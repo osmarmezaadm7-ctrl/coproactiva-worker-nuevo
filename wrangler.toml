@@ -1,0 +1,6 @@
+name = "coproactiva-nueva"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[env.production]
+vars = { ACCESS_KEY = "copro2025" }
