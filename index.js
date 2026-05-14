@@ -1,6 +1,5 @@
 // index.js — CoproActiva Worker
-// Versión: 2.0 · Mayo 2026
-// Extiende el Worker original agregando rutas reales
+// Versión: 2.1 · Mayo 2026
 
 const ACCESS_KEY = 'copro2025';
 
@@ -17,7 +16,7 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-// Helper: llamada al Apps Script
+// Helper: llamada GET al Apps Script
 async function callAppsScript(appsScriptUrl, action, params = {}) {
   const url = new URL(appsScriptUrl);
   url.searchParams.set('action', action);
@@ -28,7 +27,7 @@ async function callAppsScript(appsScriptUrl, action, params = {}) {
   const res = await fetch(url.toString(), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
-    redirect: 'follow', // Apps Script redirige — necesario
+    redirect: 'follow',
   });
 
   if (!res.ok) {
@@ -61,7 +60,14 @@ export default {
 
     // Preflight CORS
     if (method === 'OPTIONS') {
-      return jsonResponse({}, 204);
+      return new Response(null, {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
     }
 
     // Autenticación
@@ -102,7 +108,6 @@ export default {
 
       // ─── GET /factores (ruta original — no modificar) ─────────
       if (url.pathname === '/factores' && method === 'GET') {
-        // Esta ruta existía antes — preservada tal como estaba
         return jsonResponse({
           ok: true,
           factores: [
@@ -119,7 +124,6 @@ export default {
       return jsonResponse({ ok: false, error: 'Ruta no encontrada' }, 404);
 
     } catch (error) {
-      // Error interno — siempre retornar JSON, nunca fallar silenciosamente
       return jsonResponse({ ok: false, error: error.message }, 500);
     }
   },
