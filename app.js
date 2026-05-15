@@ -7,7 +7,6 @@ let currentModule = 'crm';
 
 // Esperar a que el DOM cargue
 document.addEventListener('DOMContentLoaded', () => {
-    // Elementos del DOM
     const loginScreen = document.getElementById('loginScreen');
     const appContainer = document.getElementById('app');
     const contentArea = document.getElementById('contentArea');
@@ -19,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Evento de login
     loginBtn.addEventListener('click', () => {
         const clave = claveInput.value;
-        
         if (clave === ACCESS_KEY) {
             sessionStorage.setItem('token', clave);
             loginScreen.style.display = 'none';
@@ -48,15 +46,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Función para cargar módulos
+// Cargar módulo e EJECUTAR sus scripts
 async function cargarModulo(modulo) {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = '<div style="text-align:center; padding:40px;">Cargando...</div>';
-    
+
     try {
         const response = await fetch(`modules/${modulo}.html`);
         const html = await response.text();
-        contentArea.innerHTML = html;
+
+        // Inyectar HTML sin scripts
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+
+        // Remover scripts del HTML para procesarlos aparte
+        const scripts = temp.querySelectorAll('script');
+        scripts.forEach(s => s.remove());
+
+        contentArea.innerHTML = temp.innerHTML;
+
+        // Ejecutar cada script manualmente
+        scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+            document.body.removeChild(newScript);
+        });
+
     } catch (error) {
         contentArea.innerHTML = `<div style="color:#b83232;">Error al cargar ${modulo}: ${error.message}</div>`;
     }
@@ -72,7 +92,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         }
     };
     if (body) options.body = JSON.stringify(body);
-    
+
     const response = await fetch(`${WORKER_URL}${endpoint}`, options);
     return response.json();
 }
