@@ -1,8 +1,8 @@
 // app.js — CoproActiva
 // Versión: 2.2 · Mayo 2026
 
-const WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
-const ACCESS_KEY = 'copro2025';
+var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+var ACCESS_KEY = 'copro2025';
 
 let currentModule = 'crm';
 
