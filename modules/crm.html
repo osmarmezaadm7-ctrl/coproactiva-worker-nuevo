@@ -374,16 +374,15 @@
 
   // ── Iniciar diagnóstico desde CRM ─────────────────────────────────────────
   function iniciarDiagnostico(prospectoId, nombreCondominio) {
-    // Guardar en window para que el módulo diagnóstico lo lea al iniciar
-    window.prospectoActivo = {
+    // Guardar prospecto en sessionStorage para que el iframe lo lea
+    sessionStorage.setItem('prospectoVinculado', JSON.stringify({
       id: prospectoId,
-      nombre: nombreCondominio,
-      nombreCondominio: nombreCondominio
-    };
+      nombre: nombreCondominio
+    }));
 
     // Navegar al módulo diagnóstico
     if (typeof cargarModulo === 'function') {
-      // Limpiar caché del diagnóstico para que se reinicialice con el prospecto
+      // Limpiar caché para que el módulo iframe se recree con el prospecto fresco
       if (window.moduleCache) {
         delete window.moduleCache['diagnostico'];
       }
@@ -396,7 +395,7 @@
     }
   }
 
-  // Exponer globalmente según spec del arquitecto
+  // Exponer globalmente
   window.iniciarDiagnostico = iniciarDiagnostico;
 
   // ── Modal nuevo prospecto ─────────────────────────────────────────────────
