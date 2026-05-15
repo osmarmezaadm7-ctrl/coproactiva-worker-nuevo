@@ -1,22 +1,22 @@
 // app.js — CoproActiva
-// Versión: 2.1 · Mayo 2026
-// Caché de módulos: evita recargas innecesarias al navegar
+// Versión: 2.2 · Mayo 2026
 
 const WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
 const ACCESS_KEY = 'copro2025';
 
 let currentModule = 'crm';
 
-// Caché de HTML por módulo — se llena en el primer fetch, se reutiliza después
+// Caché de HTML por módulo — expuesto en window para que módulos puedan invalidarlo
 const moduleCache = {};
+window.moduleCache = moduleCache;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const loginScreen   = document.getElementById('loginScreen');
-    const appContainer  = document.getElementById('app');
-    const loginBtn      = document.getElementById('loginBtn');
-    const claveInput    = document.getElementById('claveInput');
-    const loginError    = document.getElementById('loginError');
-    const navBtns       = document.querySelectorAll('.nav-btn');
+    const loginScreen  = document.getElementById('loginScreen');
+    const appContainer = document.getElementById('app');
+    const loginBtn     = document.getElementById('loginBtn');
+    const claveInput   = document.getElementById('claveInput');
+    const loginError   = document.getElementById('loginError');
+    const navBtns      = document.querySelectorAll('.nav-btn');
 
     // Login
     loginBtn.addEventListener('click', () => {
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Enter en el campo de clave
+    // Enter en clave
     claveInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') loginBtn.click();
     });
@@ -46,11 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Navegación — sidebar desktop y barra inferior móvil
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            navBtns.forEach(b => b.classList.remove('active'));
-            // Activar todos los botones del mismo módulo (sidebar + bottom nav)
             const modulo = btn.getAttribute('data-modulo');
-            document.querySelectorAll(`.nav-btn[data-modulo="${modulo}"]`)
-                .forEach(b => b.classList.add('active'));
+            // Activar todos los botones del mismo módulo
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll(`.nav-btn[data-modulo="${modulo}"]`).forEach(b => b.classList.add('active'));
             currentModule = modulo;
             cargarModulo(modulo);
         });
@@ -61,9 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
 async function cargarModulo(modulo) {
     const contentArea = document.getElementById('contentArea');
 
-    // Si ya está en caché, reutilizar sin fetch ni re-ejecución
+    // Si ya está en caché, usarlo y salir — sin re-fetch, sin re-ejecutar scripts
     if (moduleCache[modulo]) {
-        ejecutarModulo(contentArea, moduleCache[modulo]);
+        contentArea.innerHTML = moduleCache[modulo];
         return;
     }
 
@@ -73,16 +72,20 @@ async function cargarModulo(modulo) {
         const response = await fetch(`modules/${modulo}.html`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
+
+        // Guardar en caché antes de inyectar
         moduleCache[modulo] = html;
+
+        // Inyectar HTML — los scripts se ejecutan la primera vez
         ejecutarModulo(contentArea, html);
+
     } catch (error) {
         contentArea.innerHTML = `<div style="color:#b83232;padding:20px;">Error al cargar ${modulo}: ${error.message}</div>`;
     }
 }
 
-// Inyectar HTML y ejecutar scripts
+// Inyectar HTML y ejecutar scripts (solo en primera carga)
 function ejecutarModulo(contentArea, html) {
-    // Separar scripts del resto del HTML
     const temp = document.createElement('div');
     temp.innerHTML = html;
 
@@ -91,7 +94,7 @@ function ejecutarModulo(contentArea, html) {
 
     contentArea.innerHTML = temp.innerHTML;
 
-    // Ejecutar cada script manualmente (innerHTML no ejecuta scripts por seguridad)
+    // Ejecutar scripts manualmente (innerHTML no los ejecuta)
     scripts.forEach(oldScript => {
         const newScript = document.createElement('script');
         if (oldScript.src) {
@@ -104,7 +107,7 @@ function ejecutarModulo(contentArea, html) {
     });
 }
 
-// Helper para llamadas al Worker — disponible globalmente para los módulos
+// Helper global para llamadas al Worker — disponible para todos los módulos
 async function apiCall(endpoint, method = 'GET', body = null) {
     const options = {
         method,
