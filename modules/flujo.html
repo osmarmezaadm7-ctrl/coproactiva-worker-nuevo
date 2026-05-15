@@ -1,7 +1,11 @@
-<!-- modules/flujo.html — Flujo de trabajo CoproActiva -->
-<!-- Copiado exactamente del original · Versión módulo Mayo 2026 -->
-
-<style>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flujo de trabajo CoproActiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --c-legal: #2563eb;
@@ -42,7 +46,7 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-
+/* body styles gestionados por app shell */
 
 /* HEADER */
 .header {
@@ -253,7 +257,7 @@
   font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
   margin-top: 1px;
 }
-.aud-
+.aud-/* body styles gestionados por app shell */
 .aud-t { font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 1px; }
 .aud-d { font-size: 11px; color: #64748b; line-height: 1.4; }
 
@@ -336,6 +340,8 @@
   .legend-bar { padding: 8px 16px; }
 }
 </style>
+</head>
+<body>
 
 <div class="header">
   <div class="header-inner">
@@ -1374,3 +1380,5 @@ window.addEventListener('scroll', () => {
   btn.classList.toggle('visible', window.scrollY > 400);
 });
 </script>
+</body>
+</html>
