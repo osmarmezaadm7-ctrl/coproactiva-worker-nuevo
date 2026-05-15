@@ -1,21 +1,24 @@
-// Constantes
+// app.js — CoproActiva
+// Versión: 2.1 · Mayo 2026
+// Caché de módulos: evita recargas innecesarias al navegar
+
 const WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
 const ACCESS_KEY = 'copro2025';
 
-// Estado global
 let currentModule = 'crm';
 
-// Esperar a que el DOM cargue
-document.addEventListener('DOMContentLoaded', () => {
-    const loginScreen = document.getElementById('loginScreen');
-    const appContainer = document.getElementById('app');
-    const contentArea = document.getElementById('contentArea');
-    const loginBtn = document.getElementById('loginBtn');
-    const claveInput = document.getElementById('claveInput');
-    const loginError = document.getElementById('loginError');
-    const navBtns = document.querySelectorAll('.nav-btn');
+// Caché de HTML por módulo — se llena en el primer fetch, se reutiliza después
+const moduleCache = {};
 
-    // Evento de login
+document.addEventListener('DOMContentLoaded', () => {
+    const loginScreen   = document.getElementById('loginScreen');
+    const appContainer  = document.getElementById('app');
+    const loginBtn      = document.getElementById('loginBtn');
+    const claveInput    = document.getElementById('claveInput');
+    const loginError    = document.getElementById('loginError');
+    const navBtns       = document.querySelectorAll('.nav-btn');
+
+    // Login
     loginBtn.addEventListener('click', () => {
         const clave = claveInput.value;
         if (clave === ACCESS_KEY) {
@@ -28,61 +31,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Verificar si ya estaba logueado
+    // Enter en el campo de clave
+    claveInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') loginBtn.click();
+    });
+
+    // Sesión activa
     if (sessionStorage.getItem('token') === ACCESS_KEY) {
         loginScreen.style.display = 'none';
         appContainer.style.display = 'flex';
         cargarModulo(currentModule);
     }
 
-    // Navegación
+    // Navegación — sidebar desktop y barra inferior móvil
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             navBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentModule = btn.getAttribute('data-modulo');
-            cargarModulo(currentModule);
+            // Activar todos los botones del mismo módulo (sidebar + bottom nav)
+            const modulo = btn.getAttribute('data-modulo');
+            document.querySelectorAll(`.nav-btn[data-modulo="${modulo}"]`)
+                .forEach(b => b.classList.add('active'));
+            currentModule = modulo;
+            cargarModulo(modulo);
         });
     });
 });
 
-// Cargar módulo e EJECUTAR sus scripts
+// Cargar módulo con caché
 async function cargarModulo(modulo) {
     const contentArea = document.getElementById('contentArea');
-    contentArea.innerHTML = '<div style="text-align:center; padding:40px;">Cargando...</div>';
+
+    // Si ya está en caché, reutilizar sin fetch ni re-ejecución
+    if (moduleCache[modulo]) {
+        ejecutarModulo(contentArea, moduleCache[modulo]);
+        return;
+    }
+
+    contentArea.innerHTML = '<div style="text-align:center;padding:40px;color:#6b7280;">Cargando...</div>';
 
     try {
         const response = await fetch(`modules/${modulo}.html`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
-
-        // Inyectar HTML sin scripts
-        const temp = document.createElement('div');
-        temp.innerHTML = html;
-
-        // Remover scripts del HTML para procesarlos aparte
-        const scripts = temp.querySelectorAll('script');
-        scripts.forEach(s => s.remove());
-
-        contentArea.innerHTML = temp.innerHTML;
-
-        // Ejecutar cada script manualmente
-        scripts.forEach(oldScript => {
-            const newScript = document.createElement('script');
-            if (oldScript.src) {
-                newScript.src = oldScript.src;
-            } else {
-                newScript.textContent = oldScript.textContent;
-            }
-            document.body.appendChild(newScript);
-            document.body.removeChild(newScript);
-        });
-
+        moduleCache[modulo] = html;
+        ejecutarModulo(contentArea, html);
     } catch (error) {
-        contentArea.innerHTML = `<div style="color:#b83232;">Error al cargar ${modulo}: ${error.message}</div>`;
+        contentArea.innerHTML = `<div style="color:#b83232;padding:20px;">Error al cargar ${modulo}: ${error.message}</div>`;
     }
 }
 
-// Función para hacer peticiones al Worker
+// Inyectar HTML y ejecutar scripts
+function ejecutarModulo(contentArea, html) {
+    // Separar scripts del resto del HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    const scripts = temp.querySelectorAll('script');
+    scripts.forEach(s => s.remove());
+
+    contentArea.innerHTML = temp.innerHTML;
+
+    // Ejecutar cada script manualmente (innerHTML no ejecuta scripts por seguridad)
+    scripts.forEach(oldScript => {
+        const newScript = document.createElement('script');
+        if (oldScript.src) {
+            newScript.src = oldScript.src;
+        } else {
+            newScript.textContent = oldScript.textContent;
+        }
+        document.body.appendChild(newScript);
+        document.body.removeChild(newScript);
+    });
+}
+
+// Helper para llamadas al Worker — disponible globalmente para los módulos
 async function apiCall(endpoint, method = 'GET', body = null) {
     const options = {
         method,
@@ -92,7 +114,6 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         }
     };
     if (body) options.body = JSON.stringify(body);
-
     const response = await fetch(`${WORKER_URL}${endpoint}`, options);
     return response.json();
 }
