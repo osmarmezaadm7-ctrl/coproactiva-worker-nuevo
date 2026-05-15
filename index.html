@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<!-- Pantalla de login -->
+<!-- Login -->
 <div id="loginScreen" class="login-screen">
     <div class="login-card">
         <h2>CoproActiva</h2>
@@ -19,9 +19,10 @@
     </div>
 </div>
 
-<!-- App principal (oculta al inicio) -->
-<div id="app" class="app" style="display: none;">
-    <!-- Sidebar -->
+<!-- App -->
+<div id="app" class="app" style="display:none;">
+
+    <!-- Sidebar desktop -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <h2>CoproActiva</h2>
@@ -33,10 +34,27 @@
         </nav>
     </aside>
 
-    <!-- Contenido principal -->
+    <!-- Contenido -->
     <main class="main-content">
         <div id="contentArea">Cargando...</div>
     </main>
+
+    <!-- Barra inferior móvil -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-modulo="crm">
+            <span class="bottom-icon">📋</span>
+            <span class="bottom-label">CRM</span>
+        </button>
+        <button class="nav-btn" data-modulo="diagnostico">
+            <span class="bottom-icon">🔍</span>
+            <span class="bottom-label">Diagnóstico</span>
+        </button>
+        <button class="nav-btn" data-modulo="flujo">
+            <span class="bottom-icon">📖</span>
+            <span class="bottom-label">Flujo</span>
+        </button>
+    </nav>
+
 </div>
 
 <script src="app.js"></script>
