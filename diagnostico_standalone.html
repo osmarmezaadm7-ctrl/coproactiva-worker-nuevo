@@ -270,6 +270,12 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .empty-icon{font-size:36px;margin-bottom:10px;}
 .empty-ttl{font-size:15px;font-weight:700;color:var(--az-md);margin-bottom:6px;}
 .empty-desc{font-size:13px;line-height:1.6;}
+
+/* Cuando está dentro de un iframe — ocultar sidebar propio */
+.in-iframe .sidebar { display: none !important; }
+.in-iframe .main-scroll { margin-left: 0 !important; }
+.in-iframe #mainContent { max-width: 100% !important; }
+
 </style>
 </head>
 <body>
@@ -763,6 +769,40 @@ async function deleteSaved(nombre) {
   renderModal();
 }
 
+
+// ─── COMUNICACIÓN CON APP SHELL (postMessage) ────────────────────────────────
+function notificarPadre() {
+  if (window.parent === window) return;
+  const score = globalScore();
+  const crit = critData(score);
+  const steps = [{id:'contexto',label:'Datos de la comunidad'},
+    ...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),
+    {id:'revision',label:'Revisión y PDF'}];
+  window.parent.postMessage({
+    type: 'diag_estado',
+    score,
+    nivel: crit.lbl,
+    color: crit.ac,
+    view: S.view,
+    steps: steps.map((s,i) => ({
+      id: s.id,
+      label: s.label,
+      emoji: s.emoji || '',
+      active: s.id === S.view,
+      done: i < steps.findIndex(x => x.id === S.view)
+    }))
+  }, '*');
+}
+
+// Escuchar mensajes del padre (cambio de paso desde sidebar externo)
+window.addEventListener('message', function(event) {
+  const data = event.data;
+  if (!data || !data.type) return;
+  if (data.type === 'diag_goto' && data.view) {
+    goTo(data.view);
+  }
+});
+
 // ─── SIDEBAR + TOPBAR ─────────────────────────────────────────────────────────
 function renderNav(){
   const steps=[{id:'contexto',label:'Datos de la comunidad'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión y PDF'}];
@@ -803,6 +843,7 @@ function goPrev(){const i=VIEWS.indexOf(S.view);if(i>0)goTo(VIEWS[i-1]);}
 
 function render(){
   const isHome=S.view==='home';
+  notificarPadre();
   // Show/hide exit button and score in topbar (mobile)
   const tbScore=document.getElementById('tbScore');
   const tbExit=document.getElementById('tbExitBtn');
@@ -1731,6 +1772,12 @@ setTimeout(() => {
 }, 100);
 
   render();
+}
+
+
+// ─── DETECCIÓN DE IFRAME ──────────────────────────────────────────────────────
+if (window.parent !== window) {
+  document.body.classList.add('in-iframe');
 }
 
 // ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ────────────────────────────────
