@@ -1,0 +1,719 @@
+<!-- modules/crm.html — Módulo CRM CoproActiva -->
+<!-- Versión: 1.0 · Mayo 2026 -->
+
+<style>
+  /* ── Variables de color CoproActiva ── */
+  :root {
+    --azul:      #304660;
+    --naranja:   #D18549;
+    --verde:     #6FA885;
+    --rojo:      #B83232;
+    --superficie:#F2F0ED;
+    --borde:     #E8E4DE;
+    --texto:     #1a1a1a;
+    --texto-sub: #666;
+  }
+
+  /* ── Layout general ── */
+  #crm-root { font-family: Arial, sans-serif; color: var(--texto); }
+
+  /* ── KPIs ── */
+  .crm-kpis {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: white;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 14px 20px;
+    min-width: 110px;
+    text-align: center;
+    flex: 1;
+  }
+  .kpi-card .kpi-num {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--azul);
+  }
+  .kpi-card .kpi-num.urgente { color: var(--rojo); }
+  .kpi-card .kpi-label {
+    font-size: 12px;
+    color: var(--texto-sub);
+    margin-top: 2px;
+  }
+
+  /* ── Barra de acciones ── */
+  .crm-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .crm-toolbar h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--azul);
+  }
+  .btn-nuevo {
+    background: var(--naranja);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn-nuevo:hover { opacity: 0.9; }
+
+  /* ── Pipeline kanban ── */
+  .pipeline-scroll {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .pipeline {
+    display: flex;
+    gap: 12px;
+    min-width: max-content;
+  }
+  .columna {
+    background: var(--superficie);
+    border-radius: 8px;
+    width: 220px;
+    flex-shrink: 0;
+    padding: 10px;
+  }
+  .columna-header {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--azul);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .columna-count {
+    background: var(--azul);
+    color: white;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+
+  /* ── Tarjeta de prospecto ── */
+  .tarjeta {
+    background: white;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border-left: 4px solid var(--borde);
+    transition: box-shadow 0.15s;
+  }
+  .tarjeta:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+  .tarjeta.sem-rojo    { border-left-color: var(--rojo); }
+  .tarjeta.sem-amarillo{ border-left-color: #e8a020; }
+  .tarjeta.sem-verde   { border-left-color: var(--verde); }
+  .tarjeta.sem-gris    { border-left-color: #aaa; opacity: 0.7; }
+
+  .tarjeta-nombre {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--azul);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tarjeta-contacto {
+    font-size: 11px;
+    color: var(--texto-sub);
+    margin-bottom: 5px;
+  }
+  .tarjeta-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+  .tarjeta-unidades { color: var(--texto-sub); }
+  .semaforo-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-rojo     { background: var(--rojo); }
+  .dot-amarillo { background: #e8a020; }
+  .dot-verde    { background: var(--verde); }
+  .dot-gris     { background: #aaa; }
+
+  .tarjeta-accion {
+    font-size: 10px;
+    color: var(--texto-sub);
+    margin-top: 5px;
+    border-top: 1px solid var(--borde);
+    padding-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Modal de detalle ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-box {
+    background: white;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--texto-sub);
+  }
+  .modal-titulo {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--azul);
+    margin-bottom: 4px;
+    padding-right: 30px;
+  }
+  .modal-subtitulo {
+    font-size: 13px;
+    color: var(--texto-sub);
+    margin-bottom: 16px;
+  }
+  .modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .modal-campo label {
+    display: block;
+    font-size: 11px;
+    color: var(--texto-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 2px;
+  }
+  .modal-campo span {
+    font-size: 13px;
+    color: var(--texto);
+    font-weight: 500;
+  }
+  .modal-seccion {
+    border-top: 1px solid var(--borde);
+    padding-top: 14px;
+    margin-top: 4px;
+  }
+  .modal-seccion-titulo {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--azul);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .modal-accion-box {
+    background: var(--superficie);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .modal-accion-box .accion-texto { font-weight: 500; margin-bottom: 2px; }
+  .modal-accion-box .accion-fecha { font-size: 12px; color: var(--texto-sub); }
+
+  /* ── Selector de etapa ── */
+  .etapa-select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--azul);
+    background: white;
+    margin-bottom: 10px;
+  }
+  .btn-cambiar-etapa {
+    background: var(--azul);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .btn-cambiar-etapa:hover { opacity: 0.9; }
+
+  /* ── Estado de carga y error ── */
+  .crm-loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--texto-sub);
+  }
+  .crm-error {
+    background: #fdeaea;
+    border: 1px solid var(--rojo);
+    border-radius: 6px;
+    padding: 14px;
+    color: var(--rojo);
+    margin-bottom: 16px;
+  }
+
+  /* ── Modal nuevo prospecto ── */
+  .form-group { margin-bottom: 12px; }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--texto-sub);
+    margin-bottom: 4px;
+  }
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    font-size: 13px;
+    box-sizing: border-box;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn-guardar {
+    background: var(--naranja);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .btn-guardar:hover { opacity: 0.9; }
+  .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  @media (max-width: 480px) {
+    .modal-grid { grid-template-columns: 1fr; }
+    .form-grid  { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div id="crm-root">
+  <div class="crm-loading" id="crm-loading">Cargando CRM…</div>
+</div>
+
+<script>
+(function() {
+  // ── Constantes ────────────────────────────────────────────
+  const WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+  const TOKEN      = sessionStorage.getItem('token') || '';
+
+  const ETAPAS = [
+    'Nuevo prospecto',
+    'Reunión agendada',
+    'Reunión realizada',
+    'Diagnóstico agendado',
+    'Diagnóstico realizado',
+    'Propuesta enviada',
+    'Negociación',
+    'Ganado',
+    'Perdido'
+  ];
+
+  // ── Estado local ──────────────────────────────────────────
+  let prospectos = [];
+
+  // ── Helper API ────────────────────────────────────────────
+  async function api(path, method = 'GET', body = null) {
+    const opts = {
+      method,
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(WORKER_URL + path, opts);
+    return res.json();
+  }
+
+  // ── Inicializar ───────────────────────────────────────────
+  async function init() {
+    try {
+      const resp = await api('/crm');
+      if (!resp.ok || !resp.data || !resp.data.ok) {
+        mostrarError(resp.data?.error || resp.error || 'Error desconocido');
+        return;
+      }
+      prospectos = resp.data.data || [];
+      renderCRM();
+    } catch (err) {
+      mostrarError('Error de conexión: ' + err.message);
+    }
+  }
+
+  // ── Render principal ──────────────────────────────────────
+  function renderCRM() {
+    const root = document.getElementById('crm-root');
+
+    // Calcular KPIs
+    const activos  = prospectos.filter(p => p.etapa !== 'Ganado' && p.etapa !== 'Perdido');
+    const ganados  = prospectos.filter(p => p.etapa === 'Ganado').length;
+    const perdidos = prospectos.filter(p => p.etapa === 'Perdido').length;
+    const urgentes = activos.filter(p => p.semaforo === 'rojo').length;
+
+    root.innerHTML = `
+      <!-- KPIs -->
+      <div class="crm-kpis">
+        <div class="kpi-card">
+          <div class="kpi-num">${activos.length}</div>
+          <div class="kpi-label">Activos</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num urgente">${urgentes}</div>
+          <div class="kpi-label">Urgentes</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num" style="color:var(--verde)">${ganados}</div>
+          <div class="kpi-label">Ganados</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num" style="color:#aaa">${perdidos}</div>
+          <div class="kpi-label">Perdidos</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="crm-toolbar">
+        <h2>Pipeline de ventas</h2>
+        <button class="btn-nuevo" id="btn-nuevo-prospecto">+ Nuevo prospecto</button>
+      </div>
+
+      <!-- Pipeline -->
+      <div class="pipeline-scroll">
+        <div class="pipeline" id="pipeline"></div>
+      </div>
+    `;
+
+    // Renderizar columnas
+    renderPipeline();
+
+    // Evento nuevo prospecto
+    document.getElementById('btn-nuevo-prospecto')
+      .addEventListener('click', abrirModalNuevo);
+  }
+
+  // ── Pipeline kanban ───────────────────────────────────────
+  function renderPipeline() {
+    const pipeline = document.getElementById('pipeline');
+    pipeline.innerHTML = '';
+
+    ETAPAS.forEach(etapa => {
+      const enEtapa = prospectos.filter(p => p.etapa === etapa);
+      const col = document.createElement('div');
+      col.className = 'columna';
+      col.innerHTML = `
+        <div class="columna-header">
+          <span>${etapa}</span>
+          <span class="columna-count">${enEtapa.length}</span>
+        </div>
+        ${enEtapa.map(tarjetaHTML).join('')}
+      `;
+      pipeline.appendChild(col);
+    });
+
+    // Eventos clic en tarjetas
+    document.querySelectorAll('.tarjeta').forEach(t => {
+      t.addEventListener('click', () => {
+        const id = t.getAttribute('data-id');
+        const p = prospectos.find(x => x.id === id);
+        if (p) abrirModalDetalle(p);
+      });
+    });
+  }
+
+  // ── HTML de tarjeta ───────────────────────────────────────
+  function tarjetaHTML(p) {
+    const sem = p.semaforo || 'gris';
+    return `
+      <div class="tarjeta sem-${sem}" data-id="${p.id}">
+        <div class="tarjeta-nombre">${p.nombreCondominio}</div>
+        <div class="tarjeta-contacto">${p.nombreContacto} · ${p.comuna || '—'}</div>
+        <div class="tarjeta-meta">
+          <span class="tarjeta-unidades">${p.unidades || 0} unidades</span>
+          <span class="semaforo-dot dot-${sem}" title="Semáforo: ${sem}"></span>
+        </div>
+        ${p.proximaAccion ? `<div class="tarjeta-accion">▶ ${p.proximaAccion}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ── Modal detalle ─────────────────────────────────────────
+  function abrirModalDetalle(p) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <button class="modal-close" id="modal-cerrar">×</button>
+        <div class="modal-titulo">${p.nombreCondominio}</div>
+        <div class="modal-subtitulo">${p.etapa} · ${p.comuna || '—'} · ${p.unidades || 0} unidades</div>
+
+        <div class="modal-grid">
+          <div class="modal-campo">
+            <label>Contacto</label>
+            <span>${p.nombreContacto}</span>
+          </div>
+          <div class="modal-campo">
+            <label>Cargo</label>
+            <span>${p.cargoContacto || '—'}</span>
+          </div>
+          <div class="modal-campo">
+            <label>Teléfono</label>
+            <span>${p.telefono || '—'}</span>
+          </div>
+          <div class="modal-campo">
+            <label>Email</label>
+            <span>${p.email || '—'}</span>
+          </div>
+          <div class="modal-campo">
+            <label>Fuente</label>
+            <span>${p.fuenteLead || '—'}</span>
+          </div>
+          <div class="modal-campo">
+            <label>Responsable</label>
+            <span>${p.responsable || '—'}</span>
+          </div>
+          <div class="modal-campo">
+            <label>Primer contacto</label>
+            <span>${p.fechaPrimerContacto || '—'}</span>
+          </div>
+          <div class="modal-campo">
+            <label>Última interacción</label>
+            <span>${p.fechaUltimaInteraccion || '—'}</span>
+          </div>
+        </div>
+
+        ${p.observaciones ? `
+        <div class="modal-campo" style="margin-bottom:14px">
+          <label>Observaciones</label>
+          <span>${p.observaciones}</span>
+        </div>` : ''}
+
+        <div class="modal-seccion">
+          <div class="modal-seccion-titulo">Próxima acción</div>
+          <div class="modal-accion-box">
+            <div class="accion-texto">${p.proximaAccion || 'Sin acción definida'}</div>
+            <div class="accion-fecha">${p.fechaProximaAccion ? '📅 ' + p.fechaProximaAccion : ''}</div>
+          </div>
+        </div>
+
+        <div class="modal-seccion">
+          <div class="modal-seccion-titulo">Cambiar etapa</div>
+          <select class="etapa-select" id="select-etapa">
+            ${ETAPAS.map(e => `<option value="${e}" ${e === p.etapa ? 'selected' : ''}>${e}</option>`).join('')}
+          </select>
+          <button class="btn-cambiar-etapa" id="btn-cambiar-etapa">Guardar cambio</button>
+          <div id="msg-etapa" style="font-size:12px;margin-top:8px;color:var(--verde);display:none">✓ Etapa actualizada</div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Cerrar
+    overlay.querySelector('#modal-cerrar').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    // Cambiar etapa
+    overlay.querySelector('#btn-cambiar-etapa').addEventListener('click', async () => {
+      const nuevaEtapa = overlay.querySelector('#select-etapa').value;
+      const btn = overlay.querySelector('#btn-cambiar-etapa');
+      const msg = overlay.querySelector('#msg-etapa');
+
+      if (nuevaEtapa === p.etapa) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+
+      const resp = await api('/crm', 'POST', {
+        action: 'cambiarEtapa',
+        id: p.id,
+        etapaNueva: nuevaEtapa
+      });
+
+      if (resp.ok && resp.data && resp.data.ok) {
+        // Actualizar estado local
+        p.etapa = nuevaEtapa;
+        msg.style.display = 'block';
+        btn.textContent = 'Guardar cambio';
+        btn.disabled = false;
+        // Refrescar pipeline
+        renderPipeline();
+      } else {
+        btn.textContent = 'Error — reintentar';
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // ── Modal nuevo prospecto ─────────────────────────────────
+  function abrirModalNuevo() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <button class="modal-close" id="modal-cerrar-nuevo">×</button>
+        <div class="modal-titulo">Nuevo prospecto</div>
+        <div class="modal-subtitulo">Ingresa los datos del condominio</div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre del condominio *</label>
+            <input type="text" id="f-nombre" placeholder="Ej: Edificio Las Rosas">
+          </div>
+          <div class="form-group">
+            <label>Comuna</label>
+            <input type="text" id="f-comuna" placeholder="Ej: San Bernardo">
+          </div>
+          <div class="form-group">
+            <label>Dirección</label>
+            <input type="text" id="f-direccion" placeholder="Calle y número">
+          </div>
+          <div class="form-group">
+            <label>Unidades</label>
+            <input type="number" id="f-unidades" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Nombre del contacto *</label>
+            <input type="text" id="f-contacto" placeholder="Nombre completo">
+          </div>
+          <div class="form-group">
+            <label>Cargo</label>
+            <input type="text" id="f-cargo" placeholder="Ej: Presidenta del comité">
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" id="f-telefono" placeholder="+569...">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="f-email" placeholder="correo@ejemplo.cl">
+          </div>
+          <div class="form-group">
+            <label>Fuente del lead</label>
+            <select id="f-fuente">
+              <option value="web">Web</option>
+              <option value="referido">Referido</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Responsable</label>
+            <input type="text" id="f-responsable" placeholder="Nombre">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observaciones</label>
+          <input type="text" id="f-obs" placeholder="Notas adicionales">
+        </div>
+
+        <div id="error-nuevo" style="color:var(--rojo);font-size:12px;margin-bottom:8px;display:none"></div>
+        <button class="btn-guardar" id="btn-guardar-nuevo">Guardar prospecto</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#modal-cerrar-nuevo').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector('#btn-guardar-nuevo').addEventListener('click', async () => {
+      const nombre   = overlay.querySelector('#f-nombre').value.trim();
+      const contacto = overlay.querySelector('#f-contacto').value.trim();
+      const errDiv   = overlay.querySelector('#error-nuevo');
+      const btn      = overlay.querySelector('#btn-guardar-nuevo');
+
+      if (!nombre || !contacto) {
+        errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.';
+        errDiv.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+      errDiv.style.display = 'none';
+
+      const datos = {
+        nombreCondominio: nombre,
+        comuna:           overlay.querySelector('#f-comuna').value.trim(),
+        direccion:        overlay.querySelector('#f-direccion').value.trim(),
+        unidades:         overlay.querySelector('#f-unidades').value || 0,
+        nombreContacto:   contacto,
+        cargoContacto:    overlay.querySelector('#f-cargo').value.trim(),
+        telefono:         overlay.querySelector('#f-telefono').value.trim(),
+        email:            overlay.querySelector('#f-email').value.trim(),
+        fuenteLead:       overlay.querySelector('#f-fuente').value,
+        responsable:      overlay.querySelector('#f-responsable').value.trim(),
+        observaciones:    overlay.querySelector('#f-obs').value.trim(),
+      };
+
+      const resp = await api('/crm', 'POST', datos);
+
+      if (resp.ok && resp.data && resp.data.ok) {
+        overlay.remove();
+        // Recargar lista completa
+        await init();
+      } else {
+        errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar';
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Guardar prospecto';
+      }
+    });
+  }
+
+  // ── Error general ─────────────────────────────────────────
+  function mostrarError(msg) {
+    document.getElementById('crm-root').innerHTML = `
+      <div class="crm-error">Error al cargar el CRM: ${msg}</div>
+    `;
+  }
+
+  // ── Arrancar ──────────────────────────────────────────────
+  init();
+
+})();
+</script>
