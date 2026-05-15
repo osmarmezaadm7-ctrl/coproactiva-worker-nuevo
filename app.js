@@ -11,7 +11,8 @@ let currentModule = 'crm';
 const moduleElements = {};
 let currentModuleElement = null;
 
-window.moduleCache = moduleElements; // compatibilidad con módulos que lo referencian
+window.moduleCache = moduleElements;   // compatibilidad
+window.moduleElements = moduleElements; // expuesto para que módulos puedan remover wrappers
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginScreen  = document.getElementById('loginScreen');
