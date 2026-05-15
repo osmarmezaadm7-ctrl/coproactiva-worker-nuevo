@@ -9,19 +9,16 @@ body {
     background: #f2f0ed;
 }
 
-/* Pantalla de login */
+/* ── Login ── */
 .login-screen {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: #304660;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
 .login-card {
     background: white;
     padding: 30px;
@@ -29,49 +26,50 @@ body {
     text-align: center;
     width: 300px;
 }
-
 .login-card input {
     width: 100%;
     padding: 10px;
     margin: 15px 0;
     border: 1px solid #e8e4de;
     border-radius: 8px;
+    font-size: 15px;
 }
-
 .login-card button {
     background: #d18549;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     border-radius: 8px;
     cursor: pointer;
+    font-size: 15px;
+    width: 100%;
 }
-
 .error-message {
     color: #b83232;
     margin-top: 10px;
     font-size: 12px;
 }
 
-/* App principal */
+/* ── App ── */
 .app {
     display: flex;
     min-height: 100vh;
 }
 
+/* ── Sidebar desktop ── */
 .sidebar {
     width: 250px;
     background: #304660;
     color: white;
     padding: 20px;
+    flex-shrink: 0;
 }
-
 .sidebar-header h2 {
     color: #d18549;
     margin-bottom: 30px;
+    font-size: 20px;
 }
-
-.nav-btn {
+.sidebar .nav-btn {
     display: block;
     width: 100%;
     padding: 12px;
@@ -84,33 +82,93 @@ body {
     border-radius: 8px;
     font-size: 14px;
 }
-
-.nav-btn.active {
+.sidebar .nav-btn.active {
     background: #d18549;
     color: white;
 }
+.sidebar .nav-btn:hover:not(.active) {
+    background: rgba(255,255,255,0.08);
+}
 
+/* ── Contenido principal ── */
 .main-content {
     flex: 1;
     padding: 20px;
     background: #f2f0ed;
+    overflow-y: auto;
+    min-width: 0;
 }
 
-@media (max-width: 600px) {
+/* ── Barra inferior móvil (oculta en desktop) ── */
+.bottom-nav {
+    display: none;
+}
+
+/* ════════════════════════════════════════
+   MÓVIL (< 768px)
+════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+    /* Ocultar sidebar en móvil */
     .sidebar {
-        width: 70px;
-        padding: 10px;
-    }
-    .sidebar-header h2 {
-        font-size: 12px;
-        text-align: center;
-    }
-    .nav-btn {
-        text-align: center;
-        font-size: 20px;
-        padding: 10px;
-    }
-    .nav-btn span {
         display: none;
+    }
+
+    /* App ocupa toda la pantalla */
+    .app {
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* Contenido con espacio para barra inferior */
+    .main-content {
+        padding: 16px;
+        padding-bottom: 80px;
+        flex: 1;
+    }
+
+    /* Barra inferior visible en móvil */
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #304660;
+        height: 64px;
+        z-index: 100;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .bottom-nav .nav-btn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
+        padding: 8px 4px;
+        gap: 3px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .bottom-nav .nav-btn.active {
+        color: #d18549;
+    }
+
+    .bottom-nav .nav-btn:active {
+        background: rgba(255,255,255,0.05);
+    }
+
+    .bottom-icon {
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .bottom-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
     }
 }
