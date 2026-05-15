@@ -1,12 +1,13 @@
 // app.js — CoproActiva
-// Versión: 2.2 · Mayo 2026
+// Versión: 2.4 · Mayo 2026
+// Caché de HTML + re-ejecución de scripts en cada navegación
 
 var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
 var ACCESS_KEY = 'copro2025';
 
 let currentModule = 'crm';
 
-// Caché de HTML por módulo — expuesto en window para que módulos puedan invalidarlo
+// Caché de HTML — solo se hace fetch una vez por módulo
 const moduleCache = {};
 window.moduleCache = moduleCache;
 
@@ -16,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginBtn     = document.getElementById('loginBtn');
     const claveInput   = document.getElementById('claveInput');
     const loginError   = document.getElementById('loginError');
-    const navBtns      = document.querySelectorAll('.nav-btn');
 
     // Login
     loginBtn.addEventListener('click', () => {
@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Enter en clave
     claveInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') loginBtn.click();
     });
@@ -43,11 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
         cargarModulo(currentModule);
     }
 
-    // Navegación — sidebar desktop y barra inferior móvil
-    navBtns.forEach(btn => {
+    // Navegación
+    document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const modulo = btn.getAttribute('data-modulo');
-            // Activar todos los botones del mismo módulo
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll(`.nav-btn[data-modulo="${modulo}"]`).forEach(b => b.classList.add('active'));
             currentModule = modulo;
@@ -56,13 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Cargar módulo con caché
+// Cargar módulo — fetch solo la primera vez, scripts siempre se re-ejecutan
 async function cargarModulo(modulo) {
     const contentArea = document.getElementById('contentArea');
 
-    // Si ya está en caché, usarlo y salir — sin re-fetch, sin re-ejecutar scripts
     if (moduleCache[modulo]) {
-        contentArea.innerHTML = moduleCache[modulo];
+        // HTML ya en caché — inyectar y re-ejecutar scripts sin fetch
+        ejecutarModulo(contentArea, moduleCache[modulo]);
         return;
     }
 
@@ -72,29 +70,26 @@ async function cargarModulo(modulo) {
         const response = await fetch(`modules/${modulo}.html`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
-
-        // Guardar en caché antes de inyectar
         moduleCache[modulo] = html;
-
-        // Inyectar HTML — los scripts se ejecutan la primera vez
         ejecutarModulo(contentArea, html);
-
     } catch (error) {
         contentArea.innerHTML = `<div style="color:#b83232;padding:20px;">Error al cargar ${modulo}: ${error.message}</div>`;
     }
 }
 
-// Inyectar HTML y ejecutar scripts (solo en primera carga)
+// Inyectar HTML y re-ejecutar scripts — se llama siempre, con o sin caché
 function ejecutarModulo(contentArea, html) {
     const temp = document.createElement('div');
     temp.innerHTML = html;
 
-    const scripts = temp.querySelectorAll('script');
+    // Separar scripts del HTML antes de inyectar
+    const scripts = Array.from(temp.querySelectorAll('script'));
     scripts.forEach(s => s.remove());
 
+    // Inyectar HTML sin scripts
     contentArea.innerHTML = temp.innerHTML;
 
-    // Ejecutar scripts manualmente (innerHTML no los ejecuta)
+    // Re-ejecutar scripts manualmente — esto inicializa el módulo
     scripts.forEach(oldScript => {
         const newScript = document.createElement('script');
         if (oldScript.src) {
@@ -107,7 +102,7 @@ function ejecutarModulo(contentArea, html) {
     });
 }
 
-// Helper global para llamadas al Worker — disponible para todos los módulos
+// Helper global para llamadas al Worker
 async function apiCall(endpoint, method = 'GET', body = null) {
     const options = {
         method,
