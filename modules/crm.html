@@ -1,132 +1,235 @@
-<!-- modules/crm.html — Módulo CRM CoproActiva -->
-<!-- Versión: 1.0 · Mayo 2026 -->
+<!-- modules/crm.html — CoproActiva CRM · Versión 2.0 responsive -->
+<!-- Desktop: kanban · Móvil: accordion por etapa -->
 
 <style>
-  /* ── Variables de color CoproActiva ── */
   :root {
-    --azul:      #304660;
-    --naranja:   #D18549;
-    --verde:     #6FA885;
-    --rojo:      #B83232;
-    --superficie:#F2F0ED;
-    --borde:     #E8E4DE;
-    --texto:     #1a1a1a;
-    --texto-sub: #666;
+    --azul:       #304660;
+    --azul-claro: #3d5a7a;
+    --naranja:    #D18549;
+    --verde:      #6FA885;
+    --rojo:       #B83232;
+    --superficie: #F2F0ED;
+    --borde:      #E8E4DE;
+    --texto:      #1a1a1a;
+    --texto-sub:  #6b7280;
+    --sombra:     0 2px 12px rgba(48,70,96,0.10);
   }
 
-  /* ── Layout general ── */
-  #crm-root { font-family: Arial, sans-serif; color: var(--texto); }
+  #crm-root {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: var(--texto);
+  }
 
   /* ── KPIs ── */
   .crm-kpis {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
   }
   .kpi-card {
     background: white;
     border: 1px solid var(--borde);
-    border-radius: 8px;
-    padding: 14px 20px;
-    min-width: 110px;
+    border-radius: 10px;
+    padding: 12px 18px;
+    min-width: 90px;
     text-align: center;
-    flex: 1;
+    flex-shrink: 0;
+    box-shadow: var(--sombra);
   }
-  .kpi-card .kpi-num {
-    font-size: 28px;
-    font-weight: bold;
+  .kpi-num {
+    font-size: 26px;
+    font-weight: 700;
     color: var(--azul);
+    line-height: 1;
   }
-  .kpi-card .kpi-num.urgente { color: var(--rojo); }
-  .kpi-card .kpi-label {
-    font-size: 12px;
+  .kpi-num.urgente { color: var(--rojo); }
+  .kpi-num.ganado  { color: var(--verde); }
+  .kpi-num.perdido { color: #aaa; }
+  .kpi-label {
+    font-size: 11px;
     color: var(--texto-sub);
-    margin-top: 2px;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
   }
 
-  /* ── Barra de acciones ── */
+  /* ── Toolbar ── */
   .crm-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    flex-wrap: wrap;
     gap: 10px;
   }
   .crm-toolbar h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 700;
     color: var(--azul);
   }
   .btn-nuevo {
     background: var(--naranja);
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .btn-nuevo:hover { opacity: 0.9; }
-
-  /* ── Pipeline kanban ── */
-  .pipeline-scroll {
-    overflow-x: auto;
-    padding-bottom: 8px;
-  }
-  .pipeline {
-    display: flex;
-    gap: 12px;
-    min-width: max-content;
-  }
-  .columna {
-    background: var(--superficie);
+    padding: 10px 18px;
     border-radius: 8px;
-    width: 220px;
-    flex-shrink: 0;
-    padding: 10px;
-  }
-  .columna-header {
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--azul);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 44px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 6px;
   }
-  .columna-count {
-    background: var(--azul);
-    color: white;
-    border-radius: 10px;
-    padding: 1px 7px;
-    font-size: 11px;
+  .btn-nuevo:hover  { opacity: 0.88; }
+  .btn-nuevo:active { transform: scale(0.97); }
+
+  /* ════════════════════════════════════════
+     DESKTOP — Kanban (≥ 768px)
+  ════════════════════════════════════════ */
+  @media (min-width: 768px) {
+    .vista-mobile  { display: none !important; }
+    .vista-desktop { display: block; }
+
+    .pipeline-scroll {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .pipeline {
+      display: flex;
+      gap: 12px;
+      min-width: max-content;
+      align-items: flex-start;
+    }
+    .columna {
+      background: var(--superficie);
+      border-radius: 10px;
+      width: 200px;
+      flex-shrink: 0;
+      padding: 10px;
+    }
+    .columna-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--azul);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2px;
+    }
+    .columna-count {
+      background: var(--azul);
+      color: white;
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 10px;
+    }
+    .columna-vacia {
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+      padding: 16px 0;
+    }
   }
 
-  /* ── Tarjeta de prospecto ── */
+  /* ════════════════════════════════════════
+     MÓVIL — Accordion (< 768px)
+  ════════════════════════════════════════ */
+  @media (max-width: 767px) {
+    .vista-desktop { display: none !important; }
+    .vista-mobile  { display: block; }
+
+    .accordion-etapa {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      box-shadow: var(--sombra);
+    }
+    .accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      cursor: pointer;
+      min-height: 44px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .accordion-header:active { background: var(--superficie); }
+    .accordion-titulo {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--azul);
+    }
+    .accordion-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .accordion-count {
+      background: var(--azul);
+      color: white;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .accordion-count.vacio {
+      background: #ddd;
+      color: #999;
+    }
+    .accordion-chevron {
+      font-size: 12px;
+      color: var(--texto-sub);
+      transition: transform 0.2s;
+    }
+    .accordion-chevron.abierto { transform: rotate(180deg); }
+    .accordion-body {
+      display: none;
+      padding: 0 10px 10px;
+      border-top: 1px solid var(--borde);
+    }
+    .accordion-body.abierto { display: block; }
+    .accordion-vacia {
+      font-size: 12px;
+      color: #bbb;
+      text-align: center;
+      padding: 14px 0;
+    }
+  }
+
+  /* ── Tarjeta (compartida) ── */
   .tarjeta {
     background: white;
     border: 1px solid var(--borde);
-    border-radius: 6px;
-    padding: 10px 12px;
+    border-radius: 8px;
+    padding: 12px;
     margin-bottom: 8px;
     cursor: pointer;
     border-left: 4px solid var(--borde);
-    transition: box-shadow 0.15s;
+    transition: box-shadow 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .tarjeta:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
-  .tarjeta.sem-rojo    { border-left-color: var(--rojo); }
-  .tarjeta.sem-amarillo{ border-left-color: #e8a020; }
-  .tarjeta.sem-verde   { border-left-color: var(--verde); }
-  .tarjeta.sem-gris    { border-left-color: #aaa; opacity: 0.7; }
+  .tarjeta:hover  { box-shadow: 0 3px 12px rgba(48,70,96,0.13); }
+  .tarjeta:active { transform: scale(0.98); }
+
+  .tarjeta.sem-rojo     { border-left-color: var(--rojo); }
+  .tarjeta.sem-amarillo { border-left-color: #e8a020; }
+  .tarjeta.sem-verde    { border-left-color: var(--verde); }
+  .tarjeta.sem-gris     { border-left-color: #ccc; opacity: 0.65; }
 
   .tarjeta-nombre {
     font-size: 13px;
-    font-weight: bold;
+    font-weight: 700;
     color: var(--azul);
     margin-bottom: 3px;
     white-space: nowrap;
@@ -136,30 +239,28 @@
   .tarjeta-contacto {
     font-size: 11px;
     color: var(--texto-sub);
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
-  .tarjeta-meta {
+  .tarjeta-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 11px;
   }
-  .tarjeta-unidades { color: var(--texto-sub); }
+  .tarjeta-unidades { font-size: 11px; color: var(--texto-sub); }
   .semaforo-dot {
-    width: 10px;
-    height: 10px;
+    width: 9px; height: 9px;
     border-radius: 50%;
     display: inline-block;
   }
   .dot-rojo     { background: var(--rojo); }
   .dot-amarillo { background: #e8a020; }
   .dot-verde    { background: var(--verde); }
-  .dot-gris     { background: #aaa; }
+  .dot-gris     { background: #ccc; }
 
   .tarjeta-accion {
     font-size: 10px;
     color: var(--texto-sub);
-    margin-top: 5px;
+    margin-top: 6px;
     border-top: 1px solid var(--borde);
     padding-top: 5px;
     white-space: nowrap;
@@ -167,12 +268,18 @@
     text-overflow: ellipsis;
   }
 
-  /* ── Modal de detalle ── */
+  @media (max-width: 767px) {
+    .tarjeta { padding: 14px; }
+    .tarjeta-nombre { font-size: 14px; }
+    .tarjeta-contacto { font-size: 12px; }
+  }
+
+  /* ── Modal ── */
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 1000;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -180,164 +287,161 @@
   }
   .modal-box {
     background: white;
-    border-radius: 10px;
+    border-radius: 12px;
     width: 100%;
-    max-width: 560px;
+    max-width: 520px;
     max-height: 90vh;
     overflow-y: auto;
     padding: 24px;
     position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
   }
+  @media (max-width: 767px) {
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal-box {
+      border-radius: 16px 16px 0 0;
+      max-height: 92vh;
+      padding: 20px 16px 32px;
+    }
+  }
+  .modal-handle {
+    display: none;
+    width: 40px; height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  @media (max-width: 767px) { .modal-handle { display: block; } }
+
   .modal-close {
     position: absolute;
-    top: 14px;
-    right: 16px;
-    background: none;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
+    top: 14px; right: 16px;
+    background: none; border: none;
+    font-size: 22px; cursor: pointer;
     color: var(--texto-sub);
+    min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
   }
   .modal-titulo {
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--azul);
-    margin-bottom: 4px;
-    padding-right: 30px;
+    font-size: 18px; font-weight: 700;
+    color: var(--azul); margin-bottom: 4px;
+    padding-right: 36px;
   }
   .modal-subtitulo {
-    font-size: 13px;
-    color: var(--texto-sub);
-    margin-bottom: 16px;
+    font-size: 12px; color: var(--texto-sub);
+    margin-bottom: 18px;
   }
   .modal-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 16px;
   }
+  @media (max-width: 400px) { .modal-grid { grid-template-columns: 1fr; } }
+
   .modal-campo label {
-    display: block;
-    font-size: 11px;
-    color: var(--texto-sub);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    margin-bottom: 2px;
+    display: block; font-size: 10px;
+    color: var(--texto-sub); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 2px;
   }
-  .modal-campo span {
-    font-size: 13px;
-    color: var(--texto);
-    font-weight: 500;
-  }
+  .modal-campo span { font-size: 13px; font-weight: 500; }
+
   .modal-seccion {
     border-top: 1px solid var(--borde);
-    padding-top: 14px;
-    margin-top: 4px;
+    padding-top: 14px; margin-top: 4px;
   }
   .modal-seccion-titulo {
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--azul);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
+    font-size: 11px; font-weight: 700;
+    color: var(--azul); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 10px;
   }
-  .modal-accion-box {
+  .accion-box {
     background: var(--superficie);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 13px;
+    border-radius: 8px; padding: 12px 14px;
     margin-bottom: 14px;
   }
-  .modal-accion-box .accion-texto { font-weight: 500; margin-bottom: 2px; }
-  .modal-accion-box .accion-fecha { font-size: 12px; color: var(--texto-sub); }
+  .accion-texto { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .accion-fecha { font-size: 11px; color: var(--texto-sub); }
 
-  /* ── Selector de etapa ── */
   .etapa-select {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--borde);
-    border-radius: 6px;
-    font-size: 13px;
-    color: var(--azul);
-    background: white;
-    margin-bottom: 10px;
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--borde); border-radius: 8px;
+    font-size: 13px; color: var(--azul);
+    background: white; margin-bottom: 10px;
+    min-height: 44px;
   }
-  .btn-cambiar-etapa {
-    background: var(--azul);
-    color: white;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    font-weight: bold;
+  .btn-cambiar {
+    background: var(--azul); color: white;
+    border: none; padding: 12px 20px;
+    border-radius: 8px; font-size: 13px;
+    font-weight: 700; cursor: pointer;
+    width: 100%; min-height: 44px;
   }
-  .btn-cambiar-etapa:hover { opacity: 0.9; }
+  .btn-cambiar:hover { background: var(--azul-claro); }
+  .btn-cambiar:disabled { opacity: 0.6; cursor: not-allowed; }
+  .msg-ok { font-size: 12px; color: var(--verde); margin-top: 8px; display: none; }
 
-  /* ── Estado de carga y error ── */
-  .crm-loading {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--texto-sub);
+  /* ── Formulario nuevo ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
-  .crm-error {
-    background: #fdeaea;
-    border: 1px solid var(--rojo);
-    border-radius: 6px;
-    padding: 14px;
-    color: var(--rojo);
-    margin-bottom: 16px;
-  }
+  @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
 
-  /* ── Modal nuevo prospecto ── */
-  .form-group { margin-bottom: 12px; }
+  .form-group { margin-bottom: 0; }
   .form-group label {
-    display: block;
-    font-size: 12px;
-    color: var(--texto-sub);
-    margin-bottom: 4px;
+    display: block; font-size: 11px;
+    color: var(--texto-sub); margin-bottom: 4px;
   }
   .form-group input,
   .form-group select {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--borde);
-    border-radius: 6px;
-    font-size: 13px;
-    box-sizing: border-box;
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--borde); border-radius: 8px;
+    font-size: 13px; box-sizing: border-box;
+    min-height: 44px;
   }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none; border-color: var(--azul);
+  }
+  .form-full { grid-column: 1 / -1; }
   .btn-guardar {
-    background: var(--naranja);
-    color: white;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 8px;
+    background: var(--naranja); color: white;
+    border: none; padding: 14px;
+    border-radius: 8px; font-size: 14px;
+    font-weight: 700; cursor: pointer;
+    width: 100%; margin-top: 16px;
+    min-height: 48px;
   }
   .btn-guardar:hover { opacity: 0.9; }
   .btn-guardar:disabled { opacity: 0.6; cursor: not-allowed; }
+  .form-error {
+    color: var(--rojo); font-size: 12px;
+    margin-top: 8px; display: none;
+  }
 
-  @media (max-width: 480px) {
-    .modal-grid { grid-template-columns: 1fr; }
-    .form-grid  { grid-template-columns: 1fr; }
+  /* ── Estados ── */
+  .crm-loading {
+    text-align: center; padding: 60px 20px;
+    color: var(--texto-sub); font-size: 14px;
+  }
+  .crm-error {
+    background: #fdeaea; border: 1px solid var(--rojo);
+    border-radius: 8px; padding: 14px;
+    color: var(--rojo); font-size: 13px;
   }
 </style>
 
 <div id="crm-root">
-  <div class="crm-loading" id="crm-loading">Cargando CRM…</div>
+  <div class="crm-loading">Cargando CRM…</div>
 </div>
 
 <script>
 (function() {
-  // ── Constantes ────────────────────────────────────────────
+
   const WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
-  const TOKEN      = sessionStorage.getItem('token') || '';
+  const TOKEN = sessionStorage.getItem('token') || '';
 
   const ETAPAS = [
     'Nuevo prospecto',
@@ -351,10 +455,8 @@
     'Perdido'
   ];
 
-  // ── Estado local ──────────────────────────────────────────
   let prospectos = [];
 
-  // ── Helper API ────────────────────────────────────────────
   async function api(path, method = 'GET', body = null) {
     const opts = {
       method,
@@ -368,7 +470,6 @@
     return res.json();
   }
 
-  // ── Inicializar ───────────────────────────────────────────
   async function init() {
     try {
       const resp = await api('/crm');
@@ -383,62 +484,39 @@
     }
   }
 
-  // ── Render principal ──────────────────────────────────────
   function renderCRM() {
     const root = document.getElementById('crm-root');
-
-    // Calcular KPIs
     const activos  = prospectos.filter(p => p.etapa !== 'Ganado' && p.etapa !== 'Perdido');
     const ganados  = prospectos.filter(p => p.etapa === 'Ganado').length;
     const perdidos = prospectos.filter(p => p.etapa === 'Perdido').length;
     const urgentes = activos.filter(p => p.semaforo === 'rojo').length;
 
     root.innerHTML = `
-      <!-- KPIs -->
       <div class="crm-kpis">
-        <div class="kpi-card">
-          <div class="kpi-num">${activos.length}</div>
-          <div class="kpi-label">Activos</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-num urgente">${urgentes}</div>
-          <div class="kpi-label">Urgentes</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-num" style="color:var(--verde)">${ganados}</div>
-          <div class="kpi-label">Ganados</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-num" style="color:#aaa">${perdidos}</div>
-          <div class="kpi-label">Perdidos</div>
-        </div>
+        <div class="kpi-card"><div class="kpi-num">${activos.length}</div><div class="kpi-label">Activos</div></div>
+        <div class="kpi-card"><div class="kpi-num urgente">${urgentes}</div><div class="kpi-label">Urgentes</div></div>
+        <div class="kpi-card"><div class="kpi-num ganado">${ganados}</div><div class="kpi-label">Ganados</div></div>
+        <div class="kpi-card"><div class="kpi-num perdido">${perdidos}</div><div class="kpi-label">Perdidos</div></div>
       </div>
-
-      <!-- Toolbar -->
       <div class="crm-toolbar">
         <h2>Pipeline de ventas</h2>
-        <button class="btn-nuevo" id="btn-nuevo-prospecto">+ Nuevo prospecto</button>
+        <button class="btn-nuevo" id="btn-nuevo">＋ Nuevo</button>
       </div>
-
-      <!-- Pipeline -->
-      <div class="pipeline-scroll">
-        <div class="pipeline" id="pipeline"></div>
+      <div class="vista-desktop">
+        <div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div>
       </div>
+      <div class="vista-mobile" id="accordion-mobile"></div>
     `;
 
-    // Renderizar columnas
-    renderPipeline();
-
-    // Evento nuevo prospecto
-    document.getElementById('btn-nuevo-prospecto')
-      .addEventListener('click', abrirModalNuevo);
+    renderKanban();
+    renderAccordion();
+    document.getElementById('btn-nuevo').addEventListener('click', abrirModalNuevo);
   }
 
-  // ── Pipeline kanban ───────────────────────────────────────
-  function renderPipeline() {
-    const pipeline = document.getElementById('pipeline');
+  function renderKanban() {
+    const pipeline = document.getElementById('pipeline-desktop');
+    if (!pipeline) return;
     pipeline.innerHTML = '';
-
     ETAPAS.forEach(etapa => {
       const enEtapa = prospectos.filter(p => p.etapa === etapa);
       const col = document.createElement('div');
@@ -448,121 +526,132 @@
           <span>${etapa}</span>
           <span class="columna-count">${enEtapa.length}</span>
         </div>
-        ${enEtapa.map(tarjetaHTML).join('')}
+        ${enEtapa.length === 0
+          ? '<div class="columna-vacia">—</div>'
+          : enEtapa.map(tarjetaHTML).join('')}
       `;
       pipeline.appendChild(col);
     });
-
-    // Eventos clic en tarjetas
-    document.querySelectorAll('.tarjeta').forEach(t => {
+    pipeline.querySelectorAll('.tarjeta').forEach(t => {
       t.addEventListener('click', () => {
-        const id = t.getAttribute('data-id');
-        const p = prospectos.find(x => x.id === id);
+        const p = prospectos.find(x => x.id === t.getAttribute('data-id'));
         if (p) abrirModalDetalle(p);
       });
     });
   }
 
-  // ── HTML de tarjeta ───────────────────────────────────────
+  function renderAccordion() {
+    const acc = document.getElementById('accordion-mobile');
+    if (!acc) return;
+    acc.innerHTML = '';
+
+    const etapasConDatos = ETAPAS.filter(e => prospectos.some(p => p.etapa === e));
+    const etapasSinDatos = ETAPAS.filter(e => !prospectos.some(p => p.etapa === e));
+    const orden = [...etapasConDatos, ...etapasSinDatos];
+
+    orden.forEach((etapa, idx) => {
+      const enEtapa = prospectos.filter(p => p.etapa === etapa);
+      const abierto = idx === 0 && enEtapa.length > 0;
+
+      const bloque = document.createElement('div');
+      bloque.className = 'accordion-etapa';
+      bloque.innerHTML = `
+        <div class="accordion-header">
+          <span class="accordion-titulo">${etapa}</span>
+          <div class="accordion-meta">
+            <span class="accordion-count ${enEtapa.length === 0 ? 'vacio' : ''}">${enEtapa.length}</span>
+            <span class="accordion-chevron ${abierto ? 'abierto' : ''}">▼</span>
+          </div>
+        </div>
+        <div class="accordion-body ${abierto ? 'abierto' : ''}">
+          ${enEtapa.length === 0
+            ? '<div class="accordion-vacia">Sin prospectos</div>'
+            : enEtapa.map(tarjetaHTML).join('')}
+        </div>
+      `;
+
+      bloque.querySelector('.accordion-header').addEventListener('click', () => {
+        const body    = bloque.querySelector('.accordion-body');
+        const chevron = bloque.querySelector('.accordion-chevron');
+        const esta    = body.classList.contains('abierto');
+        body.classList.toggle('abierto', !esta);
+        chevron.classList.toggle('abierto', !esta);
+      });
+
+      acc.appendChild(bloque);
+    });
+
+    acc.querySelectorAll('.tarjeta').forEach(t => {
+      t.addEventListener('click', () => {
+        const p = prospectos.find(x => x.id === t.getAttribute('data-id'));
+        if (p) abrirModalDetalle(p);
+      });
+    });
+  }
+
   function tarjetaHTML(p) {
     const sem = p.semaforo || 'gris';
     return `
       <div class="tarjeta sem-${sem}" data-id="${p.id}">
         <div class="tarjeta-nombre">${p.nombreCondominio}</div>
-        <div class="tarjeta-contacto">${p.nombreContacto} · ${p.comuna || '—'}</div>
-        <div class="tarjeta-meta">
-          <span class="tarjeta-unidades">${p.unidades || 0} unidades</span>
-          <span class="semaforo-dot dot-${sem}" title="Semáforo: ${sem}"></span>
+        <div class="tarjeta-contacto">${p.nombreContacto}${p.comuna ? ' · ' + p.comuna : ''}</div>
+        <div class="tarjeta-footer">
+          <span class="tarjeta-unidades">${p.unidades || 0} unid.</span>
+          <span class="semaforo-dot dot-${sem}"></span>
         </div>
         ${p.proximaAccion ? `<div class="tarjeta-accion">▶ ${p.proximaAccion}</div>` : ''}
       </div>
     `;
   }
 
-  // ── Modal detalle ─────────────────────────────────────────
   function abrirModalDetalle(p) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
       <div class="modal-box">
-        <button class="modal-close" id="modal-cerrar">×</button>
+        <div class="modal-handle"></div>
+        <button class="modal-close" id="mc">×</button>
         <div class="modal-titulo">${p.nombreCondominio}</div>
         <div class="modal-subtitulo">${p.etapa} · ${p.comuna || '—'} · ${p.unidades || 0} unidades</div>
-
         <div class="modal-grid">
-          <div class="modal-campo">
-            <label>Contacto</label>
-            <span>${p.nombreContacto}</span>
-          </div>
-          <div class="modal-campo">
-            <label>Cargo</label>
-            <span>${p.cargoContacto || '—'}</span>
-          </div>
-          <div class="modal-campo">
-            <label>Teléfono</label>
-            <span>${p.telefono || '—'}</span>
-          </div>
-          <div class="modal-campo">
-            <label>Email</label>
-            <span>${p.email || '—'}</span>
-          </div>
-          <div class="modal-campo">
-            <label>Fuente</label>
-            <span>${p.fuenteLead || '—'}</span>
-          </div>
-          <div class="modal-campo">
-            <label>Responsable</label>
-            <span>${p.responsable || '—'}</span>
-          </div>
-          <div class="modal-campo">
-            <label>Primer contacto</label>
-            <span>${p.fechaPrimerContacto || '—'}</span>
-          </div>
-          <div class="modal-campo">
-            <label>Última interacción</label>
-            <span>${p.fechaUltimaInteraccion || '—'}</span>
-          </div>
+          <div class="modal-campo"><label>Contacto</label><span>${p.nombreContacto}</span></div>
+          <div class="modal-campo"><label>Cargo</label><span>${p.cargoContacto || '—'}</span></div>
+          <div class="modal-campo"><label>Teléfono</label><span>${p.telefono || '—'}</span></div>
+          <div class="modal-campo"><label>Email</label><span>${p.email || '—'}</span></div>
+          <div class="modal-campo"><label>Fuente</label><span>${p.fuenteLead || '—'}</span></div>
+          <div class="modal-campo"><label>Responsable</label><span>${p.responsable || '—'}</span></div>
+          <div class="modal-campo"><label>Primer contacto</label><span>${p.fechaPrimerContacto || '—'}</span></div>
+          <div class="modal-campo"><label>Última interacción</label><span>${p.fechaUltimaInteraccion || '—'}</span></div>
         </div>
-
-        ${p.observaciones ? `
-        <div class="modal-campo" style="margin-bottom:14px">
-          <label>Observaciones</label>
-          <span>${p.observaciones}</span>
-        </div>` : ''}
-
+        ${p.observaciones ? `<div class="modal-campo" style="margin-bottom:14px"><label>Observaciones</label><span>${p.observaciones}</span></div>` : ''}
         <div class="modal-seccion">
           <div class="modal-seccion-titulo">Próxima acción</div>
-          <div class="modal-accion-box">
+          <div class="accion-box">
             <div class="accion-texto">${p.proximaAccion || 'Sin acción definida'}</div>
-            <div class="accion-fecha">${p.fechaProximaAccion ? '📅 ' + p.fechaProximaAccion : ''}</div>
+            ${p.fechaProximaAccion ? `<div class="accion-fecha">📅 ${p.fechaProximaAccion}</div>` : ''}
           </div>
         </div>
-
         <div class="modal-seccion">
           <div class="modal-seccion-titulo">Cambiar etapa</div>
-          <select class="etapa-select" id="select-etapa">
+          <select class="etapa-select" id="sel-etapa">
             ${ETAPAS.map(e => `<option value="${e}" ${e === p.etapa ? 'selected' : ''}>${e}</option>`).join('')}
           </select>
-          <button class="btn-cambiar-etapa" id="btn-cambiar-etapa">Guardar cambio</button>
-          <div id="msg-etapa" style="font-size:12px;margin-top:8px;color:var(--verde);display:none">✓ Etapa actualizada</div>
+          <button class="btn-cambiar" id="btn-cambiar">Guardar cambio</button>
+          <div class="msg-ok" id="msg-ok">✓ Etapa actualizada</div>
         </div>
       </div>
     `;
-
     document.body.appendChild(overlay);
 
-    // Cerrar
-    overlay.querySelector('#modal-cerrar').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    const cerrar = () => overlay.remove();
+    overlay.querySelector('#mc').addEventListener('click', cerrar);
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
 
-    // Cambiar etapa
-    overlay.querySelector('#btn-cambiar-etapa').addEventListener('click', async () => {
-      const nuevaEtapa = overlay.querySelector('#select-etapa').value;
-      const btn = overlay.querySelector('#btn-cambiar-etapa');
-      const msg = overlay.querySelector('#msg-etapa');
-
+    overlay.querySelector('#btn-cambiar').addEventListener('click', async () => {
+      const nuevaEtapa = overlay.querySelector('#sel-etapa').value;
+      const btn = overlay.querySelector('#btn-cambiar');
+      const msg = overlay.querySelector('#msg-ok');
       if (nuevaEtapa === p.etapa) return;
-
       btn.disabled = true;
       btn.textContent = 'Guardando…';
 
@@ -573,13 +662,12 @@
       });
 
       if (resp.ok && resp.data && resp.data.ok) {
-        // Actualizar estado local
         p.etapa = nuevaEtapa;
         msg.style.display = 'block';
         btn.textContent = 'Guardar cambio';
         btn.disabled = false;
-        // Refrescar pipeline
-        renderPipeline();
+        renderKanban();
+        renderAccordion();
       } else {
         btn.textContent = 'Error — reintentar';
         btn.disabled = false;
@@ -587,51 +675,25 @@
     });
   }
 
-  // ── Modal nuevo prospecto ─────────────────────────────────
   function abrirModalNuevo() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
       <div class="modal-box">
-        <button class="modal-close" id="modal-cerrar-nuevo">×</button>
+        <div class="modal-handle"></div>
+        <button class="modal-close" id="mc2">×</button>
         <div class="modal-titulo">Nuevo prospecto</div>
-        <div class="modal-subtitulo">Ingresa los datos del condominio</div>
-
+        <div class="modal-subtitulo">Datos del condominio</div>
         <div class="form-grid">
-          <div class="form-group">
-            <label>Nombre del condominio *</label>
-            <input type="text" id="f-nombre" placeholder="Ej: Edificio Las Rosas">
-          </div>
-          <div class="form-group">
-            <label>Comuna</label>
-            <input type="text" id="f-comuna" placeholder="Ej: San Bernardo">
-          </div>
-          <div class="form-group">
-            <label>Dirección</label>
-            <input type="text" id="f-direccion" placeholder="Calle y número">
-          </div>
-          <div class="form-group">
-            <label>Unidades</label>
-            <input type="number" id="f-unidades" placeholder="0" min="0">
-          </div>
-          <div class="form-group">
-            <label>Nombre del contacto *</label>
-            <input type="text" id="f-contacto" placeholder="Nombre completo">
-          </div>
-          <div class="form-group">
-            <label>Cargo</label>
-            <input type="text" id="f-cargo" placeholder="Ej: Presidenta del comité">
-          </div>
-          <div class="form-group">
-            <label>Teléfono</label>
-            <input type="text" id="f-telefono" placeholder="+569...">
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="f-email" placeholder="correo@ejemplo.cl">
-          </div>
-          <div class="form-group">
-            <label>Fuente del lead</label>
+          <div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="f-nombre" placeholder="Ej: Edificio Las Rosas"></div>
+          <div class="form-group"><label>Comuna</label><input type="text" id="f-comuna" placeholder="Ej: San Bernardo"></div>
+          <div class="form-group"><label>Dirección</label><input type="text" id="f-dir" placeholder="Calle y número"></div>
+          <div class="form-group"><label>Unidades</label><input type="number" id="f-unidades" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Nombre contacto *</label><input type="text" id="f-contacto" placeholder="Nombre completo"></div>
+          <div class="form-group"><label>Cargo</label><input type="text" id="f-cargo" placeholder="Ej: Presidenta"></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="f-tel" placeholder="+569..."></div>
+          <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="correo@cl"></div>
+          <div class="form-group"><label>Fuente</label>
             <select id="f-fuente">
               <option value="web">Web</option>
               <option value="referido">Referido</option>
@@ -640,38 +702,30 @@
               <option value="otro">Otro</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Responsable</label>
-            <input type="text" id="f-responsable" placeholder="Nombre">
-          </div>
+          <div class="form-group"><label>Responsable</label><input type="text" id="f-resp" placeholder="Nombre"></div>
+          <div class="form-group form-full"><label>Observaciones</label><input type="text" id="f-obs" placeholder="Notas adicionales"></div>
         </div>
-        <div class="form-group">
-          <label>Observaciones</label>
-          <input type="text" id="f-obs" placeholder="Notas adicionales">
-        </div>
-
-        <div id="error-nuevo" style="color:var(--rojo);font-size:12px;margin-bottom:8px;display:none"></div>
-        <button class="btn-guardar" id="btn-guardar-nuevo">Guardar prospecto</button>
+        <div class="form-error" id="f-error"></div>
+        <button class="btn-guardar" id="btn-guardar">Guardar prospecto</button>
       </div>
     `;
-
     document.body.appendChild(overlay);
 
-    overlay.querySelector('#modal-cerrar-nuevo').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    const cerrar = () => overlay.remove();
+    overlay.querySelector('#mc2').addEventListener('click', cerrar);
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
 
-    overlay.querySelector('#btn-guardar-nuevo').addEventListener('click', async () => {
+    overlay.querySelector('#btn-guardar').addEventListener('click', async () => {
       const nombre   = overlay.querySelector('#f-nombre').value.trim();
       const contacto = overlay.querySelector('#f-contacto').value.trim();
-      const errDiv   = overlay.querySelector('#error-nuevo');
-      const btn      = overlay.querySelector('#btn-guardar-nuevo');
+      const errDiv   = overlay.querySelector('#f-error');
+      const btn      = overlay.querySelector('#btn-guardar');
 
       if (!nombre || !contacto) {
         errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.';
         errDiv.style.display = 'block';
         return;
       }
-
       btn.disabled = true;
       btn.textContent = 'Guardando…';
       errDiv.style.display = 'none';
@@ -679,14 +733,14 @@
       const datos = {
         nombreCondominio: nombre,
         comuna:           overlay.querySelector('#f-comuna').value.trim(),
-        direccion:        overlay.querySelector('#f-direccion').value.trim(),
+        direccion:        overlay.querySelector('#f-dir').value.trim(),
         unidades:         overlay.querySelector('#f-unidades').value || 0,
         nombreContacto:   contacto,
         cargoContacto:    overlay.querySelector('#f-cargo').value.trim(),
-        telefono:         overlay.querySelector('#f-telefono').value.trim(),
+        telefono:         overlay.querySelector('#f-tel').value.trim(),
         email:            overlay.querySelector('#f-email').value.trim(),
         fuenteLead:       overlay.querySelector('#f-fuente').value,
-        responsable:      overlay.querySelector('#f-responsable').value.trim(),
+        responsable:      overlay.querySelector('#f-resp').value.trim(),
         observaciones:    overlay.querySelector('#f-obs').value.trim(),
       };
 
@@ -694,7 +748,6 @@
 
       if (resp.ok && resp.data && resp.data.ok) {
         overlay.remove();
-        // Recargar lista completa
         await init();
       } else {
         errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar';
@@ -705,14 +758,11 @@
     });
   }
 
-  // ── Error general ─────────────────────────────────────────
   function mostrarError(msg) {
-    document.getElementById('crm-root').innerHTML = `
-      <div class="crm-error">Error al cargar el CRM: ${msg}</div>
-    `;
+    document.getElementById('crm-root').innerHTML =
+      `<div class="crm-error">Error al cargar el CRM: ${msg}</div>`;
   }
 
-  // ── Arrancar ──────────────────────────────────────────────
   init();
 
 })();
