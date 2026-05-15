@@ -380,14 +380,17 @@
       nombre: nombreCondominio
     }));
 
+    // Remover el wrapper del diagnóstico del DOM para forzar recarga completa
+    // Esto garantiza que el iframe lea el sessionStorage fresco con el prospecto
+    const wrapper = document.querySelector('[data-modulo="diagnostico"]');
+    if (wrapper) {
+      wrapper.remove();
+      if (window.moduleElements) delete window.moduleElements['diagnostico'];
+    }
+
     // Navegar al módulo diagnóstico
     if (typeof cargarModulo === 'function') {
-      // Limpiar caché para que el módulo iframe se recree con el prospecto fresco
-      if (window.moduleCache) {
-        delete window.moduleCache['diagnostico'];
-      }
       cargarModulo('diagnostico');
-      // Actualizar botones de navegación
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.nav-btn[data-modulo="diagnostico"]').forEach(b => b.classList.add('active'));
     } else {
