@@ -373,12 +373,16 @@
   }
 
   // ── Iniciar diagnóstico desde CRM ─────────────────────────────────────────
-  function iniciarDiagnostico(prospectoId, nombreCondominio) {
-    // 1. Guardar prospecto en sessionStorage ANTES de navegar
-    //    El iframe lo leerá al cargar via window.prospectoVinculado → S.ctx.nombre
+  function iniciarDiagnostico(prospectoId, nombreCondominio, prospecto) {
+    // 1. Guardar todos los campos del prospecto ANTES de navegar
+    //    El standalone los leerá en initApp() y precargará el formulario completo
     sessionStorage.setItem('prospectoVinculado', JSON.stringify({
-      id: prospectoId,
-      nombre: nombreCondominio
+      id:             prospectoId,
+      nombre:         nombreCondominio,
+      unidades:       prospecto?.unidades       || '',
+      contactoNombre: prospecto?.nombreContacto || '',
+      contactoCorreo: prospecto?.email          || '',
+      cargoContacto:  prospecto?.cargoContacto  || ''
     }));
 
     // 2. Navegar al módulo — SIN remover el wrapper
