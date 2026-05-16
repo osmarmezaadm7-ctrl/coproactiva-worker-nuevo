@@ -117,9 +117,29 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('message', function(event) {
         const data = event.data;
         if (!data || !data.type) return;
+
+        // Mensaje del sistema anterior (compatibilidad)
         if (data.type === 'diag_estado') {
             actualizarMenuDiagnostico(data);
         }
+
+        // Mensaje nuevo según spec arquitecto — actualizar puntaje, progreso y paso
+        if (data.type === 'actualizar_diagnostico') {
+            const scoreEl  = document.getElementById('sd-score');
+            const barFill  = document.getElementById('sd-bar-fill');
+            const stepsEls = document.querySelectorAll('#diagSteps li, #sd-steps .sd-step');
+
+            if (scoreEl)  scoreEl.textContent = (data.score || 0) + '%';
+            if (barFill)  barFill.style.width  = (data.progress || data.score || 0) + '%';
+
+            // Resaltar paso actual
+            stepsEls.forEach(li => {
+                li.classList.remove('active');
+                const paso = li.dataset.paso || li.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (paso && paso === data.pasoActual) li.classList.add('active');
+            });
+        }
+
         if (data.type === 'diagnostico_guardado') {
             console.log('Diagnóstico guardado:', data.nombre);
         }
@@ -292,7 +312,9 @@ function actualizarMenuDiagnostico(data) {
 function diagGotoStep(viewId) {
     const iframe = document.getElementById('diagnosticoIframe');
     if (iframe && iframe.contentWindow) {
+        // Compatibilidad con ambos formatos de mensaje
         iframe.contentWindow.postMessage({ type: 'diag_goto', view: viewId }, '*');
+        iframe.contentWindow.postMessage({ type: 'cambiar_paso', paso: viewId }, '*');
     }
 }
 
