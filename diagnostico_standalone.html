@@ -745,9 +745,8 @@ async function deleteSaved(nombre) {
     if(d && d.id) {
       await fetch(`${WORKER_BASE}/diagnosticos`, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
-        headers: {'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'saveDiagnostico', accion:'eliminar', id:d.id })
+        headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'saveDiagnostico', accion:'eliminar', id:d.id })
       });
     }
     _cache = null;
