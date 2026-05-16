@@ -1,5 +1,5 @@
 <!-- modules/crm.html — CoproActiva CRM -->
-<!-- Versión: 2.2 · Mayo 2026 — fix B1 condición de carrera iniciarDiagnostico -->
+<!-- Versión: 2.3 · Mayo 2026 — fix precarga campos diagnóstico desde CRM -->
 
 <style>
   :root {
@@ -343,7 +343,7 @@
     overlay.querySelector('#mc').addEventListener('click', cerrar);
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
 
-    // Botón iniciar diagnóstico
+    // Botón iniciar diagnóstico — se pasa p completo para precargar todos los campos
     overlay.querySelector('#btn-diag').addEventListener('click', () => {
       cerrar();
       iniciarDiagnostico(p.id, p.nombreCondominio, p);
@@ -386,8 +386,6 @@
     }));
 
     // 2. Navegar al módulo — SIN remover el wrapper
-    //    Removerlo antes causaba condición de carrera: el iframe se recreaba
-    //    antes de que sessionStorage estuviera disponible
     if (typeof cargarModulo === 'function') {
       cargarModulo('diagnostico');
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
