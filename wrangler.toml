@@ -5,5 +5,8 @@ compatibility_date = "2025-01-01"
 [vars]
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9lutdKZCJVq8NlOZm8Z5vdghCiA2c89fpukFXN4rX8a_9gIhQerYQRs7V-0OVr9Tw/exec"
 
+# Secrets — configurar manualmente en Cloudflare dashboard (nunca en el repo)
+# ANTHROPIC_API_KEY = se agrega como secret encriptado en Cloudflare
+
 [env.production]
 vars = { ACCESS_KEY = "copro2025" }
