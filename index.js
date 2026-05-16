@@ -95,7 +95,7 @@ export default {
       // Code.gs devuelve: { ok: true } directamente desde Diagnosticos.guardar()
       if (url.pathname === '/diagnosticos' && method === 'POST') {
         const body = await request.json();
-        const resp = await postAppsScript(APPS_SCRIPT_URL, { action: 'saveDiagnostico', ...body });
+        const resp = await postAppsScript(APPS_SCRIPT_URL, { ...body, action: 'saveDiagnostico' });
         return jsonResponse(resp);
       }
 
