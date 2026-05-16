@@ -820,6 +820,9 @@ function render(){
   else if(S.view==='contexto')m.innerHTML=renderCtx();
   else if(S.view==='revision')m.innerHTML=renderRevision();
   else{const a=AREAS.find(x=>x.id===S.view);if(a)m.innerHTML=renderArea(a);}
+
+  // Notificar al sidebar principal (cuando corre en iframe)
+  actualizarMenuPadre();
 }
 
 // ─── CONTEXTO ─────────────────────────────────────────────────────────────────
@@ -1794,6 +1797,21 @@ function actualizarMenuPadre() {
     pasoActual: S.view
   }, '*');
 }
+
+// ─── ESCUCHAR MENSAJES DEL PADRE (navegación desde sidebar principal) ───────────
+window.addEventListener('message', function(event) {
+  const data = event.data;
+  if (!data || !data.type) return;
+  // Navegación desde sidebar — compatibilidad con ambos formatos
+  if (data.type === 'diag_goto' && data.view) {
+    goTo(data.view);
+  }
+  if (data.type === 'cambiar_paso' && data.paso) {
+    // Mapear 'datos' → 'contexto' (nombre usado en spec del arquitecto vs VIEWS)
+    const paso = data.paso === 'datos' ? 'contexto' : data.paso;
+    goTo(paso);
+  }
+});
 
 // ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ─────────────────────────────────
 // Si viene desde el iframe con token en la URL, autenticar sin pedir clave
