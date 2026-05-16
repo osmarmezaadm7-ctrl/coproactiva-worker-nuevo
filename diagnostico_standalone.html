@@ -1749,9 +1749,50 @@ function initApp(){
   render();
 }
 
-// ─── DETECCIÓN DE IFRAME ──────────────────────────────────────────────────────
+// ─── DETECCIÓN DE IFRAME Y ELIMINACIÓN DE SIDEBAR PROPIO ────────────────────
 if (window.parent !== window) {
   document.body.classList.add('in-iframe');
+
+  // Eliminar sidebar del diagnóstico cuando corre dentro del iframe
+  // El sidebar principal de la app maneja toda la navegación
+  document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.remove();
+    const mainScroll = document.querySelector('.main-scroll');
+    if (mainScroll) {
+      mainScroll.style.marginLeft = '0';
+      mainScroll.style.padding = '20px';
+    }
+  });
+
+  // Si el DOM ya cargó (script ejecutado después de DOMContentLoaded)
+  if (document.readyState !== 'loading') {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.remove();
+    const mainScroll = document.querySelector('.main-scroll');
+    if (mainScroll) {
+      mainScroll.style.marginLeft = '0';
+      mainScroll.style.padding = '20px';
+    }
+  }
+}
+
+// ─── ENVIAR ACTUALIZACIONES AL SIDEBAR PRINCIPAL ──────────────────────────────
+function actualizarMenuPadre() {
+  if (window.parent === window) return;
+  const score = globalScore();
+  const steps = [{id:'contexto',label:'Datos de la comunidad'},
+    ...AREAS.map(a=>({id:a.id,label:a.label})),
+    {id:'revision',label:'Revisión y PDF'}];
+  const idx = steps.findIndex(s => s.id === S.view);
+  const progress = idx >= 0 ? Math.round((idx / (steps.length - 1)) * 100) : 0;
+
+  window.parent.postMessage({
+    type: 'actualizar_diagnostico',
+    score: score,
+    progress: progress,
+    pasoActual: S.view
+  }, '*');
 }
 
 // ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ─────────────────────────────────
