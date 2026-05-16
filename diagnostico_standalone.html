@@ -498,7 +498,7 @@ function defaultState(){return{
 };}
 let S={...defaultState(),view:'home'};
 
-// ─── SCORING REFINADO ────────────────────────────────────────────────────────
+// ─── SCORING ─────────────────────────────────────────────────────────────────
 function itemApplies(it){
   if(!it.cond)return true;
   if(it.cond==='locales')return S.ctx.locales==='si';
@@ -514,7 +514,7 @@ function scoreArea(a){
   if(!areaApplies(a))return null;
   let earned=0,possible=0;
   a.items.forEach((it,i)=>{
-    if(!itemApplies(it))return; // NA excluido del denominador
+    if(!itemApplies(it))return;
     const w=WP[it.w]; possible+=w;
     if(S.checks[a.id][i])earned+=w;
   });
@@ -539,33 +539,18 @@ function critFailing(){
   });
   return out;
 }
-
-// ── Análisis completo — 4 niveles + gatillos ─────────────────────────────────
 function getDiagnostico(){
   const score=globalScore();
   const crits=critFailing();
   const hasCritFail=crits.length>0;
-
-  // Áreas con puntaje < 60% (foco de riesgo prioritario)
-  const areasLow=AREAS
-    .map(a=>({...a,score:scoreArea(a)}))
-    .filter(a=>a.score&&a.score.pct<60);
-
-  // Áreas en rojo (< 40%)
+  const areasLow=AREAS.map(a=>({...a,score:scoreArea(a)})).filter(a=>a.score&&a.score.pct<60);
   const areasRed=areasLow.filter(a=>a.score.pct<40);
-
-  // Intervención prioritaria si hay crítico incumplido o área < 60%
   const requiereIntervencion=hasCritFail||areasLow.length>0;
-
-  // Clasificación de 4 niveles
-  // Regla: ítems críticos incumplidos o áreas <60% impiden clasificación "Estable limpio"
   let nivel,desc;
   if(score>=70 && areasLow.length===0 && !hasCritFail){
-    // Estable limpio: global ≥70%, todas las áreas ≥60% Y sin críticos incumplidos
     nivel='Estable';
     desc='La comunidad presenta una gestión ordenada en todas las áreas. CoproActiva puede optimizarla de manera continua.';
   } else if(score>=70 && (areasLow.length>0 || hasCritFail)){
-    // Estable con observaciones: global ≥70% pero hay áreas <60% o ítems críticos sin cumplir
     nivel='Estable con observaciones';
     const motivos=[];
     if(areasLow.length>0) motivos.push(`focos de riesgo en: ${areasLow.map(a=>a.label).join(', ')}`);
@@ -578,11 +563,8 @@ function getDiagnostico(){
     nivel='Crítico';
     desc='Se detectan deficiencias graves en una o más áreas. Se requiere intervención urgente para evitar consecuencias legales y financieras significativas.';
   }
-
   return{score,nivel,desc,hasCritFail,crits,areasLow,areasRed,requiereIntervencion};
 }
-
-// ── Línea sugerida ────────────────────────────────────────────────────────────
 function lineaSugerida(){
   const d=getDiagnostico();
   if(d.score<30)return'L3';
@@ -590,17 +572,12 @@ function lineaSugerida(){
   return'L2';
 }
 function lineaActual(){return S.lineaOverride||lineaSugerida();}
-
-// ── Semáforo por área ─────────────────────────────────────────────────────────
 function semC(pct){
   if(pct==null)return{fg:'var(--az-md)',bg:'var(--surf)',ac:'var(--border)',lbl:'No aplica'};
-  if(pct>=70) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Bien'};
   if(pct>=60) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Bien'};
   if(pct>=40) return{fg:'var(--sa-fg)',bg:'var(--sa-bg)',ac:'var(--sa-ac)',lbl:'En riesgo'};
   return{fg:'var(--sr-fg)',bg:'var(--sr-bg)',ac:'var(--sr-ac)',lbl:'Crítico'};
 }
-
-// ── Criticidad global ─────────────────────────────────────────────────────────
 function critData(score){
   const d=getDiagnostico();
   const MAP={
@@ -613,45 +590,40 @@ function critData(score){
   return{...col,lbl:d.nivel,desc:d.desc,requiereIntervencion:d.requiereIntervencion,diag:d};
 }
 
-// ─── STORAGE — Google Sheets via Worker ───────────────────────────────────────
+// ─── STORAGE ──────────────────────────────────────────────────────────────────
 const WORKER_BASE = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
 const _DIAG_TOKEN = sessionStorage.getItem('token') || 'copro2025';
 
-// ─── ESTRATEGIA: carga instantánea desde localStorage, sincroniza Sheets en background
 let _cache = null;
 let _cacheTime = 0;
 let _syncInProgress = false;
-const CACHE_TTL = 60000; // 1 minuto
+const CACHE_TTL = 60000;
 
-// Lee localStorage inmediatamente — sin espera
 function getSavedLocal() {
   try { return JSON.parse(localStorage.getItem('ca_diag')||'[]'); } catch(e){ return []; }
 }
 
-// Sincroniza con Sheets en background y actualiza si hay diferencias
 async function syncWithSheets() {
   if(_syncInProgress) return;
   _syncInProgress = true;
   try {
-    const res = await fetch(`${WORKER_BASE}/diagnosticos`, {headers:{'Authorization':'Bearer '+_DIAG_TOKEN}});
+    const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
+      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+    });
     const data = await res.json();
     if(!data.diagnosticos) return;
     const remote = data.diagnosticos.map(d => ({
       ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
     }));
-    // Merge: remote tiene prioridad, completar con local si hay algo que no está en remote
     const remoteNames = new Set(remote.map(d=>d.nombre));
     const localOnly = getSavedLocal().filter(d=>!remoteNames.has(d.nombre));
     const merged = [...remote, ...localOnly];
-    // Actualizar localStorage con datos de Sheets
     localStorage.setItem('ca_diag', JSON.stringify(merged.slice(0,50)));
     _cache = merged;
     _cacheTime = Date.now();
-    // Si estamos en home, actualizar la vista silenciosamente
     if(S.view==='home') {
       _homeData = merged;
       document.getElementById('mainContent').innerHTML = renderHome();
-      // Quitar indicador de sincronización
       const syncEl = document.getElementById('syncIndicator');
       if(syncEl) { syncEl.textContent = '✓ Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
     }
@@ -667,7 +639,6 @@ async function syncWithSheets() {
 async function getSaved() {
   const now = Date.now();
   if (_cache && (now - _cacheTime) < CACHE_TTL) return _cache;
-  // Devolver local inmediatamente
   const local = getSavedLocal();
   _cache = local;
   return local;
@@ -675,13 +646,9 @@ async function getSaved() {
 
 async function saveDiag() {
   const nombre = S.ctx.nombre?.trim() || 'Sin nombre';
-  // ID estable basado en el nombre — siempre el mismo para el mismo condominio
-  // Así al guardar de nuevo reemplaza en vez de duplicar
   const id = 'diag_' + nombre.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,40);
-
   const record = {
-    id,
-    nombre,
+    id, nombre,
     fecha: new Date().toLocaleDateString('es-CL'),
     score: globalScore(),
     linea: lineaActual(),
@@ -693,9 +660,7 @@ async function saveDiag() {
     lineaOverride: S.lineaOverride,
     prospectoId: S.prospectoId || null,
   };
-
-  showToast('Guardando...', '💾', 60000); // toast permanente hasta confirmar
-
+  showToast('Guardando...', '💾', 60000);
   try {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
       method: 'POST',
@@ -704,15 +669,11 @@ async function saveDiag() {
     });
     const data = await res.json();
     if(!data.ok) throw new Error(data.error||'Error desconocido');
-
     _cache = null;
-    // Backup localStorage
     const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
     local.unshift(record);
     localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
-
     showToast('Guardado correctamente', '✅', 2500);
-    // Notificar al padre (app shell) si está en iframe
     if (window.parent !== window) {
       window.parent.postMessage({
         type: 'diagnostico_guardado',
@@ -720,10 +681,9 @@ async function saveDiag() {
         prospectoId: record.prospectoId || null
       }, '*');
     }
-    // Forzar resync con Sheets en background
     setTimeout(syncWithSheets, 500);
   } catch(e) {
-    console.error('Error guardando en Sheets, usando localStorage:', e);
+    console.error('Error guardando en Sheets:', e);
     const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
     local.unshift(record);
     localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
@@ -759,7 +719,6 @@ async function deleteSaved(nombre) {
       });
     }
     _cache = null;
-    // También borrar del localStorage
     const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
     localStorage.setItem('ca_diag', JSON.stringify(local));
   } catch(e) {
@@ -769,8 +728,7 @@ async function deleteSaved(nombre) {
   renderModal();
 }
 
-
-// ─── COMUNICACIÓN CON APP SHELL (postMessage) ────────────────────────────────
+// ─── COMUNICACIÓN CON APP SHELL ───────────────────────────────────────────────
 function notificarPadre() {
   if (window.parent === window) return;
   const score = globalScore();
@@ -780,21 +738,15 @@ function notificarPadre() {
     {id:'revision',label:'Revisión y PDF'}];
   window.parent.postMessage({
     type: 'diag_estado',
-    score,
-    nivel: crit.lbl,
-    color: crit.ac,
-    view: S.view,
+    score, nivel: crit.lbl, color: crit.ac, view: S.view,
     steps: steps.map((s,i) => ({
-      id: s.id,
-      label: s.label,
-      emoji: s.emoji || '',
+      id: s.id, label: s.label, emoji: s.emoji || '',
       active: s.id === S.view,
       done: i < steps.findIndex(x => x.id === S.view)
     }))
   }, '*');
 }
 
-// Escuchar mensajes del padre (cambio de paso desde sidebar externo)
 window.addEventListener('message', function(event) {
   const data = event.data;
   if (!data || !data.type) return;
@@ -808,8 +760,6 @@ function renderNav(){
   const steps=[{id:'contexto',label:'Datos de la comunidad'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión y PDF'}];
   const ai=steps.findIndex(s=>s.id===S.view);
   const score=globalScore();const crit=critData(score);
-
-  // Sidebar
   document.getElementById('sbNav').innerHTML=steps.map((s,i)=>`
     <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
       <div class="sb-n">${i<ai?'✓':i+1}</div>
@@ -820,16 +770,10 @@ function renderNav(){
   document.getElementById('sbSub').textContent=crit.lbl;
   document.getElementById('sbFill').style.width=score+'%';
   document.getElementById('sbFill').style.background=crit.ac;
-
-  // Topbar
   document.getElementById('tbScore').textContent=score+'%';
   document.getElementById('tbScore').style.background=score>0?crit.ac+'33':'rgba(255,255,255,0.1)';
-
-  // Progress
-  const pct=Math.round((ai/( steps.length-1))*100);
+  const pct=Math.round((ai/(steps.length-1))*100);
   document.getElementById('progFill').style.width=pct+'%';
-
-  // Step indicator
   const current=steps[ai];
   document.getElementById('stepNum').textContent=ai+1;
   document.getElementById('stepName').textContent=current?current.label:'';
@@ -844,17 +788,14 @@ function goPrev(){const i=VIEWS.indexOf(S.view);if(i>0)goTo(VIEWS[i-1]);}
 function render(){
   const isHome=S.view==='home';
   notificarPadre();
-  // Show/hide exit button and score in topbar (mobile)
   const tbScore=document.getElementById('tbScore');
   const tbExit=document.getElementById('tbExitBtn');
-  const topbarEl=document.getElementById('topbar');
   const stepInd=document.querySelector('.step-indicator');
   const progBar=document.querySelector('.progress-bar');
   if(tbScore){tbScore.style.display=isHome?'none':'block';}
   if(tbExit){tbExit.style.display=isHome?'none':'block';}
   if(stepInd){stepInd.style.display=isHome?'none':'';}
   if(progBar){progBar.style.display=isHome?'none':'';}
-
   if(!isHome) renderNav();
   const m=document.getElementById('mainContent');
   if(S.view==='home') {
@@ -869,14 +810,11 @@ function render(){
 // ─── CONTEXTO ─────────────────────────────────────────────────────────────────
 function renderCtx(){
   const c=S.ctx;
-  const saved=_homeData||[];
   return`
   <div class="ph">
     <div class="ph-title">Datos de la comunidad</div>
     <div class="ph-sub">Completa la información básica para comenzar el diagnóstico</div>
   </div>
-
-  <!-- Guardar / Cargar -->
   <div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--az-md)"></div>Formularios guardados</div>
     <div class="saved-bar">
@@ -886,8 +824,6 @@ function renderCtx(){
     </div>
     <div class="hint">Los diagnósticos se guardan en este navegador y dispositivo.</div>
   </div>
-
-  <!-- Identificación -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Identificación</div>
     <div class="fg">
@@ -906,8 +842,6 @@ function renderCtx(){
       </div>
     </div>
   </div>
-
-  <!-- Tipo de condominio -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Tipo de condominio</div>
     <div class="type-grid">
@@ -922,8 +856,6 @@ function renderCtx(){
       </div>`).join('')}
     </div>
   </div>
-
-  <!-- Características -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Características del inmueble</div>
     <div class="fg">
@@ -966,8 +898,6 @@ function renderCtx(){
       </div>
     </div>
   </div>
-
-  <!-- Contacto comité -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Contacto del comité</div>
     <div class="fg">
@@ -992,7 +922,6 @@ function renderCtx(){
       </div>
     </div>
   </div>
-
   <div class="nav-row nav-row-end">
     <button class="pri" onclick="goNext()">Comenzar diagnóstico →</button>
   </div>`;
@@ -1007,7 +936,6 @@ function renderArea(area){
   const isLast=ai===AREAS.length-1;
   const done=S.checks[area.id].filter(Boolean).length;
   const total=area.items.filter(it=>itemApplies(it)).length;
-
   return`
   <div class="ph">
     <div class="ph-title">${area.emoji} ${area.label}</div>
@@ -1051,14 +979,11 @@ function renderRevision(){
   const score=globalScore();const lid=lineaActual();const sug=lineaSugerida();
   const lm=LINEAS[lid];const crit=critData(score);const crits=critFailing();
   const vMin=S.valorMin||lm.valMin;const vMax=S.valorMax||lm.valMax;
-
   return`
   <div class="ph">
     <div class="ph-title">Revisión del diagnóstico</div>
     <div class="ph-sub">Revisa el resultado, ajusta la línea de servicio y genera el informe PDF</div>
   </div>
-
-  <!-- Criticidad global -->
   <div class="res-crit" style="background:${crit.bg};border-color:${crit.ac};color:${crit.fg}">
     <div class="res-circle">
       <div class="res-num" style="color:${crit.fg}">${score}</div>
@@ -1070,8 +995,6 @@ function renderRevision(){
       ${crit.requiereIntervencion?`<div style="margin-top:7px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;display:inline-block;background:rgba(0,0,0,0.1)">⚠ Requiere intervención prioritaria</div>`:''}
     </div>
   </div>
-
-  <!-- Grilla de áreas -->
   <div class="ag">${AREAS.map(a=>{
     const s=scoreArea(a);const sem=semC(s?s.pct:null);
     return`<div class="ac" style="cursor:pointer" onclick="openAreaModal('${a.id}')" title="Ver detalle de ${a.label}">
@@ -1081,8 +1004,6 @@ function renderRevision(){
       <div class="ac-lbl" style="color:${sem.fg}">${sem.lbl}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center">Toca para ver detalle</div>
     </div>`;}).join('')}</div>
-
-  <!-- Ítems críticos -->
   ${crits.length?`<div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--sr-ac)"></div>⚠️ Ítems críticos sin resolver (${crits.length})</div>
     <div class="ci-list">${crits.map(cr=>`<div class="ci">
@@ -1090,8 +1011,6 @@ function renderRevision(){
       <span class="ci-txt">${cr.text}</span>
     </div>`).join('')}</div>
   </div>`:''}
-
-  <!-- Factores IA -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Factores destacados — generados por IA</div>
     ${S.loadingFactores?`<div class="load-row"><div class="spin"></div>Analizando el diagnóstico...</div>`:''}
@@ -1112,8 +1031,6 @@ function renderRevision(){
       ${S.factores.length?`<button class="btn-sm" onclick="limpiarFactores()" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)">🗑 Limpiar todos</button>`:''}
     </div>`:''}
   </div>
-
-  <!-- Línea de servicio -->
   <div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Línea de servicio propuesta</div>
     <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">
@@ -1132,8 +1049,6 @@ function renderRevision(){
         </div>`;}).join('')}
     </div>
   </div>
-
-  <!-- Valor -->
   <div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Valor mensual estimado</div>
     <p style="font-size:13px;color:var(--az-md);margin-bottom:10px">${lm.label}</p>
@@ -1146,7 +1061,6 @@ function renderRevision(){
     </div>
     <div class="hint" style="margin-top:6px">Rango precargado según la línea seleccionada. Editable antes de generar el informe.</div>
   </div>
-
   <div class="nav-row">
     <button class="ghost" onclick="openExitModal()">← Salir</button>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1156,7 +1070,7 @@ function renderRevision(){
   </div>`;
 }
 
-// ─── ACCIONES ──────────────────────────────────────────────────────────────────
+// ─── ACCIONES ─────────────────────────────────────────────────────────────────
 async function guardarFormulario(){
   if(!S.ctx.nombre?.trim()){
     alert('Ingresa el nombre del condominio antes de guardar.');
@@ -1183,7 +1097,7 @@ function closeModal(){document.getElementById('modalBg').classList.remove('show'
 async function renderModal(){
   const saved=await getSaved();
   const ml=document.getElementById('modalList');
-  if(!saved.length){ml.innerHTML=`<div class="modal-empty">No hay diagnósticos guardados aún.<br>Completa y guarda un diagnóstico para verlo aquí.</div>`;return;}
+  if(!saved.length){ml.innerHTML=`<div class="modal-empty">No hay diagnósticos guardados aún.</div>`;return;}
   ml.innerHTML=saved.map(d=>{
     const sem=semC(d.score);
     return`<div class="modal-item" onclick="loadDiag('${d.nombre}')">
@@ -1199,175 +1113,88 @@ async function renderModal(){
 }
 
 // ─── FACTORES IA ───────────────────────────────────────────────────────────────
-// URL del Worker — se actualiza después de desplegar en Cloudflare
 async function generarFactores(){
   S.loadingFactores=true;render();
   const diag2=getDiagnostico();
-  const score=diag2.score;const crits=diag2.crits;const c=S.ctx;const lid=lineaActual();
+  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
   const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
   const areasLowCtx=diag2.areasLow.length>0
-    ?`Áreas con cumplimiento bajo 60% (foco de riesgo): ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
+    ?`Áreas con cumplimiento bajo 60%: ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
     :'Todas las áreas con cumplimiento ≥ 60%.';
-  // Construir detalle completo por área con lenguaje explícito de ausencia/incumplimiento
   const obsCtx = AREAS.map(a=>{
     const s=scoreArea(a);
     if(!s) return null;
-
-    // Ítems NO cumplidos — redactados como ausencias concretas
-    const fallidos = a.items
-      .filter((it,i) => itemApplies(it) && !S.checks[a.id][i])
-      .map(it => {
-        const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
-        // Transformar el texto del ítem en una declaración de ausencia explícita
-        return `${peso} NO CUENTA CON: "${it.t}"`;
-      });
-
-    // Ítems cumplidos
-    const cumplidos = a.items
-      .filter((it,i) => itemApplies(it) && S.checks[a.id][i])
-      .map(it => `SÍ CUENTA CON: "${it.t}"`);
-
+    const fallidos = a.items.filter((it,i) => itemApplies(it) && !S.checks[a.id][i]).map(it => {
+      const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
+      return `${peso} NO CUENTA CON: "${it.t}"`;
+    });
+    const cumplidos = a.items.filter((it,i) => itemApplies(it) && S.checks[a.id][i]).map(it => `SÍ CUENTA CON: "${it.t}"`);
     let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
-    if(fallidos.length){
-      ctx += `\n  INCUMPLIMIENTOS DETECTADOS (${fallidos.length}):`;
-      fallidos.forEach(f => { ctx += `\n    • ${f}`; });
-    } else {
-      ctx += `\n  Sin incumplimientos en esta área.`;
-    }
-    if(cumplidos.length){
-      ctx += `\n  ÍTEMS EN REGLA (${cumplidos.length}):`;
-      cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; });
-    }
+    if(fallidos.length){ ctx += `\n  INCUMPLIMIENTOS (${fallidos.length}):`; fallidos.forEach(f => { ctx += `\n    • ${f}`; }); }
+    else { ctx += `\n  Sin incumplimientos.`; }
+    if(cumplidos.length){ ctx += `\n  EN REGLA (${cumplidos.length}):`; cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; }); }
     return ctx;
   }).filter(Boolean).join('\n\n');
 
-  const sistemaCtx = c.sistema
-    ? `La comunidad usa ${c.sistema} como sistema de gestión de gastos comunes. Esto significa que ya tienen una plataforma, pero hay que evaluar si está bien configurada y al día.`
-    : 'La comunidad no usa ningún sistema digital de gestión. Todo se maneja de forma manual o en planillas.';
-
-  const trabajadoresCtx = parseInt(c.trabajadores||'0') === 0
-    ? 'No tiene personal contratado directamente.'
-    : `Tiene ${c.trabajadores} trabajador(es) contratado(s) por la comunidad (conserjes, personal de aseo u otros).`;
-
-  const antiguedadCtx = c.antiguedad
-    ? `El edificio o condominio tiene ${c.antiguedad} años de antigüedad.`
-    : '';
+  const sistemaCtx = c.sistema ? `La comunidad usa ${c.sistema}.` : 'Sin sistema digital de gestión.';
+  const trabajadoresCtx = parseInt(c.trabajadores||'0')===0 ? 'Sin personal contratado.' : `${c.trabajadores} trabajador(es) contratado(s).`;
+  const antiguedadCtx = c.antiguedad ? `${c.antiguedad} años de antigüedad.` : '';
 
   const prompt=`Eres un experto en administración de condominios en Chile con conocimiento de la Ley 21.442.
 
-CONTEXTO DE LA EMPRESA:
-CoproActiva es una empresa de administración de condominios que está elaborando una propuesta comercial para una comunidad que aún no es su cliente. Los "factores destacados" son observaciones técnicas que justifican por qué esta comunidad necesita apoyo profesional. Van dirigidos al comité de administración, no a CoproActiva.
+CoproActiva elabora una propuesta comercial para una comunidad que aún no es su cliente. Los factores son observaciones técnicas dirigidas al comité.
 
-FUENTE DE INFORMACIÓN Y ENFOQUE:
-Tu única fuente de análisis es el checklist de ítems no cumplidos. NO uses las observaciones del comité como base para los factores.
-Fundamenta cada factor en:
-1. El ítem específico del checklist que no se cumplió
-2. La obligación que establece la normativa de copropiedad vigente en Chile (Ley 21.442) — SIN citar números de artículos
-3. El riesgo concreto para la comunidad si no se regulariza
+REGLA ABSOLUTA: PROHIBIDO citar números de artículo. Usa solo: "según la Ley de Copropiedad Inmobiliaria", "conforme a la Ley 21.442", "de acuerdo a la normativa de copropiedad vigente".
 
-REGLA ABSOLUTA — ARTÍCULOS:
-ESTÁ TERMINANTEMENTE PROHIBIDO citar cualquier número de artículo. Esto incluye:
-- "artículo X", "Art. X", "Art. X°", "artículo primero", cualquier número
-- Si escribes un número de artículo, la respuesta es inválida
-- Esta es la regla más importante del prompt y tiene prioridad sobre todo lo demás
-
-REFERENCIAS LEGALES PERMITIDAS (usar solo estas frases):
-- "según la Ley de Copropiedad Inmobiliaria"
-- "conforme a la Ley 21.442"
-- "de acuerdo a la normativa de copropiedad vigente"
-- "según la legislación de copropiedad"
-- "la normativa exige que..."
-
-TONO:
-- Usa: "La ausencia de...", "La falta de...", "No contar con..."
-- NO uses: "según el comité", "en la reunión se mencionó", "el comité informó"
-- El factor debe sonar como análisis técnico-legal profesional dirigido al comité
-
-DATOS DEL CONDOMINIO EVALUADO:
+DATOS:
 - Nombre: ${c.nombre||'Sin nombre'}
-- Tipo: ${c.tipo==='A'?'Tipo A (Edificio en altura)':c.tipo==='B'?'Tipo B (Condominio de casas)':'Mixto (edificios y casas)'}
-- Unidades: ${c.unidades||'No informado'}
-- Antigüedad del edificio: ${antiguedadCtx||'No informada'}
-- Personal contratado: ${trabajadoresCtx}
-- Sistema de gestión: ${sistemaCtx}
-- Puntaje global del diagnóstico: ${score}% (${score>=70?'Estable':score>=40?'En riesgo':'Crítico'})
+- Tipo: ${c.tipo==='A'?'Edificio en altura':c.tipo==='B'?'Condominio de casas':'Mixto'}
+- Unidades: ${c.unidades||'No informado'} · Antigüedad: ${antiguedadCtx||'No informada'}
+- Personal: ${trabajadoresCtx} · Sistema: ${sistemaCtx}
+- Puntaje global: ${score}% (${diag2.nivel})
 - Servicio recomendado: ${LINEAS[lid]?.label||lid}
-- ESTADO DETALLADO POR ÁREA (cada punto indica explícitamente qué tiene y qué le falta):
-${obsCtx}
-- Detalle de ítems críticos sin cumplir:
-${diag2.crits.length>0 ? diag2.crits.map(x=>`  • [${x.area}] La comunidad NO CUENTA CON: "${x.text}"`).join('\n') : '  Ninguno'}
-- Nivel de criticidad del diagnóstico: ${diag2.nivel}
 - ${intervencionCtx}
 - ${areasLowCtx}
-- Áreas en rojo (cumplimiento < 40%): ${diag2.areasRed.map(a=>a.label).join(', ')||'Ninguna'}
 - Ítems críticos sin cumplir: ${diag2.crits.length}
+${diag2.crits.length>0 ? diag2.crits.map(x=>`  • [${x.area}] NO CUENTA CON: "${x.text}"`).join('\n') : '  Ninguno'}
+
+ESTADO POR ÁREA:
+${obsCtx}
 
 INSTRUCCIONES:
-Genera exactamente 3 factores destacados. Cada factor debe:
-1. Basarse en UN ítem específico marcado como no cumplido en el checklist — especialmente los [CRÍTICO]
-2. Referenciar la obligación legal en términos generales (Ley 21.442) — sin citar números de artículos
-3. Explicar el riesgo o consecuencia legal, financiera o de seguridad que implica ese incumplimiento
-4. Estar redactado para el comité: claro, directo, sin jerga legal excesiva
-5. NO mencionar a CoproActiva
-6. NO confundir antigüedad del edificio con trayectoria de empresas
-7. NO basarte en las observaciones del comité — solo en el checklist
-8. Si hay ítems laborales sin cumplir, menciona la responsabilidad solidaria del comité ante la Inspección del Trabajo
-9. Si no hay ascensores ni gas, no inventes factores técnicos de esas instalaciones
-10. RECORDATORIO FINAL: Está PROHIBIDO citar cualquier número de artículo. Si lo haces, la respuesta será rechazada. Usa solo las frases de referencia legal permitidas listadas arriba.
+- Genera exactamente 3 factores basados en ítems NO cumplidos del checklist
+- Cada factor: 1 problema específico + referencia legal general + riesgo concreto
+- Tono: análisis técnico-legal, dirigido al comité, sin mencionar a CoproActiva
+- PROHIBIDO citar números de artículo
 
-RESPONDE SOLO con JSON válido, sin texto adicional, sin bloques de código markdown:
+RESPONDE SOLO con JSON válido sin texto adicional:
 {"factores":[{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."}]}
+Título: máximo 7 palabras. Cuerpo: exactamente 2 oraciones.`;
 
-Título: máximo 7 palabras, descriptivo del problema específico.
-Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica el riesgo o consecuencia.`;
-  // Agregar variación para que cada regeneración sea única (evita caché)
-  const variation = S.factores.length > 0
-    ? `\n\nNota: Esta es una NUEVA generación (intento #${Date.now()}). Genera factores DISTINTOS a los anteriores, enfocándote en diferentes ítems no cumplidos.`
-    : '';
-  const finalPrompt = prompt + variation;
-
-  // Verificar tamaño del prompt — si es muy largo, resumir
-  console.log('Prompt length:', finalPrompt.length, 'chars');
+  const variation = S.factores.length > 0 ? `\n\nNueva generación #${Date.now()}. Genera factores distintos a anteriores.` : '';
 
   try{
     const res=await fetch(`${WORKER_BASE}/factores`,{
       method:'POST',
       headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
-      body:JSON.stringify({prompt: finalPrompt})
+      body:JSON.stringify({prompt: prompt + variation})
     });
-
-    if(!res.ok){
-      const errText = await res.text();
-      console.error('Worker response error:', res.status, errText);
-      throw new Error(`Error del servidor: ${res.status}`);
-    }
-
+    if(!res.ok) throw new Error(`Error del servidor: ${res.status}`);
     const data=await res.json();
-    console.log('Worker response:', data);
-
     if(data.error) throw new Error(data.error);
-    if(!data.text) throw new Error('Respuesta vacía del servidor');
-
+    if(!data.text) throw new Error('Respuesta vacía');
     const cleaned = data.text.replace(/```json|```/g,'').trim();
-    console.log('Cleaned response:', cleaned.substring(0,200));
-
     const parsed = JSON.parse(cleaned);
-    if(!parsed.factores || !Array.isArray(parsed.factores)){
-      throw new Error('Formato de respuesta inválido');
-    }
+    if(!parsed.factores || !Array.isArray(parsed.factores)) throw new Error('Formato inválido');
     S.factores = parsed.factores;
-
   }catch(e){
-    console.error('Factor generation error:', e.message, e);
-    S.factores=[{
-      titulo:'Error al generar factores',
-      cuerpo:`${e.message}. Puedes ingresar los factores manualmente o intentar nuevamente.`
-    }];
+    console.error('Error generando factores:', e.message);
+    S.factores=[{titulo:'Error al generar factores',cuerpo:`${e.message}. Puedes ingresar los factores manualmente o intentar nuevamente.`}];
   }
   S.loadingFactores=false;render();
 }
 
-// ─── PDF ────────────────────────────────────────────────────────────────────── 
+// ─── PDF ──────────────────────────────────────────────────────────────────────
 function generarPDF(){
   const score=globalScore();const lid=lineaActual();const lm=LINEAS[lid];
   const crit=critData(score);const c=S.ctx;const crits=critFailing();
@@ -1415,7 +1242,7 @@ function generarPDF(){
         <div><div style="font-size:11pt;font-weight:700;color:${cFg};font-family:Georgia,serif;margin-bottom:1.5mm">${cLbl}</div>
         <div style="font-size:7.5pt;color:${cFg};opacity:0.85;line-height:1.5">${crit.desc}</div></div>
       </div>
-      ${sec('Comparativo por área — de menor a mayor cumplimiento')}
+      ${sec('Comparativo por área')}
       ${sorted.map(a=>{const[sf,sb,sa,sl]=semHex(a.score.pct);const pct=a.score.pct;const fw=pct+'%';
         return`<div style="display:flex;align-items:center;gap:3mm;margin-bottom:2.5mm">
           <div style="width:22mm;font-size:8pt;color:#516576">${a.label}</div>
@@ -1469,7 +1296,7 @@ function generarPDF(){
           </div>`).join('')}
           <div style="border-top:0.3mm solid #c2e0cc;margin:3mm 0"></div>
           <div style="background:white;border:0.5mm solid #c2e0cc;border-radius:2mm;padding:3mm 4mm;display:flex;align-items:center;justify-content:space-between">
-            <div><div style="font-size:7.5pt;color:#516576;margin-bottom:1mm">Valor mensual estimado del servicio</div><div style="font-size:6.5pt;color:#8a9ba8">Sujeto a confirmación en reunión presencial</div></div>
+            <div><div style="font-size:7.5pt;color:#516576;margin-bottom:1mm">Valor mensual estimado</div><div style="font-size:6.5pt;color:#8a9ba8">Sujeto a confirmación en reunión presencial</div></div>
             <div style="text-align:right"><div style="font-size:13pt;font-weight:700;color:#1d5c38">$${vMin} – $${vMax}</div><div style="font-size:6.5pt;color:#8a9ba8">CLP / mes</div></div>
           </div>
         </div>
@@ -1478,7 +1305,7 @@ function generarPDF(){
       <div style="background:#304660;border-radius:3mm;padding:4mm 5mm 4mm 8mm;position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;bottom:0;width:2.5mm;background:#d18549"></div>
         <div style="font-size:8.5pt;font-weight:700;color:#d18549;margin-bottom:2mm">Próximo paso</div>
-        <div style="font-size:7.5pt;color:#ccd8e0;line-height:1.6">CoproActiva los invita a una reunión de presentación con el comité, donde se revisará este diagnóstico en detalle y se confirmará el valor definitivo del servicio. Para coordinar fecha y hora, contáctenos a través de nuestros canales habituales.</div>
+        <div style="font-size:7.5pt;color:#ccd8e0;line-height:1.6">CoproActiva los invita a una reunión de presentación con el comité, donde se revisará este diagnóstico en detalle y se confirmará el valor definitivo del servicio.</div>
       </div>
     </div>
     ${ftr()}
@@ -1489,20 +1316,12 @@ function generarPDF(){
   setTimeout(()=>{window.print();setTimeout(()=>{tpl.innerHTML='';},1000);},200);
 }
 
-// ─── HOME VIEW ───────────────────────────────────────────────────────────────
-// Home carga diagnósticos de forma asíncrona
+// ─── HOME ─────────────────────────────────────────────────────────────────────
 let _homeData = null;
-let _homeLoading = false;
 
 async function loadHomeData() {
-  _homeLoading = true;
-  // 1. Cargar local inmediatamente — sin espera
   _homeData = getSavedLocal();
-  _homeLoading = false;
-  if(S.view==='home') {
-    document.getElementById('mainContent').innerHTML = renderHome();
-  }
-  // 2. Sincronizar con Sheets en background
+  if(S.view==='home') document.getElementById('mainContent').innerHTML = renderHome();
   syncWithSheets();
 }
 
@@ -1570,15 +1389,14 @@ async function cargarYAbrir(nombre){
 async function eliminarHist(nombre){
   const n=decodeURIComponent(nombre);
   if(!confirm(`¿Eliminar el diagnóstico "${n}"?`))return;
-  await deleteSaved(n);   // borra de Sheets + localStorage
-  _homeData = null;        // invalida cache para forzar recarga
-  render();                // recarga la vista home
+  await deleteSaved(n);
+  _homeData = null;
+  render();
 }
 
 async function generarPDFDesdeHistorial(nombre){
   const _sv=await getSaved();const d=_sv.find(x=>x.nombre===decodeURIComponent(nombre));
   if(!d)return;
-  // Temporarily load data for PDF generation
   const prevCtx={...S.ctx};const prevChecks=JSON.parse(JSON.stringify(S.checks));
   const prevNotes={...S.notes};const prevFac=[...S.factores];
   const prevVMin=S.valorMin;const prevVMax=S.valorMax;const prevLO=S.lineaOverride;
@@ -1595,9 +1413,8 @@ async function generarPDFDesdeHistorial(nombre){
 // ─── EXIT MODAL ───────────────────────────────────────────────────────────────
 function openExitModal(){
   const nombre=S.ctx.nombre?.trim();
-  const sub=document.getElementById('exitModalSub');
-  sub.textContent=nombre
-    ? `Estás trabajando en "\${nombre}". ¿Qué deseas hacer?`
+  document.getElementById('exitModalSub').textContent=nombre
+    ? `Estás trabajando en "${nombre}". ¿Qué deseas hacer?`
     : 'Tienes datos sin guardar en este diagnóstico.';
   document.getElementById('exitModalBg').classList.add('show');
 }
@@ -1615,10 +1432,7 @@ async function guardarYSalir(){
   _homeData = null;
   goTo('home');
 }
-function salirSinGuardar(){
-  closeExitModal();
-  goTo('home');
-}
+function salirSinGuardar(){ closeExitModal(); goTo('home'); }
 
 function showToast(msg, icon='💾', duration=2500){
   const t = document.getElementById('toastGuardado');
@@ -1638,84 +1452,42 @@ function openAreaModal(aId){
   if(!area) return;
   const s = scoreArea(area);
   const sem = semC(s?s.pct:null);
-
   document.getElementById('areaModalEmoji').textContent = area.emoji||'';
   document.getElementById('areaModalTtl').textContent = area.label;
   const scoreEl = document.getElementById('areaModalScore');
   scoreEl.textContent = s ? s.pct+'% — '+sem.lbl : 'No aplica';
   scoreEl.style.background = sem.bg;
   scoreEl.style.color = sem.fg;
-
   const fallidos = area.items.filter((it,i)=>itemApplies(it)&&!S.checks[aId][i]);
   const cumplidos = area.items.filter((it,i)=>itemApplies(it)&&S.checks[aId][i]);
   const note = S.notes[aId]?.trim();
   const wLabel = {c:'Crítico',i:'Importante',b:'Básico'};
   const wFg = {c:'var(--sr-ac)',i:'var(--sa-ac)',b:'var(--sg-ac)'};
   const wBg = {c:'var(--sr-bg)',i:'var(--sa-bg)',b:'var(--sg-bg)'};
-
   let html = '';
-
-  if(!s){
-    html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Esta área no aplica para este condominio.</p>';
-  } else {
-    if(fallidos.length){
-      html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--sr-ac)">⚠️ Sin cumplir (${fallidos.length})</div>
-        ${fallidos.map(it=>`<div class="area-modal-item fail">
-          <span class="area-modal-badge" style="background:${wBg[it.w]};color:${wFg[it.w]}">${wLabel[it.w]}</span>
-          <span class="area-modal-item-txt">${it.t}</span>
-        </div>`).join('')}
-      </div>`;
-    }
-    if(cumplidos.length){
-      html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--sg-fg)">✓ Cumplidos (${cumplidos.length})</div>
-        ${cumplidos.map(it=>`<div class="area-modal-item ok">
-          <span class="area-modal-badge" style="background:var(--sg-bg);color:var(--sg-fg)">✓</span>
-          <span class="area-modal-item-txt" style="color:var(--az-md)">${it.t}</span>
-        </div>`).join('')}
-      </div>`;
-    }
-    if(note){
-      html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--az-md)">📝 Observación anotada</div>
-        <div class="area-modal-obs">${note}</div>
-      </div>`;
-    }
-    if(!fallidos.length && !cumplidos.length){
-      html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Sin ítems evaluados en esta área.</p>';
-    }
+  if(!s){ html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Esta área no aplica para este condominio.</p>'; }
+  else {
+    if(fallidos.length){ html += `<div class="area-modal-section"><div class="area-modal-section-ttl" style="color:var(--sr-ac)">⚠️ Sin cumplir (${fallidos.length})</div>${fallidos.map(it=>`<div class="area-modal-item fail"><span class="area-modal-badge" style="background:${wBg[it.w]};color:${wFg[it.w]}">${wLabel[it.w]}</span><span class="area-modal-item-txt">${it.t}</span></div>`).join('')}</div>`; }
+    if(cumplidos.length){ html += `<div class="area-modal-section"><div class="area-modal-section-ttl" style="color:var(--sg-fg)">✓ Cumplidos (${cumplidos.length})</div>${cumplidos.map(it=>`<div class="area-modal-item ok"><span class="area-modal-badge" style="background:var(--sg-bg);color:var(--sg-fg)">✓</span><span class="area-modal-item-txt" style="color:var(--az-md)">${it.t}</span></div>`).join('')}</div>`; }
+    if(note){ html += `<div class="area-modal-section"><div class="area-modal-section-ttl" style="color:var(--az-md)">📝 Observación anotada</div><div class="area-modal-obs">${note}</div></div>`; }
+    if(!fallidos.length && !cumplidos.length){ html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Sin ítems evaluados.</p>'; }
   }
-
   document.getElementById('areaModalBody').innerHTML = html;
   document.getElementById('areaModalBg').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
 
-function closeAreaModal(){
-  document.getElementById('areaModalBg').classList.remove('show');
-  document.body.style.overflow = '';
-}
+function closeAreaModal(){ document.getElementById('areaModalBg').classList.remove('show'); document.body.style.overflow = ''; }
+function eliminarFactor(i){ S.factores.splice(i,1); render(); }
+function limpiarFactores(){ if(!confirm('¿Eliminar todos los factores generados?')) return; S.factores=[]; render(); }
 
-function eliminarFactor(i){
-  S.factores.splice(i,1);
-  render();
-}
-
-function limpiarFactores(){
-  if(!confirm('¿Eliminar todos los factores generados?')) return;
-  S.factores=[];
-  render();
-}
-
-// ─── ACCESO ──────────────────────────────────────────────────────────────────
-const ACCESS_KEY = 'copro2025'; // Cambiar por su clave preferida
+// ─── ACCESO ───────────────────────────────────────────────────────────────────
+const ACCESS_KEY = 'copro2025';
 
 function checkLogin(){
   const input = document.getElementById('loginInput');
   const val = input.value.trim();
   if(val === ACCESS_KEY){
-    // Guardar sesión por 8 horas
     sessionStorage.setItem('ca_auth', Date.now().toString());
     document.getElementById('loginScreen').style.display = 'none';
     initApp();
@@ -1723,7 +1495,6 @@ function checkLogin(){
     document.getElementById('loginError').textContent = 'Clave incorrecta. Intenta nuevamente.';
     input.value = '';
     input.focus();
-    // Shake animation
     input.style.borderColor = 'var(--sr-ac)';
     setTimeout(()=>{ input.style.borderColor = ''; }, 1500);
   }
@@ -1733,21 +1504,26 @@ function checkAuth(){
   const auth = sessionStorage.getItem('ca_auth');
   if(auth){
     const elapsed = Date.now() - parseInt(auth);
-    if(elapsed < 8 * 60 * 60 * 1000) return true; // 8 horas
+    if(elapsed < 8 * 60 * 60 * 1000) return true;
   }
   return false;
 }
 
+// ─── INIT APP ─────────────────────────────────────────────────────────────────
 function initApp(){
-  // Si viene desde CRM con prospecto vinculado, precargar nombre
+  // Si viene desde CRM con prospecto vinculado, precargar nombre y navegar directo al formulario
   if (window.prospectoVinculado && window.prospectoVinculado.nombre) {
     S.ctx.nombre = window.prospectoVinculado.nombre;
     S.prospectoId = window.prospectoVinculado.id || null;
     window.prospectoVinculado = null;
+    S.view = 'contexto'; // navegar directo al formulario, no al home
   }
-  // Precalentar Apps Script en background para reducir demora en primera carga real
-setTimeout(() => {
-  fetch(`${WORKER_BASE}/diagnosticos`)
+
+  // Sincronizar con Sheets en background — con Authorization header
+  setTimeout(() => {
+    fetch(`${WORKER_BASE}/diagnosticos`, {
+      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+    })
     .then(r => r.json())
     .then(data => {
       if(data.diagnosticos) {
@@ -1769,19 +1545,17 @@ setTimeout(() => {
       const si = document.getElementById('syncIndicator');
       if(si){ si.textContent='Sin conexión con servidor'; si.style.color='var(--sa-fg)'; setTimeout(()=>si.remove(),3000); }
     });
-}, 100);
+  }, 100);
 
   render();
 }
-
 
 // ─── DETECCIÓN DE IFRAME ──────────────────────────────────────────────────────
 if (window.parent !== window) {
   document.body.classList.add('in-iframe');
 }
 
-// ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ────────────────────────────────
-// Si viene desde el iframe con token en la URL, autenticar sin pedir clave
+// ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ─────────────────────────────────
 (function() {
   const params = new URLSearchParams(window.location.search);
   const urlToken = params.get('token');
@@ -1800,15 +1574,12 @@ if (_pvData) {
   } catch(e) {}
 }
 
-// Verificar si ya está autenticado al cargar
+// ─── ARRANQUE ─────────────────────────────────────────────────────────────────
 if(checkAuth()){
   document.getElementById('loginScreen').style.display = 'none';
   initApp();
 } else {
-  // Mostrar pantalla de login
-  setTimeout(()=>{
-    document.getElementById('loginInput').focus();
-  }, 300);
+  setTimeout(()=>{ document.getElementById('loginInput').focus(); }, 300);
 }
 </script>
 
