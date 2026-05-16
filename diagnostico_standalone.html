@@ -270,6 +270,11 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .empty-icon{font-size:36px;margin-bottom:10px;}
 .empty-ttl{font-size:15px;font-weight:700;color:var(--az-md);margin-bottom:6px;}
 .empty-desc{font-size:13px;line-height:1.6;}
+
+/* Cuando está dentro de un iframe — ocultar sidebar propio */
+.in-iframe .sidebar { display: none !important; }
+.in-iframe .main-scroll { margin-left: 0 !important; }
+.in-iframe #mainContent { max-width: 100% !important; }
 </style>
 </head>
 <body>
