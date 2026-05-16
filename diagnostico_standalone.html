@@ -607,7 +607,8 @@ function critData(score){
 }
 
 // ─── STORAGE — Google Sheets via Worker ───────────────────────────────────────
-const WORKER_BASE = 'https://coproactiva.osmarmeza-adm7.workers.dev';
+const WORKER_BASE = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+const _DIAG_TOKEN = 'copro2025';
 
 // ─── ESTRATEGIA: carga instantánea desde localStorage, sincroniza Sheets en background
 let _cache = null;
@@ -625,7 +626,9 @@ async function syncWithSheets() {
   if(_syncInProgress) return;
   _syncInProgress = true;
   try {
-    const res = await fetch(`${WORKER_BASE}/diagnosticos`);
+    const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
+      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+    });
     const data = await res.json();
     if(!data.diagnosticos) return;
     const remote = data.diagnosticos.map(d => ({
@@ -1741,15 +1744,37 @@ function initApp(){
   render();
 }
 
-// Verificar si ya está autenticado al cargar
+// ─── DETECCIÓN DE IFRAME ──────────────────────────────────────────────────────
+if (window.parent !== window) {
+  document.body.classList.add('in-iframe');
+}
+
+// ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ─────────────────────────────────
+// Si viene desde el iframe con token en la URL, autenticar sin pedir clave
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  if (urlToken && urlToken === ACCESS_KEY) {
+    sessionStorage.setItem('ca_auth', Date.now().toString());
+  }
+})();
+
+// ─── LEER PROSPECTO VINCULADO DESDE CRM ──────────────────────────────────────
+const _pvData = sessionStorage.getItem('prospectoVinculado');
+if (_pvData) {
+  try {
+    const _pv = JSON.parse(_pvData);
+    window.prospectoVinculado = _pv;
+    sessionStorage.removeItem('prospectoVinculado');
+  } catch(e) {}
+}
+
+// ─── ARRANQUE ─────────────────────────────────────────────────────────────────
 if(checkAuth()){
   document.getElementById('loginScreen').style.display = 'none';
   initApp();
 } else {
-  // Mostrar pantalla de login
-  setTimeout(()=>{
-    document.getElementById('loginInput').focus();
-  }, 300);
+  setTimeout(()=>{ document.getElementById('loginInput').focus(); }, 300);
 }
 </script>
 
