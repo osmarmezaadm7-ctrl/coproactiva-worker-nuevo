@@ -244,17 +244,39 @@ function cargarMenuLateral(modulo) {
     }
 
     else if (modulo === 'diagnostico') {
+        // Pasos fijos renderizados inmediatamente — sin esperar el iframe
+        const pasosFijos = [
+            { id: 'contexto',   emoji: '📋', label: 'Datos comunidad' },
+            { id: 'legal',      emoji: '⚖️', label: 'Legal' },
+            { id: 'financiero', emoji: '💰', label: 'Financiero' },
+            { id: 'laboral',    emoji: '👷', label: 'Laboral' },
+            { id: 'tecnico',    emoji: '🔧', label: 'Técnico' },
+            { id: 'seguridad',  emoji: '🛡️', label: 'Seguridad' },
+            { id: 'documental', emoji: '📂', label: 'Documental' },
+            { id: 'revision',   emoji: '✅', label: 'Revisión' }
+        ];
         sd.innerHTML = `
           <div class="sd-score-lbl">Puntaje actual</div>
           <div class="sd-score-val" id="sd-score">0%</div>
           <div class="sd-score-sub" id="sd-nivel">Sin datos aún</div>
           <div class="sd-bar"><div class="sd-bar-fill" id="sd-bar-fill" style="width:0%"></div></div>
-          <div id="sd-steps"></div>
+          <div id="sd-steps">${pasosFijos.map((p, i) => `
+            <div class="sd-step" onclick="diagGotoStep('${p.id}')">
+              <div class="sd-step-n">${i + 1}</div>
+              <div class="sd-step-l">${p.emoji} ${p.label}</div>
+            </div>`).join('')}
+          </div>
         `;
-        const iframe = document.getElementById('diagnosticoIframe');
-        if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'diag_ping' }, '*');
-        }
+        // Ping al iframe cuando esté listo — con retry
+        const pingIframe = () => {
+            const iframe = document.getElementById('diagnosticoIframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'diag_ping' }, '*');
+            }
+        };
+        pingIframe();
+        setTimeout(pingIframe, 800);
+        setTimeout(pingIframe, 2000);
     }
 
     else if (modulo === 'flujo') {
