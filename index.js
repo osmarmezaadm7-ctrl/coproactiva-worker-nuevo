@@ -1,9 +1,8 @@
 // index.js — CoproActiva Worker
-// Versión: 2.2 · Mayo 2026 — fix /diagnosticos response shape + /factores POST con IA
+// Versión: 2.3 · Mayo 2026 — fix estructura /diagnosticos desde Code.gs
 
 const ACCESS_KEY = 'copro2025';
 
-// Helper: respuesta JSON con CORS
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -16,7 +15,6 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-// Helper: llamada GET al Apps Script
 async function callAppsScript(appsScriptUrl, action, params = {}) {
   const url = new URL(appsScriptUrl);
   url.searchParams.set('action', action);
@@ -32,7 +30,6 @@ async function callAppsScript(appsScriptUrl, action, params = {}) {
   return res.json();
 }
 
-// Helper: llamada POST al Apps Script
 async function postAppsScript(appsScriptUrl, body) {
   const res = await fetch(appsScriptUrl, {
     method: 'POST',
@@ -49,7 +46,6 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
-    // Preflight CORS
     if (method === 'OPTIONS') {
       return new Response(null, {
         status: 200,
@@ -61,7 +57,6 @@ export default {
       });
     }
 
-    // Autenticación
     const authHeader = request.headers.get('Authorization') || '';
     const token = authHeader.replace('Bearer ', '');
     if (token !== ACCESS_KEY) {
@@ -86,22 +81,22 @@ export default {
       }
 
       // ─── GET /diagnosticos ────────────────────────────────────
+      // Code.gs devuelve: { ok: true, data: { diagnosticos: [...] } }
       // El standalone espera: { diagnosticos: [...] }
-      // Apps Script devuelve esa estructura directamente — no envolver en { data }
+      // → desenvolver data
       if (url.pathname === '/diagnosticos' && method === 'GET') {
-        const data = await callAppsScript(APPS_SCRIPT_URL, 'getDiagnosticos');
-        // data ya tiene la forma { diagnosticos: [...] } que espera el standalone
-        return jsonResponse(data);
+        const resp = await callAppsScript(APPS_SCRIPT_URL, 'getDiagnosticos');
+        // resp = { ok: true, data: { diagnosticos: [...] } }
+        // Pasar solo el data interior al standalone
+        return jsonResponse(resp.data || resp);
       }
 
       // ─── POST /diagnosticos ───────────────────────────────────
-      // El standalone espera: { ok: true }
-      // No envolver en { ok: true, data: ... }
+      // Code.gs devuelve: { ok: true } directamente desde Diagnosticos.guardar()
       if (url.pathname === '/diagnosticos' && method === 'POST') {
         const body = await request.json();
-        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'saveDiagnostico', ...body });
-        // Propagar el ok/error que devuelve Apps Script directamente
-        return jsonResponse(data);
+        const resp = await postAppsScript(APPS_SCRIPT_URL, { action: 'saveDiagnostico', ...body });
+        return jsonResponse(resp);
       }
 
       // ─── POST /factores — IA con Anthropic ───────────────────
@@ -133,21 +128,14 @@ export default {
         return jsonResponse({ ok: true, text });
       }
 
-      // ─── GET /factores (compatibilidad hacia atrás) ───────────
+      // ─── GET /factores (compatibilidad) ──────────────────────
       if (url.pathname === '/factores' && method === 'GET') {
         return jsonResponse({
           ok: true,
-          factores: [
-            'Mora en gastos comunes',
-            'Fondo de reserva insuficiente',
-            'Mantenciones atrasadas',
-            'Conflictos entre residentes',
-            'Documentación desactualizada',
-          ],
+          factores: ['Mora en gastos comunes','Fondo de reserva insuficiente','Mantenciones atrasadas','Conflictos entre residentes','Documentación desactualizada'],
         });
       }
 
-      // ─── Ruta no encontrada ───────────────────────────────────
       return jsonResponse({ ok: false, error: 'Ruta no encontrada' }, 404);
 
     } catch (error) {
