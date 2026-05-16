@@ -693,7 +693,7 @@ async function saveDiag() {
   try {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
       body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, payload:record })
     });
     const data = await res.json();
@@ -740,7 +740,7 @@ async function deleteSaved(nombre) {
     if(d && d.id) {
       await fetch(`${WORKER_BASE}/diagnosticos`, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
         body: JSON.stringify({ action:'eliminar', id:d.id })
       });
     }
@@ -1283,7 +1283,7 @@ Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica
   try{
     const res=await fetch(`${WORKER_BASE}/factores`,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
       body:JSON.stringify({prompt: finalPrompt})
     });
 
