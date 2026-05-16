@@ -276,4 +276,210 @@
   }
 
   // ── HTML tarjeta ──────────────────────────────────────────────────────────
-  function tarj
+  function tarjetaHTML(p) {
+    const sem = p.semaforo || 'gris';
+    return `
+      <div class="tarjeta sem-${sem}" data-id="${p.id}">
+        <div class="tarjeta-nombre">${p.nombreCondominio}</div>
+        <div class="tarjeta-contacto">${p.nombreContacto}${p.comuna ? ' · ' + p.comuna : ''}</div>
+        <div class="tarjeta-footer">
+          <span class="tarjeta-unidades">${p.unidades || 0} unid.</span>
+          <span class="semaforo-dot dot-${sem}"></span>
+        </div>
+        ${p.proximaAccion ? `<div class="tarjeta-accion">▶ ${p.proximaAccion}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // ── Modal detalle ─────────────────────────────────────────────────────────
+  function abrirModalDetalle(p) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-handle"></div>
+        <button class="modal-close" id="mc">×</button>
+        <div class="modal-titulo">${p.nombreCondominio}</div>
+        <div class="modal-subtitulo">${p.etapa} · ${p.comuna || '—'} · ${p.unidades || 0} unidades</div>
+        <div class="modal-grid">
+          <div class="modal-campo"><label>Contacto</label><span>${p.nombreContacto}</span></div>
+          <div class="modal-campo"><label>Cargo</label><span>${p.cargoContacto || '—'}</span></div>
+          <div class="modal-campo"><label>Teléfono</label><span>${p.telefono || '—'}</span></div>
+          <div class="modal-campo"><label>Email</label><span>${p.email || '—'}</span></div>
+          <div class="modal-campo"><label>Fuente</label><span>${p.fuenteLead || '—'}</span></div>
+          <div class="modal-campo"><label>Responsable</label><span>${p.responsable || '—'}</span></div>
+          <div class="modal-campo"><label>Primer contacto</label><span>${p.fechaPrimerContacto || '—'}</span></div>
+          <div class="modal-campo"><label>Última interacción</label><span>${p.fechaUltimaInteraccion || '—'}</span></div>
+        </div>
+        ${p.observaciones ? `<div class="modal-campo" style="margin-bottom:14px"><label>Observaciones</label><span>${p.observaciones}</span></div>` : ''}
+
+        <div class="modal-seccion">
+          <div class="modal-seccion-titulo">Próxima acción</div>
+          <div class="accion-box">
+            <div class="accion-texto">${p.proximaAccion || 'Sin acción definida'}</div>
+            ${p.fechaProximaAccion ? `<div class="accion-fecha">📅 ${p.fechaProximaAccion}</div>` : ''}
+          </div>
+        </div>
+
+        <div class="modal-seccion">
+          <div class="modal-seccion-titulo">Diagnóstico</div>
+          <button class="btn-diagnostico" id="btn-diag">🔍 Iniciar diagnóstico</button>
+        </div>
+
+        <div class="modal-seccion">
+          <div class="modal-seccion-titulo">Cambiar etapa</div>
+          <select class="etapa-select" id="sel-etapa">
+            ${ETAPAS.map(e => `<option value="${e}" ${e === p.etapa ? 'selected' : ''}>${e}</option>`).join('')}
+          </select>
+          <button class="btn-cambiar" id="btn-cambiar">Guardar cambio</button>
+          <div class="msg-ok" id="msg-ok">✓ Etapa actualizada</div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const cerrar = () => overlay.remove();
+    overlay.querySelector('#mc').addEventListener('click', cerrar);
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+
+    // Botón iniciar diagnóstico
+    overlay.querySelector('#btn-diag').addEventListener('click', () => {
+      cerrar();
+      iniciarDiagnostico(p.id, p.nombreCondominio);
+    });
+
+    // Cambiar etapa
+    overlay.querySelector('#btn-cambiar').addEventListener('click', async () => {
+      const nuevaEtapa = overlay.querySelector('#sel-etapa').value;
+      const btn = overlay.querySelector('#btn-cambiar');
+      const msg = overlay.querySelector('#msg-ok');
+      if (nuevaEtapa === p.etapa) return;
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+      const resp = await api('/crm', 'POST', { action: 'cambiarEtapa', id: p.id, etapaNueva: nuevaEtapa });
+      if (resp.ok && resp.data && resp.data.ok) {
+        p.etapa = nuevaEtapa;
+        msg.style.display = 'block';
+        btn.textContent = 'Guardar cambio';
+        btn.disabled = false;
+        renderKanban();
+        renderAccordion();
+      } else {
+        btn.textContent = 'Error — reintentar';
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // ── Iniciar diagnóstico desde CRM ─────────────────────────────────────────
+  function iniciarDiagnostico(prospectoId, nombreCondominio) {
+    // 1. Guardar prospecto en sessionStorage ANTES de navegar
+    //    El iframe lo leerá al cargar via window.prospectoVinculado → S.ctx.nombre
+    sessionStorage.setItem('prospectoVinculado', JSON.stringify({
+      id: prospectoId,
+      nombre: nombreCondominio
+    }));
+
+    // 2. Navegar al módulo — SIN remover el wrapper
+    //    Removerlo antes causaba condición de carrera: el iframe se recreaba
+    //    antes de que sessionStorage estuviera disponible
+    if (typeof cargarModulo === 'function') {
+      cargarModulo('diagnostico');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.nav-btn[data-modulo="diagnostico"]').forEach(b => b.classList.add('active'));
+    } else {
+      console.error('cargarModulo no está definida');
+    }
+  }
+
+  // Exponer globalmente por si se necesita llamar desde fuera del módulo
+  window.iniciarDiagnostico = iniciarDiagnostico;
+
+  // ── Modal nuevo prospecto ─────────────────────────────────────────────────
+  function abrirModalNuevo() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-handle"></div>
+        <button class="modal-close" id="mc2">×</button>
+        <div class="modal-titulo">Nuevo prospecto</div>
+        <div class="modal-subtitulo">Datos del condominio</div>
+        <div class="form-grid">
+          <div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="f-nombre" placeholder="Ej: Edificio Las Rosas"></div>
+          <div class="form-group"><label>Comuna</label><input type="text" id="f-comuna" placeholder="Ej: San Bernardo"></div>
+          <div class="form-group"><label>Dirección</label><input type="text" id="f-dir" placeholder="Calle y número"></div>
+          <div class="form-group"><label>Unidades</label><input type="number" id="f-unidades" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Nombre contacto *</label><input type="text" id="f-contacto" placeholder="Nombre completo"></div>
+          <div class="form-group"><label>Cargo</label><input type="text" id="f-cargo" placeholder="Ej: Presidenta"></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="f-tel" placeholder="+569..."></div>
+          <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="correo@cl"></div>
+          <div class="form-group"><label>Fuente</label>
+            <select id="f-fuente">
+              <option value="web">Web</option>
+              <option value="referido">Referido</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Responsable</label><input type="text" id="f-resp" placeholder="Nombre"></div>
+          <div class="form-group form-full"><label>Observaciones</label><input type="text" id="f-obs" placeholder="Notas adicionales"></div>
+        </div>
+        <div class="form-error" id="f-error"></div>
+        <button class="btn-guardar" id="btn-guardar">Guardar prospecto</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    const cerrar = () => overlay.remove();
+    overlay.querySelector('#mc2').addEventListener('click', cerrar);
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+
+    overlay.querySelector('#btn-guardar').addEventListener('click', async () => {
+      const nombre   = overlay.querySelector('#f-nombre').value.trim();
+      const contacto = overlay.querySelector('#f-contacto').value.trim();
+      const errDiv   = overlay.querySelector('#f-error');
+      const btn      = overlay.querySelector('#btn-guardar');
+      if (!nombre || !contacto) {
+        errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.';
+        errDiv.style.display = 'block';
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Guardando…'; errDiv.style.display = 'none';
+      const datos = {
+        nombreCondominio: nombre,
+        comuna:           overlay.querySelector('#f-comuna').value.trim(),
+        direccion:        overlay.querySelector('#f-dir').value.trim(),
+        unidades:         overlay.querySelector('#f-unidades').value || 0,
+        nombreContacto:   contacto,
+        cargoContacto:    overlay.querySelector('#f-cargo').value.trim(),
+        telefono:         overlay.querySelector('#f-tel').value.trim(),
+        email:            overlay.querySelector('#f-email').value.trim(),
+        fuenteLead:       overlay.querySelector('#f-fuente').value,
+        responsable:      overlay.querySelector('#f-resp').value.trim(),
+        observaciones:    overlay.querySelector('#f-obs').value.trim(),
+      };
+      const resp = await api('/crm', 'POST', datos);
+      if (resp.ok && resp.data && resp.data.ok) {
+        overlay.remove();
+        await init();
+      } else {
+        errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar';
+        errDiv.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Guardar prospecto';
+      }
+    });
+  }
+
+  // ── Error ─────────────────────────────────────────────────────────────────
+  function mostrarError(msg) {
+    document.getElementById('crm-root').innerHTML =
+      `<div class="crm-error">Error al cargar el CRM: ${msg}</div>`;
+  }
+
+  init();
+
+})();
+</script>
