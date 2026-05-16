@@ -1,5 +1,5 @@
 // index.js — CoproActiva Worker
-// Versión: 2.1 · Mayo 2026
+// Versión: 2.2 · Mayo 2026 — fix /diagnosticos response shape + /factores POST con IA
 
 const ACCESS_KEY = 'copro2025';
 
@@ -23,17 +23,12 @@ async function callAppsScript(appsScriptUrl, action, params = {}) {
   for (const [key, val] of Object.entries(params)) {
     url.searchParams.set(key, val);
   }
-
   const res = await fetch(url.toString(), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     redirect: 'follow',
   });
-
-  if (!res.ok) {
-    throw new Error(`Apps Script respondió ${res.status}`);
-  }
-
+  if (!res.ok) throw new Error(`Apps Script respondió ${res.status}`);
   return res.json();
 }
 
@@ -45,11 +40,7 @@ async function postAppsScript(appsScriptUrl, body) {
     body: JSON.stringify(body),
     redirect: 'follow',
   });
-
-  if (!res.ok) {
-    throw new Error(`Apps Script respondió ${res.status}`);
-  }
-
+  if (!res.ok) throw new Error(`Apps Script respondió ${res.status}`);
   return res.json();
 }
 
@@ -80,6 +71,7 @@ export default {
     const APPS_SCRIPT_URL = env.APPS_SCRIPT_URL;
 
     try {
+
       // ─── GET /crm ─────────────────────────────────────────────
       if (url.pathname === '/crm' && method === 'GET') {
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getCRM');
@@ -94,19 +86,54 @@ export default {
       }
 
       // ─── GET /diagnosticos ────────────────────────────────────
+      // El standalone espera: { diagnosticos: [...] }
+      // Apps Script devuelve esa estructura directamente — no envolver en { data }
       if (url.pathname === '/diagnosticos' && method === 'GET') {
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getDiagnosticos');
-        return jsonResponse({ ok: true, data });
+        // data ya tiene la forma { diagnosticos: [...] } que espera el standalone
+        return jsonResponse(data);
       }
 
       // ─── POST /diagnosticos ───────────────────────────────────
+      // El standalone espera: { ok: true }
+      // No envolver en { ok: true, data: ... }
       if (url.pathname === '/diagnosticos' && method === 'POST') {
         const body = await request.json();
         const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'saveDiagnostico', ...body });
-        return jsonResponse({ ok: true, data });
+        // Propagar el ok/error que devuelve Apps Script directamente
+        return jsonResponse(data);
       }
 
-      // ─── GET /factores (ruta original — no modificar) ─────────
+      // ─── POST /factores — IA con Anthropic ───────────────────
+      if (url.pathname === '/factores' && method === 'POST') {
+        const body = await request.json();
+        const prompt = body.prompt || '';
+        if (!prompt) {
+          return jsonResponse({ ok: false, error: 'Falta el campo prompt' }, 400);
+        }
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1000,
+            messages: [{ role: 'user', content: prompt }],
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          return jsonResponse({ ok: false, error: `Anthropic error ${res.status}: ${err}` }, 500);
+        }
+        const aiData = await res.json();
+        const text = aiData.content?.[0]?.text || '';
+        return jsonResponse({ ok: true, text });
+      }
+
+      // ─── GET /factores (compatibilidad hacia atrás) ───────────
       if (url.pathname === '/factores' && method === 'GET') {
         return jsonResponse({
           ok: true,
