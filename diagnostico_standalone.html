@@ -271,7 +271,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .empty-ttl{font-size:15px;font-weight:700;color:var(--az-md);margin-bottom:6px;}
 .empty-desc{font-size:13px;line-height:1.6;}
 
-/* Cuando está dentro de un iframe — ocultar sidebar propio */
+/* Cuando está dentro de un iframe — sidebar oculto, layout ajustado */
 .in-iframe .sidebar { display: none !important; }
 .in-iframe .main-scroll { margin-left: 0 !important; }
 .in-iframe #mainContent { max-width: 100% !important; }
@@ -699,7 +699,7 @@ async function saveDiag() {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
       method: 'POST',
       headers: {'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, payload:record })
+      body: JSON.stringify({ action:'saveDiagnostico', id, fecha:record.fecha, nombre, score:record.score, payload:record })
     });
     const data = await res.json();
     if(!data.ok) throw new Error(data.error||'Error desconocido');
@@ -745,8 +745,9 @@ async function deleteSaved(nombre) {
     if(d && d.id) {
       await fetch(`${WORKER_BASE}/diagnosticos`, {
         method:'POST',
-        headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'eliminar', id:d.id })
+        headers:{'Content-Type':'application/json'},
+        headers: {'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'saveDiagnostico', accion:'eliminar', id:d.id })
       });
     }
     _cache = null;
@@ -820,9 +821,6 @@ function render(){
   else if(S.view==='contexto')m.innerHTML=renderCtx();
   else if(S.view==='revision')m.innerHTML=renderRevision();
   else{const a=AREAS.find(x=>x.id===S.view);if(a)m.innerHTML=renderArea(a);}
-
-  // Notificar al sidebar principal (cuando corre en iframe)
-  actualizarMenuPadre();
 }
 
 // ─── CONTEXTO ─────────────────────────────────────────────────────────────────
@@ -1698,34 +1696,28 @@ function checkAuth(){
 }
 
 function initApp(){
-  // Si viene desde CRM con prospecto vinculado, precargar campos y navegar directo al formulario
+  // Si viene desde CRM con prospecto vinculado, precargar campos y navegar al formulario
   if (window.prospectoVinculado && window.prospectoVinculado.nombre) {
     const pv = window.prospectoVinculado;
-    S.prospectoId = pv.id || null;
-
-    // Mapeo de campos CRM → estado del diagnóstico
+    S.prospectoId        = pv.id             || null;
     S.ctx.nombre         = pv.nombre         || '';
     S.ctx.unidades       = pv.unidades       || '';
     S.ctx.contactoNombre = pv.contactoNombre || '';
     S.ctx.contactoCorreo = pv.contactoCorreo || '';
-
-    // Normalizar cargo para que calce con las opciones del select del diagnóstico
-    const cargoRaw = (pv.cargoContacto || '').toLowerCase().trim();
-    if      (cargoRaw.includes('president'))  S.ctx.contactoCargo = 'Presidente';
-    else if (cargoRaw.includes('secretar'))   S.ctx.contactoCargo = 'Secretario';
-    else if (cargoRaw.includes('tesorer'))    S.ctx.contactoCargo = 'Tesorero';
-    else if (cargoRaw.includes('inmobiliar')) S.ctx.contactoCargo = 'Representante inmobiliaria';
-    else if (cargoRaw.length > 0)             S.ctx.contactoCargo = 'Otro';
-
+    const cr = (pv.cargoContacto || '').toLowerCase().trim();
+    if      (cr.includes('president'))  S.ctx.contactoCargo = 'Presidente';
+    else if (cr.includes('secretar'))   S.ctx.contactoCargo = 'Secretario';
+    else if (cr.includes('tesorer'))    S.ctx.contactoCargo = 'Tesorero';
+    else if (cr.includes('inmobiliar')) S.ctx.contactoCargo = 'Representante inmobiliaria';
+    else if (cr.length > 0)             S.ctx.contactoCargo = 'Otro';
     window.prospectoVinculado = null;
-    S.view = 'contexto'; // navegar directo al formulario, no al home
+    S.view = 'contexto';
   }
 
-  // Sincronizar con Sheets en background — con Authorization header
-  setTimeout(() => {
-    fetch(`${WORKER_BASE}/diagnosticos`, {
-      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
-    })
+setTimeout(() => {
+  fetch(`${WORKER_BASE}/diagnosticos`, {
+    headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+  })
     .then(r => r.json())
     .then(data => {
       if(data.diagnosticos) {
@@ -1747,74 +1739,30 @@ function initApp(){
       const si = document.getElementById('syncIndicator');
       if(si){ si.textContent='Sin conexión con servidor'; si.style.color='var(--sa-fg)'; setTimeout(()=>si.remove(),3000); }
     });
-  }, 100);
+}, 100);
 
   render();
 }
 
-// ─── DETECCIÓN DE IFRAME Y ELIMINACIÓN DE SIDEBAR PROPIO ────────────────────
+// ─── DETECCIÓN DE IFRAME ──────────────────────────────────────────────────────
 if (window.parent !== window) {
   document.body.classList.add('in-iframe');
-
-  // Eliminar sidebar del diagnóstico cuando corre dentro del iframe
-  // El sidebar principal de la app maneja toda la navegación
+  // Eliminar sidebar propio — el sidebar de la app principal maneja la navegación
   document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) sidebar.remove();
-    const mainScroll = document.querySelector('.main-scroll');
-    if (mainScroll) {
-      mainScroll.style.marginLeft = '0';
-      mainScroll.style.padding = '20px';
-    }
+    const sb = document.querySelector('.sidebar');
+    if (sb) sb.remove();
+    const ms = document.querySelector('.main-scroll');
+    if (ms) { ms.style.marginLeft = '0'; ms.style.padding = '20px'; }
   });
-
-  // Si el DOM ya cargó (script ejecutado después de DOMContentLoaded)
   if (document.readyState !== 'loading') {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) sidebar.remove();
-    const mainScroll = document.querySelector('.main-scroll');
-    if (mainScroll) {
-      mainScroll.style.marginLeft = '0';
-      mainScroll.style.padding = '20px';
-    }
+    const sb = document.querySelector('.sidebar');
+    if (sb) sb.remove();
+    const ms = document.querySelector('.main-scroll');
+    if (ms) { ms.style.marginLeft = '0'; ms.style.padding = '20px'; }
   }
 }
-
-// ─── ENVIAR ACTUALIZACIONES AL SIDEBAR PRINCIPAL ──────────────────────────────
-function actualizarMenuPadre() {
-  if (window.parent === window) return;
-  const score = globalScore();
-  const steps = [{id:'contexto',label:'Datos de la comunidad'},
-    ...AREAS.map(a=>({id:a.id,label:a.label})),
-    {id:'revision',label:'Revisión y PDF'}];
-  const idx = steps.findIndex(s => s.id === S.view);
-  const progress = idx >= 0 ? Math.round((idx / (steps.length - 1)) * 100) : 0;
-
-  window.parent.postMessage({
-    type: 'actualizar_diagnostico',
-    score: score,
-    progress: progress,
-    pasoActual: S.view
-  }, '*');
-}
-
-// ─── ESCUCHAR MENSAJES DEL PADRE (navegación desde sidebar principal) ───────────
-window.addEventListener('message', function(event) {
-  const data = event.data;
-  if (!data || !data.type) return;
-  // Navegación desde sidebar — compatibilidad con ambos formatos
-  if (data.type === 'diag_goto' && data.view) {
-    goTo(data.view);
-  }
-  if (data.type === 'cambiar_paso' && data.paso) {
-    // Mapear 'datos' → 'contexto' (nombre usado en spec del arquitecto vs VIEWS)
-    const paso = data.paso === 'datos' ? 'contexto' : data.paso;
-    goTo(paso);
-  }
-});
 
 // ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ─────────────────────────────────
-// Si viene desde el iframe con token en la URL, autenticar sin pedir clave
 (function() {
   const params = new URLSearchParams(window.location.search);
   const urlToken = params.get('token');
@@ -1832,6 +1780,16 @@ if (_pvData) {
     sessionStorage.removeItem('prospectoVinculado');
   } catch(e) {}
 }
+
+// ─── ESCUCHAR MENSAJES DEL PADRE (navegación desde sidebar principal) ───────────
+window.addEventListener('message', function(event) {
+  const data = event.data;
+  if (!data || !data.type) return;
+  if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
+  if (data.type === 'cambiar_paso' && data.paso) {
+    goTo(data.paso === 'datos' ? 'contexto' : data.paso);
+  }
+});
 
 // ─── ARRANQUE ─────────────────────────────────────────────────────────────────
 if(checkAuth()){
