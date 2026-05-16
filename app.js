@@ -1,6 +1,6 @@
 // app.js — CoproActiva
-// Versión: 3.0 · Mayo 2026
-// Router display:none + sidebar dinámico + comunicación postMessage con diagnóstico
+// Versión: 3.1 · Mayo 2026
+// Fix: módulo diagnóstico siempre recarga para leer sessionStorage fresco
 
 var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
 var ACCESS_KEY = 'copro2025';
@@ -10,6 +10,10 @@ const moduleElements = {};
 let currentModuleElement = null;
 window.moduleElements = moduleElements;
 window.moduleCache    = moduleElements;
+
+// ── Módulos que deben recargarse siempre (no cacheados)
+// El diagnóstico necesita leer sessionStorage fresco con el prospecto cada vez
+const MODULOS_SIN_CACHE = ['diagnostico'];
 
 // ── Estilos del sidebar dinámico ─────────────────────────────────────────────
 const SIDEBAR_STYLES = `
@@ -134,14 +138,21 @@ async function cargarModulo(modulo) {
     // Cargar menú lateral según módulo
     cargarMenuLateral(modulo);
 
-    // Si ya existe en el DOM, solo mostrar
+    // Módulos sin caché: destruir wrapper existente para forzar recarga completa
+    // Necesario para diagnóstico, que lee sessionStorage fresco en cada navegación
+    if (MODULOS_SIN_CACHE.includes(modulo) && moduleElements[modulo]) {
+        moduleElements[modulo].remove();
+        delete moduleElements[modulo];
+    }
+
+    // Si ya existe en el DOM (y no fue destruido arriba), solo mostrar
     if (moduleElements[modulo]) {
         moduleElements[modulo].style.display = 'block';
         currentModuleElement = moduleElements[modulo];
         return;
     }
 
-    // Primera carga
+    // Primera carga (o recarga forzada)
     const loading = document.createElement('div');
     loading.style.cssText = 'text-align:center;padding:40px;color:#6b7280;';
     loading.textContent = 'Cargando...';
@@ -209,7 +220,6 @@ function cargarMenuLateral(modulo) {
           </div>
           <button class="sd-btn-nuevo" onclick="document.getElementById('btn-nuevo')?.click()">＋ Nuevo prospecto</button>
         `;
-        // Leer KPIs del CRM si ya está cargado
         actualizarKpisCRM();
     }
 
@@ -221,7 +231,6 @@ function cargarMenuLateral(modulo) {
           <div class="sd-bar"><div class="sd-bar-fill" id="sd-bar-fill" style="width:0%"></div></div>
           <div id="sd-steps"></div>
         `;
-        // Pedir al iframe su estado actual
         const iframe = document.getElementById('diagnosticoIframe');
         if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'diag_ping' }, '*');
@@ -239,7 +248,6 @@ function cargarMenuLateral(modulo) {
 
 // ── Actualizar KPIs del CRM en el sidebar ─────────────────────────────────────
 function actualizarKpisCRM() {
-    // Los KPIs los expone el módulo CRM en window._crmKpis
     setTimeout(() => {
         if (window._crmKpis) {
             const el = {
