@@ -1,6 +1,6 @@
 <!-- modules/diagnostico.html — CoproActiva Diagnóstico -->
-<!-- Implementado como iframe — Opción A aprobada por arquitecto -->
-<!-- Versión: 3.2 · Mayo 2026 — fix token acceso iframe -->
+<!-- Versión: 3.3 · Mayo 2026 — con recarga forzada -->
+
 <style>
   .diag-iframe-container {
     width: 100%;
@@ -43,26 +43,28 @@
 (function() {
   const iframe  = document.getElementById('diagnosticoIframe');
   const loading = document.getElementById('diagLoading');
-
-  // IMPORTANTE: el token del iframe es la clave de acceso del diagnóstico (copro2025),
-  // NO el token Bearer del Worker. Son dos cosas distintas.
-  // sessionStorage.getItem('token') contiene el token del Worker — no sirve aquí.
   const ACCESS_KEY = 'copro2025';
 
-  // Timestamp fuerza recarga completa cada vez que se navega al módulo
-  // — evita que el navegador sirva versión cacheada sin el prospecto
-  const src = 'diagnostico_standalone.html?token=' + encodeURIComponent(ACCESS_KEY) + '&t=' + Date.now();
-  iframe.src = src;
+  function cargarIframe() {
+    const src = 'diagnostico_standalone.html?token=' + encodeURIComponent(ACCESS_KEY) + '&t=' + Date.now();
+    iframe.src = src;
+    loading.style.display = 'flex';
+    iframe.style.opacity = '0';
+  }
+
+  cargarIframe();
 
   iframe.addEventListener('load', function() {
     loading.style.display = 'none';
     iframe.style.opacity  = '1';
   });
 
-  // Escuchar mensajes desde el iframe
   window.addEventListener('message', function(event) {
     const data = event.data;
     if (!data || !data.type) return;
+    if (data.type === 'recargar_diagnostico') {
+      cargarIframe();
+    }
     if (data.type === 'diagnostico_guardado') {
       console.log('Diagnóstico guardado:', data.nombre);
     }
