@@ -1,7 +1,6 @@
 <!-- modules/diagnostico.html — CoproActiva Diagnóstico -->
 <!-- Implementado como iframe — Opción A aprobada por arquitecto -->
-<!-- Versión: 3.0 · Mayo 2026 -->
-
+<!-- Versión: 3.1 · Mayo 2026 — fix condición de carrera B1 -->
 <style>
   .diag-iframe-container {
     width: 100%;
@@ -42,16 +41,18 @@
 
 <script>
 (function() {
-
-  const iframe = document.getElementById('diagnosticoIframe');
-  const _token = sessionStorage.getItem('token') || '';
-  iframe.src = 'diagnostico_standalone.html?token=' + encodeURIComponent(_token);
+  const iframe  = document.getElementById('diagnosticoIframe');
   const loading = document.getElementById('diagLoading');
+  const _token  = sessionStorage.getItem('token') || '';
 
-  // Cuando el iframe termina de cargar
+  // Timestamp en URL fuerza recarga completa del iframe cada vez que se navega
+  // al módulo — evita que el navegador sirva versión cacheada sin el prospecto
+  const src = 'diagnostico_standalone.html?token=' + encodeURIComponent(_token) + '&t=' + Date.now();
+  iframe.src = src;
+
   iframe.addEventListener('load', function() {
     loading.style.display = 'none';
-    iframe.style.opacity = '1';
+    iframe.style.opacity  = '1';
   });
 
   // Escuchar mensajes desde el iframe
@@ -62,17 +63,5 @@
       console.log('Diagnóstico guardado:', data.nombre);
     }
   });
-
-  // Si hay prospecto activo desde CRM, guardarlo en sessionStorage y recargar iframe
-  if (window.prospectoActivo && window.prospectoActivo.id) {
-    sessionStorage.setItem('prospectoVinculado', JSON.stringify({
-      id: window.prospectoActivo.id,
-      nombre: window.prospectoActivo.nombre || window.prospectoActivo.nombreCondominio || ''
-    }));
-    window.prospectoActivo = null;
-    // Forzar recarga del iframe para que lea el sessionStorage fresco
-    iframe.src = 'diagnostico_standalone.html?token=' + encodeURIComponent(_token) + '&t=' + Date.now();
-  }
-
 })();
 </script>
