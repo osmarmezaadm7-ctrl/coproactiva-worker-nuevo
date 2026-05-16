@@ -292,18 +292,31 @@ function actualizarMenuDiagnostico(data) {
     const stepsEl   = document.getElementById('sd-steps');
 
     if (scoreEl)  scoreEl.textContent  = (data.score || 0) + '%';
-    if (scoreEl)  scoreEl.style.color  = data.color || 'white';
     if (nivelEl)  nivelEl.textContent  = data.nivel || 'Sin datos aún';
     if (barFill)  barFill.style.width  = (data.score || 0) + '%';
     if (barFill)  barFill.style.background = data.color || '#D18549';
 
-    if (stepsEl && data.steps) {
-        stepsEl.innerHTML = data.steps.map((s, i) => `
-          <div class="sd-step ${s.active ? 'active' : ''} ${s.done ? 'done' : ''}"
-               onclick="diagGotoStep('${s.id}')">
-            <div class="sd-step-n">${s.done ? '✓' : i + 1}</div>
-            <div class="sd-step-l">${s.emoji ? s.emoji + ' ' : ''}${s.label}</div>
-          </div>
+    // Generar pasos localmente (NO esperar data.steps)
+    if (stepsEl) {
+        const pasosFijos = [
+            { id: 'datos',      emoji: '📋', label: 'Datos comunidad' },
+            { id: 'legal',      emoji: '⚖️', label: 'Legal' },
+            { id: 'financiero', emoji: '💰', label: 'Financiero' },
+            { id: 'laboral',    emoji: '👷', label: 'Laboral' },
+            { id: 'tecnico',    emoji: '🔧', label: 'Técnico' },
+            { id: 'seguridad',  emoji: '🛡️', label: 'Seguridad' },
+            { id: 'documental', emoji: '📂', label: 'Documental' },
+            { id: 'revision',   emoji: '✅', label: 'Revisión' }
+        ];
+        
+        const pasoActual = data.pasoActual || null;
+        
+        stepsEl.innerHTML = pasosFijos.map((paso, i) => `
+            <div class="sd-step ${pasoActual === paso.id ? 'active' : ''}" 
+                 onclick="diagGotoStep('${paso.id}')">
+                <div class="sd-step-n">${i + 1}</div>
+                <div class="sd-step-l">${paso.emoji} ${paso.label}</div>
+            </div>
         `).join('');
     }
 }
