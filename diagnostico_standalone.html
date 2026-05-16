@@ -271,7 +271,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .empty-ttl{font-size:15px;font-weight:700;color:var(--az-md);margin-bottom:6px;}
 .empty-desc{font-size:13px;line-height:1.6;}
 
-/* Cuando está dentro de un iframe — sidebar oculto, layout ajustado */
+/* Cuando está dentro de un iframe — sidebar oculto vía CSS (no eliminar del DOM) */
 .in-iframe .sidebar { display: none !important; }
 .in-iframe .main-scroll { margin-left: 0 !important; }
 .in-iframe #mainContent { max-width: 100% !important; }
@@ -766,31 +766,54 @@ function renderNav(){
   const ai=steps.findIndex(s=>s.id===S.view);
   const score=globalScore();const crit=critData(score);
 
-  // Sidebar
-  document.getElementById('sbNav').innerHTML=steps.map((s,i)=>`
+  // Sidebar — con guards para cuando corre en iframe (sidebar oculto por CSS, no eliminado)
+  const sbNav=document.getElementById('sbNav');
+  if(sbNav) sbNav.innerHTML=steps.map((s,i)=>`
     <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
       <div class="sb-n">${i<ai?'✓':i+1}</div>
       <div class="sb-sl">${s.emoji?s.emoji+' ':''  }${s.label}</div>
     </div>`).join('');
-  document.getElementById('sbVal').textContent=score+'%';
-  document.getElementById('sbVal').style.color=crit.ac;
-  document.getElementById('sbSub').textContent=crit.lbl;
-  document.getElementById('sbFill').style.width=score+'%';
-  document.getElementById('sbFill').style.background=crit.ac;
+  const sbVal=document.getElementById('sbVal');
+  if(sbVal){sbVal.textContent=score+'%';sbVal.style.color=crit.ac;}
+  const sbSub=document.getElementById('sbSub');
+  if(sbSub) sbSub.textContent=crit.lbl;
+  const sbFill=document.getElementById('sbFill');
+  if(sbFill){sbFill.style.width=score+'%';sbFill.style.background=crit.ac;}
 
   // Topbar
-  document.getElementById('tbScore').textContent=score+'%';
-  document.getElementById('tbScore').style.background=score>0?crit.ac+'33':'rgba(255,255,255,0.1)';
+  const tbScore=document.getElementById('tbScore');
+  if(tbScore){tbScore.textContent=score+'%';tbScore.style.background=score>0?crit.ac+'33':'rgba(255,255,255,0.1)';}
 
   // Progress
-  const pct=Math.round((ai/( steps.length-1))*100);
-  document.getElementById('progFill').style.width=pct+'%';
+  const pct=Math.round((ai/(steps.length-1))*100);
+  const progFill=document.getElementById('progFill');
+  if(progFill) progFill.style.width=pct+'%';
 
   // Step indicator
   const current=steps[ai];
-  document.getElementById('stepNum').textContent=ai+1;
-  document.getElementById('stepName').textContent=current?current.label:'';
-  document.getElementById('stepOf').textContent=`Paso ${ai+1} de ${steps.length}`;
+  const stepNum=document.getElementById('stepNum');
+  const stepName=document.getElementById('stepName');
+  const stepOf=document.getElementById('stepOf');
+  if(stepNum) stepNum.textContent=ai+1;
+  if(stepName) stepName.textContent=current?current.label:'';
+  if(stepOf) stepOf.textContent=`Paso ${ai+1} de ${steps.length}`;
+
+  // Notificar al sidebar principal de la app (cuando corre en iframe)
+  if(window.parent !== window) {
+    window.parent.postMessage({
+      type: 'diag_estado',
+      score: score,
+      nivel: crit.lbl,
+      color: crit.ac,
+      pasoActual: S.view,
+      view: S.view,
+      steps: steps.map((s,i)=>({
+        id: s.id, label: s.label, emoji: s.emoji||'',
+        active: s.id===S.view,
+        done: i < ai
+      }))
+    }, '*');
+  }
 }
 
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
@@ -1743,25 +1766,13 @@ setTimeout(() => {
   render();
 }
 
-// ─── DETECCIÓN DE IFRAME ──────────────────────────────────────────────────────
+// ─── DETECCIÓN DE IFRAME ─────────────────────────────────────────────────────
+// Solo agregar clase — NO eliminar el sidebar del DOM (rompe referencias en renderNav)
 if (window.parent !== window) {
   document.body.classList.add('in-iframe');
-  // Eliminar sidebar propio — el sidebar de la app principal maneja la navegación
-  document.addEventListener('DOMContentLoaded', function() {
-    const sb = document.querySelector('.sidebar');
-    if (sb) sb.remove();
-    const ms = document.querySelector('.main-scroll');
-    if (ms) { ms.style.marginLeft = '0'; ms.style.padding = '20px'; }
-  });
-  if (document.readyState !== 'loading') {
-    const sb = document.querySelector('.sidebar');
-    if (sb) sb.remove();
-    const ms = document.querySelector('.main-scroll');
-    if (ms) { ms.style.marginLeft = '0'; ms.style.padding = '20px'; }
-  }
 }
 
-// ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ─────────────────────────────────
+// ─── AUTENTICACIÓN AUTOMÁTICA DESDE APP SHELL ────────────────────────────────
 (function() {
   const params = new URLSearchParams(window.location.search);
   const urlToken = params.get('token');
@@ -1770,7 +1781,7 @@ if (window.parent !== window) {
   }
 })();
 
-// ─── LEER PROSPECTO VINCULADO DESDE CRM ──────────────────────────────────────
+// ─── LEER PROSPECTO VINCULADO DESDE CRM ─────────────────────────────────────
 const _pvData = sessionStorage.getItem('prospectoVinculado');
 if (_pvData) {
   try {
@@ -1780,7 +1791,7 @@ if (_pvData) {
   } catch(e) {}
 }
 
-// ─── ESCUCHAR MENSAJES DEL PADRE (navegación desde sidebar principal) ───────────
+// ─── ESCUCHAR MENSAJES DEL PADRE ─────────────────────────────────────────────
 window.addEventListener('message', function(event) {
   const data = event.data;
   if (!data || !data.type) return;
@@ -1790,7 +1801,7 @@ window.addEventListener('message', function(event) {
   }
 });
 
-// ─── ARRANQUE ─────────────────────────────────────────────────────────────────
+// ─── ARRANQUE ────────────────────────────────────────────────────────────────
 if(checkAuth()){
   document.getElementById('loginScreen').style.display = 'none';
   initApp();
