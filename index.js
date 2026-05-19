@@ -245,7 +245,7 @@ export default {
           email                 : email.toLowerCase(),
           tipoServicio          : (body.servicio || '').trim(),
           fuenteLead            : fuenteLead,
-          etapa                 : 'Nuevo Prospecto',
+          etapa                 : 'Nuevo prospecto',
           fechaPrimerContacto   : ahora,
           fechaUltimaInteraccion: ahora,
           proximaAccion         : 'Primer contacto — responder en < 24 h',
