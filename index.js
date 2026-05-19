@@ -16,12 +16,14 @@ const ACCESS_KEY = 'copro2025';
 const ALLOWED_ORIGINS = [
   'https://coproactiva.cl',
   'https://www.coproactiva.cl',
+  'https://osmarmezaadm7-ctrl.github.io', // CRM interno
 ];
 
 function getCorsHeaders(requestOrigin) {
-  const origin = ALLOWED_ORIGINS.includes(requestOrigin)
-    ? requestOrigin
-    : ALLOWED_ORIGINS[0]; // fallback seguro
+  // Permitir origen null (archivo local file://) para pruebas de desarrollo.
+  // En producción el origen siempre será coproactiva.cl.
+  const isAllowed = ALLOWED_ORIGINS.includes(requestOrigin) || requestOrigin === 'null' || requestOrigin === '';
+  const origin = isAllowed ? (requestOrigin || ALLOWED_ORIGINS[0]) : ALLOWED_ORIGINS[0];
   return {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
