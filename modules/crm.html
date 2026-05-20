@@ -420,16 +420,16 @@
   const TOKEN = sessionStorage.getItem('token') || '';
 
   const ETAPAS = [
-    'Nuevo prospecto', 'Reunión Agendada', 'Diagnóstico',
-    'Propuesta', 'Negociación', 'Ganado', 'Perdido'
+    'Nuevo prospecto', 'Reuni\u00F3n Agendada', 'Diagn\u00F3stico',
+    'Propuesta', 'Negociaci\u00F3n', 'Ganado', 'Perdido'
   ];
 
   // Migración de etapas antiguas al cargar prospectos del Sheet
   const MIGRACION_ETAPAS = {
-    'Reunión agendada':   'Reunión Agendada',
-    'Reunión realizada':  'Reunión Agendada',
-    'Diagnóstico agendado':  'Diagnóstico',
-    'Diagnóstico realizado': 'Diagnóstico',
+    'Reuni\u00F3n agendada':   'Reuni\u00F3n Agendada',
+    'Reuni\u00F3n realizada':  'Reuni\u00F3n Agendada',
+    'Diagn\u00F3stico agendado':  'Diagn\u00F3stico',
+    'Diagn\u00F3stico realizado': 'Diagn\u00F3stico',
     'Propuesta enviada':  'Propuesta',
   };
 
@@ -459,7 +459,7 @@
       prospectos = (resp.data.data || []).map(p => ({ ...p, etapa: normalizarEtapa(p.etapa) }));
       renderCRM();
     } catch (err) {
-      mostrarError('Error de conexión: ' + err.message);
+      mostrarError('Error de conexi\u00F3n: ' + err.message);
     }
   }
 
@@ -687,7 +687,7 @@
     overlay.querySelector('#btn-wsp').addEventListener('click', () => {
       const telRaw = String(p.telefono || '').trim();
       const tel = telRaw.replace(/[^0-9]/g, '');
-      if (!tel) { alert('Este prospecto no tiene teléfono registrado.'); return; }
+      if (!tel) { alert('Este prospecto no tiene tel\u00E9fono registrado.'); return; }
       const num = tel.startsWith('56') ? tel : '56' + tel;
       window.open('https://wa.me/' + num, '_blank');
     });
@@ -707,7 +707,7 @@
       const msg = overlay.querySelector('#msg-ok');
       if (nuevaEtapa === p.etapa) return;
       btn.disabled = true;
-      btn.textContent = 'Guardando…';
+      btn.textContent = 'Guardando\u2026';
       const resp = await api('/crm', 'POST', { action: 'cambiarEtapa', id: p.id, etapaNueva: nuevaEtapa });
       if (resp.ok && resp.data && resp.data.ok) {
         p.etapa = nuevaEtapa;
@@ -717,7 +717,7 @@
         renderKanban();
         renderAccordion();
       } else {
-        btn.textContent = 'Error — reintentar';
+        btn.textContent = 'Error \u2014 reintentar';
         btn.disabled = false;
       }
     });
@@ -781,7 +781,7 @@
         errDiv.style.display = 'block';
         return;
       }
-      btn.disabled = true; btn.textContent = 'Guardando…'; errDiv.style.display = 'none';
+      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
       const datos = {
         action:               'editarProspecto',
         id:                   p.id,
@@ -815,86 +815,77 @@
     });
   }
 
-  // ── Plantillas de correo por etapa ────────────────────────────
+  // -- Plantillas de correo por etapa -----------------------------
   const PLANTILLAS_CORREO = {
-    'Nuevo prospecto':  { eyebrow: 'Primer contacto',     asunto: 'CoproActiva — Administración Profesional para {condominio}' },
-    'Reunión Agendada': { eyebrow: 'Confirmación',        asunto: 'Confirmación de Reunión — CoproActiva × {condominio}' },
-    'Diagnóstico':      { eyebrow: 'Siguiente paso',      asunto: 'Diagnóstico de Administración — {condominio}' },
-    'Propuesta':        { eyebrow: 'Propuesta comercial', asunto: 'Propuesta Comercial — CoproActiva para {condominio}' },
-    'Negociación':      { eyebrow: 'Seguimiento',         asunto: 'Seguimiento Propuesta — {condominio}' },
-    'Ganado':           { eyebrow: 'Bienvenida',          asunto: '¡Bienvenidos a CoproActiva! — {condominio}' },
-    'Perdido':          { eyebrow: 'Cierre',              asunto: 'Hasta pronto — CoproActiva' },
+    'Nuevo prospecto':  { eyebrow: 'Primer contacto',     asunto: 'CoproActiva \u2014 Administraci\u00F3n Profesional para {condominio}' },
+    'Reuni\u00F3n Agendada': { eyebrow: 'Confirmaci\u00F3n',        asunto: 'Confirmaci\u00F3n de Reuni\u00F3n \u2014 CoproActiva \u00D7 {condominio}' },
+    'Diagn\u00F3stico':      { eyebrow: 'Siguiente paso',      asunto: 'Diagn\u00F3stico de Administraci\u00F3n \u2014 {condominio}' },
+    'Propuesta':        { eyebrow: 'Propuesta comercial', asunto: 'Propuesta Comercial \u2014 CoproActiva para {condominio}' },
+    'Negociaci\u00F3n':      { eyebrow: 'Seguimiento',         asunto: 'Seguimiento Propuesta \u2014 {condominio}' },
+    'Ganado':           { eyebrow: 'Bienvenida',          asunto: '\u00A1Bienvenidos a CoproActiva! \u2014 {condominio}' },
+    'Perdido':          { eyebrow: 'Cierre',              asunto: 'Hasta pronto \u2014 CoproActiva' },
   };
 
   function abrirModalCorreo(p) {
-    var plantilla = PLANTILLAS_CORREO[p.etapa] || { eyebrow: '', asunto: 'CoproActiva — {condominio}' };
+    var plantilla = PLANTILLAS_CORREO[p.etapa] || { eyebrow: '', asunto: 'CoproActiva - {condominio}' };
     var asuntoBase = plantilla.asunto.replace('{condominio}', p.nombreCondominio || '');
-    var nombre = p.nombreContacto || 'estimado/a';
-    var condo  = p.nombreCondominio || '';
-    var firma  = 'Atentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804';
-
-    var CUERPOS = {
-      'Nuevo prospecto':  'Estimado/a ' + nombre + ',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administración, empresa especializada en la gestión integral de condominios residenciales bajo la Ley N.° 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercanía con los residentes.\n\nMe gustaría coordinar una breve reunión para conocer la situación actual de ' + condo + '. ¿Tendría disponibilidad esta semana?\n\n' + firma,
-      'Reunión Agendada': 'Estimado/a ' + nombre + ',\n\nConfirmo nuestra reunión según lo coordinado. Estaré puntual y preparado/a para conocer en detalle la situación de ' + condo + '.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\n' + firma,
-      'Diagnóstico':      'Estimado/a ' + nombre + ',\n\nFue un gusto reunirnos y conocer en detalle la situación de ' + condo + '. El paso siguiente es realizar un diagnóstico integral de la administración actual.\n\nEl diagnóstico abarca las áreas legal, financiera, laboral, técnica, de seguridad y documental, con una duración estimada de 60 a 90 minutos.\n\n¿Tendría disponibilidad en los próximos días para agendar esta sesión?\n\n' + firma,
-      'Propuesta':        'Estimado/a ' + nombre + ',\n\nAdjunto nuestra propuesta comercial para la administración de ' + condo + ', elaborada en base al diagnóstico realizado.\n\nLa propuesta incluye el plan de trabajo, metodología de gestión y estructura de honorarios.\n\nQuedo disponible para resolver cualquier consulta.\n\n' + firma,
-      'Negociación':      'Estimado/a ' + nombre + ',\n\nMe contacto para dar seguimiento a la propuesta enviada para ' + condo + '.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda que haya surgido.\n\n' + firma,
-      'Ganado':           'Estimado/a ' + nombre + ',\n\nEs un placer darles la bienvenida a CoproActiva Administración.\n\nAdjunto el kit de bienvenida con toda la información necesaria para iniciar nuestra gestión en ' + condo + '.\n\n' + firma,
-      'Perdido':          'Estimado/a ' + nombre + ',\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisión y quedamos disponibles para cualquier necesidad futura.\n\n' + firma,
-    };
-    var cuerpoBase = CUERPOS[p.etapa] || '';
 
     var overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = '<div class="modal-box">' +
+
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+
+    box.innerHTML =
       '<div class="modal-handle"></div>' +
-      '<button class="modal-close" id="mc-mail">×</button>' +
-      '<div class="modal-eyebrow">' + (plantilla.eyebrow || p.etapa) + '</div>' +
+      '<button class="modal-close" id="mc-mail">&times;</button>' +
+      '<div class="modal-eyebrow"></div>' +
       '<div class="modal-titulo">Enviar correo</div>' +
-      '<div class="modal-subtitulo">' + condo + ' &middot; ' + (p.email || 'Sin email registrado') + '</div>' +
+      '<div class="modal-subtitulo"></div>' +
       '<div class="form-grid" style="margin-top:18px">' +
         '<div class="form-group form-full"><label>Para</label>' +
-          '<input type="email" id="mail-para" value="' + (p.email || '') + '" placeholder="correo@ejemplo.cl"></div>' +
+          '<input type="email" id="mail-para" placeholder="correo@ejemplo.cl"></div>' +
         '<div class="form-group form-full"><label>Asunto</label>' +
-          '<input type="text" id="mail-asunto" value="' + asuntoBase.replace(/"/g, '&quot;') + '"></div>' +
+          '<input type="text" id="mail-asunto"></div>' +
         '<div class="form-group form-full"><label>Mensaje</label>' +
           '<textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;font-weight:500;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px"></textarea></div>' +
       '</div>' +
       '<div class="form-error" id="mail-error"></div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
-        '<button class="btn-guardar" id="btn-enviar-directo" style="background:var(--co-ink);display:flex;align-items:center;justify-content:center;gap:6px">' +
-          '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
-          'Enviar</button>' +
-        '<button class="btn-guardar" id="btn-abrir-gmail" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line);display:flex;align-items:center;justify-content:center;gap:6px">' +
-          '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
-          'Abrir en Gmail</button>' +
+        '<button class="btn-guardar" id="btn-enviar-directo" style="background:var(--co-ink);display:flex;align-items:center;justify-content:center;gap:6px">Enviar</button>' +
+        '<button class="btn-guardar" id="btn-abrir-gmail" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line);display:flex;align-items:center;justify-content:center;gap:6px">Abrir en Gmail</button>' +
       '</div>' +
-      '<div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px">✓ Correo enviado correctamente</div>' +
-    '</div>';
+      '<div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px"></div>';
 
+    overlay.appendChild(box);
     document.body.appendChild(overlay);
 
-    // Precargar cuerpo en el textarea (no se puede poner con innerHTML por caracteres especiales)
-    overlay.querySelector('#mail-cuerpo').value = cuerpoBase;
+    // Rellenar valores con textContent/value para evitar problemas de encoding
+    box.querySelector('.modal-eyebrow').textContent  = plantilla.eyebrow || p.etapa;
+    box.querySelector('.modal-subtitulo').textContent = (p.nombreCondominio || '') + ' \u00B7 ' + (p.email || 'Sin email registrado');
+    box.querySelector('#mail-para').value   = p.email   || '';
+    box.querySelector('#mail-asunto').value = asuntoBase;
+    box.querySelector('#mail-ok').textContent = '\u2713 Correo enviado correctamente';
+    box.querySelector('#mail-cuerpo').value = obtenerCuerpoCorreo(p);
 
     var cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc-mail').addEventListener('click', cerrar);
+    box.querySelector('#mc-mail').addEventListener('click', cerrar);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
 
-    overlay.querySelector('#btn-enviar-directo').addEventListener('click', async function() {
-      var para   = overlay.querySelector('#mail-para').value.trim();
-      var asunto = overlay.querySelector('#mail-asunto').value.trim();
-      var cuerpo = overlay.querySelector('#mail-cuerpo').value.trim();
-      var errDiv = overlay.querySelector('#mail-error');
-      var msgOk  = overlay.querySelector('#mail-ok');
-      var btn    = overlay.querySelector('#btn-enviar-directo');
+    box.querySelector('#btn-enviar-directo').addEventListener('click', async function() {
+      var para   = box.querySelector('#mail-para').value.trim();
+      var asunto = box.querySelector('#mail-asunto').value.trim();
+      var cuerpo = box.querySelector('#mail-cuerpo').value.trim();
+      var errDiv = box.querySelector('#mail-error');
+      var msgOk  = box.querySelector('#mail-ok');
+      var btn    = box.querySelector('#btn-enviar-directo');
       if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
       errDiv.style.display = 'none';
-      btn.disabled = true; btn.textContent = 'Enviando…';
+      btn.disabled = true; btn.textContent = 'Enviando...';
       var resp = await api('/correo', 'POST', { prospectoId: p.id, etapa: p.etapa, para: para, asunto: asunto, cuerpo: cuerpo });
       if (resp.ok && resp.data && resp.data.ok) {
         msgOk.style.display = 'block';
-        btn.textContent = 'Enviado ✓';
+        btn.textContent = 'Enviado!';
         setTimeout(cerrar, 2000);
       } else {
         errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al enviar';
@@ -903,19 +894,30 @@
       }
     });
 
-    overlay.querySelector('#btn-abrir-gmail').addEventListener('click', function() {
-      var para   = overlay.querySelector('#mail-para').value.trim();
-      var asunto = overlay.querySelector('#mail-asunto').value.trim();
-      var cuerpo = overlay.querySelector('#mail-cuerpo').value.trim();
-      var errDiv = overlay.querySelector('#mail-error');
+    box.querySelector('#btn-abrir-gmail').addEventListener('click', function() {
+      var para   = box.querySelector('#mail-para').value.trim();
+      var asunto = box.querySelector('#mail-asunto').value.trim();
+      var cuerpo = box.querySelector('#mail-cuerpo').value.trim();
+      var errDiv = box.querySelector('#mail-error');
       if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
       errDiv.style.display = 'none';
-      var gmailUrl = 'https://mail.google.com/mail/?view=cm'
-        + '&to='   + encodeURIComponent(para)
-        + '&su='   + encodeURIComponent(asunto)
-        + '&body=' + encodeURIComponent(cuerpo);
-      window.open(gmailUrl, '_blank');
+      window.open('https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(para) + '&su=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo), '_blank');
     });
+  }
+
+  function obtenerCuerpoCorreo(p) {
+    var n = p.nombreContacto    || 'estimado/a';
+    var c = p.nombreCondominio  || '';
+    var f = 'Atentamente,\nCoproActiva Administraci\u00F3n\ncontacto@coproactiva.cl \u00B7 +56 9 3945 3804';
+    var cuerpos = {};
+    cuerpos['Nuevo prospecto']  = 'Estimado/a ' + n + ',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n, empresa especializada en la gesti\u00F3n integral de condominios residenciales bajo la Ley N.\u00b0 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercan\u00EDa con los residentes.\n\nMe gustar\u00EDa coordinar una breve reuni\u00F3n para conocer la situaci\u00F3n actual de ' + c + '. \u00BFTendr\u00EDa disponibilidad esta semana?\n\n' + f;
+    cuerpos['Reuni\u00F3n Agendada'] = 'Estimado/a ' + n + ',\n\nConfirmo nuestra reuni\u00F3n seg\u00FAn lo coordinado. Estar\u00E9 puntual y preparado/a para conocer en detalle la situaci\u00F3n de ' + c + '.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\n' + f;
+    cuerpos['Diagn\u00F3stico']      = 'Estimado/a ' + n + ',\n\nFue un gusto reunirnos y conocer en detalle la situaci\u00F3n de ' + c + '. El paso siguiente es realizar un diagn\u00F3stico integral de la administraci\u00F3n actual.\n\nEl diagn\u00F3stico abarca las \u00E1reas legal, financiera, laboral, t\u00E9cnica, de seguridad y documental, con una duraci\u00F3n estimada de 60 a 90 minutos.\n\n\u00BFTendr\u00EDa disponibilidad en los pr\u00F3ximos d\u00EDas para agendar esta sesi\u00F3n?\n\n' + f;
+    cuerpos['Propuesta']        = 'Estimado/a ' + n + ',\n\nAdjunto nuestra propuesta comercial para la administraci\u00F3n de ' + c + ', elaborada en base al diagn\u00F3stico realizado.\n\nLa propuesta incluye el plan de trabajo, metodolog\u00EDa de gesti\u00F3n y estructura de honorarios.\n\nQuedo disponible para resolver cualquier consulta.\n\n' + f;
+    cuerpos['Negociaci\u00F3n']      = 'Estimado/a ' + n + ',\n\nMe contacto para dar seguimiento a la propuesta enviada para ' + c + '.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda que haya surgido.\n\n' + f;
+    cuerpos['Ganado']           = 'Estimado/a ' + n + ',\n\nEs un placer darles la bienvenida a CoproActiva Administraci\u00F3n.\n\nAdjunto el kit de bienvenida con toda la informaci\u00F3n necesaria para iniciar nuestra gesti\u00F3n en ' + c + '.\n\n' + f;
+    cuerpos['Perdido']          = 'Estimado/a ' + n + ',\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisi\u00F3n y quedamos disponibles para cualquier necesidad futura.\n\n' + f;
+    return cuerpos[p.etapa] || '';
   }
   function iniciarDiagnostico(prospectoId, nombreCondominio, prospecto) {
     sessionStorage.setItem('prospectoVinculado', JSON.stringify({
@@ -932,7 +934,7 @@
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.nav-btn[data-modulo="diagnostico"]').forEach(b => b.classList.add('active'));
     } else {
-      console.error('cargarModulo no está definida');
+      console.error('cargarModulo no est\u00E1 definida');
     }
   }
 
@@ -989,7 +991,7 @@
         errDiv.style.display = 'block';
         return;
       }
-      btn.disabled = true; btn.textContent = 'Guardando…'; errDiv.style.display = 'none';
+      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
       const datos = {
         nombreCondominio: nombre,
         comuna:           overlay.querySelector('#f-comuna').value.trim(),
