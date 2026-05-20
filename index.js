@@ -305,7 +305,16 @@ export default {
       // ── POST /crm ───────────────────────────────────────────
       if (url.pathname === '/crm' && method === 'POST') {
         const body = await request.json();
-        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'saveCRM', ...body });
+
+        // Validación para editarProspecto
+        if (body.action === 'editarProspecto' && !body.id) {
+          return jsonResponse({ ok: false, error: 'Falta el ID del prospecto' }, 400, origin);
+        }
+
+        // Si viene action explícita (editarProspecto, cambiarEtapa) se respeta.
+        // Sin action: prospecto nuevo → saveCRM (comportamiento original).
+        const action = body.action || 'saveCRM';
+        const data = await postAppsScript(APPS_SCRIPT_URL, { ...body, action });
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
