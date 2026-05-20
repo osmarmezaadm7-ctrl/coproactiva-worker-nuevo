@@ -58,51 +58,130 @@
 
 body { font-family: var(--font); -webkit-font-smoothing: antialiased; background: #FBF7F0; }
 
-/* HEADER */
-.header {
-  background: #1A1714;
-  color: #fff;
-  padding: 28px 40px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+/* HEADER (oculto — reemplazado por page-header en main) */
+.header { display: none; }
+.legend-bar { display: none; }
+
+/* PAGE HEADER (estilo mockup) */
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 18px;
 }
-.header-inner { max-width: 940px; margin: 0 auto; }
-.header h1 {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -.025em;
-  margin-bottom: 6px;
-  line-height: 1.15;
+.page-eyebrow {
+  font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--c-orange); margin-bottom: 6px;
 }
-.header h1 b { color: var(--c-orange); font-weight: 800; }
-.header p {
-  font-size: 11px;
-  color: rgba(255,255,255,0.55);
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+.page-title {
+  font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
+  color: #1F1F1F; margin-bottom: 4px;
+}
+.page-title em { font-style: normal; color: var(--c-orange); }
+.page-sub {
+  font-size: 13.5px; color: #6B6359; font-weight: 500; max-width: 580px;
 }
 
-/* LEGEND */
-.legend-bar {
-  background: #2A2520;
-  padding: 12px 40px;
-  display: flex; flex-wrap: wrap; gap: 6px 18px;
-  position: sticky; top: 92px; z-index: 99;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+/* TABS (estilo mockup) */
+.flujo-tabs {
+  display: flex; gap: 4px;
+  background: #F5EFE4;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #ECE5DA;
+  margin-bottom: 24px;
+  width: fit-content;
+  flex-wrap: wrap;
 }
-.legend-bar > div { max-width: 940px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 6px 18px; width: 100%; }
-.leg {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: rgba(255,255,255,0.7);
-  font-weight: 600;
+.flujo-tab {
+  padding: 9px 18px;
+  background: transparent;
+  border: none;
+  font-family: var(--font);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #6B6359;
+  cursor: pointer;
+  border-radius: 7px;
+  letter-spacing: -.01em;
+  transition: background .13s, color .13s;
 }
-.leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+.flujo-tab:hover { color: #1F1F1F; }
+.flujo-tab.active {
+  background: #fff;
+  color: #1F1F1F;
+  box-shadow: 0 1px 3px rgba(31,31,31,.08);
+}
+
+/* Tab panels */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* LÍNEAS RESUMEN (estilo mockup) */
+.linea-resumen-card {
+  background: #fff; border: 1px solid #ECE5DA;
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.linea-resumen-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+}
+.linea-resumen-card.l1::before { background: var(--c-l1); }
+.linea-resumen-card.l2::before { background: var(--c-l2); }
+.linea-resumen-card.l3::before { background: var(--c-l3); }
+.linea-resumen-head {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+}
+.linea-resumen-pill {
+  font-size: 10px; font-weight: 800; padding: 4px 11px; border-radius: 99px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.linea-resumen-card.l1 .linea-resumen-pill { background: var(--c-l1-bg); color: var(--c-l1); }
+.linea-resumen-card.l2 .linea-resumen-pill { background: var(--c-l2-bg); color: var(--c-l2); }
+.linea-resumen-card.l3 .linea-resumen-pill { background: var(--c-l3-bg); color: var(--c-l3); }
+.linea-resumen-name {
+  font-size: 18px; font-weight: 800; color: #1F1F1F; letter-spacing: -.02em;
+}
+.linea-resumen-sub {
+  font-size: 13px; color: #6B6359; font-weight: 500; margin-bottom: 16px;
+}
+.linea-resumen-steps {
+  display: flex; gap: 0; align-items: stretch;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+}
+.lr-step {
+  flex: 0 0 auto;
+  min-width: 150px; max-width: 200px;
+  padding: 14px 16px;
+  background: #FBF7F0;
+  border: 1px solid #ECE5DA;
+  border-radius: 10px;
+  position: relative;
+}
+.lr-step + .lr-step { margin-left: 28px; }
+.lr-step + .lr-step::before {
+  content: ''; position: absolute; left: -22px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 2px; background: #DCD3C2;
+}
+.lr-step + .lr-step::after {
+  content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
+  border: 5px solid transparent; border-left-color: #BAAE99; border-right: none;
+}
+.lr-step-num {
+  font-size: 10px; font-weight: 800; color: var(--c-orange); letter-spacing: .1em;
+}
+.lr-step-name {
+  font-size: 13px; font-weight: 800; color: #1F1F1F; letter-spacing: -.01em;
+  margin-top: 3px; line-height: 1.3;
+}
+.lr-step-meta {
+  font-size: 11px; color: #9C958A; margin-top: 6px; font-weight: 500;
+}
 
 /* MAIN */
-.main { max-width: 940px; margin: 0 auto; padding: 32px 24px 80px; }
+.main { max-width: 940px; margin: 0 auto; padding: 8px 0 80px; }
 
 /* SECTION HEADERS */
 .section-block { margin-bottom: 12px; }
@@ -409,14 +488,14 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 </head>
 <body>
 
-<div class="header">
+<div class="header" style="display:none">
   <div class="header-inner">
     <h1>Flujo de trabajo <b>Coproactiva</b></h1>
     <p>3 líneas de trabajo · Auditoría paralela · Ley N°21.442</p>
   </div>
 </div>
 
-<div class="legend-bar">
+<div class="legend-bar" style="display:none">
   <div>
     <div class="leg"><div class="leg-dot" style="background:var(--c-legal)"></div>Legal</div>
     <div class="leg"><div class="leg-dot" style="background:var(--c-fin)"></div>Financiero</div>
@@ -432,10 +511,72 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 
 <div class="main">
 
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div>
+    <div class="page-eyebrow">Flujo de trabajo</div>
+    <h1 class="page-title">Cómo <em>operamos</em></h1>
+    <p class="page-sub">Flujo comercial completo · 3 líneas de trabajo · auditoría paralela · cumplimiento Ley N°21.442.</p>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="flujo-tabs">
+  <button class="flujo-tab active" data-tab="resumen" onclick="setFlujoTab('resumen')">Resumen</button>
+  <button class="flujo-tab" data-tab="comercial" onclick="setFlujoTab('comercial')">Comercial</button>
+  <button class="flujo-tab" data-tab="operacion" onclick="setFlujoTab('operacion')">Operación</button>
+  <button class="flujo-tab" data-tab="auditoria" onclick="setFlujoTab('auditoria')">Auditoría</button>
+</div>
+
+<!-- RESUMEN TAB -->
+<div class="tab-panel active" data-panel="resumen">
+  <div class="linea-resumen-card l1">
+    <div class="linea-resumen-head">
+      <span class="linea-resumen-pill">Línea 1</span>
+      <span class="linea-resumen-name">Administración integral</span>
+    </div>
+    <div class="linea-resumen-sub">Comunidad en marcha con historial · operación completa + auditoría paralela</div>
+    <div class="linea-resumen-steps">
+      <div class="lr-step"><div class="lr-step-num">FASE 01</div><div class="lr-step-name">Recepción documental</div><div class="lr-step-meta">5 días corridos</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 02</div><div class="lr-step-name">Operación mensual</div><div class="lr-step-meta">6 áreas continuas</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 03</div><div class="lr-step-name">Auditoría paralela</div><div class="lr-step-meta">10 etapas</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 04</div><div class="lr-step-name">Rendición de cuentas</div><div class="lr-step-meta">Art. 14, 20 y 21</div></div>
+    </div>
+  </div>
+
+  <div class="linea-resumen-card l2">
+    <div class="linea-resumen-head">
+      <span class="linea-resumen-pill">Línea 2</span>
+      <span class="linea-resumen-name">Nueva administración</span>
+    </div>
+    <div class="linea-resumen-sub">Primera administración o comunidad sin historial · puesta en marcha desde cero</div>
+    <div class="linea-resumen-steps">
+      <div class="lr-step"><div class="lr-step-num">FASE 01</div><div class="lr-step-name">Recepción inmobiliaria</div><div class="lr-step-meta">Si aplica</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 02</div><div class="lr-step-name">Configuración inicial</div><div class="lr-step-meta">Plataforma + fondos</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 03</div><div class="lr-step-name">Primera asamblea</div><div class="lr-step-meta">Comité + CBR</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 04</div><div class="lr-step-name">Converge con Línea 1</div><div class="lr-step-meta">Mes 2 en adelante</div></div>
+    </div>
+  </div>
+
+  <div class="linea-resumen-card l3">
+    <div class="linea-resumen-head">
+      <span class="linea-resumen-pill">Línea 3</span>
+      <span class="linea-resumen-name">Asesoría y auditoría</span>
+    </div>
+    <div class="linea-resumen-sub">Comunidad con administrador activo · servicio externo · ~4 semanas</div>
+    <div class="linea-resumen-steps">
+      <div class="lr-step"><div class="lr-step-num">ETAPA 1</div><div class="lr-step-name">Planificación</div><div class="lr-step-meta">Alcance + criterios</div></div>
+      <div class="lr-step"><div class="lr-step-num">ETAPA 2–4</div><div class="lr-step-name">Recopilación + pruebas</div><div class="lr-step-meta">Evidencia + controles</div></div>
+      <div class="lr-step"><div class="lr-step-num">ETAPA 5–7</div><div class="lr-step-name">Hallazgos + riesgos</div><div class="lr-step-meta">Matriz impacto</div></div>
+      <div class="lr-step"><div class="lr-step-num">ETAPA 8–10</div><div class="lr-step-name">Informe + seguimiento</div><div class="lr-step-meta">Presentación comité</div></div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════
      SECCIÓN 0 — FLUJO COMERCIAL
 ══════════════════════════════════════════ -->
-<div class="section-block">
+<div class="section-block tab-panel" data-panel="comercial">
   <div class="section-label l0">
     <span class="line-pill" style="background:#2A2520;color:rgba(255,255,255,0.85)">0</span>
     Flujo comercial — desde el prospecto hasta la firma del contrato
@@ -605,7 +746,7 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 <!-- ══════════════════════════════════════════
      SECCIÓN 1 — LÍNEA 1: ADMINISTRACIÓN INTEGRAL
 ══════════════════════════════════════════ -->
-<div class="section-block">
+<div class="section-block tab-panel" data-panel="operacion">
   <div class="section-label l1">
     <span class="line-pill" style="background:var(--c-l1);color:#fff">Línea 1</span>
     Administración integral de edificios y condominios — comunidad en marcha
@@ -980,7 +1121,7 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 <!-- ══════════════════════════════════════════
      SECCIÓN 2 — LÍNEA 2: NUEVA ADMINISTRACIÓN
 ══════════════════════════════════════════ -->
-<div class="section-block">
+<div class="section-block tab-panel" data-panel="operacion">
   <div class="section-label l2">
     <span class="line-pill" style="background:var(--c-l2);color:#fff">Línea 2</span>
     Nueva administración — primera administración o comunidad sin historial
@@ -1066,7 +1207,7 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 <!-- ══════════════════════════════════════════
      SECCIÓN 3 — LÍNEA 3: ASESORÍA Y AUDITORÍA
 ══════════════════════════════════════════ -->
-<div class="section-block">
+<div class="section-block tab-panel" data-panel="auditoria">
   <div class="section-label l3">
     <span class="line-pill" style="background:var(--c-l3);color:#fff">Línea 3</span>
     Asesoría y auditoría — comunidad con administrador activo · servicio externo
@@ -1233,7 +1374,7 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 <!-- ══════════════════════════════════════════
      CICLO MENSUAL Y DECISIONES RECURRENTES
 ══════════════════════════════════════════ -->
-<div class="section-block">
+<div class="section-block tab-panel" data-panel="operacion">
   <div class="section-label lx">
     <span class="line-pill" style="background:#6B6359;color:#fff">Ciclo</span>
     Ciclo operativo mensual — aplica a Líneas 1 y 2
@@ -1348,7 +1489,7 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 <!-- ══════════════════════════════════════════
      RENOVACIÓN / TÉRMINO
 ══════════════════════════════════════════ -->
-<div class="section-block">
+<div class="section-block tab-panel" data-panel="operacion">
   <div class="section-label lx">
     <span class="line-pill" style="background:#6B6359;color:#fff">Anual</span>
     Decisión anual — renovación o término del mandato
@@ -1420,6 +1561,13 @@ body { font-family: var(--font); -webkit-font-smoothing: antialiased; background
 <script>
 function toggle(node) {
   node.classList.toggle('open');
+}
+function setFlujoTab(t){
+  document.querySelectorAll('.flujo-tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===t));
+  document.querySelectorAll('.tab-panel[data-panel]').forEach(p=>{
+    p.classList.toggle('active', p.dataset.panel===t);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 window.addEventListener('scroll', () => {
   const btn = document.getElementById('scrollTop');
