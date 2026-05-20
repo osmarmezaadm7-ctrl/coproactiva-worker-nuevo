@@ -386,6 +386,34 @@
   }
   .btn-mail:hover { background: var(--co-blue); color: #fff; }
 
+  /* -- Toggle datos prospecto -- */
+  .toggle-datos-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--co-cream);
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-md);
+    cursor: pointer;
+    margin-bottom: 4px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.13s;
+  }
+  .toggle-datos-btn:hover { background: var(--co-cream-deep); }
+  .toggle-datos-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--co-ink-3);
+    letter-spacing: -0.01em;
+  }
+  .toggle-datos-chev {
+    font-size: 10px;
+    color: var(--co-mute);
+    transition: transform 0.2s;
+  }
+
   /* Estado de carga global manejado por .module-loading en styles.css */
   .crm-error {
     background: var(--co-red-soft);
@@ -612,7 +640,11 @@
         <div class="modal-titulo">${p.nombreCondominio}</div>
         <div class="modal-subtitulo">${p.comuna || '—'} · ${p.unidades || 0} unidades</div>
 
-        <div class="modal-grid">
+        <div class="toggle-datos-btn" id="toggle-datos">
+          <span class="toggle-datos-label" id="toggle-datos-label">Ver datos del prospecto</span>
+          <span class="toggle-datos-chev" id="toggle-datos-chev">&#9660;</span>
+        </div>
+        <div class="modal-grid toggle-datos-body" id="toggle-datos-body" style="display:none;margin-top:10px">
           <div class="modal-campo"><label>Contacto</label><span>${p.nombreContacto}</span></div>
           <div class="modal-campo"><label>Cargo</label><span>${p.cargoContacto || '—'}</span></div>
           <div class="modal-campo"><label>Teléfono</label><span>${p.telefono || '—'}</span></div>
@@ -621,8 +653,8 @@
           <div class="modal-campo"><label>Responsable</label><span>${p.responsable || '—'}</span></div>
           <div class="modal-campo"><label>Primer contacto</label><span>${p.fechaPrimerContacto || '—'}</span></div>
           <div class="modal-campo"><label>Última interacción</label><span>${p.fechaUltimaInteraccion || '—'}</span></div>
+          ${p.observaciones ? `<div class="modal-campo" style="grid-column:1/-1"><label>Observaciones</label><span>${p.observaciones}</span></div>` : ''}
         </div>
-        ${p.observaciones ? `<div class="modal-campo" style="margin-bottom:18px"><label>Observaciones</label><span>${p.observaciones}</span></div>` : ''}
 
         <div class="modal-seccion">
           <div class="modal-seccion-titulo">Próxima acción</div>
@@ -675,6 +707,17 @@
     const cerrar = () => overlay.remove();
     overlay.querySelector('#mc').addEventListener('click', cerrar);
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+
+    // Toggle datos del prospecto
+    overlay.querySelector('#toggle-datos').addEventListener('click', () => {
+      const body  = overlay.querySelector('#toggle-datos-body');
+      const label = overlay.querySelector('#toggle-datos-label');
+      const chev  = overlay.querySelector('#toggle-datos-chev');
+      const open  = body.style.display !== 'none';
+      body.style.display  = open ? 'none' : 'grid';
+      label.textContent   = open ? 'Ver datos del prospecto' : 'Ocultar datos del prospecto';
+      chev.style.transform = open ? '' : 'rotate(180deg)';
+    });
 
     const btnDiag = overlay.querySelector('#btn-diag');
     if (btnDiag) {
