@@ -3,7 +3,7 @@ main = "index.js"
 compatibility_date = "2025-01-01"
 
 [vars]
-APPS_SCRIPT_URL = APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbMdi1i1LVKLUsxiMlZxl36213y1Ku4BwMHL-DZrMAtLRx6ldGhQMdWx0xa_M1tjVt/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbMdi1i1LVKLUsxiMlZxl36213y1Ku4BwMHL-DZrMAtLRx6ldGhQMdWx0xa_M1tjVt/exec"
 ACCESS_KEY = "copro2025"
 
 [[secret_text_bindings]]
