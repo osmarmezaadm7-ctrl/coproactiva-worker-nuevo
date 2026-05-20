@@ -109,7 +109,18 @@ async function cargarModulo(modulo) {
 
     const loading = document.createElement('div');
     loading.className = 'module-loading';
-    loading.textContent = 'Cargando…';
+    loading.innerHTML = `
+      <div class="ml-iso-wrap">
+        <img class="ml-iso" src="assets/coproactiva-iso.png" alt="">
+      </div>
+      <div class="ml-text">
+        <div class="ml-brand"><b>co</b>proactiva</div>
+        <div class="ml-status">
+          <span class="ml-status-dot"></span>
+          Cargando ${modulo === 'crm' ? 'CRM' : modulo === 'diagnostico' ? 'Diagnóstico' : 'Flujo de trabajo'}
+        </div>
+      </div>
+    `;
     contentArea.appendChild(loading);
 
     try {
