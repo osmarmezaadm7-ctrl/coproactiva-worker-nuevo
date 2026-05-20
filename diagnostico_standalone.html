@@ -94,9 +94,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 .sb-bar-f{height:100%;border-radius:99px;background:var(--na);transition:width 0.4s;}
 
 /* ── COMPONENTS ───────────────────────────────────────────────────── */
-.ph{margin-bottom:22px;}
-.ph-title{font-size:24px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-0.025em;line-height:1.15;}
-.ph-sub{font-size:13px;color:var(--muted);font-weight:500;}
+.ph{margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.ph-text{flex:1;min-width:0;}
+.ph-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--na);margin-bottom:6px;}
+.ph-title{font-size:28px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-0.03em;line-height:1.1;}
+.ph-title em{font-style:normal;color:var(--na);}
+.ph-sub{font-size:13.5px;color:var(--muted);font-weight:500;max-width:540px;}
+.ph-action{flex-shrink:0;}
+
+/* ── DIAG HERO (revisión y home) ── */
+.diag-hero{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:24px 28px;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center;margin-bottom:18px;position:relative;overflow:hidden;}
+.diag-hero::after{content:'';position:absolute;right:-50px;top:-50px;width:220px;height:220px;background:radial-gradient(circle,var(--na-lt),transparent 70%);pointer-events:none;}
+.diag-hero-text{position:relative;z-index:1;min-width:0;}
+.diag-hero-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--na);margin-bottom:6px;}
+.diag-hero-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.025em;line-height:1.15;margin-bottom:4px;}
+.diag-hero-sub{font-size:13px;color:var(--muted);font-weight:500;}
+.diag-ring{position:relative;width:120px;height:120px;z-index:1;flex-shrink:0;}
+.diag-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.diag-ring circle{fill:none;stroke-width:9;}
+.diag-ring .bg{stroke:var(--border);}
+.diag-ring .fg{stroke-linecap:round;transition:stroke-dashoffset 0.6s;}
+.diag-ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.diag-ring-val{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-0.03em;line-height:1;}
+.diag-ring-lbl{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px;}
+@media(max-width:600px){.diag-hero{grid-template-columns:1fr;padding:20px;text-align:center;}.diag-ring{margin:0 auto;}}
 
 .card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--shadow);}
 .card-ttl{font-size:14px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;letter-spacing:-0.01em;}
@@ -847,8 +868,11 @@ function renderCtx(){
   const c=S.ctx;
   return`
   <div class="ph">
-    <div class="ph-title">Datos de la comunidad</div>
-    <div class="ph-sub">Completa la información básica para comenzar el diagnóstico</div>
+    <div class="ph-text">
+      <div class="ph-eyebrow">Diagnóstico</div>
+      <div class="ph-title">Datos de la <em>comunidad</em></div>
+      <div class="ph-sub">Completa la información básica para comenzar el diagnóstico</div>
+    </div>
   </div>
 
   <div class="card">
@@ -979,8 +1003,11 @@ function renderArea(area){
 
   return`
   <div class="ph">
-    <div class="ph-title">${area.emoji} ${area.label}</div>
-    <div class="ph-sub">Marca los ítems que la comunidad tiene en orden · ${applies?`${done}/${total} marcados`:'No aplica para esta comunidad'}</div>
+    <div class="ph-text">
+      <div class="ph-eyebrow">Área evaluada · ${ai+1}/${AREAS.length}</div>
+      <div class="ph-title">${area.emoji} <em>${area.label}</em></div>
+      <div class="ph-sub">Marca los ítems que la comunidad tiene en orden · ${applies?`${done}/${total} marcados`:'No aplica para esta comunidad'}</div>
+    </div>
   </div>
   <div class="card">
     ${!applies?`
@@ -1020,10 +1047,36 @@ function renderRevision(){
   const lm=LINEAS[lid];const crit=critData(score);const crits=critFailing();
   const vMin=S.valorMin||lm.valMin;const vMax=S.valorMax||lm.valMax;
 
+  const ringCirc = 2*Math.PI*52;
+  const ringOff = ringCirc - (score/100)*ringCirc;
   return`
   <div class="ph">
-    <div class="ph-title">Revisión del diagnóstico</div>
-    <div class="ph-sub">Revisa el resultado, ajusta la línea de servicio y genera el informe PDF</div>
+    <div class="ph-text">
+      <div class="ph-eyebrow">Diagnóstico</div>
+      <div class="ph-title">Estado de la <em>comunidad</em></div>
+      <div class="ph-sub">Evaluación de 6 áreas críticas con checklist de cumplimiento normativo bajo Ley N°21.442.</div>
+    </div>
+    <div class="ph-action">
+      <button class="pri" onclick="generarPDF()" ${S.loadingFactores?'disabled':''}>📄 Descargar PDF</button>
+    </div>
+  </div>
+
+  <div class="diag-hero">
+    <div class="diag-hero-text">
+      <div class="diag-hero-eyebrow">Diagnóstico en curso</div>
+      <div class="diag-hero-title">${S.ctx.nombre||'Sin nombre'}</div>
+      <div class="diag-hero-sub">${S.ctx.unidades?S.ctx.unidades+' unidades · ':''}${S.ctx.contactoNombre||'Sin contacto registrado'}</div>
+    </div>
+    <div class="diag-ring">
+      <svg viewBox="0 0 120 120">
+        <circle class="bg" cx="60" cy="60" r="52"/>
+        <circle class="fg" cx="60" cy="60" r="52" stroke="${crit.ac}" stroke-dasharray="${ringCirc}" stroke-dashoffset="${ringOff}"/>
+      </svg>
+      <div class="diag-ring-num">
+        <div class="diag-ring-val" style="color:${crit.fg}">${score}%</div>
+        <div class="diag-ring-lbl">${crit.lbl}</div>
+      </div>
+    </div>
   </div>
 
   <div class="res-crit" style="background:${crit.bg};border-color:${crit.ac};color:${crit.fg}">
@@ -1450,6 +1503,17 @@ async function loadHomeData() {
 function renderHome(){
   const hist=_homeData||[];
   return`
+  <div class="ph">
+    <div class="ph-text">
+      <div class="ph-eyebrow">Diagnóstico</div>
+      <div class="ph-title">Diagnósticos <em>guardados</em></div>
+      <div class="ph-sub">Crea nuevos diagnósticos o continúa uno existente. Se sincronizan automáticamente con Google Sheets.</div>
+    </div>
+    <div class="ph-action">
+      <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
+    </div>
+  </div>
+
   <div class="home-header">
     <div class="home-logo">
       <div class="home-mark">C</div>
@@ -1458,10 +1522,10 @@ function renderHome(){
         <div class="home-tag">Comunidades que funcionan</div>
       </div>
     </div>
-    <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
   </div>
+
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-    <div style="font-size:16px;font-weight:800;color:var(--text);letter-spacing:-0.02em">Diagnósticos guardados</div>
+    <div style="font-size:14px;font-weight:800;color:var(--text);letter-spacing:-0.02em">Historial</div>
     <div style="display:flex;align-items:center;gap:12px">
       <span id="syncIndicator" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600">
         <span class="spin" style="width:10px;height:10px;border-width:1.5px"></span> Sincronizando...
