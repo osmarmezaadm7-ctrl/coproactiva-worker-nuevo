@@ -386,10 +386,22 @@
   const TOKEN = sessionStorage.getItem('token') || '';
 
   const ETAPAS = [
-    'Nuevo prospecto', 'Reunión agendada', 'Reunión realizada',
-    'Diagnóstico agendado', 'Diagnóstico realizado', 'Propuesta enviada',
-    'Negociación', 'Ganado', 'Perdido'
+    'Nuevo prospecto', 'Reunión Agendada', 'Diagnóstico',
+    'Propuesta', 'Negociación', 'Ganado', 'Perdido'
   ];
+
+  // Migración de etapas antiguas al cargar prospectos del Sheet
+  const MIGRACION_ETAPAS = {
+    'Reunión agendada':   'Reunión Agendada',
+    'Reunión realizada':  'Reunión Agendada',
+    'Diagnóstico agendado':  'Diagnóstico',
+    'Diagnóstico realizado': 'Diagnóstico',
+    'Propuesta enviada':  'Propuesta',
+  };
+
+  function normalizarEtapa(etapa) {
+    return MIGRACION_ETAPAS[etapa] || etapa;
+  }
 
   let prospectos = [];
 
@@ -410,7 +422,7 @@
         mostrarError(resp.data?.error || resp.error || 'Error desconocido');
         return;
       }
-      prospectos = resp.data.data || [];
+      prospectos = (resp.data.data || []).map(p => ({ ...p, etapa: normalizarEtapa(p.etapa) }));
       renderCRM();
     } catch (err) {
       mostrarError('Error de conexión: ' + err.message);
