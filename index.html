@@ -4,36 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoproActiva — Administración</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- Login -->
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN
+═══════════════════════════════════════════════════════ -->
 <div id="loginScreen" class="login-screen">
-    <div class="login-card">
-        <h2>CoproActiva</h2>
-        <p>Ingresa tu clave de acceso</p>
-        <input type="password" id="claveInput" placeholder="Clave">
-        <button id="loginBtn">Ingresar</button>
-        <div id="loginError" class="error-message"></div>
+
+    <!-- Panel izquierdo: marca -->
+    <div class="login-brand">
+        <img src="assets/coproactiva-iso.png" alt="" class="login-iso" aria-hidden="true">
+
+        <div class="login-brand-top">
+            <div class="login-brand-logo">
+                <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+            </div>
+            <div class="login-brand-tagline">Comunidades que funcionan</div>
+        </div>
+
+        <div class="login-brand-bottom">
+            <div class="login-brand-statement">
+                Una administración<br>
+                <em>Activa</em> en tu<br>
+                comunidad
+            </div>
+            <div class="login-brand-meta">
+                <span class="login-brand-meta-dot"></span>
+                Región Metropolitana · Ley N°21.442
+            </div>
+        </div>
     </div>
+
+    <!-- Panel derecho: formulario -->
+    <div class="login-panel">
+        <div class="login-card">
+            <div class="login-eyebrow">Panel de administración</div>
+            <h1 class="login-title">Ingresa al sistema</h1>
+            <p class="login-sub">Acceso exclusivo para administradores certificados.</p>
+
+            <label class="login-label" for="claveInput">Clave de acceso</label>
+            <input type="password" id="claveInput" class="login-input" placeholder="••••••••" autocomplete="current-password">
+            <button id="loginBtn" class="login-btn">Ingresar al sistema</button>
+            <div id="loginError" class="error-message"></div>
+
+            <div class="login-foot">
+                <span class="login-foot-dot"></span>
+                Inscrito en el Registro Nacional de Administradores · MINVU
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- App -->
+<!-- ═══════════════════════════════════════════════════════
+     APP SHELL
+═══════════════════════════════════════════════════════ -->
 <div id="app" class="app" style="display:none;">
 
     <!-- Sidebar desktop -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <h2>CoproActiva</h2>
+            <div class="sidebar-logo">
+                <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+            </div>
+            <div class="sidebar-tag">Panel de administración</div>
         </div>
-        <nav>
-            <button class="nav-btn active" data-modulo="crm">📋 CRM</button>
-            <button class="nav-btn" data-modulo="diagnostico">🔍 Diagnóstico</button>
-            <button class="nav-btn" data-modulo="flujo">📖 Flujo de trabajo</button>
+
+        <nav class="sidebar-nav">
+            <button class="nav-btn active" data-modulo="crm">
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+                </span>
+                <span class="nav-label">CRM</span>
+            </button>
+            <button class="nav-btn" data-modulo="diagnostico">
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+                </span>
+                <span class="nav-label">Diagnóstico</span>
+            </button>
+            <button class="nav-btn" data-modulo="flujo">
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12M4 10h12M4 16h8"/></svg>
+                </span>
+                <span class="nav-label">Flujo de trabajo</span>
+            </button>
         </nav>
+
         <!-- Menú dinámico según módulo activo -->
         <div id="sidebarDynamic"></div>
+
+        <div class="sidebar-foot">
+            <div class="sidebar-foot-user">
+                <div class="sb-avatar">OM</div>
+                <div>
+                    <div class="sb-user-name">Osmar Meza</div>
+                    <div class="sb-user-role">Administrador</div>
+                </div>
+            </div>
+        </div>
     </aside>
 
     <!-- Contenido principal -->
@@ -44,15 +118,21 @@
     <!-- Barra inferior móvil -->
     <nav class="bottom-nav">
         <button class="nav-btn active" data-modulo="crm">
-            <span class="bottom-icon">📋</span>
+            <span class="bottom-icon">
+                <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+            </span>
             <span class="bottom-label">CRM</span>
         </button>
         <button class="nav-btn" data-modulo="diagnostico">
-            <span class="bottom-icon">🔍</span>
+            <span class="bottom-icon">
+                <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+            </span>
             <span class="bottom-label">Diagnóstico</span>
         </button>
         <button class="nav-btn" data-modulo="flujo">
-            <span class="bottom-icon">📖</span>
+            <span class="bottom-icon">
+                <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12M4 10h12M4 16h8"/></svg>
+            </span>
             <span class="bottom-label">Flujo</span>
         </button>
     </nav>
