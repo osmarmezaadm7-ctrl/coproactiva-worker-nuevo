@@ -685,7 +685,8 @@
     }
 
     overlay.querySelector('#btn-wsp').addEventListener('click', () => {
-      const tel = (p.telefono || '').replace(/[^0-9]/g, '');
+      const telRaw = String(p.telefono || '').trim();
+      const tel = telRaw.replace(/[^0-9]/g, '');
       if (!tel) { alert('Este prospecto no tiene teléfono registrado.'); return; }
       const num = tel.startsWith('56') ? tel : '56' + tel;
       window.open('https://wa.me/' + num, '_blank');
