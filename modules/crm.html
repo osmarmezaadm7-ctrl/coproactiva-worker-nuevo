@@ -352,6 +352,40 @@
     background: var(--co-cream);
   }
 
+  /* ── Botones Contactar ── */
+  .contactar-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .btn-contactar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 11px 14px;
+    border-radius: var(--co-r-md);
+    font-family: var(--co-font);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    min-height: 44px;
+    letter-spacing: -0.01em;
+    transition: background 0.13s, opacity 0.13s;
+  }
+  .btn-wsp {
+    background: #25D366;
+    color: #fff;
+  }
+  .btn-wsp:hover { background: #1ebe5d; }
+  .btn-mail {
+    background: var(--co-blue-soft);
+    color: var(--co-blue);
+    border: 1.5px solid var(--co-blue);
+  }
+  .btn-mail:hover { background: var(--co-blue); color: #fff; }
+
   /* Estado de carga global manejado por .module-loading en styles.css */
   .crm-error {
     background: var(--co-red-soft);
@@ -598,9 +632,24 @@
           </div>
         </div>
 
+        ${p.etapa === 'Diagnóstico' ? `
         <div class="modal-seccion">
           <div class="modal-seccion-titulo">Diagnóstico</div>
           <button class="btn-diagnostico" id="btn-diag">Iniciar diagnóstico</button>
+        </div>` : ''}
+
+        <div class="modal-seccion">
+          <div class="modal-seccion-titulo">Contactar</div>
+          <div class="contactar-btns">
+            <button class="btn-contactar btn-wsp" id="btn-wsp">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L.057 23.428a.5.5 0 0 0 .609.61l5.627-1.474A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.9 9.9 0 0 1-5.031-1.371l-.36-.214-3.733.978.997-3.645-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.465 0 9.9 4.434 9.9 9.9 0 5.465-4.435 9.9-9.9 9.9z"/></svg>
+              WhatsApp
+            </button>
+            <button class="btn-contactar btn-mail" id="btn-mail">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+              Correo
+            </button>
+          </div>
         </div>
 
         <div class="modal-seccion">
@@ -627,9 +676,23 @@
     overlay.querySelector('#mc').addEventListener('click', cerrar);
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
 
-    overlay.querySelector('#btn-diag').addEventListener('click', () => {
-      cerrar();
-      iniciarDiagnostico(p.id, p.nombreCondominio, p);
+    const btnDiag = overlay.querySelector('#btn-diag');
+    if (btnDiag) {
+      btnDiag.addEventListener('click', () => {
+        cerrar();
+        iniciarDiagnostico(p.id, p.nombreCondominio, p);
+      });
+    }
+
+    overlay.querySelector('#btn-wsp').addEventListener('click', () => {
+      const tel = (p.telefono || '').replace(/[^0-9]/g, '');
+      if (!tel) { alert('Este prospecto no tiene teléfono registrado.'); return; }
+      const num = tel.startsWith('56') ? tel : '56' + tel;
+      window.open('https://wa.me/' + num, '_blank');
+    });
+
+    overlay.querySelector('#btn-mail').addEventListener('click', () => {
+      abrirModalCorreo(p);
     });
 
     overlay.querySelector('#btn-editar').addEventListener('click', () => {
@@ -748,6 +811,82 @@
         errDiv.style.display = 'block';
         btn.disabled = false; btn.textContent = 'Guardar cambios';
       }
+    });
+  }
+
+  // ── Plantillas de correo por etapa ────────────────────────────
+  const PLANTILLAS_CORREO = {
+    'Nuevo prospecto':  { eyebrow: 'Primer contacto',     asunto: 'CoproActiva — Administración Profesional para {condominio}' },
+    'Reunión Agendada': { eyebrow: 'Confirmación',        asunto: 'Confirmación de Reunión — CoproActiva × {condominio}' },
+    'Diagnóstico':      { eyebrow: 'Siguiente paso',      asunto: 'Diagnóstico de Administración — {condominio}' },
+    'Propuesta':        { eyebrow: 'Propuesta comercial', asunto: 'Propuesta Comercial — CoproActiva para {condominio}' },
+    'Negociación':      { eyebrow: 'Seguimiento',         asunto: 'Seguimiento Propuesta — {condominio}' },
+    'Ganado':           { eyebrow: 'Bienvenida',          asunto: '¡Bienvenidos a CoproActiva! — {condominio}' },
+    'Perdido':          { eyebrow: 'Cierre',              asunto: 'Hasta pronto — CoproActiva' },
+  };
+
+  function abrirModalCorreo(p) {
+    const plantilla = PLANTILLAS_CORREO[p.etapa] || { eyebrow: '', asunto: 'CoproActiva — {condominio}' };
+    const asuntoBase = plantilla.asunto.replace('{condominio}', p.nombreCondominio || '');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-handle"></div>
+        <button class="modal-close" id="mc-mail">×</button>
+        <div class="modal-eyebrow">${plantilla.eyebrow || p.etapa}</div>
+        <div class="modal-titulo">Enviar correo</div>
+        <div class="modal-subtitulo">${p.nombreCondominio} · ${p.email || 'Sin email registrado'}</div>
+
+        <div class="form-grid" style="margin-top:18px">
+          <div class="form-group form-full">
+            <label>Para</label>
+            <input type="email" id="mail-para" value="${p.email || ''}" placeholder="correo@ejemplo.cl">
+          </div>
+          <div class="form-group form-full">
+            <label>Asunto</label>
+            <input type="text" id="mail-asunto" value="${asuntoBase}">
+          </div>
+          <div class="form-group form-full">
+            <label>Mensaje adicional (opcional)</label>
+            <textarea id="mail-cuerpo" rows="4" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;font-weight:500;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:100px" placeholder="Agrega un mensaje personalizado..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-error" id="mail-error"></div>
+        <button class="btn-guardar" id="btn-enviar-mail" style="margin-top:16px">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+          Abrir en Gmail
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    const cerrar = () => overlay.remove();
+    overlay.querySelector('#mc-mail').addEventListener('click', cerrar);
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+
+    overlay.querySelector('#btn-enviar-mail').addEventListener('click', () => {
+      const para   = overlay.querySelector('#mail-para').value.trim();
+      const asunto = overlay.querySelector('#mail-asunto').value.trim();
+      const cuerpo = overlay.querySelector('#mail-cuerpo').value.trim();
+      const errDiv = overlay.querySelector('#mail-error');
+
+      if (!para) {
+        errDiv.textContent = 'El campo Para es obligatorio.';
+        errDiv.style.display = 'block';
+        return;
+      }
+      errDiv.style.display = 'none';
+
+      const gmailUrl = 'https://mail.google.com/mail/?view=cm'
+        + '&to=' + encodeURIComponent(para)
+        + '&su=' + encodeURIComponent(asunto)
+        + (cuerpo ? '&body=' + encodeURIComponent(cuerpo) : '');
+
+      window.open(gmailUrl, '_blank');
+      cerrar();
     });
   }
 
