@@ -111,7 +111,9 @@ async function cargarModulo(modulo) {
     loading.className = 'module-loading';
     loading.innerHTML = `
       <div class="ml-iso-wrap">
-        <img class="ml-iso" src="assets/coproactiva-iso.png" alt="">
+        <div class="ml-iso-disc">
+          <div class="ml-iso" aria-hidden="true"></div>
+        </div>
       </div>
       <div class="ml-text">
         <div class="ml-brand"><b>co</b>proactiva</div>
