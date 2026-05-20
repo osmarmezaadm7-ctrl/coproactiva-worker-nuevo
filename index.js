@@ -374,6 +374,16 @@ export default {
         }, 200, origin);
       }
 
+      // ── POST /correo — envío de correo via Apps Script ────────
+      if (url.pathname === '/correo' && method === 'POST') {
+        const body = await request.json();
+        if (!body.para || !body.asunto || !body.cuerpo) {
+          return jsonResponse({ ok: false, error: 'Faltan campos: para, asunto, cuerpo' }, 400, origin);
+        }
+        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'enviarCorreo', ...body });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
       return jsonResponse({ ok: false, error: 'Ruta no encontrada' }, 404, origin);
 
     } catch (error) {
