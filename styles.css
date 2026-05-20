@@ -1152,6 +1152,109 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   MODULE LOADER — pulso con aura del isotipo
+═══════════════════════════════════════════════════════════════ */
+.module-loading {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 60px 20px;
+}
+.ml-iso-wrap {
+  position: relative;
+  width: 120px; height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ml-iso-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,133,59,0.55), rgba(217,133,59,0.15) 50%, transparent 75%);
+  animation: ml-glow-outer 1.8s ease-in-out infinite;
+  filter: blur(8px);
+}
+.ml-iso-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,133,59,0.45), transparent 65%);
+  animation: ml-glow-inner 1.8s ease-in-out infinite;
+}
+.ml-iso {
+  width: 72px;
+  height: 72px;
+  position: relative;
+  z-index: 2;
+  animation: ml-breathe 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(217,133,59,0.4));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+@keyframes ml-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes ml-glow-outer {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes ml-glow-inner {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+.ml-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ml-brand {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--co-ink);
+}
+.ml-brand b { color: var(--co-ink); font-weight: 800; }
+.ml-status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--co-mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ml-status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--co-orange);
+  animation: ml-blink 1.4s ease-in-out infinite;
+}
+@keyframes ml-blink {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.module-error {
+  background: var(--co-red-soft);
+  border: 1px solid var(--co-red);
+  border-radius: var(--co-r-md);
+  padding: 16px 20px;
+  color: var(--co-red);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    BOTTOM NAV (móvil)
 ═══════════════════════════════════════════════════════════════ */
 .bottom-nav { display: none; }
