@@ -830,64 +830,108 @@
     const plantilla = PLANTILLAS_CORREO[p.etapa] || { eyebrow: '', asunto: 'CoproActiva — {condominio}' };
     const asuntoBase = plantilla.asunto.replace('{condominio}', p.nombreCondominio || '');
 
+    // Cuerpo de plantilla prellenado según etapa
+    const CUERPOS = {
+      'Nuevo prospecto':  `Estimado/a ${p.nombreContacto},\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administración, empresa especializada en la gestión integral de condominios residenciales bajo la Ley N.° 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercanía con los residentes.\n\nMe gustaría coordinar una breve reunión para conocer la situación actual de ${p.nombreCondominio}. ¿Tendría disponibilidad esta semana?\n\nAtentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804`,
+      'Reunión Agendada': `Estimado/a ${p.nombreContacto},\n\nConfirmo nuestra reunión según lo coordinado. Estaré puntual y preparado/a para conocer en detalle la situación de ${p.nombreCondominio}.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\nAtentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804`,
+      'Diagnóstico':      `Estimado/a ${p.nombreContacto},\n\nFue un gusto reunirnos y conocer en detalle la situación de ${p.nombreCondominio}. El paso siguiente es realizar un diagnóstico integral de la administración actual.\n\nEl diagnóstico abarca las áreas legal, financiera, laboral, técnica, de seguridad y documental, con una duración estimada de 60 a 90 minutos.\n\n¿Tendría disponibilidad en los próximos días para agendar esta sesión?\n\nAtentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804`,
+      'Propuesta':        `Estimado/a ${p.nombreContacto},\n\nAdjunto nuestra propuesta comercial para la administración de ${p.nombreCondominio}, elaborada en base al diagnóstico realizado.\n\nLa propuesta incluye el plan de trabajo, metodología de gestión y estructura de honorarios.\n\nQuedo disponible para resolver cualquier consulta.\n\nAtentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804`,
+      'Negociación':      `Estimado/a ${p.nombreContacto},\n\nMe contacto para dar seguimiento a la propuesta enviada para ${p.nombreCondominio}.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda que haya surgido.\n\nAtentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804`,
+      'Ganado':           `Estimado/a ${p.nombreContacto},\n\nEs un placer darles la bienvenida a CoproActiva Administración.\n\nAdjunto el kit de bienvenida con toda la información necesaria para iniciar nuestra gestión en ${p.nombreCondominio}.\n\nAtentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804`,
+      'Perdido':          `Estimado/a ${p.nombreContacto},\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisión y quedamos disponibles para cualquier necesidad futura.\n\nAtentamente,\nCoproActiva Administración\ncontacto@coproactiva.cl · +56 9 3945 3804`,
+    };
+    const cuerpoBase = CUERPOS[p.etapa] || '';
+
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
+    overlay.innerHTML = \`
       <div class="modal-box">
         <div class="modal-handle"></div>
         <button class="modal-close" id="mc-mail">×</button>
-        <div class="modal-eyebrow">${plantilla.eyebrow || p.etapa}</div>
+        <div class="modal-eyebrow">\${plantilla.eyebrow || p.etapa}</div>
         <div class="modal-titulo">Enviar correo</div>
-        <div class="modal-subtitulo">${p.nombreCondominio} · ${p.email || 'Sin email registrado'}</div>
+        <div class="modal-subtitulo">\${p.nombreCondominio} · \${p.email || 'Sin email registrado'}</div>
 
         <div class="form-grid" style="margin-top:18px">
           <div class="form-group form-full">
             <label>Para</label>
-            <input type="email" id="mail-para" value="${p.email || ''}" placeholder="correo@ejemplo.cl">
+            <input type="email" id="mail-para" value="\${p.email || ''}" placeholder="correo@ejemplo.cl">
           </div>
           <div class="form-group form-full">
             <label>Asunto</label>
-            <input type="text" id="mail-asunto" value="${asuntoBase}">
+            <input type="text" id="mail-asunto" value="\${asuntoBase}">
           </div>
           <div class="form-group form-full">
-            <label>Mensaje adicional (opcional)</label>
-            <textarea id="mail-cuerpo" rows="4" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;font-weight:500;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:100px" placeholder="Agrega un mensaje personalizado..."></textarea>
+            <label>Mensaje</label>
+            <textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;font-weight:500;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px">\${cuerpoBase}</textarea>
           </div>
         </div>
 
         <div class="form-error" id="mail-error"></div>
-        <button class="btn-guardar" id="btn-enviar-mail" style="margin-top:16px">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-          Abrir en Gmail
-        </button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+          <button class="btn-guardar" id="btn-enviar-directo" style="background:var(--co-ink);display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Enviar
+          </button>
+          <button class="btn-guardar" id="btn-abrir-gmail" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line);display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Abrir en Gmail
+          </button>
+        </div>
+        <div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px">✓ Correo enviado correctamente</div>
       </div>
-    `;
+    \`;
 
     document.body.appendChild(overlay);
     const cerrar = () => overlay.remove();
     overlay.querySelector('#mc-mail').addEventListener('click', cerrar);
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
 
-    overlay.querySelector('#btn-enviar-mail').addEventListener('click', () => {
+    // Botón Enviar directo — via Worker → Apps Script → GmailApp
+    overlay.querySelector('#btn-enviar-directo').addEventListener('click', async () => {
       const para   = overlay.querySelector('#mail-para').value.trim();
       const asunto = overlay.querySelector('#mail-asunto').value.trim();
       const cuerpo = overlay.querySelector('#mail-cuerpo').value.trim();
       const errDiv = overlay.querySelector('#mail-error');
+      const msgOk  = overlay.querySelector('#mail-ok');
+      const btn    = overlay.querySelector('#btn-enviar-directo');
 
-      if (!para) {
-        errDiv.textContent = 'El campo Para es obligatorio.';
-        errDiv.style.display = 'block';
-        return;
-      }
+      if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
       errDiv.style.display = 'none';
+      btn.disabled = true; btn.textContent = 'Enviando…';
 
+      const resp = await api('/correo', 'POST', {
+        prospectoId: p.id,
+        etapa:       p.etapa,
+        para,
+        asunto,
+        cuerpo,
+      });
+
+      if (resp.ok && resp.data && resp.data.ok) {
+        msgOk.style.display = 'block';
+        btn.textContent = 'Enviado ✓';
+        setTimeout(cerrar, 2000);
+      } else {
+        errDiv.textContent = resp.data?.error || resp.error || 'Error al enviar';
+        errDiv.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Enviar';
+      }
+    });
+
+    // Botón Abrir en Gmail — abre navegador con todo prellenado
+    overlay.querySelector('#btn-abrir-gmail').addEventListener('click', () => {
+      const para   = overlay.querySelector('#mail-para').value.trim();
+      const asunto = overlay.querySelector('#mail-asunto').value.trim();
+      const cuerpo = overlay.querySelector('#mail-cuerpo').value.trim();
+      const errDiv = overlay.querySelector('#mail-error');
+      if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
+      errDiv.style.display = 'none';
       const gmailUrl = 'https://mail.google.com/mail/?view=cm'
-        + '&to=' + encodeURIComponent(para)
-        + '&su=' + encodeURIComponent(asunto)
-        + (cuerpo ? '&body=' + encodeURIComponent(cuerpo) : '');
-
+        + '&to='  + encodeURIComponent(para)
+        + '&su='  + encodeURIComponent(asunto)
+        + '&body=' + encodeURIComponent(cuerpo);
       window.open(gmailUrl, '_blank');
-      cerrar();
     });
   }
 
