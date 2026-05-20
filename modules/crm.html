@@ -330,15 +330,7 @@
     font-weight: 600;
   }
 
-  /* ── Estados ── */
-  .crm-loading {
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--co-mute);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-  }
+  /* Estado de carga global manejado por .module-loading en styles.css */
   .crm-error {
     background: var(--co-red-soft);
     border: 1px solid var(--co-red);
@@ -351,7 +343,20 @@
 </style>
 
 <div id="crm-root">
-  <div class="crm-loading">Cargando CRM…</div>
+  <div class="module-loading">
+    <div class="ml-iso-wrap">
+      <div class="ml-iso-disc">
+        <div class="ml-iso" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="ml-text">
+      <div class="ml-brand"><b>co</b>proactiva</div>
+      <div class="ml-status">
+        <span class="ml-status-dot"></span>
+        Cargando CRM
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
