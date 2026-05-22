@@ -1422,7 +1422,7 @@ function generarPDF(){
       ${isoSvg}
       <div>
         <div style="display:flex;align-items:baseline">${logoTxt('15pt','#D9853B','rgba(255,255,255,0.9)')}</div>
-        <div style="font-size:12pt;font-weight:700;color:#D9853B;letter-spacing:0.16em;text-transform:uppercase;margin-top:2px;opacity:0.8">Comunidades que funcionan</div>
+        <div style="font-size:7pt;font-weight:700;color:#D9853B;letter-spacing:0.16em;text-transform:uppercase;margin-top:2px;opacity:0.8">Comunidades que funcionan</div>
       </div>
     </div>
  
@@ -1480,7 +1480,7 @@ function generarPDF(){
   // Calcular dasharray para el anillo del score
   const ringR=28;const ringC=2*Math.PI*ringR;const ringOff=ringC-(score/100)*ringC;
  
-  const p1=`<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:8pt;color:#1F1F1F;overflow:hidden;page-break-after:always">
+  const p1=`<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:12pt;color:#1F1F1F;overflow:hidden;page-break-after:always">
     ${fontLink}
     ${hdr(2,3)}
     <div style="padding:5mm 14mm 10mm">
@@ -1493,7 +1493,7 @@ function generarPDF(){
           </svg>
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
             <div style="font-size:14pt;font-weight:900;color:${cFg};line-height:1;letter-spacing:-0.04em">${score}</div>
-            <div style="font-size:6pt;color:${cFg};font-weight:700;opacity:0.7">%</div>
+            <div style="font-size:8pt;color:${cFg};font-weight:700;opacity:0.7">%</div>
           </div>
         </div>
         <div style="width:1px;background:${cAc};opacity:0.2;align-self:stretch;margin:2px 0"></div>
@@ -1514,10 +1514,10 @@ function generarPDF(){
           const s=scoreArea(a);const[sf,sb,sa,sl]=semHex(s?s.pct:null);
           const pct=s?s.pct:null;
           return`<div style="background:${sb};border:1px solid ${sa};border-radius:7px;padding:7px 9px">
-            <div style="font-size:6.5pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:3px">${a.emoji||''} ${a.label}</div>
+            <div style="font-size:8pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:3px">${a.emoji||''} ${a.label}</div>
             <div style="font-size:20pt;font-weight:900;color:${sf};line-height:1;letter-spacing:-0.04em;margin-bottom:3px">${pct!=null?pct+'%':'—'}</div>
             <div style="height:3px;background:rgba(0,0,0,0.08);border-radius:99px;margin-bottom:4px;overflow:hidden"><div style="height:100%;width:${pct||0}%;background:${sa};border-radius:99px"></div></div>
-            <div style="font-size:6.5pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.06em">${sl}</div>
+            <div style="font-size:8pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.06em">${sl}</div>
           </div>`;}).join('')}
       </div>
     </div>
