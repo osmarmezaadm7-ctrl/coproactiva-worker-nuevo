@@ -281,31 +281,31 @@
 
   <!-- ── Barra inferior móvil ──────────────────────────────── -->
   <nav class="bottom-nav" aria-label="Navegación principal">
-    <button class="nav-btn" data-modulo="panel" onclick="navFlat('panel','Panel maestro','')">
+    <button class="nav-btn" data-nav="panel" onclick="navFlat('panel','Panel maestro','');bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
       </span>
       <span class="bottom-label">Panel</span>
     </button>
-    <button class="nav-btn" data-modulo="comunidades" onclick="navToggle('comunidades')">
+    <button class="nav-btn" data-nav="comunidades" onclick="navToggle('comunidades');bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
       </span>
       <span class="bottom-label">Comunidades</span>
     </button>
-    <button class="nav-btn active" data-modulo="crm" onclick="navToggle('crm')">
+    <button class="nav-btn active" data-nav="crm" onclick="navToggle('crm');bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
       </span>
       <span class="bottom-label">CRM</span>
     </button>
-    <button class="nav-btn" data-modulo="finanzas" onclick="navToggle('finanzas')">
+    <button class="nav-btn" data-nav="finanzas" onclick="navToggle('finanzas');bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
       </span>
       <span class="bottom-label">Finanzas</span>
     </button>
-    <button class="nav-btn" data-modulo="menu" onclick="abrirMenuMovil()">
+    <button class="nav-btn" data-nav="menu" onclick="abrirMenuMovil();bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
       </span>
@@ -601,6 +601,12 @@ function abrirMenuMovil() {
     sb.style.top = '0'; sb.style.left = '0'; sb.style.bottom = '0';
     sb.style.overflowY = 'auto';
   }
+}
+
+// ── Bottom nav active state ───────────────────────────────────
+function bnav(el) {
+  document.querySelectorAll('.bottom-nav .nav-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
 }
 
 // ── Toggle sidebar nav ───────────────────────────────────────
