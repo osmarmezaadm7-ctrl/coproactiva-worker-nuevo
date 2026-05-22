@@ -243,6 +243,9 @@
 
     </div><!-- /sb-nav-area -->
 
+    <!-- Área dinámica por módulo — app.js la puebla según CRM/diagnóstico/flujo -->
+    <div id="sidebarDynamic"></div>
+
     <div class="sidebar-foot">
       <div class="sb-avatar" id="sbAvatar">OM</div>
       <div>
@@ -510,6 +513,10 @@ function _mostrarProximamente(cacheKey, modId, subId) {
 
   // Ocultar el módulo activo anterior (igual que hace cargarModulo en app.js)
   Object.values(cache).forEach(el => { if (el && el.style) el.style.display = 'none'; });
+
+  // Limpiar el sidebar dinámico (cada módulo tiene el suyo)
+  const sd = document.getElementById('sidebarDynamic');
+  if (sd) sd.innerHTML = '';
 
   // Si ya existe un wrapper WIP para esta key, mostrarlo
   if (cache[cacheKey]) {
