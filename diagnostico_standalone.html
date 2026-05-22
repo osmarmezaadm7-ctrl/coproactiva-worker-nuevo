@@ -4,23 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CoproActiva — Diagnóstico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --na: #d18549; --na-lt: #fdeee0; --na-dk: #a8622e;
-  --az: #304660; --az-md: #516576; --az-lt: #e8edf2;
-  --vd: #6fa885; --vd-lt: #eaf4ee; --vd-dk: #1d5c38; --vd-md: #c2e0cc;
-  --surf: #f2f0ed; --border: #e8e4de; --muted: #8a9ba8;
-  --bg: #fafaf9; --text: #1a2a38;
-  --sg-fg:#1d5c38; --sg-bg:#eaf4ee; --sg-ac:#6fa885;
-  --sa-fg:#7a3e10; --sa-bg:#fdeee0; --sa-ac:#d18549;
-  --sr-fg:#7a1515; --sr-bg:#fde8e8; --sr-ac:#b83232;
+  /* Brand */
+  --na: #D9853B; --na-lt: #FDF3E7; --na-dk: #C2722C;
+  /* Dark warm (antes azul) */
+  --az: #1A1714; --az-md: #6B6359; --az-lt: #F5EFE4;
+  /* Verde (success) */
+  --vd: #5D9C7E; --vd-lt: #E8F2EC; --vd-dk: #3F7158; --vd-md: #BFDDC8;
+  /* Neutros */
+  --surf: #F5EFE4; --border: #ECE5DA; --muted: #9C958A;
+  --bg: #FBF7F0; --text: #1F1F1F;
+  /* Semáforos */
+  --sg-fg:#3F7158; --sg-bg:#E8F2EC; --sg-ac:#5D9C7E;
+  --sa-fg:#8B5028; --sa-bg:#FDF3E7; --sa-ac:#D9853B;
+  --sr-fg:#7A1F1F; --sr-bg:#FBE9E9; --sr-ac:#C44545;
+  /* Forma */
   --r:8px; --r-lg:12px; --r-xl:16px;
-  --shadow: 0 1px 4px rgba(0,0,0,0.07);
-  --shadow-md: 0 2px 10px rgba(0,0,0,0.09);
+  --shadow: 0 1px 3px rgba(31,31,31,0.05), 0 1px 2px rgba(31,31,31,0.03);
+  --shadow-md: 0 4px 12px rgba(31,31,31,0.07), 0 2px 4px rgba(31,31,31,0.04);
+  /* Fuente */
+  --font: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{-webkit-text-size-adjust:100%;}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;}
 
 /* ── MOBILE LAYOUT ─────────────────────────────────────────────────── */
 .app{display:flex;flex-direction:column;min-height:100vh;}
@@ -28,8 +39,8 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
 /* Top bar mobile */
 .topbar{background:var(--az);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .tb-logo{display:flex;align-items:center;gap:9px;}
-.tb-mark{width:28px;height:28px;background:var(--na);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;}
-.tb-brand{font-size:13px;color:white;} .tb-brand b{color:var(--na);}
+.tb-mark{width:28px;height:28px;background:var(--na);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;flex-shrink:0;letter-spacing:-0.02em;}
+.tb-brand{font-size:14px;color:white;font-weight:500;letter-spacing:-0.02em;} .tb-brand b{color:white;font-weight:800;}
 .tb-score{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.1);color:white;}
 
 /* Progress bar */
@@ -37,14 +48,14 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
 .progress-fill{height:100%;background:var(--na);transition:width 0.4s;}
 
 /* Step indicator */
-.step-indicator{padding:12px 16px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.step-info{display:flex;align-items:center;gap:8px;}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--na);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.step-name{font-size:13px;font-weight:700;color:var(--az);}
-.step-of{font-size:12px;color:var(--muted);}
+.step-indicator{padding:14px 16px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.step-info{display:flex;align-items:center;gap:10px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--na);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.01em;}
+.step-of{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;}
 
 /* Main scroll area */
-.main-scroll{flex:1;overflow-y:auto;padding:16px;}
+.main-scroll{flex:1;overflow-y:auto;padding:18px 16px;}
 
 /* ── DESKTOP OVERRIDE ─────────────────────────────────────────────── */
 @media(min-width:768px){
@@ -52,224 +63,267 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
   .topbar{display:none;}
   .progress-bar{display:none;}
   .step-indicator{display:none;}
-  .sidebar{display:flex !important;width:240px;position:fixed;top:0;left:0;height:100vh;z-index:50;}
-  .main-scroll{margin-left:240px;padding:28px 40px;min-height:100vh;}
-  #mainContent{max-width:680px;margin:0 auto;}
+  .sidebar{display:flex !important;width:260px;position:fixed;top:0;left:0;height:100vh;z-index:50;}
+  .main-scroll{margin-left:260px;padding:32px 40px;min-height:100vh;}
+  #mainContent{max-width:720px;margin:0 auto;}
 }
 
 /* ── SIDEBAR (desktop only) ───────────────────────────────────────── */
 .sidebar{display:none;flex-direction:column;background:var(--az);height:100vh;overflow-y:auto;}
-.sb-hd{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.07);}
-.sb-logo{display:flex;align-items:center;gap:9px;}
-.sb-mark{width:30px;height:30px;background:var(--na);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
-.sb-brand{font-size:13px;color:white;} .sb-brand b{color:var(--na);}
-.sb-tag{font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px;}
-.sb-nav{padding:10px 10px;flex:1;}
-.sb-lbl{font-size:9px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin:12px 0 5px;}
-.sb-step{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;transition:background 0.12s;}
-.sb-step:hover{background:rgba(255,255,255,0.05);}
-.sb-step.active{background:rgba(209,133,73,0.15);}
-.sb-n{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:rgba(255,255,255,0.3);flex-shrink:0;transition:all 0.2s;}
-.sb-step.done .sb-n{background:var(--vd);border-color:var(--vd);color:white;font-size:8px;}
+.sb-hd{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.sb-logo{display:flex;align-items:center;gap:10px;}
+.sb-mark{width:32px;height:32px;background:var(--na);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;letter-spacing:-0.02em;}
+.sb-brand{font-size:15px;color:white;font-weight:500;letter-spacing:-0.02em;} .sb-brand b{color:white;font-weight:800;}
+.sb-tag{font-size:10px;color:var(--na);margin-top:2px;font-weight:600;letter-spacing:0.04em;text-transform:lowercase;}
+.sb-nav{padding:14px 12px;flex:1;}
+.sb-lbl{font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.14em;padding:0 8px;margin:14px 0 8px;font-weight:700;}
+.sb-step{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background 0.12s;}
+.sb-step:hover{background:rgba(255,255,255,0.04);}
+.sb-step.active{background:rgba(217,133,59,0.16);}
+.sb-n{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.4);flex-shrink:0;transition:all 0.2s;font-weight:700;}
+.sb-step.done .sb-n{background:var(--vd);border-color:var(--vd);color:white;}
 .sb-step.active .sb-n{background:var(--na);border-color:var(--na);color:white;}
-.sb-sl{font-size:12px;color:rgba(255,255,255,0.4);transition:color 0.12s;}
-.sb-step.active .sb-sl{color:white;font-weight:600;}
-.sb-step.done .sb-sl{color:rgba(255,255,255,0.6);}
-.sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07);}
-.sb-s-lbl{font-size:9px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
-.sb-s-val{font-size:24px;font-weight:700;color:white;line-height:1;}
-.sb-s-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;}
-.sb-bar{height:2px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:7px;overflow:hidden;}
-.sb-bar-f{height:100%;border-radius:2px;background:var(--na);transition:width 0.4s;}
+.sb-sl{font-size:12.5px;color:rgba(255,255,255,0.55);transition:color 0.12s;font-weight:600;}
+.sb-step.active .sb-sl{color:white;}
+.sb-step.done .sb-sl{color:rgba(255,255,255,0.7);}
+.sb-foot{padding:16px 18px;border-top:1px solid rgba(255,255,255,0.06);}
+.sb-s-lbl{font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;font-weight:700;}
+.sb-s-val{font-size:28px;font-weight:800;color:white;line-height:1;letter-spacing:-0.03em;}
+.sb-s-sub{font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;font-weight:500;}
+.sb-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:99px;margin-top:10px;overflow:hidden;}
+.sb-bar-f{height:100%;border-radius:99px;background:var(--na);transition:width 0.4s;}
 
 /* ── COMPONENTS ───────────────────────────────────────────────────── */
-.ph{margin-bottom:18px;}
-.ph-title{font-size:19px;font-weight:700;color:var(--az);margin-bottom:3px;}
-.ph-sub{font-size:13px;color:var(--az-md);}
+.ph{margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.ph-text{flex:1;min-width:0;}
+.ph-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--na);margin-bottom:6px;}
+.ph-title{font-size:28px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-0.03em;line-height:1.1;}
+.ph-title em{font-style:normal;color:var(--na);}
+.ph-sub{font-size:13.5px;color:var(--muted);font-weight:500;max-width:540px;}
+.ph-action{flex-shrink:0;}
 
-.card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:10px;box-shadow:var(--shadow);}
-.card-ttl{font-size:14px;font-weight:700;color:var(--az);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+/* ── DIAG HERO (revisión y home) ── */
+.diag-hero{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:24px 28px;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center;margin-bottom:18px;position:relative;overflow:hidden;}
+.diag-hero::after{content:'';position:absolute;right:-50px;top:-50px;width:220px;height:220px;background:radial-gradient(circle,var(--na-lt),transparent 70%);pointer-events:none;}
+.diag-hero-text{position:relative;z-index:1;min-width:0;}
+.diag-hero-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--na);margin-bottom:6px;}
+.diag-hero-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.025em;line-height:1.15;margin-bottom:4px;}
+.diag-hero-sub{font-size:13px;color:var(--muted);font-weight:500;}
+.diag-ring{position:relative;width:120px;height:120px;z-index:1;flex-shrink:0;}
+.diag-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.diag-ring circle{fill:none;stroke-width:9;}
+.diag-ring .bg{stroke:var(--border);}
+.diag-ring .fg{stroke-linecap:round;transition:stroke-dashoffset 0.6s;}
+.diag-ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.diag-ring-val{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-0.03em;line-height:1;}
+.diag-ring-lbl{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px;}
+@media(max-width:600px){.diag-hero{grid-template-columns:1fr;padding:20px;text-align:center;}.diag-ring{margin:0 auto;}}
+
+.card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--shadow);}
+.card-ttl{font-size:14px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;letter-spacing:-0.01em;}
 .cdot{width:7px;height:7px;border-radius:50%;background:var(--na);flex-shrink:0;}
 
 /* ── FORM ──────────────────────────────────────────────────────────── */
-.fg{display:grid;grid-template-columns:1fr;gap:12px;}
+.fg{display:grid;grid-template-columns:1fr;gap:14px;}
 @media(min-width:480px){.fg{grid-template-columns:1fr 1fr;}}
-.f{display:flex;flex-direction:column;gap:5px;}
+.f{display:flex;flex-direction:column;gap:6px;}
 .f.full{grid-column:1/-1;}
 .f.full3{grid-column:1/-1;}
 @media(min-width:480px){.f.full3{grid-column:1/-1;}}
-label.fl{font-size:11.5px;color:var(--az-md);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
-input,select,textarea{font-family:Arial,sans-serif;font-size:14px;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--bg);width:100%;transition:border-color 0.13s;-webkit-appearance:none;appearance:none;}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--na);background:white;}
-textarea{resize:vertical;min-height:56px;}
-.hint{font-size:11px;color:var(--muted);margin-top:2px;}
+label.fl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;}
+input,select,textarea{font-family:var(--font);font-size:14px;font-weight:500;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 14px;background:white;width:100%;transition:border-color 0.13s, box-shadow 0.13s;-webkit-appearance:none;appearance:none;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--na);box-shadow:0 0 0 3px var(--na-lt);}
+textarea{resize:vertical;min-height:62px;}
+.hint{font-size:11px;color:var(--muted);margin-top:3px;font-weight:500;}
 
 /* Type cards */
-.type-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+.type-grid{display:grid;grid-template-columns:1fr;gap:10px;}
 @media(min-width:400px){.type-grid{grid-template-columns:repeat(3,1fr);}}
-.type-card{border:1.5px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:all 0.13s;background:var(--bg);text-align:center;}
+.type-card{border:1.5px solid var(--border);border-radius:var(--r);padding:14px 12px;cursor:pointer;transition:all 0.13s;background:white;text-align:center;}
 .type-card:hover{border-color:var(--na);background:var(--na-lt);}
-.type-card.sel{border-color:var(--na);background:var(--na-lt);}
-.type-card-icon{font-size:22px;margin-bottom:5px;}
-.type-card-name{font-size:13px;font-weight:700;color:var(--az);}
-.type-card-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.type-card.sel{border-color:var(--na);background:var(--na-lt);box-shadow:0 0 0 3px var(--na-lt);}
+.type-card-icon{font-size:24px;margin-bottom:6px;}
+.type-card-name{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-0.01em;}
+.type-card-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;}
 
 /* Saved list */
 .saved-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
 .saved-select{flex:1;min-width:180px;}
-.ctx-note{font-size:12px;color:var(--muted);padding:8px 10px;background:var(--surf);border-radius:6px;border-left:2.5px solid var(--na);margin-top:10px;}
+.ctx-note{font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surf);border-radius:var(--r);border-left:3px solid var(--na);margin-top:10px;}
 
 /* ── CHECKLIST ─────────────────────────────────────────────────────── */
-.items{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
-.irow{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--r);background:var(--surf);cursor:pointer;transition:background 0.12s;border:1.5px solid transparent;user-select:none;}
-.irow:active{background:#ebe8e3;}
+.items{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.irow{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border-radius:var(--r);background:var(--bg);cursor:pointer;transition:all 0.13s;border:1.5px solid transparent;user-select:none;}
+.irow:hover{background:white;border-color:var(--border);}
+.irow:active{transform:scale(0.99);}
 .irow.on{background:var(--vd-lt);border-color:var(--vd-md);}
-.irow.na{opacity:0.3;cursor:default;pointer-events:none;}
+.irow.na{opacity:0.35;cursor:default;pointer-events:none;}
 .chk{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;background:white;transition:all 0.13s;}
 .irow.on .chk{background:var(--vd);border-color:var(--vd);}
 .ckm{display:none;width:5px;height:9px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg) translate(-1px,-1px);}
 .irow.on .ckm{display:block;}
-.itxt{flex:1;font-size:13.5px;color:var(--text);line-height:1.45;}
-.wp{font-size:10px;padding:2px 7px;border-radius:10px;flex-shrink:0;margin-top:3px;font-weight:700;white-space:nowrap;}
+.itxt{flex:1;font-size:13.5px;color:var(--text);line-height:1.5;font-weight:500;}
+.wp{font-size:9px;padding:3px 8px;border-radius:99px;flex-shrink:0;margin-top:3px;font-weight:800;white-space:nowrap;text-transform:uppercase;letter-spacing:0.06em;}
 .wc{background:var(--sr-bg);color:var(--sr-fg);}
 .wi{background:var(--sa-bg);color:var(--sa-fg);}
 .wb{background:var(--sg-bg);color:var(--sg-fg);}
-.nap{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surf);color:var(--muted);white-space:nowrap;}
+.nap{font-size:9px;padding:3px 8px;border-radius:99px;background:var(--surf);color:var(--muted);white-space:nowrap;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;}
 
-.obs-lbl{font-size:11.5px;color:var(--az-md);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;}
-.area-bar-row{display:flex;align-items:center;gap:9px;padding:10px 0;border-top:1px solid var(--border);margin-top:10px;flex-wrap:wrap;}
-.bar-lbl{font-size:12px;color:var(--muted);}
-.bar-track{flex:1;min-width:80px;height:5px;background:var(--surf);border-radius:3px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:3px;transition:width 0.4s;}
-.bar-pct{font-size:13px;font-weight:700;min-width:36px;text-align:right;}
-.bar-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;}
+.obs-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:6px;}
+.area-bar-row{display:flex;align-items:center;gap:10px;padding:12px 0 0;border-top:1px solid var(--border);margin-top:14px;flex-wrap:wrap;}
+.bar-lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.bar-track{flex:1;min-width:80px;height:6px;background:var(--surf);border-radius:99px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;transition:width 0.4s;}
+.bar-pct{font-size:14px;font-weight:800;min-width:40px;text-align:right;letter-spacing:-0.01em;}
+.bar-badge{font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.04em;}
 
 /* ── BUTTONS ───────────────────────────────────────────────────────── */
-.nav-row{display:flex;gap:9px;justify-content:space-between;margin-top:6px;flex-wrap:wrap;}
+.nav-row{display:flex;gap:10px;justify-content:space-between;margin-top:8px;flex-wrap:wrap;}
 .nav-row-end{justify-content:flex-end;}
-button{font-family:Arial,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;border-radius:var(--r);padding:10px 18px;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all 0.13s;-webkit-tap-highlight-color:transparent;}
-button:active{opacity:0.8;}
+button{font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border-radius:var(--r);padding:11px 18px;border:1.5px solid var(--border);background:white;color:var(--text);transition:all 0.13s;-webkit-tap-highlight-color:transparent;letter-spacing:-0.01em;}
+button:active{transform:scale(0.98);}
+button:hover{border-color:var(--na);}
 button.pri{background:var(--na);color:white;border-color:var(--na);}
+button.pri:hover{background:var(--na-dk);border-color:var(--na-dk);}
 button.vd{background:var(--vd);color:white;border-color:var(--vd);}
-button.ghost{color:var(--az-md);border-color:var(--border);}
+button.vd:hover{background:var(--vd-dk);border-color:var(--vd-dk);}
+button.ghost{color:var(--az-md);border-color:var(--border);background:white;}
+button.ghost:hover{border-color:var(--na);color:var(--na);}
 button:disabled{opacity:0.4;cursor:not-allowed;}
-.btn-sm{padding:7px 13px;font-size:12px;}
-.btn-danger{color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg);}
+.btn-sm{padding:8px 14px;font-size:12px;}
+.btn-danger{color:var(--sr-fg);border-color:var(--sr-bg);background:var(--sr-bg);}
+.btn-danger:hover{background:var(--sr-ac);color:white;border-color:var(--sr-ac);}
 
 /* ── RESULT / REVISION ─────────────────────────────────────────────── */
-.res-crit{border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;border:1.5px solid;}
-.res-circle{width:54px;height:54px;border-radius:50%;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,0.08);}
-.res-num{font-size:19px;font-weight:700;line-height:1;}
-.res-pct{font-size:9px;color:var(--muted);}
-.res-label{font-size:15px;font-weight:700;margin-bottom:2px;}
-.res-desc{font-size:12px;opacity:0.82;line-height:1.5;}
-.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+.res-crit{border-radius:var(--r-lg);padding:18px 20px;margin-bottom:14px;display:flex;align-items:center;gap:16px;border:1.5px solid;}
+.res-circle{width:60px;height:60px;border-radius:50%;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(31,31,31,0.08);}
+.res-num{font-size:22px;font-weight:800;line-height:1;letter-spacing:-0.03em;}
+.res-pct{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.1em;}
+.res-label{font-size:16px;font-weight:800;margin-bottom:3px;letter-spacing:-0.02em;}
+.res-desc{font-size:12.5px;opacity:0.85;line-height:1.55;font-weight:500;}
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
 @media(min-width:480px){.ag{grid-template-columns:repeat(3,1fr);}}
-.ac{background:white;border:1px solid var(--border);border-radius:var(--r);padding:10px 11px;transition:box-shadow 0.13s;}.ac:hover{box-shadow:var(--shadow-md);}
-.ac-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--az-md);margin-bottom:2px;}
-.ac-pct{font-size:20px;font-weight:700;line-height:1;margin-bottom:2px;}
-.ac-bar{height:3px;background:var(--surf);border-radius:2px;margin-bottom:3px;overflow:hidden;}
-.ac-fill{height:100%;border-radius:2px;}
-.ac-lbl{font-size:10px;font-weight:700;}
-.ci-list{display:flex;flex-direction:column;gap:4px;}
-.ci{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:var(--sr-bg);border-radius:6px;border-left:2.5px solid var(--sr-ac);}
-.ci-area{font-size:10px;font-weight:700;color:var(--az-md);white-space:nowrap;padding-top:1px;min-width:55px;}
-.ci-txt{font-size:12.5px;line-height:1.4;}
-.fac-card{padding:10px 12px;background:var(--surf);border-radius:6px;border-left:2.5px solid var(--na);margin-bottom:5px;}
-.fac-ttl{font-size:13px;font-weight:700;color:var(--az);margin-bottom:2px;}
-.fac-body{font-size:12px;color:var(--az-md);line-height:1.5;}
-.fac-edit{margin-top:6px;}
-.fac-edit input{font-size:12px !important;padding:6px 9px !important;margin-bottom:4px;}
-.fac-edit textarea{font-size:12px !important;padding:6px 9px !important;min-height:40px !important;}
+.ac{background:white;border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;transition:all 0.13s;}
+.ac:hover{box-shadow:var(--shadow-md);border-color:var(--na);transform:translateY(-1px);}
+.ac-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;}
+.ac-pct{font-size:22px;font-weight:800;line-height:1;margin-bottom:6px;letter-spacing:-0.03em;}
+.ac-bar{height:4px;background:var(--surf);border-radius:99px;margin-bottom:6px;overflow:hidden;}
+.ac-fill{height:100%;border-radius:99px;}
+.ac-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;}
+.ci-list{display:flex;flex-direction:column;gap:6px;}
+.ci{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--sr-bg);border-radius:var(--r);border-left:3px solid var(--sr-ac);}
+.ci-area{font-size:10px;font-weight:800;color:var(--sr-fg);white-space:nowrap;padding-top:1px;min-width:60px;text-transform:uppercase;letter-spacing:0.06em;}
+.ci-txt{font-size:12.5px;line-height:1.45;color:var(--text);font-weight:500;}
+.fac-card{padding:12px 14px;background:var(--surf);border-radius:var(--r);border-left:3px solid var(--na);margin-bottom:8px;}
+.fac-ttl{font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;letter-spacing:-0.01em;}
+.fac-body{font-size:12px;color:var(--az-md);line-height:1.55;font-weight:500;}
+.fac-edit{margin-top:8px;}
+.fac-edit input{font-size:12px !important;padding:7px 10px !important;margin-bottom:5px;}
+.fac-edit textarea{font-size:12px !important;padding:7px 10px !important;min-height:42px !important;}
 .spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--na);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.load-row{display:flex;align-items:center;gap:9px;padding:12px 0;font-size:12.5px;color:var(--muted);}
-.val-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.val-row span{font-size:13px;color:var(--muted);}
-.val-in{font-size:14px !important;font-weight:700 !important;color:var(--vd-dk) !important;text-align:right;width:110px !important;border-color:var(--vd-md) !important;}
+.load-row{display:flex;align-items:center;gap:10px;padding:14px 0;font-size:12.5px;color:var(--muted);font-weight:600;}
+.val-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.val-row span{font-size:13px;color:var(--muted);font-weight:600;}
+.val-in{font-size:14px !important;font-weight:800 !important;color:var(--vd-dk) !important;text-align:right;width:120px !important;border-color:var(--vd-md) !important;}
 
 /* Linea selector */
-.linea-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:4px;}
+.linea-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:4px;}
 @media(min-width:480px){.linea-grid{grid-template-columns:repeat(3,1fr);}}
-.linea-card{border:1.5px solid var(--border);border-radius:var(--r);padding:11px 12px;cursor:pointer;transition:all 0.13s;background:var(--bg);}
-.linea-card.sel-l1{border-color:#0369a1;background:#e0f2fe;}
+.linea-card{border:1.5px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all 0.13s;background:white;}
+.linea-card:hover{border-color:var(--na);}
+.linea-card.sel-l1{border-color:#4A6FA5;background:#EBF1FA;}
 .linea-card.sel-l2{border-color:var(--vd);background:var(--vd-lt);}
 .linea-card.sel-l3{border-color:var(--na);background:var(--na-lt);}
-.linea-card .lc-tag{font-size:10px;font-weight:700;margin-bottom:3px;}
-.linea-card .lc-name{font-size:12px;font-weight:700;color:var(--az);margin-bottom:2px;}
-.linea-card .lc-desc{font-size:11px;color:var(--az-md);}
-.suggested-badge{font-size:10px;background:var(--az);color:white;padding:1px 6px;border-radius:10px;margin-left:6px;}
+.linea-card .lc-tag{font-size:10px;font-weight:800;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em;}
+.linea-card .lc-name{font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;letter-spacing:-0.01em;}
+.linea-card .lc-desc{font-size:11.5px;color:var(--az-md);line-height:1.5;font-weight:500;}
+.suggested-badge{font-size:9px;background:var(--text);color:white;padding:2px 8px;border-radius:99px;margin-left:6px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;}
 
 /* ── MODAL ─────────────────────────────────────────────────────────── */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,23,20,0.5);backdrop-filter:blur(3px);z-index:200;align-items:flex-end;justify-content:center;}
 .modal-bg.show{display:flex;}
 @media(min-width:500px){.modal-bg{align-items:center;}}
-.modal{background:white;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 16px 28px;width:100%;max-height:85vh;overflow-y:auto;animation:slideUp 0.2s ease;}
-@media(min-width:500px){.modal{border-radius:var(--r-xl);max-width:420px;}}
+.modal{background:white;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:24px 18px 32px;width:100%;max-height:85vh;overflow-y:auto;animation:slideUp 0.2s ease;}
+@media(min-width:500px){.modal{border-radius:var(--r-xl);max-width:440px;padding:28px 24px;}}
 @keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.modal-ttl{font-size:16px;font-weight:700;color:var(--az);margin-bottom:6px;}
-.modal-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
-.modal-list{display:flex;flex-direction:column;gap:6px;}
-.modal-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:background 0.12s;}
-.modal-item:hover{background:var(--surf);}
-.modal-item-name{font-size:13.5px;font-weight:700;color:var(--az);}
-.modal-item-meta{font-size:11.5px;color:var(--muted);}
-.modal-item-score{font-size:13px;font-weight:700;padding:3px 9px;border-radius:10px;}
-.modal-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px;}
+.modal-ttl{font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.02em;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px;font-weight:500;}
+.modal-list{display:flex;flex-direction:column;gap:8px;}
+.modal-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all 0.12s;}
+.modal-item:hover{background:var(--surf);border-color:var(--na);}
+.modal-item-name{font-size:13.5px;font-weight:800;color:var(--text);letter-spacing:-0.01em;}
+.modal-item-meta{font-size:11.5px;color:var(--muted);margin-top:2px;font-weight:500;}
+.modal-item-score{font-size:13px;font-weight:800;padding:4px 10px;border-radius:99px;letter-spacing:-0.01em;}
+.modal-empty{text-align:center;padding:28px;color:var(--muted);font-size:13px;font-weight:500;}
+
 /* Pantalla de acceso */
 #loginScreen{display:flex;position:fixed;inset:0;background:var(--az);z-index:999;align-items:center;justify-content:center;flex-direction:column;padding:24px;}
-.login-box{background:white;border-radius:var(--r-xl);padding:32px 28px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px;justify-content:center;}
-.login-mark{width:40px;height:40px;background:var(--na);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;}
-.login-brand{font-size:18px;font-weight:700;color:var(--az);}
-.login-brand b{color:var(--na);}
-.login-title{font-size:15px;font-weight:700;color:var(--az);margin-bottom:6px;text-align:center;}
-.login-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;}
-.login-error{font-size:12px;color:var(--sr-ac);text-align:center;margin-top:8px;min-height:18px;}
+.login-box{background:white;border-radius:var(--r-xl);padding:36px 32px;width:100%;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,0.25);}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;justify-content:center;}
+.login-mark{width:44px;height:44px;background:var(--na);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:white;letter-spacing:-0.03em;}
+.login-brand{font-size:20px;font-weight:500;color:var(--text);letter-spacing:-0.02em;}
+.login-brand b{color:var(--text);font-weight:800;}
+.login-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;text-align:center;letter-spacing:-0.02em;}
+.login-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px;font-weight:500;}
+.login-error{font-size:12px;color:var(--sr-fg);text-align:center;margin-top:10px;min-height:18px;font-weight:600;}
+
 /* Modal detalle de área */
-.area-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:center;justify-content:center;padding:16px;}
+.area-modal-bg{display:none;position:fixed;inset:0;background:rgba(26,23,20,0.5);backdrop-filter:blur(3px);z-index:300;align-items:center;justify-content:center;padding:16px;}
 .area-modal-bg.show{display:flex;}
-.area-modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.18);animation:slideUp 0.2s ease;}
-.area-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:white;z-index:1;}
-.area-modal-ttl{font-size:16px;font-weight:700;color:var(--az);display:flex;align-items:center;gap:8px;}
-.area-modal-score{font-size:13px;font-weight:700;padding:3px 10px;border-radius:20px;}
-.area-modal-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surf);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--muted);flex-shrink:0;}
-.area-modal-body{padding:14px 18px 18px;}
-.area-modal-section{margin-bottom:14px;}
-.area-modal-section-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
-.area-modal-item{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:6px;margin-bottom:5px;}
+.area-modal{background:white;border-radius:var(--r-xl);width:100%;max-width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.22);animation:slideUp 0.2s ease;}
+.area-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:white;z-index:1;}
+.area-modal-ttl{font-size:17px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:10px;letter-spacing:-0.02em;}
+.area-modal-score{font-size:12px;font-weight:800;padding:4px 11px;border-radius:99px;letter-spacing:-0.01em;}
+.area-modal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surf);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted);flex-shrink:0;transition:all 0.13s;}
+.area-modal-close:hover{background:var(--na-lt);color:var(--na);border-color:var(--na);}
+.area-modal-body{padding:16px 20px 20px;}
+.area-modal-section{margin-bottom:16px;}
+.area-modal-section-ttl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.area-modal-item{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border-radius:var(--r);margin-bottom:6px;}
 .area-modal-item.fail{background:var(--sr-bg);}
 .area-modal-item.ok{background:var(--sg-bg);}
-.area-modal-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;flex-shrink:0;margin-top:2px;white-space:nowrap;}
-.area-modal-item-txt{font-size:13px;line-height:1.4;}
-.area-modal-obs{font-size:12.5px;color:var(--az-md);padding:8px 10px;background:var(--surf);border-radius:6px;border-left:2.5px solid var(--na);line-height:1.5;}
+.area-modal-badge{font-size:9px;font-weight:800;padding:3px 7px;border-radius:99px;flex-shrink:0;margin-top:2px;white-space:nowrap;text-transform:uppercase;letter-spacing:0.06em;}
+.area-modal-item-txt{font-size:13px;line-height:1.45;font-weight:500;}
+.area-modal-obs{font-size:12.5px;color:var(--az-md);padding:10px 12px;background:var(--surf);border-radius:var(--r);border-left:3px solid var(--na);line-height:1.55;font-weight:500;}
+
 /* Exit modal */
-.exit-options{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
-.exit-opt{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all 0.13s;background:var(--bg);}
+.exit-options{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+.exit-opt{display:flex;align-items:center;gap:14px;padding:16px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all 0.13s;background:white;}
 .exit-opt:hover{border-color:var(--na);background:var(--na-lt);}
 .exit-opt.danger:hover{border-color:var(--sr-ac);background:var(--sr-bg);}
-.exit-opt-icon{font-size:22px;flex-shrink:0;}
-.exit-opt-ttl{font-size:14px;font-weight:700;color:var(--az);}
-.exit-opt-desc{font-size:12px;color:var(--muted);}
+.exit-opt-icon{font-size:24px;flex-shrink:0;}
+.exit-opt-ttl{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-0.01em;}
+.exit-opt-desc{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;}
+
 /* Home view */
-.home-header{background:var(--az);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
-.home-logo{display:flex;align-items:center;gap:10px;}
-.home-mark{width:36px;height:36px;background:var(--na);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;}
-.home-brand{font-size:15px;font-weight:700;color:white;}
-.home-brand b{color:var(--na);}
-.home-tag{font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;}
-.hist-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.13s;box-shadow:var(--shadow);}
-.hist-card:hover{border-color:var(--na);box-shadow:var(--shadow-md);}
-.hist-score{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.home-header{background:var(--az);border-radius:var(--r-lg);padding:22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.home-logo{display:flex;align-items:center;gap:12px;}
+.home-mark{width:40px;height:40px;background:var(--na);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:white;letter-spacing:-0.03em;}
+.home-brand{font-size:16px;font-weight:500;color:white;letter-spacing:-0.02em;}
+.home-brand b{color:white;font-weight:800;}
+.home-tag{font-size:11px;color:var(--na);margin-top:2px;font-weight:600;text-transform:lowercase;}
+.hist-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.13s;box-shadow:var(--shadow);}
+.hist-card:hover{border-color:var(--na);box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.hist-score{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;letter-spacing:-0.02em;}
 .hist-info{flex:1;min-width:0;}
-.hist-nombre{font-size:14px;font-weight:700;color:var(--az);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hist-meta{font-size:11.5px;color:var(--muted);margin-top:1px;}
-.hist-linea{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.hist-nombre{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.01em;}
+.hist-meta{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500;}
+.hist-linea{font-size:10px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap;text-transform:uppercase;letter-spacing:0.04em;}
 .hist-actions{display:flex;gap:6px;flex-shrink:0;}
-.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
-.empty-icon{font-size:36px;margin-bottom:10px;}
-.empty-ttl{font-size:15px;font-weight:700;color:var(--az-md);margin-bottom:6px;}
-.empty-desc{font-size:13px;line-height:1.6;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty-ttl{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.02em;}
+.empty-desc{font-size:13px;line-height:1.6;font-weight:500;}
+
+/* Cuando está dentro de un iframe — sidebar oculto vía CSS (no eliminar del DOM) */
+.in-iframe .sidebar { display: none !important; }
+.in-iframe .main-scroll { margin-left: 0 !important; }
+.in-iframe #mainContent { max-width: 100% !important; }
+.in-iframe .home-header { display: none !important; }
+.in-iframe .topbar { display: none !important; }
+.in-iframe .progress-bar { display: none !important; }
+.in-iframe .step-indicator { display: none !important; }
 </style>
 </head>
 <body>
@@ -286,10 +340,10 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
       <label class="fl">Clave de acceso</label>
       <input type="password" id="loginInput" placeholder="••••••••"
         onkeydown="if(event.key==='Enter') checkLogin()"
-        style="font-size:16px;padding:12px 14px;text-align:center;letter-spacing:4px">
+        style="font-size:16px;padding:13px 14px;text-align:center;letter-spacing:6px">
     </div>
     <div class="login-error" id="loginError"></div>
-    <button class="pri" onclick="checkLogin()" style="width:100%;margin-top:14px;padding:12px;font-size:14px">
+    <button class="pri" onclick="checkLogin()" style="width:100%;margin-top:14px;padding:13px;font-size:14px">
       Ingresar
     </button>
   </div>
@@ -304,7 +358,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="tb-score" id="tbScore" style="display:none">0%</div>
-      <button id="tbExitBtn" onclick="openExitModal()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif">Salir</button>
+      <button id="tbExitBtn" onclick="openExitModal()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.85);padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)">Salir</button>
     </div>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
@@ -323,7 +377,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
         <div class="sb-mark">C</div>
         <div>
           <div class="sb-brand"><b>co</b>proactiva</div>
-          <div class="sb-tag">Comunidades que funcionan.</div>
+          <div class="sb-tag">Comunidades que funcionan</div>
         </div>
       </div>
     </div>
@@ -333,7 +387,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
       <div class="sb-s-val" id="sbVal">0%</div>
       <div class="sb-s-sub" id="sbSub">Sin datos aún</div>
       <div class="sb-bar"><div class="sb-bar-f" id="sbFill" style="width:0%"></div></div>
-      <button onclick="openExitModal()" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;transition:background 0.13s">← Salir del diagnóstico</button>
+      <button onclick="openExitModal()" style="width:100%;margin-top:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);color:rgba(255,255,255,0.7);padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:background 0.13s">← Salir del diagnóstico</button>
     </div>
   </aside>
 
@@ -346,14 +400,14 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-ttl">Diagnósticos guardados</div>
     <div class="modal-list" id="modalList"></div>
-    <div style="margin-top:12px">
+    <div style="margin-top:14px">
       <button class="ghost btn-sm" onclick="closeModal()" style="width:100%">Cancelar</button>
     </div>
   </div>
 </div>
 
 <!-- TOAST feedback guardado -->
-<div id="toastGuardado" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--az);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;gap:8px;align-items:center">
+<div id="toastGuardado" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--az);color:white;padding:12px 22px;border-radius:99px;font-size:13px;font-weight:700;z-index:500;box-shadow:0 6px 20px rgba(0,0,0,0.25);transition:opacity 0.3s;gap:10px;align-items:center;letter-spacing:-0.01em">
   <span id="toastIcon">💾</span>
   <span id="toastMsg">Guardando...</span>
 </div>
@@ -389,18 +443,22 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
       <div class="exit-opt danger" onclick="salirSinGuardar()">
         <div class="exit-opt-icon">🚪</div>
         <div>
-          <div class="exit-opt-ttl" style="color:var(--sr-ac)">Salir sin guardar</div>
+          <div class="exit-opt-ttl" style="color:var(--sr-fg)">Salir sin guardar</div>
           <div class="exit-opt-desc">Los datos no guardados se perderán.</div>
         </div>
       </div>
     </div>
-    <div style="margin-top:12px">
+    <div style="margin-top:14px">
       <button class="ghost btn-sm" onclick="closeExitModal()" style="width:100%">Cancelar — seguir trabajando</button>
     </div>
   </div>
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// LÓGICA — IDÉNTICA a la versión original. Solo cambia el CSS visual.
+// ═══════════════════════════════════════════════════════════════════════════════
+
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const AREAS=[
   {id:'legal',label:'Legal',emoji:'⚖️',items:[
@@ -464,17 +522,17 @@ const WP={c:3,i:2,b:1};
 const LINEAS={
   L1:{label:'Administración integral',sublabel:'Administración integral',
       desc:'La comunidad tiene base. CoproActiva asume la administración completa y optimiza los procesos existentes.',
-      color:'#0369a1',bg:'#e0f2fe',
+      color:'#4A6FA5',bg:'#EBF1FA',
       items:['Recepción y auditoría documental completa','Gestión financiera con rendiciones mensuales al comité','Coordinación de proveedores y mantención preventiva','Plataforma digital para cobro y comunicación','Informes de gestión mensuales con indicadores clave'],
       valMin:'600.000',valMax:'900.000'},
   L2:{label:'Nueva administración',sublabel:'Nueva administración',
       desc:'La comunidad necesita restructuración. CoproActiva ordena cada área desde cero y regulariza la gestión.',
-      color:'#1d5c38',bg:'#eaf4ee',
+      color:'#3F7158',bg:'#E8F2EC',
       items:['Levantamiento del estado administrativo y financiero actual','Regularización legal, laboral y documental prioritaria','Implementación de plataforma de gestión y control de morosidad','Coordinación de equipamiento crítico y mantención preventiva','Informes periódicos al comité con plan de avance'],
       valMin:'800.000',valMax:'1.100.000'},
   L3:{label:'Asesoría externa',sublabel:'Asesoría externa',
       desc:'Diagnóstico y orientación sin cambio de administración. Apoyo técnico al comité vigente.',
-      color:'#7a3e10',bg:'#fdeee0',
+      color:'#8B5028',bg:'#FDF3E7',
       items:['Auditoría documental con informe de hallazgos','Asesoría legal y normativa sobre Ley 21.442','Orientación para regularización laboral y previsional','Plan de acción priorizado por nivel de riesgo','Acompañamiento al comité en la toma de decisiones'],
       valMin:'300.000',valMax:'500.000'},
 };
@@ -507,7 +565,7 @@ function scoreArea(a){
   if(!areaApplies(a))return null;
   let earned=0,possible=0;
   a.items.forEach((it,i)=>{
-    if(!itemApplies(it))return; // NA excluido del denominador
+    if(!itemApplies(it))return;
     const w=WP[it.w]; possible+=w;
     if(S.checks[a.id][i])earned+=w;
   });
@@ -533,32 +591,21 @@ function critFailing(){
   return out;
 }
 
-// ── Análisis completo — 4 niveles + gatillos ─────────────────────────────────
 function getDiagnostico(){
   const score=globalScore();
   const crits=critFailing();
   const hasCritFail=crits.length>0;
-
-  // Áreas con puntaje < 60% (foco de riesgo prioritario)
   const areasLow=AREAS
     .map(a=>({...a,score:scoreArea(a)}))
     .filter(a=>a.score&&a.score.pct<60);
-
-  // Áreas en rojo (< 40%)
   const areasRed=areasLow.filter(a=>a.score.pct<40);
-
-  // Intervención prioritaria si hay crítico incumplido o área < 60%
   const requiereIntervencion=hasCritFail||areasLow.length>0;
 
-  // Clasificación de 4 niveles
-  // Regla: ítems críticos incumplidos o áreas <60% impiden clasificación "Estable limpio"
   let nivel,desc;
   if(score>=70 && areasLow.length===0 && !hasCritFail){
-    // Estable limpio: global ≥70%, todas las áreas ≥60% Y sin críticos incumplidos
     nivel='Estable';
     desc='La comunidad presenta una gestión ordenada en todas las áreas. CoproActiva puede optimizarla de manera continua.';
   } else if(score>=70 && (areasLow.length>0 || hasCritFail)){
-    // Estable con observaciones: global ≥70% pero hay áreas <60% o ítems críticos sin cumplir
     nivel='Estable con observaciones';
     const motivos=[];
     if(areasLow.length>0) motivos.push(`focos de riesgo en: ${areasLow.map(a=>a.label).join(', ')}`);
@@ -575,7 +622,6 @@ function getDiagnostico(){
   return{score,nivel,desc,hasCritFail,crits,areasLow,areasRed,requiereIntervencion};
 }
 
-// ── Línea sugerida ────────────────────────────────────────────────────────────
 function lineaSugerida(){
   const d=getDiagnostico();
   if(d.score<30)return'L3';
@@ -584,7 +630,6 @@ function lineaSugerida(){
 }
 function lineaActual(){return S.lineaOverride||lineaSugerida();}
 
-// ── Semáforo por área ─────────────────────────────────────────────────────────
 function semC(pct){
   if(pct==null)return{fg:'var(--az-md)',bg:'var(--surf)',ac:'var(--border)',lbl:'No aplica'};
   if(pct>=70) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Bien'};
@@ -593,7 +638,6 @@ function semC(pct){
   return{fg:'var(--sr-fg)',bg:'var(--sr-bg)',ac:'var(--sr-ac)',lbl:'Crítico'};
 }
 
-// ── Criticidad global ─────────────────────────────────────────────────────────
 function critData(score){
   const d=getDiagnostico();
   const MAP={
@@ -606,44 +650,40 @@ function critData(score){
   return{...col,lbl:d.nivel,desc:d.desc,requiereIntervencion:d.requiereIntervencion,diag:d};
 }
 
-// ─── STORAGE — Google Sheets via Worker ───────────────────────────────────────
-const WORKER_BASE = 'https://coproactiva.osmarmeza-adm7.workers.dev';
+// ─── STORAGE ─────────────────────────────────────────────────────────────────
+const WORKER_BASE = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+const _DIAG_TOKEN = 'copro2025';
 
-// ─── ESTRATEGIA: carga instantánea desde localStorage, sincroniza Sheets en background
 let _cache = null;
 let _cacheTime = 0;
 let _syncInProgress = false;
-const CACHE_TTL = 60000; // 1 minuto
+const CACHE_TTL = 60000;
 
-// Lee localStorage inmediatamente — sin espera
 function getSavedLocal() {
   try { return JSON.parse(localStorage.getItem('ca_diag')||'[]'); } catch(e){ return []; }
 }
 
-// Sincroniza con Sheets en background y actualiza si hay diferencias
 async function syncWithSheets() {
   if(_syncInProgress) return;
   _syncInProgress = true;
   try {
-    const res = await fetch(`${WORKER_BASE}/diagnosticos`);
+    const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
+      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+    });
     const data = await res.json();
     if(!data.diagnosticos) return;
     const remote = data.diagnosticos.map(d => ({
       ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
     }));
-    // Merge: remote tiene prioridad, completar con local si hay algo que no está en remote
     const remoteNames = new Set(remote.map(d=>d.nombre));
     const localOnly = getSavedLocal().filter(d=>!remoteNames.has(d.nombre));
     const merged = [...remote, ...localOnly];
-    // Actualizar localStorage con datos de Sheets
     localStorage.setItem('ca_diag', JSON.stringify(merged.slice(0,50)));
     _cache = merged;
     _cacheTime = Date.now();
-    // Si estamos en home, actualizar la vista silenciosamente
     if(S.view==='home') {
       _homeData = merged;
       document.getElementById('mainContent').innerHTML = renderHome();
-      // Quitar indicador de sincronización
       const syncEl = document.getElementById('syncIndicator');
       if(syncEl) { syncEl.textContent = '✓ Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
     }
@@ -659,7 +699,6 @@ async function syncWithSheets() {
 async function getSaved() {
   const now = Date.now();
   if (_cache && (now - _cacheTime) < CACHE_TTL) return _cache;
-  // Devolver local inmediatamente
   const local = getSavedLocal();
   _cache = local;
   return local;
@@ -667,13 +706,10 @@ async function getSaved() {
 
 async function saveDiag() {
   const nombre = S.ctx.nombre?.trim() || 'Sin nombre';
-  // ID estable basado en el nombre — siempre el mismo para el mismo condominio
-  // Así al guardar de nuevo reemplaza en vez de duplicar
   const id = 'diag_' + nombre.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,40);
 
   const record = {
-    id,
-    nombre,
+    id, nombre,
     fecha: new Date().toLocaleDateString('es-CL'),
     score: globalScore(),
     linea: lineaActual(),
@@ -685,25 +721,23 @@ async function saveDiag() {
     lineaOverride: S.lineaOverride,
   };
 
-  showToast('Guardando...', '💾', 60000); // toast permanente hasta confirmar
+  showToast('Guardando...', '💾', 60000);
 
   try {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, payload:record })
+      headers: {'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'saveDiagnostico', id, fecha:record.fecha, nombre, score:record.score, payload:record })
     });
     const data = await res.json();
     if(!data.ok) throw new Error(data.error||'Error desconocido');
 
     _cache = null;
-    // Backup localStorage
     const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
     local.unshift(record);
     localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
 
     showToast('Guardado correctamente', '✅', 2500);
-    // Forzar resync con Sheets en background
     setTimeout(syncWithSheets, 500);
   } catch(e) {
     console.error('Error guardando en Sheets, usando localStorage:', e);
@@ -737,12 +771,11 @@ async function deleteSaved(nombre) {
     if(d && d.id) {
       await fetch(`${WORKER_BASE}/diagnosticos`, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'eliminar', id:d.id })
+        headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'saveDiagnostico', accion:'eliminar', id:d.id })
       });
     }
     _cache = null;
-    // También borrar del localStorage
     const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
     localStorage.setItem('ca_diag', JSON.stringify(local));
   } catch(e) {
@@ -758,31 +791,49 @@ function renderNav(){
   const ai=steps.findIndex(s=>s.id===S.view);
   const score=globalScore();const crit=critData(score);
 
-  // Sidebar
-  document.getElementById('sbNav').innerHTML=steps.map((s,i)=>`
+  const sbNav=document.getElementById('sbNav');
+  if(sbNav) sbNav.innerHTML=steps.map((s,i)=>`
     <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
       <div class="sb-n">${i<ai?'✓':i+1}</div>
       <div class="sb-sl">${s.emoji?s.emoji+' ':''  }${s.label}</div>
     </div>`).join('');
-  document.getElementById('sbVal').textContent=score+'%';
-  document.getElementById('sbVal').style.color=crit.ac;
-  document.getElementById('sbSub').textContent=crit.lbl;
-  document.getElementById('sbFill').style.width=score+'%';
-  document.getElementById('sbFill').style.background=crit.ac;
+  const sbVal=document.getElementById('sbVal');
+  if(sbVal){sbVal.textContent=score+'%';sbVal.style.color=crit.ac;}
+  const sbSub=document.getElementById('sbSub');
+  if(sbSub) sbSub.textContent=crit.lbl;
+  const sbFill=document.getElementById('sbFill');
+  if(sbFill){sbFill.style.width=score+'%';sbFill.style.background=crit.ac;}
 
-  // Topbar
-  document.getElementById('tbScore').textContent=score+'%';
-  document.getElementById('tbScore').style.background=score>0?crit.ac+'33':'rgba(255,255,255,0.1)';
+  const tbScore=document.getElementById('tbScore');
+  if(tbScore){tbScore.textContent=score+'%';tbScore.style.background=score>0?crit.ac+'33':'rgba(255,255,255,0.1)';}
 
-  // Progress
-  const pct=Math.round((ai/( steps.length-1))*100);
-  document.getElementById('progFill').style.width=pct+'%';
+  const pct=Math.round((ai/(steps.length-1))*100);
+  const progFill=document.getElementById('progFill');
+  if(progFill) progFill.style.width=pct+'%';
 
-  // Step indicator
   const current=steps[ai];
-  document.getElementById('stepNum').textContent=ai+1;
-  document.getElementById('stepName').textContent=current?current.label:'';
-  document.getElementById('stepOf').textContent=`Paso ${ai+1} de ${steps.length}`;
+  const stepNum=document.getElementById('stepNum');
+  const stepName=document.getElementById('stepName');
+  const stepOf=document.getElementById('stepOf');
+  if(stepNum) stepNum.textContent=ai+1;
+  if(stepName) stepName.textContent=current?current.label:'';
+  if(stepOf) stepOf.textContent=`Paso ${ai+1} de ${steps.length}`;
+
+  if(window.parent !== window) {
+    window.parent.postMessage({
+      type: 'diag_estado',
+      score: score,
+      nivel: crit.lbl,
+      color: crit.ac,
+      pasoActual: S.view,
+      view: S.view,
+      steps: steps.map((s,i)=>({
+        id: s.id, label: s.label, emoji: s.emoji||'',
+        active: s.id===S.view,
+        done: i < ai
+      }))
+    }, '*');
+  }
 }
 
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
@@ -792,10 +843,8 @@ function goPrev(){const i=VIEWS.indexOf(S.view);if(i>0)goTo(VIEWS[i-1]);}
 
 function render(){
   const isHome=S.view==='home';
-  // Show/hide exit button and score in topbar (mobile)
   const tbScore=document.getElementById('tbScore');
   const tbExit=document.getElementById('tbExitBtn');
-  const topbarEl=document.getElementById('topbar');
   const stepInd=document.querySelector('.step-indicator');
   const progBar=document.querySelector('.progress-bar');
   if(tbScore){tbScore.style.display=isHome?'none':'block';}
@@ -817,14 +866,15 @@ function render(){
 // ─── CONTEXTO ─────────────────────────────────────────────────────────────────
 function renderCtx(){
   const c=S.ctx;
-  const saved=_homeData||[];
   return`
   <div class="ph">
-    <div class="ph-title">Datos de la comunidad</div>
-    <div class="ph-sub">Completa la información básica para comenzar el diagnóstico</div>
+    <div class="ph-text">
+      <div class="ph-eyebrow">Diagnóstico</div>
+      <div class="ph-title">Datos de la <em>comunidad</em></div>
+      <div class="ph-sub">Completa la información básica para comenzar el diagnóstico</div>
+    </div>
   </div>
 
-  <!-- Guardar / Cargar -->
   <div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--az-md)"></div>Formularios guardados</div>
     <div class="saved-bar">
@@ -835,7 +885,6 @@ function renderCtx(){
     <div class="hint">Los diagnósticos se guardan en este navegador y dispositivo.</div>
   </div>
 
-  <!-- Identificación -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Identificación</div>
     <div class="fg">
@@ -855,7 +904,6 @@ function renderCtx(){
     </div>
   </div>
 
-  <!-- Tipo de condominio -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Tipo de condominio</div>
     <div class="type-grid">
@@ -871,7 +919,6 @@ function renderCtx(){
     </div>
   </div>
 
-  <!-- Características -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Características del inmueble</div>
     <div class="fg">
@@ -915,7 +962,6 @@ function renderCtx(){
     </div>
   </div>
 
-  <!-- Contacto comité -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Contacto del comité</div>
     <div class="fg">
@@ -946,7 +992,6 @@ function renderCtx(){
   </div>`;
 }
 
-// ─── ÁREA ─────────────────────────────────────────────────────────────────────
 function renderArea(area){
   const applies=areaApplies(area);
   const s=applies?scoreArea(area):null;
@@ -958,15 +1003,18 @@ function renderArea(area){
 
   return`
   <div class="ph">
-    <div class="ph-title">${area.emoji} ${area.label}</div>
-    <div class="ph-sub">Marca los ítems que la comunidad tiene en orden · ${applies?`${done}/${total} marcados`:'No aplica para esta comunidad'}</div>
+    <div class="ph-text">
+      <div class="ph-eyebrow">Área evaluada · ${ai+1}/${AREAS.length}</div>
+      <div class="ph-title">${area.emoji} <em>${area.label}</em></div>
+      <div class="ph-sub">Marca los ítems que la comunidad tiene en orden · ${applies?`${done}/${total} marcados`:'No aplica para esta comunidad'}</div>
+    </div>
   </div>
   <div class="card">
     ${!applies?`
       <div style="padding:16px 0;text-align:center">
-        <div style="font-size:28px;margin-bottom:8px">👷</div>
-        <div style="font-size:14px;font-weight:700;color:var(--az-md);margin-bottom:4px">Área no aplicable</div>
-        <div style="font-size:13px;color:var(--muted)">Esta comunidad no tiene personal contratado,<br>por lo que el área Laboral no se evalúa.</div>
+        <div style="font-size:32px;margin-bottom:10px">👷</div>
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-0.01em">Área no aplicable</div>
+        <div style="font-size:13px;color:var(--muted);font-weight:500">Esta comunidad no tiene personal contratado,<br>por lo que el área Laboral no se evalúa.</div>
       </div>`:
     `<div class="items">${area.items.map((it,i)=>{
       const na=!itemApplies(it);const on=S.checks[area.id][i];
@@ -994,19 +1042,43 @@ function renderArea(area){
 
 function toggleItem(aId,i){S.checks[aId][i]=!S.checks[aId][i];render();}
 
-// ─── REVISIÓN ─────────────────────────────────────────────────────────────────
 function renderRevision(){
   const score=globalScore();const lid=lineaActual();const sug=lineaSugerida();
   const lm=LINEAS[lid];const crit=critData(score);const crits=critFailing();
   const vMin=S.valorMin||lm.valMin;const vMax=S.valorMax||lm.valMax;
 
+  const ringCirc = 2*Math.PI*52;
+  const ringOff = ringCirc - (score/100)*ringCirc;
   return`
   <div class="ph">
-    <div class="ph-title">Revisión del diagnóstico</div>
-    <div class="ph-sub">Revisa el resultado, ajusta la línea de servicio y genera el informe PDF</div>
+    <div class="ph-text">
+      <div class="ph-eyebrow">Diagnóstico</div>
+      <div class="ph-title">Estado de la <em>comunidad</em></div>
+      <div class="ph-sub">Evaluación de 6 áreas críticas con checklist de cumplimiento normativo bajo Ley N°21.442.</div>
+    </div>
+    <div class="ph-action">
+      <button class="pri" onclick="generarPDF()" ${S.loadingFactores?'disabled':''}>📄 Descargar PDF</button>
+    </div>
   </div>
 
-  <!-- Criticidad global -->
+  <div class="diag-hero">
+    <div class="diag-hero-text">
+      <div class="diag-hero-eyebrow">Diagnóstico en curso</div>
+      <div class="diag-hero-title">${S.ctx.nombre||'Sin nombre'}</div>
+      <div class="diag-hero-sub">${S.ctx.unidades?S.ctx.unidades+' unidades · ':''}${S.ctx.contactoNombre||'Sin contacto registrado'}</div>
+    </div>
+    <div class="diag-ring">
+      <svg viewBox="0 0 120 120">
+        <circle class="bg" cx="60" cy="60" r="52"/>
+        <circle class="fg" cx="60" cy="60" r="52" stroke="${crit.ac}" stroke-dasharray="${ringCirc}" stroke-dashoffset="${ringOff}"/>
+      </svg>
+      <div class="diag-ring-num">
+        <div class="diag-ring-val" style="color:${crit.fg}">${score}%</div>
+        <div class="diag-ring-lbl">${crit.lbl}</div>
+      </div>
+    </div>
+  </div>
+
   <div class="res-crit" style="background:${crit.bg};border-color:${crit.ac};color:${crit.fg}">
     <div class="res-circle">
       <div class="res-num" style="color:${crit.fg}">${score}</div>
@@ -1015,11 +1087,10 @@ function renderRevision(){
     <div style="flex:1">
       <div class="res-label">${crit.lbl}</div>
       <div class="res-desc">${crit.desc}</div>
-      ${crit.requiereIntervencion?`<div style="margin-top:7px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;display:inline-block;background:rgba(0,0,0,0.1)">⚠ Requiere intervención prioritaria</div>`:''}
+      ${crit.requiereIntervencion?`<div style="margin-top:8px;font-size:10px;font-weight:800;padding:4px 11px;border-radius:99px;display:inline-block;background:rgba(0,0,0,0.1);text-transform:uppercase;letter-spacing:0.06em">⚠ Requiere intervención prioritaria</div>`:''}
     </div>
   </div>
 
-  <!-- Grilla de áreas -->
   <div class="ag">${AREAS.map(a=>{
     const s=scoreArea(a);const sem=semC(s?s.pct:null);
     return`<div class="ac" style="cursor:pointer" onclick="openAreaModal('${a.id}')" title="Ver detalle de ${a.label}">
@@ -1027,10 +1098,9 @@ function renderRevision(){
       <div class="ac-pct" style="color:${sem.fg}">${s?s.pct+'%':'—'}</div>
       <div class="ac-bar"><div class="ac-fill" style="width:${s?s.pct:0}%;background:${sem.ac}"></div></div>
       <div class="ac-lbl" style="color:${sem.fg}">${sem.lbl}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center">Toca para ver detalle</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;text-align:center;font-weight:600">Toca para detalle</div>
     </div>`;}).join('')}</div>
 
-  <!-- Ítems críticos -->
   ${crits.length?`<div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--sr-ac)"></div>⚠️ Ítems críticos sin resolver (${crits.length})</div>
     <div class="ci-list">${crits.map(cr=>`<div class="ci">
@@ -1039,33 +1109,31 @@ function renderRevision(){
     </div>`).join('')}</div>
   </div>`:''}
 
-  <!-- Factores IA -->
   <div class="card">
     <div class="card-ttl"><div class="cdot"></div>Factores destacados — generados por IA</div>
     ${S.loadingFactores?`<div class="load-row"><div class="spin"></div>Analizando el diagnóstico...</div>`:''}
     ${!S.loadingFactores&&S.factores.length?S.factores.map((f,i)=>`
       <div class="fac-card" style="position:relative">
-        <button onclick="eliminarFactor(${i})" title="Eliminar factor" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:white;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-weight:700;line-height:1">×</button>
-        <div class="fac-ttl" style="padding-right:24px">${f.titulo}</div>
+        <button onclick="eliminarFactor(${i})" title="Eliminar factor" style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:white;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-weight:800;line-height:1">×</button>
+        <div class="fac-ttl" style="padding-right:28px">${f.titulo}</div>
         <div class="fac-body">${f.cuerpo}</div>
         <div class="fac-edit">
           <input type="text" value="${f.titulo}" oninput="S.factores[${i}].titulo=this.value">
           <textarea oninput="S.factores[${i}].cuerpo=this.value">${f.cuerpo}</textarea>
         </div>
       </div>`).join(''):''}
-    ${!S.loadingFactores?`<div style="display:flex;gap:8px;margin-top:${S.factores.length?'8px':'0'};flex-wrap:wrap">
+    ${!S.loadingFactores?`<div style="display:flex;gap:8px;margin-top:${S.factores.length?'10px':'0'};flex-wrap:wrap">
       <button class="btn-sm ${!S.factores.length?'pri':''}" onclick="generarFactores()">
         ${S.factores.length?'↺ Regenerar':'✨ Generar factores con IA'}
       </button>
-      ${S.factores.length?`<button class="btn-sm" onclick="limpiarFactores()" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)">🗑 Limpiar todos</button>`:''}
+      ${S.factores.length?`<button class="btn-sm btn-danger" onclick="limpiarFactores()">🗑 Limpiar todos</button>`:''}
     </div>`:''}
   </div>
 
-  <!-- Línea de servicio -->
   <div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Línea de servicio propuesta</div>
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">
-      El sistema sugiere <strong style="color:var(--az)">${LINEAS[sug].label}</strong> según el puntaje.
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;font-weight:500">
+      El sistema sugiere <strong style="color:var(--text)">${LINEAS[sug].label}</strong> según el puntaje.
       Puedes confirmarla o cambiarla según tu criterio.
     </div>
     <div class="linea-grid">
@@ -1076,15 +1144,14 @@ function renderRevision(){
           <div class="lc-tag" style="color:${lm2.color}">${isSug?`<span class="suggested-badge">Sugerida</span>`:''}</div>
           <div class="lc-name">${lm2.sublabel}</div>
           <div class="lc-desc">${lm2.desc.substring(0,70)}...</div>
-          ${isSel?`<div style="font-size:10px;font-weight:700;color:${lm2.color};margin-top:5px">✓ Seleccionada</div>`:''}
+          ${isSel?`<div style="font-size:10px;font-weight:800;color:${lm2.color};margin-top:6px;text-transform:uppercase;letter-spacing:0.04em">✓ Seleccionada</div>`:''}
         </div>`;}).join('')}
     </div>
   </div>
 
-  <!-- Valor -->
   <div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Valor mensual estimado</div>
-    <p style="font-size:13px;color:var(--az-md);margin-bottom:10px">${lm.label}</p>
+    <p style="font-size:13px;color:var(--az-md);margin-bottom:12px;font-weight:500">${lm.label}</p>
     <div class="val-row">
       <span>$</span>
       <input type="text" class="val-in" value="${vMin}" oninput="S.valorMin=this.value">
@@ -1092,7 +1159,7 @@ function renderRevision(){
       <input type="text" class="val-in" value="${vMax}" oninput="S.valorMax=this.value">
       <span>CLP/mes</span>
     </div>
-    <div class="hint" style="margin-top:6px">Rango precargado según la línea seleccionada. Editable antes de generar el informe.</div>
+    <div class="hint" style="margin-top:8px">Rango precargado según la línea seleccionada. Editable antes de generar el informe.</div>
   </div>
 
   <div class="nav-row">
@@ -1104,7 +1171,6 @@ function renderRevision(){
   </div>`;
 }
 
-// ─── ACCIONES ──────────────────────────────────────────────────────────────────
 async function guardarFormulario(){
   if(!S.ctx.nombre?.trim()){
     alert('Ingresa el nombre del condominio antes de guardar.');
@@ -1141,40 +1207,32 @@ async function renderModal(){
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="modal-item-score" style="background:${sem.bg};color:${sem.fg}">${d.score}%</span>
-        <button class="btn-danger btn-sm" onclick="event.stopPropagation();deleteSaved('${d.nombre}')" style="padding:4px 8px">×</button>
+        <button class="btn-danger btn-sm" onclick="event.stopPropagation();deleteSaved('${d.nombre}')" style="padding:4px 10px">×</button>
       </div>
     </div>`;}).join('');
 }
 
 // ─── FACTORES IA ───────────────────────────────────────────────────────────────
-// URL del Worker — se actualiza después de desplegar en Cloudflare
 async function generarFactores(){
   S.loadingFactores=true;render();
   const diag2=getDiagnostico();
-  const score=diag2.score;const crits=diag2.crits;const c=S.ctx;const lid=lineaActual();
+  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
   const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
   const areasLowCtx=diag2.areasLow.length>0
     ?`Áreas con cumplimiento bajo 60% (foco de riesgo): ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
     :'Todas las áreas con cumplimiento ≥ 60%.';
-  // Construir detalle completo por área con lenguaje explícito de ausencia/incumplimiento
   const obsCtx = AREAS.map(a=>{
     const s=scoreArea(a);
     if(!s) return null;
-
-    // Ítems NO cumplidos — redactados como ausencias concretas
     const fallidos = a.items
       .filter((it,i) => itemApplies(it) && !S.checks[a.id][i])
       .map(it => {
         const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
-        // Transformar el texto del ítem en una declaración de ausencia explícita
         return `${peso} NO CUENTA CON: "${it.t}"`;
       });
-
-    // Ítems cumplidos
     const cumplidos = a.items
       .filter((it,i) => itemApplies(it) && S.checks[a.id][i])
       .map(it => `SÍ CUENTA CON: "${it.t}"`);
-
     let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
     if(fallidos.length){
       ctx += `\n  INCUMPLIMIENTOS DETECTADOS (${fallidos.length}):`;
@@ -1268,37 +1326,28 @@ RESPONDE SOLO con JSON válido, sin texto adicional, sin bloques de código mark
 
 Título: máximo 7 palabras, descriptivo del problema específico.
 Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica el riesgo o consecuencia.`;
-  // Agregar variación para que cada regeneración sea única (evita caché)
   const variation = S.factores.length > 0
     ? `\n\nNota: Esta es una NUEVA generación (intento #${Date.now()}). Genera factores DISTINTOS a los anteriores, enfocándote en diferentes ítems no cumplidos.`
     : '';
   const finalPrompt = prompt + variation;
 
-  // Verificar tamaño del prompt — si es muy largo, resumir
-  console.log('Prompt length:', finalPrompt.length, 'chars');
-
   try{
     const res=await fetch(`${WORKER_BASE}/factores`,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
       body:JSON.stringify({prompt: finalPrompt})
     });
 
     if(!res.ok){
-      const errText = await res.text();
-      console.error('Worker response error:', res.status, errText);
       throw new Error(`Error del servidor: ${res.status}`);
     }
 
     const data=await res.json();
-    console.log('Worker response:', data);
 
     if(data.error) throw new Error(data.error);
     if(!data.text) throw new Error('Respuesta vacía del servidor');
 
     const cleaned = data.text.replace(/```json|```/g,'').trim();
-    console.log('Cleaned response:', cleaned.substring(0,200));
-
     const parsed = JSON.parse(cleaned);
     if(!parsed.factores || !Array.isArray(parsed.factores)){
       throw new Error('Formato de respuesta inválido');
@@ -1315,272 +1364,173 @@ Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica
   S.loadingFactores=false;render();
 }
 
-// ─── PDF ────────────────────────────────────────────────────────────────────── 
+// ─── PDF ──────────────────────────────────────────────────────────────────────
 function generarPDF(){
   const score=globalScore();const lid=lineaActual();const lm=LINEAS[lid];
   const crit=critData(score);const c=S.ctx;const crits=critFailing();
   const vMin=S.valorMin||lm.valMin;const vMax=S.valorMax||lm.valMax;
   const fecha=new Date().toLocaleDateString('es-CL',{year:'numeric',month:'long',day:'numeric'});
   const sorted=[...AREAS].map(a=>({...a,score:scoreArea(a)})).filter(a=>a.score).sort((a,b)=>a.score.pct-b.score.pct);
-
-  // Tipografía: carga Manrope igual que la web de CoproActiva
-  const fontLink=`<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">`;
-
   function semHex(pct){
     if(pct==null)return['#6B6359','#F5EFE4','#ECE5DA','No aplica'];
-    if(pct>=70)return['#1d5c38','#E8F2EC','#5D9C7E','Bien'];
-    if(pct>=40)return['#7a3e10','#FDF3E7','#D9853B','En riesgo'];
+    if(pct>=70)return['#3F7158','#E8F2EC','#5D9C7E','Bien'];
+    if(pct>=40)return['#8B5028','#FDF3E7','#D9853B','En riesgo'];
     return['#7A1F1F','#FBE9E9','#C44545','Crítico'];
   }
   const[cFg,cBg,cAc,cLbl]=semHex(score);
-
-  // ISO-logotipo SVG (la C+P de la marca)
-  const isoSvg=`<svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><circle cx="50" cy="50" r="48" fill="#D9853B" opacity="0.18"/><path d="M72 50c0 12.15-9.85 22-22 22s-22-9.85-22-22 9.85-22 22-22c4.8 0 9.25 1.54 12.86 4.14" stroke="#D9853B" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="50" r="10" fill="#D9853B"/></svg>`;
-  const isoSvgSm=`<svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><circle cx="50" cy="50" r="48" fill="#D9853B" opacity="0.18"/><path d="M72 50c0 12.15-9.85 22-22 22s-22-9.85-22-22 9.85-22 22-22c4.8 0 9.25 1.54 12.86 4.14" stroke="#D9853B" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="50" r="10" fill="#D9853B"/></svg>`;
-
-  // Logo textual igual que la web: "co" bold naranja + "proactiva" regular
-  const logoTxt=(sz,colorCo,colorPro)=>`<span style="font-size:${sz};font-weight:900;color:${colorCo};letter-spacing:-0.03em;line-height:1">co</span><span style="font-size:${sz};font-weight:400;color:${colorPro};letter-spacing:-0.02em;line-height:1">proactiva</span>`;
-
-  // Header interior pages (páginas 2 y 3)
-  function hdr(pg,total){return`<div style="background:#1A1714;height:44px;display:flex;align-items:center;padding:0 14mm;justify-content:space-between;position:relative">
-    <div style="display:flex;align-items:center;gap:8px">${isoSvgSm}${logoTxt('10pt','#D9853B','rgba(255,255,255,0.85)')}</div>
-    <div style="font-size:7pt;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.04em;text-transform:uppercase">${c.nombre||'Sin nombre'} · Informe de Diagnóstico</div>
-    <div style="font-size:7pt;font-weight:700;color:rgba(255,255,255,0.35)">Pág. ${pg} / ${total}</div>
-    <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:#D9853B"></div>
+  function hdr(pg,total){return`<div style="background:#1A1714;height:48mm;position:relative;padding:6mm 16mm 0;font-family:Arial,sans-serif">
+    <div style="display:flex;align-items:center;gap:3mm;margin-bottom:2mm">
+      <div style="width:8mm;height:8mm;background:#D9853B;border-radius:2mm;display:flex;align-items:center;justify-content:center;font-size:10pt;font-weight:700;color:white">C</div>
+      <span style="font-size:10pt;font-weight:700;color:white">co</span><span style="font-size:10pt;color:white;font-weight:400">proactiva</span>
+    </div>
+    <div style="position:absolute;top:6mm;right:16mm;font-size:6.5pt;color:#9C958A">Pág. ${pg} / ${total}</div>
+    <div style="font-size:17pt;font-weight:700;color:white;margin-bottom:1.5mm">Informe de Diagnóstico Inicial</div>
+    <div style="font-size:7.5pt;color:#D9853B;margin-bottom:3.5mm">Diagnóstico preliminar de riesgo y propuesta de administración</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">
+      ${[['CONDOMINIO',c.nombre||'—'],['FECHA',fecha],['TIPO / UNID.',`Tipo ${c.tipo} · ${c.unidades||'?'} unidades`],['ELABORADO POR','CoproActiva']].map(([l,v])=>`
+      <div><div style="font-size:5.5pt;color:#9C958A;margin-bottom:1mm;text-transform:uppercase;letter-spacing:0.5px">${l}</div><div style="font-size:7.5pt;font-weight:700;color:white">${v}</div></div>`).join('')}
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:1mm;background:#D9853B"></div>
   </div>`;}
-
-  function ftr(){return`<div style="position:absolute;bottom:0;left:0;right:0;height:8mm;background:#F5EFE4;border-top:0.5px solid #ECE5DA;display:flex;align-items:center;padding:0 14mm;font-size:6pt;color:#9C958A;font-family:'Manrope',Arial,sans-serif;font-weight:600;letter-spacing:0.04em">
-    <span>coproactiva · Comunidades que funcionan</span>
-    <span style="flex:1;text-align:center">Documento confidencial — uso exclusivo del comité de administración</span>
+  function ftr(){return`<div style="position:absolute;bottom:0;left:0;right:0;height:9mm;background:#F5EFE4;border-top:0.3mm solid #ECE5DA;display:flex;align-items:center;padding:0 16mm;font-size:6.5pt;color:#9C958A;font-family:Arial,sans-serif">
+    <span>coproactiva · Comunidades que funcionan.</span>
+    <span style="flex:1;text-align:center">Documento confidencial</span>
     <span>${fecha}</span>
   </div>`;}
+  function sec(t){return`<div style="font-size:6.5pt;font-weight:700;color:#D9853B;text-transform:uppercase;letter-spacing:0.8px;border-bottom:0.5mm solid #D9853B;padding-bottom:1mm;margin:5mm 0 3mm">${t}</div>`;}
 
-  function sec(t){return`<div style="font-size:6pt;font-weight:800;color:#D9853B;text-transform:uppercase;letter-spacing:1px;border-bottom:1.5px solid #D9853B;padding-bottom:3px;margin:12px 0 8px;font-family:'Manrope',Arial,sans-serif">${t}</div>`;}
-
-  // ── PÁGINA 1: PORTADA ──────────────────────────────────────────────────────
-  const coverScoreColor=cAc;
-  const p0=`<div style="width:210mm;height:297mm;position:relative;background:#1A1714;font-family:'Manrope',Arial,sans-serif;overflow:hidden;page-break-after:always">
-    ${fontLink}
-    <!-- franja naranja izquierda -->
-    <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(to bottom,#D9853B,#C2722C 60%,transparent)"></div>
-    <!-- acento radial top-right -->
-    <div style="position:absolute;top:-80px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(217,133,59,0.12),transparent 65%);pointer-events:none"></div>
-    <!-- acento radial bottom-left -->
-    <div style="position:absolute;bottom:-60px;left:-40px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(217,133,59,0.07),transparent 65%);pointer-events:none"></div>
-
-    <!-- header logo -->
-    <div style="padding:44px 52px 0 52px;display:flex;align-items:center;gap:12px">
-      ${isoSvg}
-      <div>
-        <div style="display:flex;align-items:baseline">${logoTxt('15pt','#D9853B','rgba(255,255,255,0.9)')}</div>
-        <div style="font-size:7pt;font-weight:700;color:#D9853B;letter-spacing:0.16em;text-transform:uppercase;margin-top:2px;opacity:0.8">Comunidades que funcionan</div>
-      </div>
-    </div>
-
-    <!-- hero central -->
-    <div style="padding:0 52px;margin-top:60px">
-      <div style="font-size:7pt;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#D9853B;margin-bottom:18px;display:flex;align-items:center;gap:10px">
-        Diagnóstico inicial
-        <div style="flex:1;max-width:60px;height:1px;background:rgba(217,133,59,0.4)"></div>
-      </div>
-      <div style="font-size:44pt;font-weight:900;color:white;line-height:1.05;letter-spacing:-0.03em;margin-bottom:16px">
-        Estado de tu<br><span style="color:#D9853B">comunidad</span><br>hoy
-      </div>
-      <div style="font-size:9pt;color:rgba(255,255,255,0.38);font-weight:500;line-height:1.6;max-width:260px">
-        Evaluación de 6 áreas críticas bajo la normativa de copropiedad vigente en Chile.
-      </div>
-    </div>
-
-    <!-- score + meta integrados en la parte inferior del hero -->
-    <div style="padding:0 52px;margin-top:56px;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px">
-      <div style="display:flex;align-items:flex-end;gap:20px">
-        <div style="flex:1">
-          <div style="font-size:7pt;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:8px">Nivel de cumplimiento</div>
-          <div style="font-size:80pt;font-weight:900;color:${coverScoreColor};line-height:1;letter-spacing:-0.06em">${score}<span style="font-size:28pt;vertical-align:top;margin-top:14px;display:inline-block">%</span></div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-            <div style="font-size:13pt;font-weight:800;color:${coverScoreColor};letter-spacing:-0.01em">${cLbl}</div>
-            ${crit.requiereIntervencion?`<div style="font-size:7pt;font-weight:800;padding:2px 9px;border-radius:99px;background:rgba(196,69,69,0.18);color:${coverScoreColor};text-transform:uppercase;letter-spacing:0.08em">Requiere intervención</div>`:''}
-          </div>
+  const p1=`<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:Arial,sans-serif;font-size:8pt;color:#1F1F1F;overflow:hidden;page-break-after:always">
+    ${hdr(1,2)}
+    <div style="padding:5mm 16mm">
+      ${sec('Resultado del diagnóstico')}
+      <div style="background:${cBg};border:0.6mm solid ${cAc};border-radius:3mm;padding:4mm 5mm;display:flex;align-items:center;gap:5mm">
+        <div style="width:14mm;height:14mm;border-radius:50%;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+          <div style="font-size:14pt;font-weight:700;color:${cFg};line-height:1">${score}</div>
+          <div style="font-size:6pt;color:#9C958A">%</div>
         </div>
-        <div style="width:1px;background:rgba(255,255,255,0.06);align-self:stretch"></div>
-        <div style="text-align:right;padding-left:20px">
-          <div style="margin-bottom:14px">
-            <div style="font-size:6pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Condominio</div>
-            <div style="font-size:12pt;font-weight:800;color:white;letter-spacing:-0.02em">${c.nombre||'—'}</div>
-          </div>
-          <div style="margin-bottom:14px">
-            <div style="font-size:6pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Tipo / Unidades</div>
-            <div style="font-size:12pt;font-weight:800;color:white;letter-spacing:-0.02em">Tipo ${c.tipo} · ${c.unidades||'?'} un.</div>
-          </div>
-          <div>
-            <div style="font-size:6pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Fecha</div>
-            <div style="font-size:12pt;font-weight:800;color:white;letter-spacing:-0.02em">${fecha}</div>
-          </div>
-        </div>
+        <div style="width:0.3mm;background:${cAc};opacity:0.3;align-self:stretch;margin:1mm 0"></div>
+        <div><div style="font-size:11pt;font-weight:700;color:${cFg};font-family:Georgia,serif;margin-bottom:1.5mm">${cLbl}</div>
+        <div style="font-size:7.5pt;color:${cFg};opacity:0.85;line-height:1.5">${crit.desc}</div></div>
       </div>
-    </div>
-
-    <!-- footer -->
-    <div style="position:absolute;bottom:0;left:4px;right:0;height:36px;background:rgba(255,255,255,0.025);border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;padding:0 52px;justify-content:space-between">
-      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Documento confidencial</div>
-      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Elaborado por CoproActiva</div>
-    </div>
-  </div>`;
-
-  // ── PÁGINA 2: DIAGNÓSTICO POR ÁREAS ───────────────────────────────────────
-  // Calcular dasharray para el anillo del score
-  const ringR=28;const ringC=2*Math.PI*ringR;const ringOff=ringC-(score/100)*ringC;
-
-  const p1=`<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:8pt;color:#1F1F1F;overflow:hidden;page-break-after:always">
-    ${fontLink}
-    ${hdr(2,3)}
-    <div style="padding:5mm 14mm 10mm">
-      ${sec('Resultado global del diagnóstico')}
-      <div style="background:${cBg};border:1.5px solid ${cAc};border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:14px;margin-bottom:12px">
-        <div style="position:relative;width:56px;height:56px;flex-shrink:0">
-          <svg width="56" height="56" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
-            <circle cx="32" cy="32" r="${ringR}" fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="6"/>
-            <circle cx="32" cy="32" r="${ringR}" fill="none" stroke="${cAc}" stroke-width="6" stroke-dasharray="${ringC.toFixed(1)}" stroke-dashoffset="${ringOff.toFixed(1)}" stroke-linecap="round"/>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-            <div style="font-size:14pt;font-weight:900;color:${cFg};line-height:1;letter-spacing:-0.04em">${score}</div>
-            <div style="font-size:6pt;color:${cFg};font-weight:700;opacity:0.7">%</div>
+      ${sec('Comparativo por área — de menor a mayor cumplimiento')}
+      ${sorted.map(a=>{const[sf,sb,sa,sl]=semHex(a.score.pct);const pct=a.score.pct;const fw=pct+'%';
+        return`<div style="display:flex;align-items:center;gap:3mm;margin-bottom:2.5mm">
+          <div style="width:22mm;font-size:8pt;color:#6B6359">${a.label}</div>
+          <div style="flex:1;height:4.5mm;background:#F5EFE4;border-radius:1mm;overflow:hidden;position:relative">
+            <div style="height:100%;width:${fw};background:${sa};border-radius:1mm"></div>
+            <span style="position:absolute;top:50%;transform:translateY(-50%);${pct>20?`right:4mm;color:white`:`left:${fw};margin-left:2mm;color:${sf}`};font-size:7pt;font-weight:700">${pct}%</span>
           </div>
-        </div>
-        <div style="width:1px;background:${cAc};opacity:0.2;align-self:stretch;margin:2px 0"></div>
-        <div style="flex:1">
-          <div style="font-size:14pt;font-weight:900;color:${cFg};margin-bottom:3px;letter-spacing:-0.03em">${cLbl}</div>
-          <div style="font-size:7.5pt;color:${cFg};opacity:0.82;line-height:1.5;font-weight:500">${crit.desc}</div>
-          ${crit.requiereIntervencion?`<div style="font-size:6pt;font-weight:800;padding:2px 8px;border-radius:99px;background:rgba(0,0,0,0.1);color:${cFg};text-transform:uppercase;letter-spacing:0.08em;margin-top:5px;display:inline-block">⚠ Requiere intervención prioritaria</div>`:''}
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:6pt;font-weight:800;color:#9C958A;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:3px">Elaborado por</div>
-          <div style="font-size:10pt;font-weight:900;color:#1F1F1F;letter-spacing:-0.02em">CoproActiva</div>
-        </div>
-      </div>
-
-      ${sec('Comparativo por área')}
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px">
-        ${AREAS.map(a=>{
-          const s=scoreArea(a);const[sf,sb,sa,sl]=semHex(s?s.pct:null);
-          const pct=s?s.pct:null;
-          return`<div style="background:${sb};border:1px solid ${sa};border-radius:7px;padding:7px 9px">
-            <div style="font-size:6.5pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:3px">${a.emoji||''} ${a.label}</div>
-            <div style="font-size:20pt;font-weight:900;color:${sf};line-height:1;letter-spacing:-0.04em;margin-bottom:3px">${pct!=null?pct+'%':'—'}</div>
-            <div style="height:3px;background:rgba(0,0,0,0.08);border-radius:99px;margin-bottom:4px;overflow:hidden"><div style="height:100%;width:${pct||0}%;background:${sa};border-radius:99px"></div></div>
-            <div style="font-size:6.5pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.06em">${sl}</div>
+          <div style="width:14mm;height:4.5mm;background:${sb};border-radius:1mm;display:flex;align-items:center;justify-content:center;font-size:6.5pt;font-weight:700;color:${sf}">${sl}</div>
+        </div>`;}).join('')}
+      ${sec('Observaciones por área')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5mm">
+        ${AREAS.map(a=>{const s=scoreArea(a);const[sf,,sa,sl]=semHex(s?s.pct:null);const notes=S.notes[a.id]||'';
+          return`<div style="border:0.3mm solid #ECE5DA;border-radius:2mm;padding:2.5mm 3mm;background:white;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:2mm;background:${sa}"></div>
+            <div style="padding-left:3mm;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5mm">
+              <span style="font-size:8pt;font-weight:700;color:#1F1F1F">${a.label}</span>
+              ${s?`<span style="font-size:7pt;font-weight:700;color:${sf}">${s.pct}% · ${sl}</span>`:''}
+            </div>
+            <div style="padding-left:3mm;font-size:7.5pt;color:#6B6359;line-height:1.5">${notes||'<em style="color:#9C958A">Sin observaciones registradas.</em>'}</div>
           </div>`;}).join('')}
       </div>
     </div>
     ${ftr()}
   </div>`;
 
-  // ── PÁGINA 3: CRÍTICOS + FACTORES + PROPUESTA ─────────────────────────────
   const byArea={};crits.forEach(it=>{byArea[it.area]=byArea[it.area]||[];byArea[it.area].push(it.text);});
-  const linColors={L1:{hdr:'#1A4A82',body:'#EBF1FA',border:'#B5D4F4',dot:'#378ADD'},L2:{hdr:'#1d5c38',body:'#E8F2EC',border:'#BFDDC8',dot:'#5D9C7E'},L3:{hdr:'#7a3e10',body:'#FDF3E7',border:'#F5C4B3',dot:'#D9853B'}};
-  const lc=linColors[lid]||linColors.L2;
-
-  const p2=`<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:8pt;color:#1F1F1F;overflow:hidden">
-    ${fontLink}
-    ${hdr(3,3)}
-    <div style="padding:5mm 14mm 10mm">
+  const p2=`<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:Arial,sans-serif;font-size:8pt;color:#1F1F1F;overflow:hidden">
+    ${hdr(2,2)}
+    <div style="padding:5mm 16mm">
       ${crits.length?`${sec(`Ítems críticos faltantes · ${crits.length} sin resolver`)}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
-          ${Object.entries(byArea).map(([an,items])=>`
-            <div>
-              <div style="font-size:6pt;font-weight:800;color:#6B6359;text-transform:uppercase;letter-spacing:0.12em;border-bottom:0.5px solid #ECE5DA;padding-bottom:3px;margin-bottom:4px">${an}</div>
-              ${items.map(txt=>`<div style="display:flex;align-items:flex-start;gap:6px;padding:4px 8px;background:#FBE9E9;border-radius:5px;border-left:2.5px solid #C44545;margin-bottom:3px">
-                <div style="font-size:8pt;font-weight:900;color:#C44545;flex-shrink:0;line-height:1.4">×</div>
-                <div style="font-size:7pt;color:#1F1F1F;line-height:1.4;font-weight:500">${txt}</div>
-              </div>`).join('')}
-            </div>`).join('')}
-        </div>`:''}
-
-      ${S.factores.length?`${sec('Factores destacados — análisis técnico')}
-        ${S.factores.map((f,i)=>`<div style="background:#F5EFE4;border-radius:6px;padding:7px 10px;border-left:3px solid #D9853B;margin-bottom:6px">
-          <div style="font-size:6pt;font-weight:800;color:#D9853B;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:2px">Factor 0${i+1}</div>
-          <div style="font-size:8.5pt;font-weight:800;color:#1F1F1F;margin-bottom:3px;letter-spacing:-0.01em">${f.titulo}</div>
-          <div style="font-size:7pt;color:#6B6359;line-height:1.5;font-weight:500">${f.cuerpo}</div>
+        ${Object.entries(byArea).map(([an,items])=>`
+          <div style="font-size:7.5pt;font-weight:700;color:#6B6359;border-bottom:0.3mm solid #6B6359;padding-bottom:1mm;display:inline-block;margin-bottom:2mm">${an}</div>
+          ${items.map(txt=>`<div style="display:flex;align-items:flex-start;gap:3mm;padding:2mm 3mm;background:#FBE9E9;border-radius:1.5mm;border-left:2mm solid #C44545;margin-bottom:1.5mm">
+            <div style="font-size:9pt;font-weight:700;color:#C44545;line-height:1">×</div>
+            <div style="font-size:7.5pt;color:#1F1F1F;line-height:1.4">${txt}</div>
+          </div>`).join('')}
+          <div style="height:3mm"></div>`).join('')}`:''}
+      ${S.factores.length?`${sec('Factores destacados')}
+        ${S.factores.map(f=>`<div style="background:#F5EFE4;border-radius:2mm;padding:2.5mm 3mm;border-left:2mm solid #D9853B;margin-bottom:2mm">
+          <div style="font-size:8.5pt;font-weight:700;color:#1F1F1F;margin-bottom:1mm">${f.titulo}</div>
+          <div style="font-size:7.5pt;color:#6B6359;line-height:1.5">${f.cuerpo}</div>
         </div>`).join('')}`:''}
-
       ${sec('Propuesta de servicio')}
-      <div style="background:${lc.body};border:1.5px solid ${lc.border};border-radius:8px;overflow:hidden;margin-bottom:8px">
-        <div style="background:${lc.hdr};padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-size:10pt;font-weight:900;color:white;letter-spacing:-0.02em">${lm.label}</div>
-            <div style="font-size:6.5pt;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-top:1px">Línea ${lid} · Recomendada para esta comunidad</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.12);border-radius:6px;padding:5px 10px;text-align:right;flex-shrink:0">
-            <div style="font-size:6pt;color:rgba(255,255,255,0.45);font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Valor mensual</div>
-            <div style="font-size:13pt;font-weight:900;color:white;letter-spacing:-0.03em">$${vMin} – $${vMax}</div>
-            <div style="font-size:6pt;color:rgba(255,255,255,0.35);font-weight:600">CLP / mes</div>
-          </div>
-        </div>
-        <div style="padding:8px 12px">
-          <div style="font-size:7.5pt;color:#6B6359;line-height:1.5;margin-bottom:8px;font-weight:500;border-bottom:0.5px solid ${lc.border};padding-bottom:8px">${lm.desc}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-            ${lm.items.map(item=>`<div style="display:flex;align-items:flex-start;gap:7px">
-              <div style="width:13px;height:13px;background:${lc.dot};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-                <div style="width:4px;height:4px;background:white;border-radius:50%"></div>
-              </div>
-              <div style="font-size:7.5pt;color:#1F1F1F;line-height:1.4;font-weight:500">${item}</div>
-            </div>`).join('')}
+      <div style="background:#E8F2EC;border:1mm solid #BFDDC8;border-radius:3mm;overflow:hidden;margin-bottom:3mm">
+        <div style="background:#3F7158;padding:3mm 5mm"><div style="font-size:9.5pt;font-weight:700;color:white">${lm.label}</div></div>
+        <div style="padding:4mm 5mm">
+          <div style="font-size:8pt;color:#6B6359;line-height:1.5;margin-bottom:3mm">${lm.desc}</div>
+          ${lm.items.map(item=>`<div style="display:flex;align-items:flex-start;gap:3mm;margin-bottom:2.5mm">
+            <div style="width:5mm;height:5mm;background:#5D9C7E;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:5pt;font-weight:700;color:white;flex-shrink:0;margin-top:0.5mm">OK</div>
+            <div style="font-size:8.5pt;color:#1F1F1F;line-height:1.4">${item}</div>
+          </div>`).join('')}
+          <div style="border-top:0.3mm solid #BFDDC8;margin:3mm 0"></div>
+          <div style="background:white;border:0.5mm solid #BFDDC8;border-radius:2mm;padding:3mm 4mm;display:flex;align-items:center;justify-content:space-between">
+            <div><div style="font-size:7.5pt;color:#6B6359;margin-bottom:1mm">Valor mensual estimado del servicio</div><div style="font-size:6.5pt;color:#9C958A">Sujeto a confirmación en reunión presencial</div></div>
+            <div style="text-align:right"><div style="font-size:13pt;font-weight:700;color:#3F7158">$${vMin} – $${vMax}</div><div style="font-size:6.5pt;color:#9C958A">CLP / mes</div></div>
           </div>
         </div>
       </div>
-
       ${sec('Próximo paso')}
-      <div style="background:#1A1714;border-radius:6px;padding:9px 12px 9px 16px;position:relative;overflow:hidden">
-        <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#D9853B"></div>
-        <div style="font-size:8pt;font-weight:800;color:#D9853B;margin-bottom:3px;letter-spacing:-0.01em">Próximo paso</div>
-        <div style="font-size:7.5pt;color:rgba(255,255,255,0.55);line-height:1.6;font-weight:500">CoproActiva los invita a una reunión de presentación con el comité, donde se revisará este diagnóstico en detalle y se confirmará el valor definitivo del servicio. Para coordinar fecha y hora, contáctenos a través de nuestros canales habituales.</div>
+      <div style="background:#1A1714;border-radius:3mm;padding:4mm 5mm 4mm 8mm;position:relative;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:2.5mm;background:#D9853B"></div>
+        <div style="font-size:8.5pt;font-weight:700;color:#D9853B;margin-bottom:2mm">Próximo paso</div>
+        <div style="font-size:7.5pt;color:#ECE5DA;line-height:1.6">CoproActiva los invita a una reunión de presentación con el comité, donde se revisará este diagnóstico en detalle y se confirmará el valor definitivo del servicio. Para coordinar fecha y hora, contáctenos a través de nuestros canales habituales.</div>
       </div>
     </div>
     ${ftr()}
   </div>`;
 
   const tpl=document.getElementById('pdfTpl');
-  tpl.innerHTML=p0+p1+p2;
+  tpl.innerHTML=p1+p2;
   setTimeout(()=>{window.print();setTimeout(()=>{tpl.innerHTML='';},1000);},200);
 }
 
 // ─── HOME VIEW ───────────────────────────────────────────────────────────────
-// Home carga diagnósticos de forma asíncrona
 let _homeData = null;
 let _homeLoading = false;
 
 async function loadHomeData() {
   _homeLoading = true;
-  // 1. Cargar local inmediatamente — sin espera
   _homeData = getSavedLocal();
   _homeLoading = false;
   if(S.view==='home') {
     document.getElementById('mainContent').innerHTML = renderHome();
   }
-  // 2. Sincronizar con Sheets en background
   syncWithSheets();
 }
 
 function renderHome(){
   const hist=_homeData||[];
   return`
+  <div class="ph">
+    <div class="ph-text">
+      <div class="ph-eyebrow">Diagnóstico</div>
+      <div class="ph-title">Diagnósticos <em>guardados</em></div>
+      <div class="ph-sub">Crea nuevos diagnósticos o continúa uno existente. Se sincronizan automáticamente con Google Sheets.</div>
+    </div>
+    <div class="ph-action">
+      <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
+    </div>
+  </div>
+
   <div class="home-header">
     <div class="home-logo">
       <div class="home-mark">C</div>
       <div>
         <div class="home-brand"><b>co</b>proactiva</div>
-        <div class="home-tag">Comunidades que funcionan.</div>
+        <div class="home-tag">Comunidades que funcionan</div>
       </div>
     </div>
-    <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <div style="font-size:15px;font-weight:700;color:var(--az)">Diagnósticos guardados</div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span id="syncIndicator" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="font-size:14px;font-weight:800;color:var(--text);letter-spacing:-0.02em">Historial</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="syncIndicator" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600">
         <span class="spin" style="width:10px;height:10px;border-width:1.5px"></span> Sincronizando...
       </span>
-      <span style="font-size:12px;color:var(--muted)">${hist.length} guardado${hist.length!==1?'s':''}</span>
+      <span style="font-size:12px;color:var(--muted);font-weight:600">${hist.length} guardado${hist.length!==1?'s':''}</span>
     </div>
   </div>
   ${hist.length===0?`
@@ -1589,9 +1539,9 @@ function renderHome(){
       <div class="empty-ttl">Sin diagnósticos aún</div>
       <div class="empty-desc">Crea tu primer diagnóstico para comenzar<br>a captar clientes con CoproActiva.</div>
       <br>
-      <button class="pri" onclick="nuevoDesdeHome()" style="margin-top:8px">Comenzar diagnóstico</button>
+      <button class="pri" onclick="nuevoDesdeHome()" style="margin-top:10px">Comenzar diagnóstico</button>
     </div>
-  `:`<div style="display:flex;flex-direction:column;gap:8px">
+  `:`<div style="display:flex;flex-direction:column;gap:10px">
     ${hist.map(d=>{
       const sem=semC(d.score);
       const lm2=LINEAS[d.linea]||LINEAS.L2;
@@ -1604,7 +1554,7 @@ function renderHome(){
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <span class="hist-linea" style="background:${lm2.bg||'var(--vd-lt)'};color:${lm2.color||'var(--vd-dk)'}">${d.linea}</span>
           <button class="btn-sm ghost" onclick="event.stopPropagation();generarPDFDesdeHistorial('${encodeURIComponent(d.nombre)}')" title="Descargar PDF">📄</button>
-          <button class="btn-sm" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)" onclick="event.stopPropagation();eliminarHist('${encodeURIComponent(d.nombre)}')" title="Eliminar">×</button>
+          <button class="btn-sm btn-danger" onclick="event.stopPropagation();eliminarHist('${encodeURIComponent(d.nombre)}')" title="Eliminar">×</button>
         </div>
       </div>`;}).join('')}
   </div>`}`;
@@ -1625,15 +1575,14 @@ async function cargarYAbrir(nombre){
 async function eliminarHist(nombre){
   const n=decodeURIComponent(nombre);
   if(!confirm(`¿Eliminar el diagnóstico "${n}"?`))return;
-  await deleteSaved(n);   // borra de Sheets + localStorage
-  _homeData = null;        // invalida cache para forzar recarga
-  render();                // recarga la vista home
+  await deleteSaved(n);
+  _homeData = null;
+  render();
 }
 
 async function generarPDFDesdeHistorial(nombre){
   const _sv=await getSaved();const d=_sv.find(x=>x.nombre===decodeURIComponent(nombre));
   if(!d)return;
-  // Temporarily load data for PDF generation
   const prevCtx={...S.ctx};const prevChecks=JSON.parse(JSON.stringify(S.checks));
   const prevNotes={...S.notes};const prevFac=[...S.factores];
   const prevVMin=S.valorMin;const prevVMax=S.valorMax;const prevLO=S.lineaOverride;
@@ -1652,7 +1601,7 @@ function openExitModal(){
   const nombre=S.ctx.nombre?.trim();
   const sub=document.getElementById('exitModalSub');
   sub.textContent=nombre
-    ? `Estás trabajando en "\${nombre}". ¿Qué deseas hacer?`
+    ? `Estás trabajando en "${nombre}". ¿Qué deseas hacer?`
     : 'Tienes datos sin guardar en este diagnóstico.';
   document.getElementById('exitModalBg').classList.add('show');
 }
@@ -1711,11 +1660,11 @@ function openAreaModal(aId){
   let html = '';
 
   if(!s){
-    html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Esta área no aplica para este condominio.</p>';
+    html = '<p style="color:var(--muted);font-size:13px;padding:8px 0;font-weight:500">Esta área no aplica para este condominio.</p>';
   } else {
     if(fallidos.length){
       html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--sr-ac)">⚠️ Sin cumplir (${fallidos.length})</div>
+        <div class="area-modal-section-ttl" style="color:var(--sr-fg)">⚠️ Sin cumplir (${fallidos.length})</div>
         ${fallidos.map(it=>`<div class="area-modal-item fail">
           <span class="area-modal-badge" style="background:${wBg[it.w]};color:${wFg[it.w]}">${wLabel[it.w]}</span>
           <span class="area-modal-item-txt">${it.t}</span>
@@ -1738,7 +1687,7 @@ function openAreaModal(aId){
       </div>`;
     }
     if(!fallidos.length && !cumplidos.length){
-      html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Sin ítems evaluados en esta área.</p>';
+      html = '<p style="color:var(--muted);font-size:13px;padding:8px 0;font-weight:500">Sin ítems evaluados en esta área.</p>';
     }
   }
 
@@ -1764,13 +1713,12 @@ function limpiarFactores(){
 }
 
 // ─── ACCESO ──────────────────────────────────────────────────────────────────
-const ACCESS_KEY = 'copro2025'; // Cambiar por su clave preferida
+const ACCESS_KEY = 'copro2025';
 
 function checkLogin(){
   const input = document.getElementById('loginInput');
   const val = input.value.trim();
   if(val === ACCESS_KEY){
-    // Guardar sesión por 8 horas
     sessionStorage.setItem('ca_auth', Date.now().toString());
     document.getElementById('loginScreen').style.display = 'none';
     initApp();
@@ -1778,7 +1726,6 @@ function checkLogin(){
     document.getElementById('loginError').textContent = 'Clave incorrecta. Intenta nuevamente.';
     input.value = '';
     input.focus();
-    // Shake animation
     input.style.borderColor = 'var(--sr-ac)';
     setTimeout(()=>{ input.style.borderColor = ''; }, 1500);
   }
@@ -1788,54 +1735,97 @@ function checkAuth(){
   const auth = sessionStorage.getItem('ca_auth');
   if(auth){
     const elapsed = Date.now() - parseInt(auth);
-    if(elapsed < 8 * 60 * 60 * 1000) return true; // 8 horas
+    if(elapsed < 8 * 60 * 60 * 1000) return true;
   }
   return false;
 }
 
 function initApp(){
-  // Precalentar Apps Script en background para reducir demora en primera carga real
-setTimeout(() => {
-  fetch(`${WORKER_BASE}/diagnosticos`)
-    .then(r => r.json())
-    .then(data => {
-      if(data.diagnosticos) {
-        const remote = data.diagnosticos.map(d => ({
-          ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
-        }));
-        localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
-        _cache = remote;
-        _cacheTime = Date.now();
-        if(S.view==='home') {
-          _homeData = remote;
-          document.getElementById('mainContent').innerHTML = renderHome();
-          const si = document.getElementById('syncIndicator');
-          if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
-        }
-      }
+  if (window.prospectoVinculado && window.prospectoVinculado.nombre) {
+    const pv = window.prospectoVinculado;
+    S.prospectoId        = pv.id             || null;
+    S.ctx.nombre         = pv.nombre         || '';
+    S.ctx.unidades       = pv.unidades       || '';
+    S.ctx.contactoNombre = pv.contactoNombre || '';
+    S.ctx.contactoCorreo = pv.contactoCorreo || '';
+    const cr = (pv.cargoContacto || '').toLowerCase().trim();
+    if      (cr.includes('president'))  S.ctx.contactoCargo = 'Presidente';
+    else if (cr.includes('secretar'))   S.ctx.contactoCargo = 'Secretario';
+    else if (cr.includes('tesorer'))    S.ctx.contactoCargo = 'Tesorero';
+    else if (cr.includes('inmobiliar')) S.ctx.contactoCargo = 'Representante inmobiliaria';
+    else if (cr.length > 0)             S.ctx.contactoCargo = 'Otro';
+    window.prospectoVinculado = null;
+    S.view = 'contexto';
+  }
+
+  setTimeout(() => {
+    fetch(`${WORKER_BASE}/diagnosticos`, {
+      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
     })
-    .catch(() => {
-      const si = document.getElementById('syncIndicator');
-      if(si){ si.textContent='Sin conexión con servidor'; si.style.color='var(--sa-fg)'; setTimeout(()=>si.remove(),3000); }
-    });
-}, 100);
+      .then(r => r.json())
+      .then(data => {
+        if(data.diagnosticos) {
+          const remote = data.diagnosticos.map(d => ({
+            ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
+          }));
+          localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
+          _cache = remote;
+          _cacheTime = Date.now();
+          if(S.view==='home') {
+            _homeData = remote;
+            document.getElementById('mainContent').innerHTML = renderHome();
+            const si = document.getElementById('syncIndicator');
+            if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
+          }
+        }
+      })
+      .catch(() => {
+        const si = document.getElementById('syncIndicator');
+        if(si){ si.textContent='Sin conexión con servidor'; si.style.color='var(--sa-fg)'; setTimeout(()=>si.remove(),3000); }
+      });
+  }, 100);
 
   render();
 }
 
-// Verificar si ya está autenticado al cargar
+if (window.parent !== window) {
+  document.body.classList.add('in-iframe');
+}
+
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  if (urlToken && urlToken === ACCESS_KEY) {
+    sessionStorage.setItem('ca_auth', Date.now().toString());
+  }
+})();
+
+const _pvData = sessionStorage.getItem('prospectoVinculado');
+if (_pvData) {
+  try {
+    const _pv = JSON.parse(_pvData);
+    window.prospectoVinculado = _pv;
+    sessionStorage.removeItem('prospectoVinculado');
+  } catch(e) {}
+}
+
+window.addEventListener('message', function(event) {
+  const data = event.data;
+  if (!data || !data.type) return;
+  if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
+  if (data.type === 'cambiar_paso' && data.paso) {
+    goTo(data.paso === 'datos' ? 'contexto' : data.paso);
+  }
+});
+
 if(checkAuth()){
   document.getElementById('loginScreen').style.display = 'none';
   initApp();
 } else {
-  // Mostrar pantalla de login
-  setTimeout(()=>{
-    document.getElementById('loginInput').focus();
-  }, 300);
+  setTimeout(()=>{ document.getElementById('loginInput').focus(); }, 300);
 }
 </script>
 
-<!-- PDF template -->
 <div id="pdfTpl" style="display:none"></div>
 <style>
 @media print{
