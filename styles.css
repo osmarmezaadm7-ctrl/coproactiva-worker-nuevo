@@ -1334,3 +1334,300 @@ html, body {
     letter-spacing: 0.02em;
   }
 }
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR DINÁMICO — módulos colapsables v2
+   Estas clases NO reemplazan .sidebar .nav-btn (que sigue para
+   el bottom-nav móvil). Son clases independientes con prefijo
+   .mod- y .sub- para evitar conflictos.
+═══════════════════════════════════════════════════════════════ */
+
+/* Área scrollable del nav */
+.sb-nav-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
+}
+
+/* Etiqueta de sección */
+.sb-section {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.22);
+  padding: 10px 18px 3px;
+  display: block;
+}
+
+/* Separador */
+.sb-sep {
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+  margin: 5px 14px;
+}
+
+/* Fila de módulo raíz */
+.mod-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: var(--co-font);
+  border-radius: 0;
+}
+.mod-row:hover       { background: rgba(255,255,255,0.05); }
+.mod-row.mod-active  { background: rgba(217,133,59,0.14); }
+.mod-row.mod-open    { background: rgba(255,255,255,0.03); }
+
+/* Ícono del módulo */
+.mod-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: rgba(255,255,255,0.38);
+  transition: color 0.12s;
+}
+.mod-row.mod-active .mod-icon,
+.mod-row.mod-open   .mod-icon  { color: var(--co-orange); }
+.mod-row:hover      .mod-icon  { color: rgba(255,255,255,0.72); }
+
+/* Label del módulo */
+.mod-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.50);
+  flex: 1;
+  letter-spacing: -0.01em;
+  transition: color 0.12s;
+}
+.mod-row.mod-active .mod-label { color: rgba(255,255,255,0.92); }
+.mod-row.mod-open   .mod-label { color: rgba(255,255,255,0.72); }
+.mod-row:hover      .mod-label { color: rgba(255,255,255,0.82); }
+
+/* Badge numérico */
+.mod-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+.mb-red    { background: #C44545; color: #fff; }
+.mb-orange { background: var(--co-orange); color: #fff; }
+.mb-green  { background: var(--co-green); color: #fff; }
+
+/* Chevron rotatorio */
+.mod-chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: rgba(255,255,255,0.20);
+  transition: transform 0.20s, color 0.12s;
+}
+.mod-row.mod-open   .mod-chevron,
+.mod-row.mod-active .mod-chevron {
+  transform: rotate(90deg);
+  color: rgba(255,255,255,0.45);
+}
+
+/* Lista de sub-items */
+.sub-list {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.22s ease;
+}
+.sub-list.sub-open { max-height: 600px; }
+
+/* Sub-item */
+.sub-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px 5px 40px;
+  cursor: pointer;
+  transition: background 0.10s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: var(--co-font);
+  border-radius: 0;
+}
+.sub-item:hover      { background: rgba(255,255,255,0.04); }
+.sub-item.sub-active { background: rgba(217,133,59,0.10); }
+
+/* Dot del sub-item */
+.sub-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.17);
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.sub-item.sub-active .sub-dot { background: var(--co-orange); }
+.sub-item:hover      .sub-dot { background: rgba(255,255,255,0.50); }
+
+/* Label del sub-item */
+.sub-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.38);
+  flex: 1;
+  letter-spacing: -0.01em;
+  transition: color 0.12s;
+}
+.sub-item.sub-active .sub-label { color: rgba(255,255,255,0.85); font-weight: 600; }
+.sub-item:hover      .sub-label { color: rgba(255,255,255,0.65); }
+
+/* Badge dentro de sub-item */
+.sub-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 7px;
+  line-height: 1.4;
+}
+.sb-red    { background: rgba(196,69,69,0.30);  color: #f09595; }
+.sb-orange { background: rgba(217,133,59,0.25); color: #fac775; }
+.sb-green  { background: rgba(93,156,126,0.25); color: #9FE1CB; }
+
+/* Footer del sidebar */
+.sidebar-foot {
+  padding: 11px 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.sb-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--co-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+.sb-user-name { font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,0.80); }
+.sb-user-role { font-size: 9px; color: rgba(255,255,255,0.28); }
+
+/* Topbar del módulo activo */
+.mod-topbar {
+  background: var(--co-surface);
+  border-bottom: 1px solid var(--co-line);
+  padding: 0 24px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mod-topbar-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--co-ink);
+  letter-spacing: -0.025em;
+}
+.mod-topbar-trail {
+  font-size: 11px;
+  color: var(--co-mute);
+}
+.mod-topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tb-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--co-line);
+  border-radius: var(--co-r-sm);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--co-ink-3);
+  font-size: 16px;
+  transition: background 0.13s;
+  font-family: var(--co-font);
+}
+.tb-icon-btn:hover { background: var(--co-cream-deep); }
+
+.tb-btn-primary {
+  background: var(--co-orange);
+  color: #fff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: var(--co-r-sm);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--co-font);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.13s;
+}
+.tb-btn-primary:hover { background: var(--co-orange-hover); }
+
+/* Pantalla "en desarrollo" */
+.mod-wip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px;
+  text-align: center;
+  gap: 14px;
+}
+.mod-wip-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  background: var(--co-orange-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.mod-wip-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--co-ink);
+  letter-spacing: -0.025em;
+}
+.mod-wip-desc {
+  font-size: 13px;
+  color: var(--co-mute);
+  max-width: 320px;
+  line-height: 1.65;
+}
+.mod-wip-pill {
+  background: var(--co-orange-soft);
+  color: var(--co-orange);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
