@@ -1,144 +1,832 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoproActiva — Administración</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoproActiva — Administración</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Sidebar dinámico · módulos colapsables ──────────────── */
+    .sb-nav-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.08) transparent;
+    }
+    .sb-section {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+      padding: 10px 18px 3px;
+    }
+    .sb-sep {
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+      margin: 6px 16px;
+    }
+
+    /* Módulo raíz */
+    .mod-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      font-family: var(--co-font);
+    }
+    .mod-row:hover { background: rgba(255,255,255,0.05); }
+    .mod-row.mod-active { background: rgba(217,133,59,0.13); }
+    .mod-row.mod-open   { background: rgba(255,255,255,0.03); }
+
+    .mod-icon {
+      font-size: 15px;
+      width: 16px;
+      flex-shrink: 0;
+      color: rgba(255,255,255,0.40);
+      transition: color 0.12s;
+    }
+    .mod-row.mod-active .mod-icon,
+    .mod-row.mod-open   .mod-icon { color: var(--co-orange); }
+    .mod-row:hover .mod-icon      { color: rgba(255,255,255,0.75); }
+
+    .mod-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.50);
+      flex: 1;
+      letter-spacing: -0.01em;
+      transition: color 0.12s;
+    }
+    .mod-row.mod-active .mod-label { color: rgba(255,255,255,0.92); }
+    .mod-row.mod-open   .mod-label { color: rgba(255,255,255,0.75); }
+    .mod-row:hover .mod-label      { color: rgba(255,255,255,0.82); }
+
+    .mod-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+    .mb-red    { background: #C44545; color: #fff; }
+    .mb-orange { background: var(--co-orange); color: #fff; }
+    .mb-green  { background: #5D9C7E; color: #fff; }
+
+    .mod-chevron {
+      font-size: 11px;
+      color: rgba(255,255,255,0.20);
+      flex-shrink: 0;
+      transition: transform 0.2s, color 0.12s;
+    }
+    .mod-row.mod-open .mod-chevron,
+    .mod-row.mod-active .mod-chevron {
+      transform: rotate(90deg);
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* Sub-items */
+    .sub-list {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.22s ease;
+    }
+    .sub-list.sub-open { max-height: 600px; }
+
+    .sub-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px 5px 38px;
+      cursor: pointer;
+      transition: background 0.10s;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      font-family: var(--co-font);
+    }
+    .sub-item:hover { background: rgba(255,255,255,0.04); }
+    .sub-item.sub-active { background: rgba(217,133,59,0.10); }
+
+    .sub-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      flex-shrink: 0;
+      transition: background 0.12s;
+    }
+    .sub-item.sub-active .sub-dot { background: var(--co-orange); }
+    .sub-item:hover .sub-dot      { background: rgba(255,255,255,0.50); }
+
+    .sub-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.38);
+      flex: 1;
+      letter-spacing: -0.01em;
+      transition: color 0.12s;
+    }
+    .sub-item.sub-active .sub-label { color: rgba(255,255,255,0.85); font-weight: 600; }
+    .sub-item:hover .sub-label      { color: rgba(255,255,255,0.65); }
+
+    .sub-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 7px;
+    }
+    .sb-red    { background: rgba(196,69,69,0.30);   color: #f09595; }
+    .sb-orange { background: rgba(217,133,59,0.25);  color: #fac775; }
+    .sb-green  { background: rgba(93,156,126,0.25);  color: #9FE1CB; }
+
+    /* Footer */
+    .sidebar-foot {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .sb-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--co-orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      letter-spacing: -0.02em;
+    }
+    .sb-user-name { font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,0.80); }
+    .sb-user-role { font-size: 9px; color: rgba(255,255,255,0.28); }
+
+    /* Topbar módulo */
+    .mod-topbar {
+      background: var(--co-surface);
+      border-bottom: 1px solid var(--co-line);
+      padding: 0 24px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .mod-topbar-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--co-ink);
+      letter-spacing: -0.025em;
+    }
+    .mod-topbar-trail {
+      font-size: 11px;
+      color: var(--co-mute);
+    }
+    .mod-topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tb-icon-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--co-line);
+      border-radius: var(--co-r-sm);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--co-ink-3);
+      font-size: 16px;
+      transition: background 0.13s;
+      font-family: var(--co-font);
+    }
+    .tb-icon-btn:hover { background: var(--co-cream-deep); }
+    .tb-btn-primary {
+      background: var(--co-orange);
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: var(--co-r-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--co-font);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.13s;
+    }
+    .tb-btn-primary:hover { background: var(--co-orange-hover); }
+
+    /* Bottom nav móvil — ítems dinámicos */
+    @media (max-width: 767px) {
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #1A1714;
+        height: 72px;
+        z-index: 100;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding: 6px 6px env(safe-area-inset-bottom);
+      }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════════
      LOGIN
-═══════════════════════════════════════════════════════ -->
+═══════════════════════════════════════════════════════════ -->
 <div id="loginScreen" class="login-screen">
-
-    <!-- Panel izquierdo: marca -->
-    <div class="login-brand">
-        <img src="assets/coproactiva-iso.png" alt="" class="login-iso" aria-hidden="true">
-
-        <div class="login-brand-top">
-            <div class="login-brand-logo">
-                <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
-            </div>
-            <div class="login-brand-tagline">Comunidades que funcionan</div>
-        </div>
-
-        <div class="login-brand-bottom">
-            <div class="login-brand-statement">
-                Una administración<br>
-                <em>Activa</em> en tu<br>
-                comunidad
-            </div>
-            <div class="login-brand-meta">
-                <span class="login-brand-meta-dot"></span>
-                Región Metropolitana · Ley N°21.442
-            </div>
-        </div>
+  <div class="login-brand">
+    <img src="assets/coproactiva-iso.png" alt="" class="login-iso" aria-hidden="true">
+    <div class="login-brand-top">
+      <div class="login-brand-logo">
+        <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+      </div>
+      <div class="login-brand-tagline">Comunidades que funcionan</div>
     </div>
-
-    <!-- Panel derecho: formulario -->
-    <div class="login-panel">
-        <div class="login-card">
-            <div class="login-eyebrow">Panel de administración</div>
-            <h1 class="login-title">Ingresa al sistema</h1>
-            <p class="login-sub">Acceso exclusivo para administradores certificados.</p>
-
-            <label class="login-label" for="claveInput">Clave de acceso</label>
-            <input type="password" id="claveInput" class="login-input" placeholder="••••••••" autocomplete="current-password">
-            <button id="loginBtn" class="login-btn">Ingresar al sistema</button>
-            <div id="loginError" class="error-message"></div>
-
-            <div class="login-foot">
-                <span class="login-foot-dot"></span>
-                Inscrito en el Registro Nacional de Administradores · MINVU
-            </div>
-        </div>
+    <div class="login-brand-bottom">
+      <div class="login-brand-statement">
+        Una administración<br>
+        <em>Activa</em> en tu<br>
+        comunidad
+      </div>
+      <div class="login-brand-meta">
+        <span class="login-brand-meta-dot"></span>
+        Región Metropolitana · Ley N°21.442
+      </div>
     </div>
-
+  </div>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="login-eyebrow">Panel de administración</div>
+      <h1 class="login-title">Ingresa al sistema</h1>
+      <p class="login-sub">Acceso exclusivo para administradores certificados.</p>
+      <label class="login-label" for="claveInput">Clave de acceso</label>
+      <input type="password" id="claveInput" class="login-input"
+             placeholder="••••••••" autocomplete="current-password">
+      <button id="loginBtn" class="login-btn">Ingresar al sistema</button>
+      <div id="loginError" class="error-message"></div>
+      <div class="login-foot">
+        <span class="login-foot-dot"></span>
+        Inscrito en el Registro Nacional de Administradores · MINVU
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════════
      APP SHELL
-═══════════════════════════════════════════════════════ -->
+═══════════════════════════════════════════════════════════ -->
 <div id="app" class="app" style="display:none;">
 
-    <!-- Sidebar desktop -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
-            </div>
-            <div class="sidebar-tag">Panel de administración</div>
+  <!-- ── Sidebar desktop ──────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+      </div>
+      <div class="sidebar-tag">back office · administración</div>
+    </div>
+
+    <div class="sb-nav-area" id="sbNavArea">
+
+      <!-- GENERAL -->
+      <div class="sb-section">General</div>
+
+      <button class="mod-row" data-mod="panel" onclick="navFlat('panel','Panel maestro','')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+        <span class="mod-label">Panel maestro</span>
+      </button>
+
+      <div class="mod" id="mod-comunidades">
+        <button class="mod-row" onclick="navToggle('comunidades')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
+          <span class="mod-label">Comunidades</span>
+          <span class="mod-badge mb-orange" id="badge-comunidades">5</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-comunidades">
+          <button class="sub-item" onclick="navSub('comunidades','listado','Listado general')"><span class="sub-dot"></span><span class="sub-label">Listado general</span></button>
+          <button class="sub-item" onclick="navSub('comunidades','ficha','Ficha de comunidad')"><span class="sub-dot"></span><span class="sub-label">Ficha de comunidad</span></button>
+          <button class="sub-item" onclick="navSub('comunidades','unidades','Unidades')"><span class="sub-dot"></span><span class="sub-label">Unidades y alícuotas</span></button>
+          <button class="sub-item" onclick="navSub('comunidades','residentes','Residentes')"><span class="sub-dot"></span><span class="sub-label">Residentes</span></button>
+          <button class="sub-item" onclick="navSub('comunidades','comite','Comité')"><span class="sub-dot"></span><span class="sub-label">Comité</span></button>
         </div>
+      </div>
 
-        <nav class="sidebar-nav">
-            <button class="nav-btn active" data-modulo="crm">
-                <span class="nav-icon" aria-hidden="true">
-                    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
-                </span>
-                <span class="nav-label">CRM</span>
-            </button>
-            <button class="nav-btn" data-modulo="diagnostico">
-                <span class="nav-icon" aria-hidden="true">
-                    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
-                </span>
-                <span class="nav-label">Diagnóstico</span>
-            </button>
-            <button class="nav-btn" data-modulo="flujo">
-                <span class="nav-icon" aria-hidden="true">
-                    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12M4 10h12M4 16h8"/></svg>
-                </span>
-                <span class="nav-label">Flujo de trabajo</span>
-            </button>
-        </nav>
+      <div class="sb-sep"></div>
+      <!-- COMERCIAL -->
+      <div class="sb-section">Comercial</div>
 
-        <!-- Menú dinámico según módulo activo -->
-        <div id="sidebarDynamic"></div>
-
-        <div class="sidebar-foot">
-            <div class="sidebar-foot-user">
-                <div class="sb-avatar">OM</div>
-                <div>
-                    <div class="sb-user-name">Osmar Meza</div>
-                    <div class="sb-user-role">Administrador</div>
-                </div>
-            </div>
+      <div class="mod" id="mod-crm">
+        <button class="mod-row mod-active" onclick="navToggle('crm')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+          <span class="mod-label">CRM</span>
+          <span class="mod-badge mb-orange" id="badge-crm">3</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list sub-open" id="sub-crm">
+          <button class="sub-item sub-active" onclick="navSub('crm','pipeline','Pipeline')"><span class="sub-dot"></span><span class="sub-label">Pipeline</span></button>
+          <button class="sub-item" onclick="navSub('crm','prospectos','Prospectos')"><span class="sub-dot"></span><span class="sub-label">Prospectos</span></button>
+          <button class="sub-item" onclick="navSub('crm','diagnostico','Diagnóstico')"><span class="sub-dot"></span><span class="sub-label">Diagnóstico</span></button>
+          <button class="sub-item" onclick="navSub('crm','propuesta','Propuesta y contrato')"><span class="sub-dot"></span><span class="sub-label">Propuesta y contrato</span></button>
+          <button class="sub-item" onclick="navSub('crm','flujo','Flujo comercial')"><span class="sub-dot"></span><span class="sub-label">Flujo comercial</span></button>
         </div>
-    </aside>
+      </div>
 
-    <!-- Contenido principal -->
-    <main class="main-content">
-        <div id="contentArea"></div>
-    </main>
+      <div class="sb-sep"></div>
+      <!-- OPERACIONES -->
+      <div class="sb-section">Operaciones</div>
 
-    <!-- Barra inferior móvil -->
-    <nav class="bottom-nav">
-        <button class="nav-btn active" data-modulo="crm">
-            <span class="bottom-icon">
-                <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
-            </span>
-            <span class="bottom-label">CRM</span>
+      <div class="mod" id="mod-finanzas">
+        <button class="mod-row" onclick="navToggle('finanzas')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
+          <span class="mod-label">Finanzas</span>
+          <span class="mod-badge mb-red" id="badge-finanzas">2</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
         </button>
-        <button class="nav-btn" data-modulo="diagnostico">
-            <span class="bottom-icon">
-                <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
-            </span>
-            <span class="bottom-label">Diagnóstico</span>
-        </button>
-        <button class="nav-btn" data-modulo="flujo">
-            <span class="bottom-icon">
-                <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12M4 10h12M4 16h8"/></svg>
-            </span>
-            <span class="bottom-label">Flujo</span>
-        </button>
-    </nav>
+        <div class="sub-list" id="sub-finanzas">
+          <button class="sub-item" onclick="navSub('finanzas','resumen','Resumen financiero')"><span class="sub-dot"></span><span class="sub-label">Resumen financiero</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','gastos','Gastos comunes')"><span class="sub-dot"></span><span class="sub-label">Gastos comunes</span><span class="sub-badge sb-orange">Mayo</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','cobranza','Cobranza')"><span class="sub-dot"></span><span class="sub-label">Cobranza</span><span class="sub-badge sb-red">12</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','pagos','Ingreso de pagos')"><span class="sub-dot"></span><span class="sub-label">Ingreso de pagos</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','rendicion','Rendición al comité')"><span class="sub-dot"></span><span class="sub-label">Rendición al comité</span></button>
+        </div>
+      </div>
 
-</div>
+      <div class="mod" id="mod-servicios">
+        <button class="mod-row" onclick="navToggle('servicios')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3c0 4-4 5-4 9a4 4 0 008 0c0-4-4-5-4-9z"/></svg>
+          <span class="mod-label">Servicios comunes</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-servicios">
+          <button class="sub-item" onclick="navSub('servicios','medidores','Medidores')"><span class="sub-dot"></span><span class="sub-label">Lecturas de medidores</span></button>
+          <button class="sub-item" onclick="navSub('servicios','gas','Gas caldera')"><span class="sub-dot"></span><span class="sub-label">Gas caldera</span></button>
+          <button class="sub-item" onclick="navSub('servicios','calculo','Cálculo y prorrateo')"><span class="sub-dot"></span><span class="sub-label">Cálculo y prorrateo</span></button>
+          <button class="sub-item" onclick="navSub('servicios','historial','Historial')"><span class="sub-dot"></span><span class="sub-label">Historial de lecturas</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-remuneraciones">
+        <button class="mod-row" onclick="navToggle('remuneraciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"/><path d="M3 17c0-3.3 2.2-5 5-5"/><path d="M13 11l1.5 1.5L17 10"/></svg>
+          <span class="mod-label">Remuneraciones</span>
+          <span class="mod-badge mb-red" id="badge-rem">3</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-remuneraciones">
+          <button class="sub-item" onclick="navSub('remuneraciones','personal','Personal')"><span class="sub-dot"></span><span class="sub-label">Personal por comunidad</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','liquidaciones','Liquidaciones')"><span class="sub-dot"></span><span class="sub-label">Liquidaciones</span><span class="sub-badge sb-red">Pend.</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','previred','Previred / DT')"><span class="sub-dot"></span><span class="sub-label">Previred / DT</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','finiquitos','Finiquitos')"><span class="sub-dot"></span><span class="sub-label">Finiquitos</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-mantenciones">
+        <button class="mod-row" onclick="navToggle('mantenciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 3.3a4 4 0 00-5.5 5.5L3.3 14.7a1 1 0 001.4 1.4l5.9-5.9a4 4 0 005.5-5.5l-2.2 2.2-1.4-1.4 2.2-2.2z"/></svg>
+          <span class="mod-label">Mantenciones</span>
+          <span class="mod-badge mb-red" id="badge-man">1</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-mantenciones">
+          <button class="sub-item" onclick="navSub('mantenciones','calendario','Calendario')"><span class="sub-dot"></span><span class="sub-label">Calendario</span></button>
+          <button class="sub-item" onclick="navSub('mantenciones','proveedores','Proveedores')"><span class="sub-dot"></span><span class="sub-label">Proveedores</span></button>
+          <button class="sub-item" onclick="navSub('mantenciones','alertas','Alertas')"><span class="sub-dot"></span><span class="sub-label">Alertas de vencimiento</span><span class="sub-badge sb-red">1</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-incidencias">
+        <button class="mod-row" onclick="navToggle('incidencias')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L2 17h16L10 3z"/><path d="M10 9v4"/><circle cx="10" cy="15" r=".5" fill="currentColor"/></svg>
+          <span class="mod-label">Incidencias</span>
+          <span class="mod-badge mb-red" id="badge-inc">8</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-incidencias">
+          <button class="sub-item" onclick="navSub('incidencias','activas','Activas')"><span class="sub-dot"></span><span class="sub-label">Activas</span><span class="sub-badge sb-red">8</span></button>
+          <button class="sub-item" onclick="navSub('incidencias','historial','Historial')"><span class="sub-dot"></span><span class="sub-label">Historial</span></button>
+        </div>
+      </div>
+
+      <div class="sb-sep"></div>
+      <!-- COMUNICACIÓN -->
+      <div class="sb-section">Comunicación</div>
+
+      <div class="mod" id="mod-comunicaciones">
+        <button class="mod-row" onclick="navToggle('comunicaciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3H3a1 1 0 00-1 1v9a1 1 0 001 1h5l2 3 2-3h5a1 1 0 001-1V4a1 1 0 00-1-1z"/></svg>
+          <span class="mod-label">Comunicaciones</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-comunicaciones">
+          <button class="sub-item" onclick="navSub('comunicaciones','circulares','Circulares')"><span class="sub-dot"></span><span class="sub-label">Circulares</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','asambleas','Asambleas')"><span class="sub-dot"></span><span class="sub-label">Asambleas · Ley 21.442</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','encuestas','Encuestas')"><span class="sub-dot"></span><span class="sub-label">Encuestas</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','libro','Libro de novedades')"><span class="sub-dot"></span><span class="sub-label">Libro de novedades</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-documentos">
+        <button class="mod-row" onclick="navToggle('documentos')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H5a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V7l-3-4z"/><path d="M13 3v4h4"/></svg>
+          <span class="mod-label">Documentos</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-documentos">
+          <button class="sub-item" onclick="navSub('documentos','contratos','Contratos y seguros')"><span class="sub-dot"></span><span class="sub-label">Contratos y seguros</span></button>
+          <button class="sub-item" onclick="navSub('documentos','actas','Actas de reunión')"><span class="sub-dot"></span><span class="sub-label">Actas de reunión</span></button>
+          <button class="sub-item" onclick="navSub('documentos','reglamentos','Reglamentos')"><span class="sub-dot"></span><span class="sub-label">Reglamentos</span></button>
+        </div>
+      </div>
+
+      <div class="sb-sep"></div>
+      <!-- EMPRESA -->
+      <div class="sb-section">Empresa</div>
+
+      <div class="mod" id="mod-reportes">
+        <button class="mod-row" onclick="navToggle('reportes')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V7l4-4 4 4 4-4v14"/><path d="M7 17v-6"/><path d="M11 17v-4"/><path d="M15 17v-8"/></svg>
+          <span class="mod-label">Reportes</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-reportes">
+          <button class="sub-item" onclick="navSub('reportes','mensual','Reporte mensual')"><span class="sub-dot"></span><span class="sub-label">Reporte mensual</span></button>
+          <button class="sub-item" onclick="navSub('reportes','kpis','KPIs generales')"><span class="sub-dot"></span><span class="sub-label">KPIs generales</span></button>
+        </div>
+      </div>
+
+      <button class="mod-row" data-mod="config" onclick="navFlat('config','Configuración','Empresa')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v1.5M10 15.5V17M3 10h1.5M15.5 10H17M5.05 5.05l1.06 1.06M13.89 13.89l1.06 1.06M5.05 14.95l1.06-1.06M13.89 6.11l1.06-1.06"/></svg>
+        <span class="mod-label">Configuración</span>
+      </button>
+
+    </div><!-- /sb-nav-area -->
+
+    <div class="sidebar-foot">
+      <div class="sb-avatar" id="sbAvatar">OM</div>
+      <div>
+        <div class="sb-user-name" id="sbUserName">Osmar Meza</div>
+        <div class="sb-user-role">Administrador</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Contenido principal ───────────────────────────────── -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Topbar del módulo activo -->
+    <div class="mod-topbar" id="modTopbar">
+      <span class="mod-topbar-title" id="modTopbarTitle">CRM</span>
+      <span class="mod-topbar-trail" id="modTopbarTrail">· Comercial</span>
+      <div class="mod-topbar-right">
+        <button class="tb-icon-btn" id="btnNotif" aria-label="Notificaciones" title="Notificaciones">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3a6 6 0 016 6v3l1.5 2H2.5L4 12V9a6 6 0 016-6z"/><path d="M8.5 16.5a1.5 1.5 0 003 0"/></svg>
+        </button>
+        <button class="tb-icon-btn" id="btnRefresh" aria-label="Actualizar" title="Actualizar">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10a6 6 0 016-6 6 6 0 014.5 2"/><path d="M16 10a6 6 0 01-6 6 6 6 0 01-4.5-2"/><path d="M14 6h2.5V3.5"/><path d="M6 14H3.5v2.5"/></svg>
+        </button>
+        <button class="tb-btn-primary" id="btnTopAction" style="display:none">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>
+          <span id="btnTopActionLabel">Nuevo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Área de contenido de módulos -->
+    <div id="contentArea"></div>
+
+  </main>
+
+  <!-- ── Barra inferior móvil ──────────────────────────────── -->
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-btn" data-modulo="panel" onclick="navFlat('panel','Panel maestro','')">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+      </span>
+      <span class="bottom-label">Panel</span>
+    </button>
+    <button class="nav-btn" data-modulo="comunidades" onclick="navToggle('comunidades')">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
+      </span>
+      <span class="bottom-label">Comunidades</span>
+    </button>
+    <button class="nav-btn active" data-modulo="crm" onclick="navToggle('crm')">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+      </span>
+      <span class="bottom-label">CRM</span>
+    </button>
+    <button class="nav-btn" data-modulo="finanzas" onclick="navToggle('finanzas')">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
+      </span>
+      <span class="bottom-label">Finanzas</span>
+    </button>
+    <button class="nav-btn" data-modulo="menu" onclick="abrirMenuMovil()">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+      </span>
+      <span class="bottom-label">Más</span>
+    </button>
+  </nav>
+
+</div><!-- /#app -->
 
 <script src="app.js"></script>
+<script>
+// ── Navegación sidebar dinámico ───────────────────────────────
+
+// Mapa: módulo → { título, sección, subMódulo activo }
+const NAV_STATE = {
+  modActivo: 'crm',
+  subActivo: 'pipeline',
+  modAbierto: 'crm',
+};
+
+// Módulos sin sub-items (navegación directa)
+const MOD_PLANOS = ['panel', 'config'];
+
+// Top actions por módulo
+const TOP_ACTIONS = {
+  'crm':            { label: 'Nuevo prospecto',   show: true  },
+  'comunidades':    { label: 'Nueva comunidad',   show: true  },
+  'finanzas':       { label: 'Emitir GC',         show: true  },
+  'remuneraciones': { label: 'Nueva liquidación', show: true  },
+  'incidencias':    { label: 'Nueva incidencia',  show: true  },
+  'mantenciones':   { label: 'Nueva mantención',  show: true  },
+  'comunicaciones': { label: 'Nuevo comunicado',  show: true  },
+  'documentos':     { label: 'Subir documento',   show: true  },
+};
+
+// Títulos topbar por sub-módulo
+const TOPBAR = {
+  'panel':                   ['Panel maestro',         ''],
+  'comunidades-listado':     ['Listado de comunidades','· General'],
+  'comunidades-ficha':       ['Ficha de comunidad',    '· General'],
+  'comunidades-unidades':    ['Unidades y alícuotas',  '· Comunidades'],
+  'comunidades-residentes':  ['Residentes',            '· Comunidades'],
+  'comunidades-comite':      ['Comité',                '· Comunidades'],
+  'crm-pipeline':            ['Pipeline CRM',          '· Comercial'],
+  'crm-prospectos':          ['Prospectos',            '· Comercial'],
+  'crm-diagnostico':         ['Diagnóstico',           '· Comercial'],
+  'crm-propuesta':           ['Propuesta y contrato',  '· Comercial'],
+  'crm-flujo':               ['Flujo comercial',       '· Comercial'],
+  'finanzas-resumen':        ['Resumen financiero',    '· Finanzas'],
+  'finanzas-gastos':         ['Gastos comunes',        '· Finanzas'],
+  'finanzas-cobranza':       ['Cobranza',              '· Finanzas'],
+  'finanzas-pagos':          ['Ingreso de pagos',      '· Finanzas'],
+  'finanzas-rendicion':      ['Rendición al comité',   '· Finanzas'],
+  'servicios-medidores':     ['Lecturas de medidores', '· Servicios comunes'],
+  'servicios-gas':           ['Gas caldera',           '· Servicios comunes'],
+  'servicios-calculo':       ['Cálculo y prorrateo',   '· Servicios comunes'],
+  'servicios-historial':     ['Historial de lecturas', '· Servicios comunes'],
+  'remuneraciones-personal': ['Personal',              '· Remuneraciones'],
+  'remuneraciones-liquidaciones':['Liquidaciones',     '· Remuneraciones'],
+  'remuneraciones-previred': ['Previred / DT',         '· Remuneraciones'],
+  'remuneraciones-finiquitos':['Finiquitos',           '· Remuneraciones'],
+  'mantenciones-calendario': ['Calendario',            '· Mantenciones'],
+  'mantenciones-proveedores':['Proveedores',           '· Mantenciones'],
+  'mantenciones-alertas':    ['Alertas de vencimiento','· Mantenciones'],
+  'incidencias-activas':     ['Incidencias activas',   '· Operaciones'],
+  'incidencias-historial':   ['Historial incidencias', '· Operaciones'],
+  'comunicaciones-circulares':['Circulares',           '· Comunicación'],
+  'comunicaciones-asambleas':['Asambleas',             '· Comunicación'],
+  'comunicaciones-encuestas':['Encuestas',             '· Comunicación'],
+  'comunicaciones-libro':    ['Libro de novedades',    '· Comunicación'],
+  'documentos-contratos':    ['Contratos y seguros',   '· Documentos'],
+  'documentos-actas':        ['Actas de reunión',      '· Documentos'],
+  'documentos-reglamentos':  ['Reglamentos',           '· Documentos'],
+  'reportes-mensual':        ['Reporte mensual',       '· Empresa'],
+  'reportes-kpis':           ['KPIs generales',        '· Empresa'],
+  'config':                  ['Configuración',         '· Empresa'],
+};
+
+function navFlat(modId, titulo, seccion) {
+  // Cerrar módulo abierto anterior
+  if (NAV_STATE.modAbierto && NAV_STATE.modAbierto !== modId) {
+    _cerrarSub(NAV_STATE.modAbierto);
+  }
+  // Limpiar activos
+  _limpiarActivos();
+  // Marcar activo
+  const btn = document.querySelector(`[data-mod="${modId}"]`) ||
+              document.querySelector(`.mod-row[onclick*="navFlat('${modId}'"]`);
+  if (btn) btn.classList.add('mod-active');
+  NAV_STATE.modActivo = modId;
+  NAV_STATE.subActivo = null;
+  NAV_STATE.modAbierto = null;
+  // Actualizar topbar
+  _actualizarTopbar(modId, titulo, seccion);
+  // Cargar módulo
+  _cargarModulo(modId);
+}
+
+function navToggle(modId) {
+  const sub = document.getElementById('sub-' + modId);
+  const modRow = document.querySelector(`#mod-${modId} .mod-row`);
+  const yaAbierto = sub && sub.classList.contains('sub-open');
+
+  // Cerrar anterior si es distinto
+  if (NAV_STATE.modAbierto && NAV_STATE.modAbierto !== modId) {
+    _cerrarSub(NAV_STATE.modAbierto);
+    const prevRow = document.querySelector(`#mod-${NAV_STATE.modAbierto} .mod-row`);
+    if (prevRow) prevRow.classList.remove('mod-open', 'mod-active');
+  }
+
+  if (yaAbierto) {
+    // Cerrar
+    if (sub) sub.classList.remove('sub-open');
+    if (modRow) modRow.classList.remove('mod-open', 'mod-active');
+    NAV_STATE.modAbierto = null;
+  } else {
+    // Abrir
+    if (sub) sub.classList.add('sub-open');
+    if (modRow) modRow.classList.add('mod-open');
+    NAV_STATE.modAbierto = modId;
+    // Si no hay sub activo de este módulo, activar el primero
+    const primerSub = sub && sub.querySelector('.sub-item');
+    if (primerSub && NAV_STATE.modActivo !== modId) {
+      const onclick = primerSub.getAttribute('onclick');
+      if (onclick) primerSub.click();
+      return;
+    }
+  }
+}
+
+function navSub(modId, subId, titulo) {
+  // Limpiar sub-items activos
+  document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('sub-active'));
+  // Marcar nuevo activo
+  const key = `${modId}-${subId}`;
+  const items = document.querySelectorAll(`#sub-${modId} .sub-item`);
+  items.forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${subId}'`)) {
+      el.classList.add('sub-active');
+    }
+  });
+  // Marcar módulo padre como activo
+  const modRow = document.querySelector(`#mod-${modId} .mod-row`);
+  if (modRow) { modRow.classList.add('mod-active'); modRow.classList.add('mod-open'); }
+  NAV_STATE.modActivo = modId;
+  NAV_STATE.subActivo = subId;
+  // Topbar
+  const tb = TOPBAR[key];
+  if (tb) _actualizarTopbar(key, tb[0], tb[1]);
+  else    _actualizarTopbar(key, titulo, '');
+  // Cargar módulo (mapeo a módulos GAS existentes + nuevos)
+  _cargarModulo(modId, subId);
+}
+
+function _cerrarSub(modId) {
+  const sub = document.getElementById('sub-' + modId);
+  if (sub) sub.classList.remove('sub-open');
+}
+
+function _limpiarActivos() {
+  document.querySelectorAll('.mod-row').forEach(el => el.classList.remove('mod-active', 'mod-open'));
+  document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('sub-active'));
+}
+
+function _actualizarTopbar(key, titulo, trail) {
+  const t = document.getElementById('modTopbarTitle');
+  const r = document.getElementById('modTopbarTrail');
+  if (t) t.textContent = titulo;
+  if (r) r.textContent = trail;
+  // Top action
+  const modId = key.split('-')[0];
+  const accion = TOP_ACTIONS[modId];
+  const btn = document.getElementById('btnTopAction');
+  const lbl = document.getElementById('btnTopActionLabel');
+  if (btn && lbl) {
+    if (accion && accion.show) {
+      btn.style.display = 'flex';
+      lbl.textContent = accion.label;
+      btn.onclick = () => _topAction(modId);
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+}
+
+// Mapeo módulos → función del app.js original o nueva pantalla
+function _cargarModulo(modId, subId) {
+  // Módulos existentes en app.js (crm, diagnostico, flujo)
+  const MODULOS_GAS = {
+    'crm':         () => { if (typeof cargarModulo === 'function') cargarModulo('crm'); },
+    'crm-pipeline':   () => { if (typeof cargarModulo === 'function') cargarModulo('crm'); },
+    'crm-prospectos': () => { if (typeof cargarModulo === 'function') cargarModulo('crm'); },
+    'crm-diagnostico':() => { if (typeof cargarModulo === 'function') cargarModulo('diagnostico'); },
+    'crm-flujo':      () => { if (typeof cargarModulo === 'function') cargarModulo('flujo'); },
+  };
+
+  const key = subId ? `${modId}-${subId}` : modId;
+  if (MODULOS_GAS[key]) {
+    MODULOS_GAS[key]();
+    return;
+  }
+  if (MODULOS_GAS[modId]) {
+    MODULOS_GAS[modId]();
+    return;
+  }
+
+  // Módulos nuevos → pantalla de próximamente
+  _mostrarProximamente(modId, subId);
+}
+
+function _mostrarProximamente(modId, subId) {
+  const ca = document.getElementById('contentArea');
+  if (!ca) return;
+  const key = subId ? `${modId}-${subId}` : modId;
+  const tb  = TOPBAR[key];
+  const titulo = tb ? tb[0] : (subId || modId);
+  ca.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                min-height:60vh;padding:40px;text-align:center;gap:16px">
+      <div style="width:56px;height:56px;border-radius:14px;background:var(--co-orange-soft);
+                  display:flex;align-items:center;justify-content:center;margin-bottom:4px">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--co-orange)"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+        </svg>
+      </div>
+      <div style="font-size:18px;font-weight:800;color:var(--co-ink);letter-spacing:-0.025em">${titulo}</div>
+      <div style="font-size:13px;color:var(--co-mute);max-width:320px;line-height:1.6">
+        Este módulo está en desarrollo. La arquitectura y el diseño están definidos — el código llega pronto.
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+        <span style="background:var(--co-orange-soft);color:var(--co-orange);font-size:11px;font-weight:700;
+                     padding:4px 12px;border-radius:20px;letter-spacing:0.02em">${modId.toUpperCase()}</span>
+        ${subId ? `<span style="background:var(--co-cream-deep);color:var(--co-mute);font-size:11px;font-weight:600;
+                                padding:4px 12px;border-radius:20px">${subId}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function _topAction(modId) {
+  const acciones = {
+    'crm':            () => document.getElementById('btn-nuevo')?.click(),
+    'comunidades':    () => _mostrarProximamente('comunidades','nueva'),
+    'finanzas':       () => _mostrarProximamente('finanzas','emitir-gc'),
+    'remuneraciones': () => _mostrarProximamente('remuneraciones','nueva-liquidacion'),
+    'incidencias':    () => _mostrarProximamente('incidencias','nueva'),
+    'mantenciones':   () => _mostrarProximamente('mantenciones','nueva'),
+    'comunicaciones': () => _mostrarProximamente('comunicaciones','nueva-circular'),
+    'documentos':     () => _mostrarProximamente('documentos','subir'),
+  };
+  if (acciones[modId]) acciones[modId]();
+}
+
+function abrirMenuMovil() {
+  // En móvil, abrir un overlay con todos los módulos
+  // Por ahora activa el sidebar temporalmente en pantallas pequeñas
+  const sb = document.querySelector('.sidebar');
+  if (sb) {
+    sb.style.display = sb.style.display === 'flex' ? 'none' : 'flex';
+    sb.style.position = 'fixed';
+    sb.style.zIndex   = '200';
+    sb.style.top = '0'; sb.style.left = '0'; sb.style.bottom = '0';
+    sb.style.overflowY = 'auto';
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Abrir CRM por defecto al cargar
+  const subCrm = document.getElementById('sub-crm');
+  if (subCrm) subCrm.classList.add('sub-open');
+  const modCrmRow = document.querySelector('#mod-crm .mod-row');
+  if (modCrmRow) modCrmRow.classList.add('mod-open');
+  // Activar primer sub
+  const primerSubCrm = subCrm && subCrm.querySelector('.sub-item');
+  if (primerSubCrm) primerSubCrm.classList.add('sub-active');
+  _actualizarTopbar('crm-pipeline', 'Pipeline CRM', '· Comercial');
+});
+</script>
 </body>
 </html>
