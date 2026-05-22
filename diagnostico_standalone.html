@@ -1364,7 +1364,7 @@ Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica
   S.loadingFactores=false;render();
 }
 
-// ─── PDF - TEXTOS LEGIBLES (aumentos significativos) ─────────────────────────
+// ─── PDF - Ítems críticos en página 2, footer tamaño original ────────────────
 function generarPDF() {
   const score = globalScore();
   const lid = lineaActual();
@@ -1400,8 +1400,9 @@ function generarPDF() {
     </div>`;
   }
 
+  // FOOTER TAMAÑO ORIGINAL (6pt)
   function ftr() {
-    return `<div style="position:absolute;bottom:0;left:0;right:0;height:10mm;background:#F5EFE4;border-top:0.5px solid #ECE5DA;display:flex;align-items:center;padding:0 14mm;font-size:8pt;color:#9C958A;font-family:'Manrope',Arial,sans-serif;font-weight:600;letter-spacing:0.04em">
+    return `<div style="position:absolute;bottom:0;left:0;right:0;height:8mm;background:#F5EFE4;border-top:0.5px solid #ECE5DA;display:flex;align-items:center;padding:0 14mm;font-size:6pt;color:#9C958A;font-family:'Manrope',Arial,sans-serif;font-weight:600;letter-spacing:0.04em">
       <span>coproactiva · Comunidades que funcionan</span>
       <span style="flex:1;text-align:center">Documento confidencial — uso exclusivo del comité de administración</span>
       <span>${fecha}</span>
@@ -1412,7 +1413,7 @@ function generarPDF() {
     return `<div style="font-size:10pt;font-weight:800;color:#D9853B;text-transform:uppercase;letter-spacing:1px;border-bottom:1.5px solid #D9853B;padding-bottom:3px;margin:14px 0 10px;font-family:'Manrope',Arial,sans-serif">${t}</div>`;
   }
 
-  // ── PÁGINA 1: PORTADA ──────────────────────────────────────────────────────
+  // ── PÁGINA 1: PORTADA (sin cambios) ────────────────────────────────────────
   const coverScoreColor = cAc;
   const p0 = `<div style="width:210mm;height:297mm;position:relative;background:#1A1714;font-family:'Manrope',Arial,sans-serif;overflow:hidden;page-break-after:always">
     ${fontLink}
@@ -1470,15 +1471,19 @@ function generarPDF() {
     </div>
 
     <div style="position:absolute;bottom:0;left:4px;right:0;height:36px;background:rgba(255,255,255,0.025);border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;padding:0 52px;justify-content:space-between">
-      <div style="font-size:7pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Documento confidencial</div>
-      <div style="font-size:7pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Elaborado por CoproActiva</div>
+      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Documento confidencial</div>
+      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Elaborado por CoproActiva</div>
     </div>
   </div>`;
 
-  // ── PÁGINA 2 ──────────────────────────────────────────────────────────────
+  // ── PÁGINA 2: RESULTADO + ÁREAS + ÍTEMS CRÍTICOS ──────────────────────────
   const ringR = 28;
   const ringC = 2 * Math.PI * ringR;
   const ringOff = ringC - (score / 100) * ringC;
+
+  // Agrupar críticos por área
+  const byArea = {};
+  crits.forEach(it => { byArea[it.area] = byArea[it.area] || []; byArea[it.area].push(it.text); });
 
   const p1 = `<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:10pt;color:#1F1F1F;overflow:hidden;page-break-after:always">
     ${fontLink}
@@ -1509,7 +1514,7 @@ function generarPDF() {
       </div>
 
       ${sec('Comparativo por área')}
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:20px">
         ${AREAS.map(a=>{
           const s=scoreArea(a);const[sf,sb,sa,sl]=semHex(s?s.pct:null);
           const pct=s?s.pct:null;
@@ -1520,13 +1525,26 @@ function generarPDF() {
             <div style="font-size:8pt;font-weight:800;color:${sf};text-transform:uppercase">${sl}</div>
           </div>`;}).join('')}
       </div>
+
+      ${crits.length ? `
+        ${sec(`Ítems críticos faltantes · ${crits.length} sin resolver`)}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          ${Object.entries(byArea).map(([an, items]) => `
+            <div>
+              <div style="font-size:9pt;font-weight:800;color:#6B6359;text-transform:uppercase;letter-spacing:0.12em;border-bottom:0.5px solid #ECE5DA;padding-bottom:4px;margin-bottom:6px">${an}</div>
+              ${items.map(txt => `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;background:#FBE9E9;border-radius:6px;border-left:3px solid #C44545;margin-bottom:5px">
+                <div style="font-size:10pt;font-weight:900;color:#C44545">×</div>
+                <div style="font-size:9pt;color:#1F1F1F;line-height:1.4">${txt}</div>
+              </div>`).join('')}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
     </div>
     ${ftr()}
   </div>`;
 
-  // ── PÁGINA 3 ──────────────────────────────────────────────────────────────
-  const byArea = {};
-  crits.forEach(it => { byArea[it.area] = byArea[it.area] || []; byArea[it.area].push(it.text); });
+  // ── PÁGINA 3: FACTORES + PROPUESTA + PRÓXIMO PASO ─────────────────────────
   const linColors = { L1: { hdr: '#1A4A82', body: '#EBF1FA', border: '#B5D4F4', dot: '#378ADD' }, L2: { hdr: '#1d5c38', body: '#E8F2EC', border: '#BFDDC8', dot: '#5D9C7E' }, L3: { hdr: '#7a3e10', body: '#FDF3E7', border: '#F5C4B3', dot: '#D9853B' } };
   const lc = linColors[lid] || linColors.L2;
 
@@ -1534,24 +1552,14 @@ function generarPDF() {
     ${fontLink}
     ${hdr(3,3)}
     <div style="padding:6mm 14mm 12mm">
-      ${crits.length?`${sec(`Ítems críticos faltantes · ${crits.length} sin resolver`)}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-          ${Object.entries(byArea).map(([an,items])=>`
-            <div>
-              <div style="font-size:9pt;font-weight:800;color:#6B6359;text-transform:uppercase;letter-spacing:0.12em;border-bottom:0.5px solid #ECE5DA;padding-bottom:4px;margin-bottom:6px">${an}</div>
-              ${items.map(txt=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;background:#FBE9E9;border-radius:6px;border-left:3px solid #C44545;margin-bottom:5px">
-                <div style="font-size:10pt;font-weight:900;color:#C44545">×</div>
-                <div style="font-size:9pt;color:#1F1F1F;line-height:1.4">${txt}</div>
-              </div>`).join('')}
-            </div>`).join('')}
-        </div>`:''}
-
-      ${S.factores.length?`${sec('Factores destacados — análisis técnico')}
-        ${S.factores.map((f,i)=>`<div style="background:#F5EFE4;border-radius:7px;padding:10px 14px;border-left:3px solid #D9853B;margin-bottom:10px">
+      ${S.factores.length ? `
+        ${sec('Factores destacados — análisis técnico')}
+        ${S.factores.map((f, i) => `<div style="background:#F5EFE4;border-radius:7px;padding:10px 14px;border-left:3px solid #D9853B;margin-bottom:10px">
           <div style="font-size:8pt;font-weight:800;color:#D9853B;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:3px">Factor 0${i+1}</div>
           <div style="font-size:11pt;font-weight:800;color:#1F1F1F;margin-bottom:5px">${f.titulo}</div>
           <div style="font-size:9.5pt;color:#6B6359;line-height:1.5">${f.cuerpo}</div>
-        </div>`).join('')}`:''}
+        </div>`).join('')}
+      ` : ''}
 
       ${sec('Propuesta de servicio')}
       <div style="background:${lc.body};border:1.5px solid ${lc.border};border-radius:8px;overflow:hidden;margin-bottom:10px">
@@ -1569,7 +1577,7 @@ function generarPDF() {
         <div style="padding:10px 14px">
           <div style="font-size:9.5pt;color:#6B6359;line-height:1.5;margin-bottom:10px;border-bottom:0.5px solid ${lc.border};padding-bottom:8px">${lm.desc}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            ${lm.items.map(item=>`<div style="display:flex;align-items:flex-start;gap:8px">
+            ${lm.items.map(item => `<div style="display:flex;align-items:flex-start;gap:8px">
               <div style="width:14px;height:14px;background:${lc.dot};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
                 <div style="width:5px;height:5px;background:white;border-radius:50%"></div>
               </div>
