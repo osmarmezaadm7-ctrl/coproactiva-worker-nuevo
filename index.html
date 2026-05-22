@@ -10,8 +10,9 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     /* Colapso del nav cuando sidebarDynamic tiene contenido */
-    .sb-nav-area { transition: max-height 0.25s ease, opacity 0.2s ease; }
+    .sb-nav-area { transition: max-height 0.3s ease, opacity 0.25s ease; }
     .sb-nav-area.sb-collapsed { max-height: 0 !important; overflow: hidden; opacity: 0; padding: 0; }
+    .sb-nav-area.sb-pinned { max-height: none !important; opacity: 1 !important; overflow-y: auto !important; }
     #sidebarDynamic { flex: 1; overflow-y: auto; min-height: 0; }
     #sidebarDynamic:empty { display: none; }
   </style>
@@ -68,8 +69,17 @@
   <!-- ── Sidebar desktop ──────────────────────────────────── -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="sidebar-logo">
+          <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+        </div>
+        <button id="btnToggleNav" onclick="toggleSbNav()"
+          title="Ver menú completo"
+          style="display:none;background:rgba(255,255,255,0.08);border:none;cursor:pointer;
+                 width:26px;height:26px;border-radius:6px;align-items:center;justify-content:center;
+                 color:rgba(255,255,255,0.55);font-size:15px;font-family:var(--co-font);flex-shrink:0">
+          &#9776;
+        </button>
       </div>
       <div class="sidebar-tag">back office · administración</div>
     </div>
@@ -593,6 +603,28 @@ function abrirMenuMovil() {
   }
 }
 
+// ── Toggle sidebar nav ───────────────────────────────────────
+function toggleSbNav() {
+  const navArea = document.getElementById('sbNavArea');
+  const dynArea = document.getElementById('sidebarDynamic');
+  const btn     = document.getElementById('btnToggleNav');
+  if (!navArea) return;
+  const pinned = navArea.classList.contains('sb-pinned');
+  if (pinned) {
+    // Volver a colapsar — restaurar estado original
+    navArea.classList.remove('sb-pinned');
+    navArea.classList.add('sb-collapsed');
+    if (btn) btn.title = 'Ver menú completo';
+    if (btn) btn.style.opacity = '1';
+  } else {
+    // Expandir y pinear — mostrar nav sobre el contenido dinámico
+    navArea.classList.remove('sb-collapsed');
+    navArea.classList.add('sb-pinned');
+    if (btn) btn.title = 'Ocultar menú';
+    if (btn) btn.style.opacity = '0.7';
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Marcar CRM activo en sidebar
@@ -610,7 +642,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (navArea && dynArea) {
     const observer = new MutationObserver(() => {
       const tieneContenido = dynArea.innerHTML.trim().length > 0;
-      navArea.classList.toggle('sb-collapsed', tieneContenido);
+      // Si está pinned por el usuario, no colapsar
+      if (!navArea.classList.contains('sb-pinned')) {
+        navArea.classList.toggle('sb-collapsed', tieneContenido);
+      }
+      // Mostrar/ocultar botón toggle
+      const btn = document.getElementById('btnToggleNav');
+      if (btn) btn.style.display = tieneContenido ? 'flex' : 'none';
     });
     observer.observe(dynArea, { childList: true, subtree: false });
   }
