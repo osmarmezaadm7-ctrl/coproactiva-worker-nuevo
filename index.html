@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Colapso del nav cuando sidebarDynamic tiene contenido */
+    .sb-nav-area { transition: max-height 0.25s ease, opacity 0.2s ease; }
+    .sb-nav-area.sb-collapsed { max-height: 0 !important; overflow: hidden; opacity: 0; padding: 0; }
+    #sidebarDynamic { flex: 1; overflow-y: auto; min-height: 0; }
+    #sidebarDynamic:empty { display: none; }
+  </style>
 </head>
 <body>
 
@@ -587,15 +594,26 @@ function abrirMenuMovil() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-// El app.js ya abre el CRM al iniciar (onDOMContentLoaded).
-// Aquí solo marcamos el estado visual del sidebar.
 document.addEventListener('DOMContentLoaded', () => {
+  // Marcar CRM activo en sidebar
   const subCrm    = document.getElementById('sub-crm');
   const modCrmRow = document.querySelector('#mod-crm .mod-row');
   if (subCrm)    subCrm.classList.add('sub-open');
   if (modCrmRow) modCrmRow.classList.add('mod-open');
   const primerSubCrm = subCrm && subCrm.querySelector('.sub-item');
   if (primerSubCrm)  primerSubCrm.classList.add('sub-active');
+
+  // MutationObserver: cuando sidebarDynamic tiene contenido → colapsar nav
+  // cuando está vacío → mostrar nav con todos los módulos
+  const navArea = document.getElementById('sbNavArea');
+  const dynArea = document.getElementById('sidebarDynamic');
+  if (navArea && dynArea) {
+    const observer = new MutationObserver(() => {
+      const tieneContenido = dynArea.innerHTML.trim().length > 0;
+      navArea.classList.toggle('sb-collapsed', tieneContenido);
+    });
+    observer.observe(dynArea, { childList: true, subtree: false });
+  }
 });
 </script>
 </body>
