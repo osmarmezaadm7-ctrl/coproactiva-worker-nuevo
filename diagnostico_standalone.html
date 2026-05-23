@@ -1212,141 +1212,156 @@ async function renderModal(){
     </div>`;}).join('');
 }
 
-// ─── CONCLUSIÓN IA ────────────────────────────────────────────────────────────
-async function generarConclusion(){
-  S.loadingConclusion = true;
-  render();
-
-  const diag2 = getDiagnostico();
-  const score = diag2.score;
-  const c = S.ctx;
-
-  const resumenAreas = AREAS.map(a=>{
-    const s = scoreArea(a);
+// ─── FACTORES IA ───────────────────────────────────────────────────────────────
+async function generarFactores(){
+  S.loadingFactores=true;render();
+  const diag2=getDiagnostico();
+  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
+  const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
+  const areasLowCtx=diag2.areasLow.length>0
+    ?`Áreas con cumplimiento bajo 60% (foco de riesgo): ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
+    :'Todas las áreas con cumplimiento ≥ 60%.';
+  const obsCtx = AREAS.map(a=>{
+    const s=scoreArea(a);
     if(!s) return null;
+    const fallidos = a.items
+      .filter((it,i) => itemApplies(it) && !S.checks[a.id][i])
+      .map(it => {
+        const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
+        return `${peso} NO CUENTA CON: "${it.t}"`;
+      });
+    const cumplidos = a.items
+      .filter((it,i) => itemApplies(it) && S.checks[a.id][i])
+      .map(it => `SÍ CUENTA CON: "${it.t}"`);
+    let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
+    if(fallidos.length){
+      ctx += `\n  INCUMPLIMIENTOS DETECTADOS (${fallidos.length}):`;
+      fallidos.forEach(f => { ctx += `\n    • ${f}`; });
+    } else {
+      ctx += `\n  Sin incumplimientos en esta área.`;
+    }
+    if(cumplidos.length){
+      ctx += `\n  ÍTEMS EN REGLA (${cumplidos.length}):`;
+      cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; });
+    }
+    return ctx;
+  }).filter(Boolean).join('\n\n');
 
-    return `- ${a.label}: ${s.pct}%`;
-  }).filter(Boolean).join('\n');
+  const sistemaCtx = c.sistema
+    ? `La comunidad usa ${c.sistema} como sistema de gestión de gastos comunes. Esto significa que ya tienen una plataforma, pero hay que evaluar si está bien configurada y al día.`
+    : 'La comunidad no usa ningún sistema digital de gestión. Todo se maneja de forma manual o en planillas.';
 
-  const areasCriticas = diag2.areasRed.map(a=>a.label).join(', ') || 'Ninguna';
+  const trabajadoresCtx = parseInt(c.trabajadores||'0') === 0
+    ? 'No tiene personal contratado directamente.'
+    : `Tiene ${c.trabajadores} trabajador(es) contratado(s) por la comunidad (conserjes, personal de aseo u otros).`;
 
-  const areasBajo60 = diag2.areasLow.map(a=>a.label).join(', ') || 'Ninguna';
+  const antiguedadCtx = c.antiguedad
+    ? `El edificio o condominio tiene ${c.antiguedad} años de antigüedad.`
+    : '';
 
-  const areasPositivas = AREAS.map(a=>{
-    const s = scoreArea(a);
-    if(!s || s.pct < 70) return null;
-    return a.label;
-  }).filter(Boolean).join(', ') || 'Ninguna';
+  const prompt=`Eres un experto en administración de condominios en Chile con conocimiento de la Ley 21.442.
 
-  const prompt = `
-Eres un consultor experto en administración de condominios en Chile, gestión operacional y cumplimiento conforme a la Ley 21.442.
+CONTEXTO DE LA EMPRESA:
+CoproActiva es una empresa de administración de condominios que está elaborando una propuesta comercial para una comunidad que aún no es su cliente. Los "factores destacados" son observaciones técnicas que justifican por qué esta comunidad necesita apoyo profesional. Van dirigidos al comité de administración, no a CoproActiva.
 
-CONTEXTO INTERNO:
-Este diagnóstico será utilizado como antesala de una propuesta comercial para administración de la comunidad. La conclusión debe ayudar a transmitir profesionalismo, criterio técnico y necesidad de gestión especializada, pero SIN mencionar propuestas comerciales, servicios, contratación ni empresas administradoras.
+FUENTE DE INFORMACIÓN Y ENFOQUE:
+Tu única fuente de análisis es el checklist de ítems no cumplidos. NO uses las observaciones del comité como base para los factores.
+Fundamenta cada factor en:
+1. El ítem específico del checklist que no se cumplió
+2. La obligación que establece la normativa de copropiedad vigente en Chile (Ley 21.442) — SIN citar números de artículos
+3. El riesgo concreto para la comunidad si no se regulariza
 
-OBJETIVO:
-Redactar una conclusión ejecutiva profesional para un informe de diagnóstico inicial de una comunidad.
+REGLA ABSOLUTA — ARTÍCULOS:
+ESTÁ TERMINANTEMENTE PROHIBIDO citar cualquier número de artículo. Esto incluye:
+- "artículo X", "Art. X", "Art. X°", "artículo primero", cualquier número
+- Si escribes un número de artículo, la respuesta es inválida
+- Esta es la regla más importante del prompt y tiene prioridad sobre todo lo demás
 
-La conclusión debe:
-- analizar el resultado general del checklist
-- interpretar el porcentaje de cumplimiento global
-- considerar el desempeño de cada área evaluada
-- mencionar áreas críticas o de mayor exposición operacional
-- incluir observaciones positivas y fortalezas detectadas
-- transmitir una evaluación técnica equilibrada y profesional
-- sugerir implícitamente la necesidad de fortalecimiento de gestión y regularización
-- estar dirigida al comité de administración
-- mantener un tono ejecutivo, claro y objetivo
+REFERENCIAS LEGALES PERMITIDAS (usar solo estas frases):
+- "según la Ley de Copropiedad Inmobiliaria"
+- "conforme a la Ley 21.442"
+- "de acuerdo a la normativa de copropiedad vigente"
+- "según la legislación de copropiedad"
+- "la normativa exige que..."
 
-RESTRICCIONES:
-- NO mencionar a CoproActiva
-- NO hablar de propuestas comerciales
-- NO ofrecer servicios
-- NO mencionar contratación de administración
-- NO citar artículos legales
-- NO inventar información
-- NO usar lenguaje alarmista
-- NO generar factores individuales
-- NO generar listas ni viñetas
-- NO repetir porcentajes excesivamente
-- NO usar formato markdown
-- NO responder en JSON
+TONO:
+- Usa: "La ausencia de...", "La falta de...", "No contar con..."
+- NO uses: "según el comité", "en la reunión se mencionó", "el comité informó"
+- El factor debe sonar como análisis técnico-legal profesional dirigido al comité
 
-DATOS DEL DIAGNÓSTICO:
+DATOS DEL CONDOMINIO EVALUADO:
+- Nombre: ${c.nombre||'Sin nombre'}
+- Tipo: ${c.tipo==='A'?'Tipo A (Edificio en altura)':c.tipo==='B'?'Tipo B (Condominio de casas)':'Mixto (edificios y casas)'}
+- Unidades: ${c.unidades||'No informado'}
+- Antigüedad del edificio: ${antiguedadCtx||'No informada'}
+- Personal contratado: ${trabajadoresCtx}
+- Sistema de gestión: ${sistemaCtx}
+- Puntaje global del diagnóstico: ${score}% (${score>=70?'Estable':score>=40?'En riesgo':'Crítico'})
+- Servicio recomendado: ${LINEAS[lid]?.label||lid}
+- ESTADO DETALLADO POR ÁREA (cada punto indica explícitamente qué tiene y qué le falta):
+${obsCtx}
+- Detalle de ítems críticos sin cumplir:
+${diag2.crits.length>0 ? diag2.crits.map(x=>`  • [${x.area}] La comunidad NO CUENTA CON: "${x.text}"`).join('\n') : '  Ninguno'}
+- Nivel de criticidad del diagnóstico: ${diag2.nivel}
+- ${intervencionCtx}
+- ${areasLowCtx}
+- Áreas en rojo (cumplimiento < 40%): ${diag2.areasRed.map(a=>a.label).join(', ')||'Ninguna'}
+- Ítems críticos sin cumplir: ${diag2.crits.length}
 
-Nombre comunidad: ${c.nombre || 'No informado'}
+INSTRUCCIONES:
+Genera exactamente 3 factores destacados. Cada factor debe:
+1. Basarse en UN ítem específico marcado como no cumplido en el checklist — especialmente los [CRÍTICO]
+2. Referenciar la obligación legal en términos generales (Ley 21.442) — sin citar números de artículos
+3. Explicar el riesgo o consecuencia legal, financiera o de seguridad que implica ese incumplimiento
+4. Estar redactado para el comité: claro, directo, sin jerga legal excesiva
+5. NO mencionar a CoproActiva
+6. NO confundir antigüedad del edificio con trayectoria de empresas
+7. NO basarte en las observaciones del comité — solo en el checklist
+8. Si hay ítems laborales sin cumplir, menciona la responsabilidad solidaria del comité ante la Inspección del Trabajo
+9. Si no hay ascensores ni gas, no inventes factores técnicos de esas instalaciones
+10. RECORDATORIO FINAL: Está PROHIBIDO citar cualquier número de artículo. Si lo haces, la respuesta será rechazada. Usa solo las frases de referencia legal permitidas listadas arriba.
 
-Resultado global:
-- Puntaje total: ${score}%
-- Nivel diagnóstico: ${diag2.nivel}
+RESPONDE SOLO con JSON válido, sin texto adicional, sin bloques de código markdown:
+{"factores":[{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."}]}
 
-Cumplimiento por áreas:
-${resumenAreas}
-
-Áreas críticas (<40%):
-${areasCriticas}
-
-Áreas bajo 60%:
-${areasBajo60}
-
-Áreas con buen cumplimiento (>=70%):
-${areasPositivas}
-
-Cantidad de ítems críticos sin cumplir:
-${diag2.crits.length}
-
-INSTRUCCIONES FINALES:
-
-Redacta una única conclusión ejecutiva:
-- entre 140 y 240 palabras
-- en 2 o 3 párrafos breves
-- lenguaje natural, técnico y profesional
-- equilibrando observaciones positivas y aspectos a fortalecer
-- enfocada en gestión, cumplimiento y continuidad operacional
-- con sensación de evaluación seria y profesional
-- dejando implícita la necesidad de mejoras y seguimiento
-- sin títulos
-
-RESPONDE SOLO CON LA CONCLUSIÓN.
-`;
+Título: máximo 7 palabras, descriptivo del problema específico.
+Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica el riesgo o consecuencia.`;
+  const variation = S.factores.length > 0
+    ? `\n\nNota: Esta es una NUEVA generación (intento #${Date.now()}). Genera factores DISTINTOS a los anteriores, enfocándote en diferentes ítems no cumplidos.`
+    : '';
+  const finalPrompt = prompt + variation;
 
   try{
-
-    const res = await fetch(`${WORKER_BASE}/conclusion`,{
+    const res=await fetch(`${WORKER_BASE}/factores`,{
       method:'POST',
-      headers:{
-        'Authorization':'Bearer '+_DIAG_TOKEN,
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({prompt})
+      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({prompt: finalPrompt})
     });
 
     if(!res.ok){
       throw new Error(`Error del servidor: ${res.status}`);
     }
 
-    const data = await res.json();
+    const data=await res.json();
 
-    if(data.error){
-      throw new Error(data.error);
+    if(data.error) throw new Error(data.error);
+    if(!data.text) throw new Error('Respuesta vacía del servidor');
+
+    const cleaned = data.text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(cleaned);
+    if(!parsed.factores || !Array.isArray(parsed.factores)){
+      throw new Error('Formato de respuesta inválido');
     }
-
-    if(!data.text){
-      throw new Error('Respuesta vacía del servidor');
-    }
-
-    S.conclusion = data.text.trim();
+    S.factores = parsed.factores;
 
   }catch(e){
-
-    console.error('Conclusion generation error:', e.message, e);
-
-    S.conclusion = 'No fue posible generar automáticamente la conclusión del diagnóstico.';
-
+    console.error('Factor generation error:', e.message, e);
+    S.factores=[{
+      titulo:'Error al generar factores',
+      cuerpo:`${e.message}. Puedes ingresar los factores manualmente o intentar nuevamente.`
+    }];
   }
-
-  S.loadingConclusion = false;
-  render();
+  S.loadingFactores=false;render();
 }
 
 // ─── PDF - Ítems críticos en página 2, footer tamaño original ────────────────
