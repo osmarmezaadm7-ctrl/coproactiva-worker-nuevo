@@ -785,6 +785,282 @@ async function deleteSaved(nombre) {
   renderModal();
 }
 
+async function guardarFormulario(){
+  if(!S.ctx.nombre?.trim()){
+    alert('Ingresa el nombre del condominio antes de guardar.');
+    goTo('contexto');
+    return;
+  }
+  await saveDiag();
+  _homeData = null;
+}
+
+
+function renderModal(){
+  const saved=await getSaved();
+  const ml=document.getElementById('modalList');
+  if(!saved.length){ml.innerHTML=`<div class="modal-empty">No hay diagnósticos guardados aún.<br>Completa y guarda un diagnóstico para verlo aquí.</div>`;return;}
+  ml.innerHTML=saved.map(d=>{
+    const sem=semC(d.score);
+    return`<div class="modal-item" onclick="loadDiag('${d.nombre}')">
+      <div>
+        <div class="modal-item-name">${d.nombre}</div>
+        <div class="modal-item-meta">Tipo ${d.ctx?.tipo||'A'} · ${d.ctx?.unidades||'?'} unidades · ${d.fecha}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="modal-item-score" style="background:${sem.bg};color:${sem.fg}">${d.score}%</span>
+        <button class="btn-danger btn-sm" onclick="event.stopPropagation();deleteSaved('${d.nombre}')" style="padding:4px 10px">×</button>
+      </div>
+    </div>`;}).join('');
+}
+
+
+function generarPDF() {
+  const score = globalScore();
+  const lid = lineaActual();
+  const lm = LINEAS[lid];
+  const crit = critData(score);
+  const c = S.ctx;
+  const crits = critFailing();
+  const vMin = S.valorMin || lm.valMin;
+  const vMax = S.valorMax || lm.valMax;
+  const fecha = new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const fontLink = `<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">`;
+
+  function semHex(pct) {
+    if (pct == null) return ['#6B6359', '#F5EFE4', '#ECE5DA', 'No aplica'];
+    if (pct >= 70) return ['#1d5c38', '#E8F2EC', '#5D9C7E', 'Bien'];
+    if (pct >= 40) return ['#7a3e10', '#FDF3E7', '#D9853B', 'En riesgo'];
+    return ['#7A1F1F', '#FBE9E9', '#C44545', 'Crítico'];
+  }
+  const [cFg, cBg, cAc, cLbl] = semHex(score);
+
+  const isoSvg = `<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#D9853B" opacity="0.18"/><path d="M72 50c0 12.15-9.85 22-22 22s-22-9.85-22-22 9.85-22 22-22c4.8 0 9.25 1.54 12.86 4.14" stroke="#D9853B" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="50" r="10" fill="#D9853B"/></svg>`;
+  const isoSvgSm = `<svg width="20" height="20" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#D9853B" opacity="0.18"/><path d="M72 50c0 12.15-9.85 22-22 22s-22-9.85-22-22 9.85-22 22-22c4.8 0 9.25 1.54 12.86 4.14" stroke="#D9853B" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="50" r="10" fill="#D9853B"/></svg>`;
+
+  const logoTxt = (sz, colorCo, colorPro) => `<span style="font-size:${sz};font-weight:900;color:${colorCo};letter-spacing:-0.03em;line-height:1">co</span><span style="font-size:${sz};font-weight:400;color:${colorPro};letter-spacing:-0.02em;line-height:1">proactiva</span>`;
+
+  function hdr(pg, total) {
+    return `<div style="background:#1A1714;height:44px;display:flex;align-items:center;padding:0 14mm;justify-content:space-between;position:relative">
+      <div style="display:flex;align-items:center;gap:8px">${isoSvgSm}${logoTxt('11pt','#D9853B','rgba(255,255,255,0.85)')}</div>
+      <div style="font-size:9pt;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.04em;text-transform:uppercase">${c.nombre||'Sin nombre'} · Informe de Diagnóstico</div>
+      <div style="font-size:9pt;font-weight:700;color:rgba(255,255,255,0.35)">Pág. ${pg} / ${total}</div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:#D9853B"></div>
+    </div>`;
+  }
+
+  // FOOTER TAMAÑO ORIGINAL (6pt)
+  function ftr() {
+    return `<div style="position:absolute;bottom:0;left:0;right:0;height:8mm;background:#F5EFE4;border-top:0.5px solid #ECE5DA;display:flex;align-items:center;padding:0 14mm;font-size:6pt;color:#9C958A;font-family:'Manrope',Arial,sans-serif;font-weight:600;letter-spacing:0.04em">
+      <span>coproactiva · Comunidades que funcionan</span>
+      <span style="flex:1;text-align:center">Documento confidencial — uso exclusivo del comité de administración</span>
+      <span>${fecha}</span>
+    </div>`;
+  }
+
+  function sec(t) {
+    return `<div style="font-size:10pt;font-weight:800;color:#D9853B;text-transform:uppercase;letter-spacing:1px;border-bottom:1.5px solid #D9853B;padding-bottom:3px;margin:14px 0 10px;font-family:'Manrope',Arial,sans-serif">${t}</div>`;
+  }
+
+  // ── PÁGINA 1: PORTADA (sin cambios) ────────────────────────────────────────
+  const coverScoreColor = cAc;
+  const p0 = `<div style="width:210mm;height:297mm;position:relative;background:#1A1714;font-family:'Manrope',Arial,sans-serif;overflow:hidden;page-break-after:always">
+    ${fontLink}
+    <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(to bottom,#D9853B,#C2722C 60%,transparent)"></div>
+    <div style="position:absolute;top:-80px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(217,133,59,0.12),transparent 65%)"></div>
+    <div style="position:absolute;bottom:-60px;left:-40px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(217,133,59,0.07),transparent 65%)"></div>
+
+    <div style="padding:44px 52px 0 52px;display:flex;align-items:center;gap:12px">
+      ${isoSvg}
+      <div>
+        <div style="display:flex;align-items:baseline">${logoTxt('16pt','#D9853B','rgba(255,255,255,0.9)')}</div>
+        <div style="font-size:8pt;font-weight:700;color:#D9853B;letter-spacing:0.16em;text-transform:uppercase;margin-top:2px;opacity:0.8">Comunidades que funcionan</div>
+      </div>
+    </div>
+
+    <div style="padding:0 52px;margin-top:60px">
+      <div style="font-size:8pt;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#D9853B;margin-bottom:18px;display:flex;align-items:center;gap:10px">
+        Diagnóstico inicial
+        <div style="flex:1;max-width:60px;height:1px;background:rgba(217,133,59,0.4)"></div>
+      </div>
+      <div style="font-size:44pt;font-weight:900;color:white;line-height:1.05;letter-spacing:-0.03em;margin-bottom:16px">
+        Estado de tu<br><span style="color:#D9853B">comunidad</span><br>hoy
+      </div>
+      <div style="font-size:11pt;color:rgba(255,255,255,0.38);font-weight:500;line-height:1.6;max-width:260px">
+        Evaluación de 6 áreas críticas bajo la normativa de copropiedad vigente en Chile.
+      </div>
+    </div>
+
+    <div style="padding:0 52px;margin-top:56px;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px">
+      <div style="display:flex;align-items:flex-end;gap:20px">
+        <div style="flex:1">
+          <div style="font-size:8pt;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:8px">Nivel de cumplimiento</div>
+          <div style="font-size:80pt;font-weight:900;color:${coverScoreColor};line-height:1;letter-spacing:-0.06em">${score}<span style="font-size:28pt;vertical-align:top;margin-top:14px;display:inline-block">%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <div style="font-size:14pt;font-weight:800;color:${coverScoreColor};letter-spacing:-0.01em">${cLbl}</div>
+            ${crit.requiereIntervencion?`<div style="font-size:8pt;font-weight:800;padding:2px 9px;border-radius:99px;background:rgba(196,69,69,0.18);color:${coverScoreColor};text-transform:uppercase;letter-spacing:0.08em">Requiere intervención</div>`:''}
+          </div>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.06);align-self:stretch"></div>
+        <div style="text-align:right;padding-left:20px">
+          <div style="margin-bottom:14px">
+            <div style="font-size:7pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Condominio</div>
+            <div style="font-size:13pt;font-weight:800;color:white;letter-spacing:-0.02em">${c.nombre||'—'}</div>
+          </div>
+          <div style="margin-bottom:14px">
+            <div style="font-size:7pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Tipo / Unidades</div>
+            <div style="font-size:13pt;font-weight:800;color:white;letter-spacing:-0.02em">Tipo ${c.tipo} · ${c.unidades||'?'} un.</div>
+          </div>
+          <div>
+            <div style="font-size:7pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Fecha</div>
+            <div style="font-size:13pt;font-weight:800;color:white;letter-spacing:-0.02em">${fecha}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute;bottom:0;left:4px;right:0;height:36px;background:rgba(255,255,255,0.025);border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;padding:0 52px;justify-content:space-between">
+      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Documento confidencial</div>
+      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Elaborado por CoproActiva</div>
+    </div>
+  </div>`;
+
+  // ── PÁGINA 2: RESULTADO + ÁREAS + ÍTEMS CRÍTICOS ──────────────────────────
+  const ringR = 28;
+  const ringC = 2 * Math.PI * ringR;
+  const ringOff = ringC - (score / 100) * ringC;
+
+  // Agrupar críticos por área
+  const byArea = {};
+  crits.forEach(it => { byArea[it.area] = byArea[it.area] || []; byArea[it.area].push(it.text); });
+
+  const p1 = `<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:10pt;color:#1F1F1F;overflow:hidden;page-break-after:always">
+    ${fontLink}
+    ${hdr(2,3)}
+    <div style="padding:6mm 14mm 12mm">
+      ${sec('Resultado global del diagnóstico')}
+      <div style="background:${cBg};border:1.5px solid ${cAc};border-radius:8px;padding:14px 18px;display:flex;align-items:center;gap:16px;margin-bottom:16px">
+        <div style="position:relative;width:65px;height:65px;flex-shrink:0">
+          <svg width="65" height="65" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
+            <circle cx="32" cy="32" r="${ringR}" fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="5"/>
+            <circle cx="32" cy="32" r="${ringR}" fill="none" stroke="${cAc}" stroke-width="5" stroke-dasharray="${ringC.toFixed(1)}" stroke-dashoffset="${ringOff.toFixed(1)}" stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:16pt;font-weight:900;color:${cFg};line-height:1">${score}</div>
+            <div style="font-size:8pt;color:${cFg};font-weight:700">%</div>
+          </div>
+        </div>
+        <div style="width:1px;background:${cAc};opacity:0.2;align-self:stretch;margin:2px 0"></div>
+        <div style="flex:1">
+          <div style="font-size:16pt;font-weight:900;color:${cFg};margin-bottom:5px">${cLbl}</div>
+          <div style="font-size:10pt;color:${cFg};opacity:0.82;line-height:1.5">${crit.desc}</div>
+          ${crit.requiereIntervencion?`<div style="font-size:8pt;font-weight:800;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,0.08);color:${cFg};display:inline-block;margin-top:6px">⚠ Requiere intervención prioritaria</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:8pt;font-weight:800;color:#9C958A">Elaborado por</div>
+          <div style="font-size:12pt;font-weight:900;color:#1F1F1F">CoproActiva</div>
+        </div>
+      </div>
+
+      ${sec('Comparativo por área')}
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:20px">
+        ${AREAS.map(a=>{
+          const s=scoreArea(a);const[sf,sb,sa,sl]=semHex(s?s.pct:null);
+          const pct=s?s.pct:null;
+          return`<div style="background:${sb};border:1px solid ${sa};border-radius:8px;padding:10px 12px">
+            <div style="font-size:8pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">${a.emoji||''} ${a.label}</div>
+            <div style="font-size:22pt;font-weight:900;color:${sf};line-height:1;margin-bottom:4px">${pct!=null?pct+'%':'—'}</div>
+            <div style="height:4px;background:rgba(0,0,0,0.08);border-radius:99px;margin-bottom:5px"><div style="height:100%;width:${pct||0}%;background:${sa};border-radius:99px"></div></div>
+            <div style="font-size:8pt;font-weight:800;color:${sf};text-transform:uppercase">${sl}</div>
+          </div>`;}).join('')}
+      </div>
+
+      ${crits.length ? `
+        ${sec(`Ítems críticos faltantes · ${crits.length} sin resolver`)}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          ${Object.entries(byArea).map(([an, items]) => `
+            <div>
+              <div style="font-size:9pt;font-weight:800;color:#6B6359;text-transform:uppercase;letter-spacing:0.12em;border-bottom:0.5px solid #ECE5DA;padding-bottom:4px;margin-bottom:6px">${an}</div>
+              ${items.map(txt => `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;background:#FBE9E9;border-radius:6px;border-left:3px solid #C44545;margin-bottom:5px">
+                <div style="font-size:10pt;font-weight:900;color:#C44545">×</div>
+                <div style="font-size:9pt;color:#1F1F1F;line-height:1.4">${txt}</div>
+              </div>`).join('')}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+    ${ftr()}
+  </div>`;
+
+  // ── PÁGINA 3: FACTORES + PROPUESTA + PRÓXIMO PASO ─────────────────────────
+  const linColors = { L1: { hdr: '#1A4A82', body: '#EBF1FA', border: '#B5D4F4', dot: '#378ADD' }, L2: { hdr: '#1d5c38', body: '#E8F2EC', border: '#BFDDC8', dot: '#5D9C7E' }, L3: { hdr: '#7a3e10', body: '#FDF3E7', border: '#F5C4B3', dot: '#D9853B' } };
+  const lc = linColors[lid] || linColors.L2;
+
+  const p2 = `<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:10pt;color:#1F1F1F;overflow:hidden">
+    ${fontLink}
+    ${hdr(3,3)}
+    <div style="padding:6mm 14mm 12mm">
+      ${S.conclusion ? `
+        ${sec('Conclusión diagnóstica')}
+        <div style="background:#F5EFE4;border-radius:7px;padding:14px 16px;border-left:3px solid #D9853B;margin-bottom:10px">
+          <div style="font-size:9.5pt;color:#3A3631;line-height:1.75;white-space:pre-line">${S.conclusion}</div>
+        </div>
+      ` : ''}
+
+      ${sec('Propuesta de servicio')}
+      <div style="background:${lc.body};border:1.5px solid ${lc.border};border-radius:8px;overflow:hidden;margin-bottom:10px">
+        <div style="background:${lc.hdr};padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:12pt;font-weight:900;color:white">${lm.label}</div>
+            <div style="font-size:8pt;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:2px">Línea ${lid} · Recomendada para esta comunidad</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.12);border-radius:6px;padding:6px 12px;text-align:right">
+            <div style="font-size:7pt;color:rgba(255,255,255,0.45);font-weight:700;text-transform:uppercase">Valor mensual</div>
+            <div style="font-size:15pt;font-weight:900;color:white">$${vMin} – $${vMax}</div>
+            <div style="font-size:7pt;color:rgba(255,255,255,0.35)">CLP / mes</div>
+          </div>
+        </div>
+        <div style="padding:10px 14px">
+          <div style="font-size:9.5pt;color:#6B6359;line-height:1.5;margin-bottom:10px;border-bottom:0.5px solid ${lc.border};padding-bottom:8px">${lm.desc}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            ${lm.items.map(item => `<div style="display:flex;align-items:flex-start;gap:8px">
+              <div style="width:14px;height:14px;background:${lc.dot};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+                <div style="width:5px;height:5px;background:white;border-radius:50%"></div>
+              </div>
+              <div style="font-size:9.5pt;color:#1F1F1F;line-height:1.4">${item}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      ${sec('Próximo paso')}
+      <div style="background:#1A1714;border-radius:7px;padding:12px 16px 12px 20px;position:relative">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#D9853B;border-radius:4px 0 0 4px"></div>
+        <div style="font-size:10pt;font-weight:800;color:#D9853B;margin-bottom:5px">Próximo paso</div>
+        <div style="font-size:9.5pt;color:rgba(255,255,255,0.55);line-height:1.6">CoproActiva los invita a una reunión de presentación con el comité, donde se revisará este diagnóstico en detalle y se confirmará el valor definitivo del servicio. Para coordinar fecha y hora, contáctenos a través de nuestros canales habituales.</div>
+      </div>
+    </div>
+    ${ftr()}
+  </div>`;
+
+  const tpl = document.getElementById('pdfTpl');
+  tpl.innerHTML = p0 + p1 + p2;
+  setTimeout(() => { window.print(); setTimeout(() => { tpl.innerHTML = ''; }, 1000); }, 200);
+}
+
+
+function openExitModal(){
+  const nombre=S.ctx.nombre?.trim();
+  const sub=document.getElementById('exitModalSub');
+  sub.textContent=nombre
+    ? `Estás trabajando en "${nombre}". ¿Qué deseas hacer?`
+    : 'Tienes datos sin guardar en este diagnóstico.';
+  document.getElementById('exitModalBg').classList.add('show');
+}
+
+
 // ─── CONCLUSIÓN IA ─────────────────────────────────────────────────────────────
 async function generarConclusion(){
   S.loadingConclusion=true;render();
