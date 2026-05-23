@@ -545,7 +545,7 @@ function defaultState(){return{
        contactoNombre:'',contactoCorreo:'',contactoCargo:''},
   checks:Object.fromEntries(AREAS.map(a=>[a.id,new Array(a.items.length).fill(false)])),
   notes:Object.fromEntries(AREAS.map(a=>[a.id,''])),
-  factores:[],valorMin:'',valorMax:'',lineaOverride:null,loadingFactores:false,
+  conclusion:'',valorMin:'',valorMax:'',lineaOverride:null,loadingConclusion:false,
 };}
 let S={...defaultState(),view:'home'};
 
@@ -716,7 +716,7 @@ async function saveDiag() {
     ctx: {...S.ctx},
     checks: JSON.parse(JSON.stringify(S.checks)),
     notes: {...S.notes},
-    factores: [...S.factores],
+    conclusion: S.conclusion,
     valorMin: S.valorMin, valorMax: S.valorMax,
     lineaOverride: S.lineaOverride,
   };
@@ -756,7 +756,7 @@ async function loadDiag(nombre) {
   S.ctx={...d.ctx};
   S.checks=JSON.parse(JSON.stringify(d.checks));
   S.notes={...d.notes};
-  S.factores=d.factores||[];
+  S.conclusion=d.conclusion||'';
   S.valorMin=d.valorMin||'';
   S.valorMax=d.valorMax||'';
   S.lineaOverride=d.lineaOverride||null;
@@ -783,6 +783,148 @@ async function deleteSaved(nombre) {
     localStorage.setItem('ca_diag', JSON.stringify(local));
   }
   renderModal();
+}
+
+// ─── CONCLUSIÓN IA ─────────────────────────────────────────────────────────────
+async function generarConclusion(){
+  S.loadingConclusion=true;render();
+  const diag2=getDiagnostico();
+  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
+  const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
+  const areasLowCtx=diag2.areasLow.length>0
+    ?`Áreas con cumplimiento bajo 60%: ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
+    :'Todas las áreas con cumplimiento igual o superior a 60%.';
+  const obsCtx = AREAS.map(a=>{
+    const s=scoreArea(a);
+    if(!s) return null;
+    const fallidos = a.items
+      .filter((it,i) => itemApplies(it) && !S.checks[a.id][i])
+      .map(it => {
+        const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
+        return `${peso} NO CUENTA CON: "${it.t}"`;
+      });
+    const cumplidos = a.items
+      .filter((it,i) => itemApplies(it) && S.checks[a.id][i])
+      .map(it => `SÍ CUENTA CON: "${it.t}"`);
+    let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
+    if(fallidos.length){
+      ctx += `\n  INCUMPLIMIENTOS (${fallidos.length}):`;
+      fallidos.forEach(f => { ctx += `\n    • ${f}`; });
+    } else {
+      ctx += `\n  Sin incumplimientos en esta área.`;
+    }
+    if(cumplidos.length){
+      ctx += `\n  ÍTEMS EN REGLA (${cumplidos.length}):`;
+      cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; });
+    }
+    return ctx;
+  }).filter(Boolean).join('\n\n');
+
+  const sistemaCtx = c.sistema
+    ? `La comunidad usa ${c.sistema} como sistema de gestión. Ya tienen plataforma, evaluar si está bien configurada.`
+    : 'La comunidad no usa ningún sistema digital. Todo se maneja de forma manual o en planillas.';
+  const trabajadoresCtx = parseInt(c.trabajadores||'0') === 0
+    ? 'No tiene personal contratado directamente.'
+    : `Tiene ${c.trabajadores} trabajador(es) contratado(s).`;
+  const antiguedadCtx = c.antiguedad ? `${c.antiguedad} años de antigüedad.` : '';
+
+  const prompt=`Eres un experto en administración de condominios en Chile con conocimiento de la Ley 21.442.
+
+CONTEXTO:
+CoproActiva es una empresa de administración de condominios. Esta conclusión será incluida en un informe de diagnóstico entregado al comité de administración de una comunidad que aún no es cliente. Va dirigida al comité, no a CoproActiva.
+
+FUENTE DE INFORMACIÓN:
+Tu única fuente de análisis es el checklist de ítems cumplidos y no cumplidos. NO uses las observaciones del comité como base del análisis.
+
+REGLA ABSOLUTA — ARTÍCULOS:
+ESTÁ TERMINANTEMENTE PROHIBIDO citar cualquier número de artículo. Esto incluye "artículo X", "Art. X", cualquier número de artículo.
+Si citas un número de artículo, la respuesta es inválida. Esta regla tiene prioridad absoluta.
+
+REFERENCIAS LEGALES PERMITIDAS (solo estas frases):
+- "según la Ley de Copropiedad Inmobiliaria"
+- "conforme a la Ley 21.442"
+- "de acuerdo a la normativa de copropiedad vigente"
+- "según la legislación de copropiedad"
+- "la normativa exige que..."
+
+TONO Y ESTILO:
+- Prosa fluida, párrafos completos, sin listas con viñetas
+- Tono técnico-profesional, objetivo, dirigido al comité
+- Usa: "La ausencia de...", "La falta de...", "El diagnóstico revela..."
+- NO uses: "según el comité", "en la reunión se mencionó", "el comité indicó"
+- NO menciones a CoproActiva ni hagas publicidad de ninguna empresa
+- NO uses jerga legal excesiva
+
+DATOS DEL CONDOMINIO EVALUADO:
+- Nombre: ${c.nombre||'Sin nombre'}
+- Tipo: ${c.tipo==='A'?'Tipo A (Edificio en altura)':c.tipo==='B'?'Tipo B (Condominio de casas)':'Mixto'}
+- Unidades: ${c.unidades||'No informado'}
+- Antigüedad: ${antiguedadCtx||'No informada'}
+- Personal contratado: ${trabajadoresCtx}
+- Sistema de gestión: ${sistemaCtx}
+- Puntaje global: ${score}% (${score>=70?'Estable':score>=40?'En riesgo':'Crítico'})
+- Servicio recomendado: ${LINEAS[lid]?.label||lid}
+- ESTADO DETALLADO POR ÁREA:
+${obsCtx}
+- Ítems críticos sin cumplir:
+${diag2.crits.length>0 ? diag2.crits.map(x=>`  • [${x.area}] NO CUENTA CON: "${x.text}"`).join('\n') : '  Ninguno'}
+- Nivel de criticidad: ${diag2.nivel}
+- ${intervencionCtx}
+- ${areasLowCtx}
+- Áreas en rojo (< 40%): ${diag2.areasRed.map(a=>a.label).join(', ')||'Ninguna'}
+- Total ítems críticos sin cumplir: ${diag2.crits.length}
+
+INSTRUCCIONES — redacta UNA conclusión diagnóstica en prosa, estructurada en 4 párrafos:
+
+PÁRRAFO 1 — Estado general:
+Resume el resultado global (puntaje, nivel de criticidad, cuántas áreas están en riesgo). Una o dos oraciones directas que den el panorama completo.
+
+PÁRRAFO 2 — Áreas críticas:
+Describe las áreas con mayor brecha, los incumplimientos específicos detectados y el riesgo concreto para la comunidad (legal, financiero, laboral o de seguridad). Si hay ítems laborales críticos, menciona la responsabilidad solidaria del comité. Narra, no listes.
+
+PÁRRAFO 3 — Áreas en buen estado:
+Reconoce las áreas donde la comunidad sí cumple. Esto da equilibrio y credibilidad al informe.
+
+PÁRRAFO 4 — Recomendación:
+Indica la línea de trabajo recomendada y por qué es la adecuada según el diagnóstico. No hagas publicidad. Solo indica qué tipo de apoyo profesional requiere esta comunidad.
+
+REGLAS ADICIONALES:
+- Si no hay ascensores ni gas, no menciones factores técnicos de esas instalaciones
+- No confundas antigüedad del edificio con trayectoria de empresas
+- Extensión total: entre 180 y 260 palabras
+- Legible en voz alta en una reunión de comité
+
+RESPONDE SOLO con JSON válido, sin texto adicional ni bloques markdown:
+{"conclusion":"..."}
+
+El valor es un string de texto plano con los 4 párrafos separados por \\n\\n.`;
+
+  const variation = S.conclusion
+    ? `\n\nNota: Nueva generación (intento #${Date.now()}). Redacta una conclusión DISTINTA con diferente énfasis, sin repetir las mismas oraciones.`
+    : '';
+  const finalPrompt = prompt + variation;
+
+  try{
+    const res=await fetch(`${WORKER_BASE}/factores`,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({prompt: finalPrompt})
+    });
+    if(!res.ok) throw new Error(`Error del servidor: ${res.status}`);
+    const data=await res.json();
+    if(data.error) throw new Error(data.error);
+    if(!data.text) throw new Error('Respuesta vacía del servidor');
+    const cleaned = data.text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(cleaned);
+    if(!parsed.conclusion || typeof parsed.conclusion !== 'string'){
+      throw new Error('Formato de respuesta inválido');
+    }
+    S.conclusion = parsed.conclusion;
+  }catch(e){
+    console.error('Conclusion generation error:', e.message, e);
+    S.conclusion = `Error al generar la conclusión: ${e.message}. Puedes redactarla manualmente o intentar nuevamente.`;
+  }
+  S.loadingConclusion=false;render();
 }
 
 // ─── SIDEBAR + TOPBAR ─────────────────────────────────────────────────────────
@@ -1057,7 +1199,7 @@ function renderRevision(){
       <div class="ph-sub">Evaluación de 6 áreas críticas con checklist de cumplimiento normativo bajo Ley N°21.442.</div>
     </div>
     <div class="ph-action">
-      <button class="pri" onclick="generarPDF()" ${S.loadingFactores?'disabled':''}>📄 Descargar PDF</button>
+      <button class="pri" onclick="generarPDF()" ${S.loadingConclusion?'disabled':''}>📄 Descargar PDF</button>
     </div>
   </div>
 
@@ -1110,844 +1252,25 @@ function renderRevision(){
   </div>`:''}
 
   <div class="card">
-    <div class="card-ttl"><div class="cdot"></div>Factores destacados — generados por IA</div>
-    ${S.loadingFactores?`<div class="load-row"><div class="spin"></div>Analizando el diagnóstico...</div>`:''}
-    ${!S.loadingFactores&&S.factores.length?S.factores.map((f,i)=>`
-      <div class="fac-card" style="position:relative">
-        <button onclick="eliminarFactor(${i})" title="Eliminar factor" style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:white;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-weight:800;line-height:1">×</button>
-        <div class="fac-ttl" style="padding-right:28px">${f.titulo}</div>
-        <div class="fac-body">${f.cuerpo}</div>
-        <div class="fac-edit">
-          <input type="text" value="${f.titulo}" oninput="S.factores[${i}].titulo=this.value">
-          <textarea oninput="S.factores[${i}].cuerpo=this.value">${f.cuerpo}</textarea>
-        </div>
-      </div>`).join(''):''}
-    ${!S.loadingFactores?`<div style="display:flex;gap:8px;margin-top:${S.factores.length?'10px':'0'};flex-wrap:wrap">
-      <button class="btn-sm ${!S.factores.length?'pri':''}" onclick="generarFactores()">
-        ${S.factores.length?'↺ Regenerar':'✨ Generar factores con IA'}
-      </button>
-      ${S.factores.length?`<button class="btn-sm btn-danger" onclick="limpiarFactores()">🗑 Limpiar todos</button>`:''}
-    </div>`:''}
-  </div>
-
   <div class="card">
-    <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Línea de servicio propuesta</div>
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;font-weight:500">
-      El sistema sugiere <strong style="color:var(--text)">${LINEAS[sug].label}</strong> según el puntaje.
-      Puedes confirmarla o cambiarla según tu criterio.
-    </div>
-    <div class="linea-grid">
-      ${Object.entries(LINEAS).map(([k,lm2])=>{
-        const isSel=lid===k;const isSug=sug===k;
-        const selCls=isSel?`sel-${k.toLowerCase()}`:'';
-        return`<div class="linea-card ${selCls}" onclick="S.lineaOverride='${k}';render()">
-          <div class="lc-tag" style="color:${lm2.color}">${isSug?`<span class="suggested-badge">Sugerida</span>`:''}</div>
-          <div class="lc-name">${lm2.sublabel}</div>
-          <div class="lc-desc">${lm2.desc.substring(0,70)}...</div>
-          ${isSel?`<div style="font-size:10px;font-weight:800;color:${lm2.color};margin-top:6px;text-transform:uppercase;letter-spacing:0.04em">✓ Seleccionada</div>`:''}
-        </div>`;}).join('')}
-    </div>
+    <div class="card-ttl"><div class="cdot"></div>Conclusión diagnóstica — generada por IA</div>
+    ${S.loadingConclusion?`<div class="load-row"><div class="spin"></div>Analizando diagnóstico y redactando conclusión...</div>`:''}
+    ${!S.loadingConclusion&&S.conclusion?`
+      <div class="fac-card">
+        <div class="fac-edit" style="display:block">
+          <textarea rows="9" style="width:100%;font-size:13px;line-height:1.75;resize:vertical;padding:10px"
+            oninput="S.conclusion=this.value">${S.conclusion}</textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn-sm" onclick="generarConclusion()">↺ Regenerar conclusión</button>
+        <button class="btn-sm btn-danger" onclick="S.conclusion='';render()">🗑 Limpiar</button>
+      </div>
+    `:''}
+    ${!S.loadingConclusion&&!S.conclusion?`
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        Genera una conclusión profesional basada en los resultados del diagnóstico. Resume el estado general, las brechas críticas y la línea de trabajo recomendada.
+      </p>
+      <button class="btn-sm pri" onclick="generarConclusion()">&#10024; Generar conclusión con IA</button>
+    `:''}
   </div>
-
-  <div class="card">
-    <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Valor mensual estimado</div>
-    <p style="font-size:13px;color:var(--az-md);margin-bottom:12px;font-weight:500">${lm.label}</p>
-    <div class="val-row">
-      <span>$</span>
-      <input type="text" class="val-in" value="${vMin}" oninput="S.valorMin=this.value">
-      <span>–  $</span>
-      <input type="text" class="val-in" value="${vMax}" oninput="S.valorMax=this.value">
-      <span>CLP/mes</span>
-    </div>
-    <div class="hint" style="margin-top:8px">Rango precargado según la línea seleccionada. Editable antes de generar el informe.</div>
-  </div>
-
-  <div class="nav-row">
-    <button class="ghost" onclick="openExitModal()">← Salir</button>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="ghost" onclick="guardarFormulario()">💾 Guardar</button>
-      <button class="vd" onclick="generarPDF()" ${S.loadingFactores?'disabled':''}>📄 Descargar PDF</button>
-    </div>
-  </div>`;
-}
-
-async function guardarFormulario(){
-  if(!S.ctx.nombre?.trim()){
-    alert('Ingresa el nombre del condominio antes de guardar.');
-    goTo('contexto');
-    return;
-  }
-  await saveDiag();
-  _homeData = null;
-}
-
-function limpiarFormulario(){
-  if(!confirm('¿Limpiar todo el formulario? Los datos no guardados se perderán.'))return;
-  const nuevo=defaultState();
-  S.ctx={...nuevo.ctx};S.checks=nuevo.checks;S.notes=nuevo.notes;
-  S.factores=[];S.valorMin='';S.valorMax='';S.lineaOverride=null;
-  S.view='contexto';render();
-}
-
-function openModal(){
-  renderModal();
-  document.getElementById('modalBg').classList.add('show');
-}
-function closeModal(){document.getElementById('modalBg').classList.remove('show');}
-async function renderModal(){
-  const saved=await getSaved();
-  const ml=document.getElementById('modalList');
-  if(!saved.length){ml.innerHTML=`<div class="modal-empty">No hay diagnósticos guardados aún.<br>Completa y guarda un diagnóstico para verlo aquí.</div>`;return;}
-  ml.innerHTML=saved.map(d=>{
-    const sem=semC(d.score);
-    return`<div class="modal-item" onclick="loadDiag('${d.nombre}')">
-      <div>
-        <div class="modal-item-name">${d.nombre}</div>
-        <div class="modal-item-meta">Tipo ${d.ctx?.tipo||'A'} · ${d.ctx?.unidades||'?'} unidades · ${d.fecha}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="modal-item-score" style="background:${sem.bg};color:${sem.fg}">${d.score}%</span>
-        <button class="btn-danger btn-sm" onclick="event.stopPropagation();deleteSaved('${d.nombre}')" style="padding:4px 10px">×</button>
-      </div>
-    </div>`;}).join('');
-}
-
-// ─── FACTORES IA ───────────────────────────────────────────────────────────────
-async function generarFactores(){
-  S.loadingFactores=true;render();
-  const diag2=getDiagnostico();
-  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
-  const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
-  const areasLowCtx=diag2.areasLow.length>0
-    ?`Áreas con cumplimiento bajo 60% (foco de riesgo): ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
-    :'Todas las áreas con cumplimiento ≥ 60%.';
-  const obsCtx = AREAS.map(a=>{
-    const s=scoreArea(a);
-    if(!s) return null;
-    const fallidos = a.items
-      .filter((it,i) => itemApplies(it) && !S.checks[a.id][i])
-      .map(it => {
-        const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
-        return `${peso} NO CUENTA CON: "${it.t}"`;
-      });
-    const cumplidos = a.items
-      .filter((it,i) => itemApplies(it) && S.checks[a.id][i])
-      .map(it => `SÍ CUENTA CON: "${it.t}"`);
-    let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
-    if(fallidos.length){
-      ctx += `\n  INCUMPLIMIENTOS DETECTADOS (${fallidos.length}):`;
-      fallidos.forEach(f => { ctx += `\n    • ${f}`; });
-    } else {
-      ctx += `\n  Sin incumplimientos en esta área.`;
-    }
-    if(cumplidos.length){
-      ctx += `\n  ÍTEMS EN REGLA (${cumplidos.length}):`;
-      cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; });
-    }
-    return ctx;
-  }).filter(Boolean).join('\n\n');
-
-  const sistemaCtx = c.sistema
-    ? `La comunidad usa ${c.sistema} como sistema de gestión de gastos comunes. Esto significa que ya tienen una plataforma, pero hay que evaluar si está bien configurada y al día.`
-    : 'La comunidad no usa ningún sistema digital de gestión. Todo se maneja de forma manual o en planillas.';
-
-  const trabajadoresCtx = parseInt(c.trabajadores||'0') === 0
-    ? 'No tiene personal contratado directamente.'
-    : `Tiene ${c.trabajadores} trabajador(es) contratado(s) por la comunidad (conserjes, personal de aseo u otros).`;
-
-  const antiguedadCtx = c.antiguedad
-    ? `El edificio o condominio tiene ${c.antiguedad} años de antigüedad.`
-    : '';
-
-  const prompt=`Eres un experto en administración de condominios en Chile con conocimiento de la Ley 21.442.
-
-CONTEXTO DE LA EMPRESA:
-CoproActiva es una empresa de administración de condominios que está elaborando una propuesta comercial para una comunidad que aún no es su cliente. Los "factores destacados" son observaciones técnicas que justifican por qué esta comunidad necesita apoyo profesional. Van dirigidos al comité de administración, no a CoproActiva.
-
-FUENTE DE INFORMACIÓN Y ENFOQUE:
-Tu única fuente de análisis es el checklist de ítems no cumplidos. NO uses las observaciones del comité como base para los factores.
-Fundamenta cada factor en:
-1. El ítem específico del checklist que no se cumplió
-2. La obligación que establece la normativa de copropiedad vigente en Chile (Ley 21.442) — SIN citar números de artículos
-3. El riesgo concreto para la comunidad si no se regulariza
-
-REGLA ABSOLUTA — ARTÍCULOS:
-ESTÁ TERMINANTEMENTE PROHIBIDO citar cualquier número de artículo. Esto incluye:
-- "artículo X", "Art. X", "Art. X°", "artículo primero", cualquier número
-- Si escribes un número de artículo, la respuesta es inválida
-- Esta es la regla más importante del prompt y tiene prioridad sobre todo lo demás
-
-REFERENCIAS LEGALES PERMITIDAS (usar solo estas frases):
-- "según la Ley de Copropiedad Inmobiliaria"
-- "conforme a la Ley 21.442"
-- "de acuerdo a la normativa de copropiedad vigente"
-- "según la legislación de copropiedad"
-- "la normativa exige que..."
-
-TONO:
-- Usa: "La ausencia de...", "La falta de...", "No contar con..."
-- NO uses: "según el comité", "en la reunión se mencionó", "el comité informó"
-- El factor debe sonar como análisis técnico-legal profesional dirigido al comité
-
-DATOS DEL CONDOMINIO EVALUADO:
-- Nombre: ${c.nombre||'Sin nombre'}
-- Tipo: ${c.tipo==='A'?'Tipo A (Edificio en altura)':c.tipo==='B'?'Tipo B (Condominio de casas)':'Mixto (edificios y casas)'}
-- Unidades: ${c.unidades||'No informado'}
-- Antigüedad del edificio: ${antiguedadCtx||'No informada'}
-- Personal contratado: ${trabajadoresCtx}
-- Sistema de gestión: ${sistemaCtx}
-- Puntaje global del diagnóstico: ${score}% (${score>=70?'Estable':score>=40?'En riesgo':'Crítico'})
-- Servicio recomendado: ${LINEAS[lid]?.label||lid}
-- ESTADO DETALLADO POR ÁREA (cada punto indica explícitamente qué tiene y qué le falta):
-${obsCtx}
-- Detalle de ítems críticos sin cumplir:
-${diag2.crits.length>0 ? diag2.crits.map(x=>`  • [${x.area}] La comunidad NO CUENTA CON: "${x.text}"`).join('\n') : '  Ninguno'}
-- Nivel de criticidad del diagnóstico: ${diag2.nivel}
-- ${intervencionCtx}
-- ${areasLowCtx}
-- Áreas en rojo (cumplimiento < 40%): ${diag2.areasRed.map(a=>a.label).join(', ')||'Ninguna'}
-- Ítems críticos sin cumplir: ${diag2.crits.length}
-
-INSTRUCCIONES:
-Genera exactamente 3 factores destacados. Cada factor debe:
-1. Basarse en UN ítem específico marcado como no cumplido en el checklist — especialmente los [CRÍTICO]
-2. Referenciar la obligación legal en términos generales (Ley 21.442) — sin citar números de artículos
-3. Explicar el riesgo o consecuencia legal, financiera o de seguridad que implica ese incumplimiento
-4. Estar redactado para el comité: claro, directo, sin jerga legal excesiva
-5. NO mencionar a CoproActiva
-6. NO confundir antigüedad del edificio con trayectoria de empresas
-7. NO basarte en las observaciones del comité — solo en el checklist
-8. Si hay ítems laborales sin cumplir, menciona la responsabilidad solidaria del comité ante la Inspección del Trabajo
-9. Si no hay ascensores ni gas, no inventes factores técnicos de esas instalaciones
-10. RECORDATORIO FINAL: Está PROHIBIDO citar cualquier número de artículo. Si lo haces, la respuesta será rechazada. Usa solo las frases de referencia legal permitidas listadas arriba.
-
-RESPONDE SOLO con JSON válido, sin texto adicional, sin bloques de código markdown:
-{"factores":[{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."}]}
-
-Título: máximo 7 palabras, descriptivo del problema específico.
-Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica el riesgo o consecuencia.`;
-  const variation = S.factores.length > 0
-    ? `\n\nNota: Esta es una NUEVA generación (intento #${Date.now()}). Genera factores DISTINTOS a los anteriores, enfocándote en diferentes ítems no cumplidos.`
-    : '';
-  const finalPrompt = prompt + variation;
-
-  try{
-    const res=await fetch(`${WORKER_BASE}/factores`,{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
-      body:JSON.stringify({prompt: finalPrompt})
-    });
-
-    if(!res.ok){
-      throw new Error(`Error del servidor: ${res.status}`);
-    }
-
-    const data=await res.json();
-
-    if(data.error) throw new Error(data.error);
-    if(!data.text) throw new Error('Respuesta vacía del servidor');
-
-    const cleaned = data.text.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(cleaned);
-    if(!parsed.factores || !Array.isArray(parsed.factores)){
-      throw new Error('Formato de respuesta inválido');
-    }
-    S.factores = parsed.factores;
-
-  }catch(e){
-    console.error('Factor generation error:', e.message, e);
-    S.factores=[{
-      titulo:'Error al generar factores',
-      cuerpo:`${e.message}. Puedes ingresar los factores manualmente o intentar nuevamente.`
-    }];
-  }
-  S.loadingFactores=false;render();
-}
-
-// ─── PDF - Ítems críticos en página 2, footer tamaño original ────────────────
-function generarPDF() {
-  const score = globalScore();
-  const lid = lineaActual();
-  const lm = LINEAS[lid];
-  const crit = critData(score);
-  const c = S.ctx;
-  const crits = critFailing();
-  const vMin = S.valorMin || lm.valMin;
-  const vMax = S.valorMax || lm.valMax;
-  const fecha = new Date().toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
-
-  const fontLink = `<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">`;
-
-  function semHex(pct) {
-    if (pct == null) return ['#6B6359', '#F5EFE4', '#ECE5DA', 'No aplica'];
-    if (pct >= 70) return ['#1d5c38', '#E8F2EC', '#5D9C7E', 'Bien'];
-    if (pct >= 40) return ['#7a3e10', '#FDF3E7', '#D9853B', 'En riesgo'];
-    return ['#7A1F1F', '#FBE9E9', '#C44545', 'Crítico'];
-  }
-  const [cFg, cBg, cAc, cLbl] = semHex(score);
-
-  const isoSvg = `<svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#D9853B" opacity="0.18"/><path d="M72 50c0 12.15-9.85 22-22 22s-22-9.85-22-22 9.85-22 22-22c4.8 0 9.25 1.54 12.86 4.14" stroke="#D9853B" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="50" r="10" fill="#D9853B"/></svg>`;
-  const isoSvgSm = `<svg width="20" height="20" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#D9853B" opacity="0.18"/><path d="M72 50c0 12.15-9.85 22-22 22s-22-9.85-22-22 9.85-22 22-22c4.8 0 9.25 1.54 12.86 4.14" stroke="#D9853B" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="50" r="10" fill="#D9853B"/></svg>`;
-
-  const logoTxt = (sz, colorCo, colorPro) => `<span style="font-size:${sz};font-weight:900;color:${colorCo};letter-spacing:-0.03em;line-height:1">co</span><span style="font-size:${sz};font-weight:400;color:${colorPro};letter-spacing:-0.02em;line-height:1">proactiva</span>`;
-
-  function hdr(pg, total) {
-    return `<div style="background:#1A1714;height:44px;display:flex;align-items:center;padding:0 14mm;justify-content:space-between;position:relative">
-      <div style="display:flex;align-items:center;gap:8px">${isoSvgSm}${logoTxt('11pt','#D9853B','rgba(255,255,255,0.85)')}</div>
-      <div style="font-size:9pt;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.04em;text-transform:uppercase">${c.nombre||'Sin nombre'} · Informe de Diagnóstico</div>
-      <div style="font-size:9pt;font-weight:700;color:rgba(255,255,255,0.35)">Pág. ${pg} / ${total}</div>
-      <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:#D9853B"></div>
-    </div>`;
-  }
-
-  // FOOTER TAMAÑO ORIGINAL (6pt)
-  function ftr() {
-    return `<div style="position:absolute;bottom:0;left:0;right:0;height:8mm;background:#F5EFE4;border-top:0.5px solid #ECE5DA;display:flex;align-items:center;padding:0 14mm;font-size:6pt;color:#9C958A;font-family:'Manrope',Arial,sans-serif;font-weight:600;letter-spacing:0.04em">
-      <span>coproactiva · Comunidades que funcionan</span>
-      <span style="flex:1;text-align:center">Documento confidencial — uso exclusivo del comité de administración</span>
-      <span>${fecha}</span>
-    </div>`;
-  }
-
-  function sec(t) {
-    return `<div style="font-size:10pt;font-weight:800;color:#D9853B;text-transform:uppercase;letter-spacing:1px;border-bottom:1.5px solid #D9853B;padding-bottom:3px;margin:14px 0 10px;font-family:'Manrope',Arial,sans-serif">${t}</div>`;
-  }
-
-  // ── PÁGINA 1: PORTADA (sin cambios) ────────────────────────────────────────
-  const coverScoreColor = cAc;
-  const p0 = `<div style="width:210mm;height:297mm;position:relative;background:#1A1714;font-family:'Manrope',Arial,sans-serif;overflow:hidden;page-break-after:always">
-    ${fontLink}
-    <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(to bottom,#D9853B,#C2722C 60%,transparent)"></div>
-    <div style="position:absolute;top:-80px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(217,133,59,0.12),transparent 65%)"></div>
-    <div style="position:absolute;bottom:-60px;left:-40px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(217,133,59,0.07),transparent 65%)"></div>
-
-    <div style="padding:44px 52px 0 52px;display:flex;align-items:center;gap:12px">
-      ${isoSvg}
-      <div>
-        <div style="display:flex;align-items:baseline">${logoTxt('16pt','#D9853B','rgba(255,255,255,0.9)')}</div>
-        <div style="font-size:8pt;font-weight:700;color:#D9853B;letter-spacing:0.16em;text-transform:uppercase;margin-top:2px;opacity:0.8">Comunidades que funcionan</div>
-      </div>
-    </div>
-
-    <div style="padding:0 52px;margin-top:60px">
-      <div style="font-size:8pt;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#D9853B;margin-bottom:18px;display:flex;align-items:center;gap:10px">
-        Diagnóstico inicial
-        <div style="flex:1;max-width:60px;height:1px;background:rgba(217,133,59,0.4)"></div>
-      </div>
-      <div style="font-size:44pt;font-weight:900;color:white;line-height:1.05;letter-spacing:-0.03em;margin-bottom:16px">
-        Estado de tu<br><span style="color:#D9853B">comunidad</span><br>hoy
-      </div>
-      <div style="font-size:11pt;color:rgba(255,255,255,0.38);font-weight:500;line-height:1.6;max-width:260px">
-        Evaluación de 6 áreas críticas bajo la normativa de copropiedad vigente en Chile.
-      </div>
-    </div>
-
-    <div style="padding:0 52px;margin-top:56px;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px">
-      <div style="display:flex;align-items:flex-end;gap:20px">
-        <div style="flex:1">
-          <div style="font-size:8pt;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:8px">Nivel de cumplimiento</div>
-          <div style="font-size:80pt;font-weight:900;color:${coverScoreColor};line-height:1;letter-spacing:-0.06em">${score}<span style="font-size:28pt;vertical-align:top;margin-top:14px;display:inline-block">%</span></div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-            <div style="font-size:14pt;font-weight:800;color:${coverScoreColor};letter-spacing:-0.01em">${cLbl}</div>
-            ${crit.requiereIntervencion?`<div style="font-size:8pt;font-weight:800;padding:2px 9px;border-radius:99px;background:rgba(196,69,69,0.18);color:${coverScoreColor};text-transform:uppercase;letter-spacing:0.08em">Requiere intervención</div>`:''}
-          </div>
-        </div>
-        <div style="width:1px;background:rgba(255,255,255,0.06);align-self:stretch"></div>
-        <div style="text-align:right;padding-left:20px">
-          <div style="margin-bottom:14px">
-            <div style="font-size:7pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Condominio</div>
-            <div style="font-size:13pt;font-weight:800;color:white;letter-spacing:-0.02em">${c.nombre||'—'}</div>
-          </div>
-          <div style="margin-bottom:14px">
-            <div style="font-size:7pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Tipo / Unidades</div>
-            <div style="font-size:13pt;font-weight:800;color:white;letter-spacing:-0.02em">Tipo ${c.tipo} · ${c.unidades||'?'} un.</div>
-          </div>
-          <div>
-            <div style="font-size:7pt;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:4px">Fecha</div>
-            <div style="font-size:13pt;font-weight:800;color:white;letter-spacing:-0.02em">${fecha}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style="position:absolute;bottom:0;left:4px;right:0;height:36px;background:rgba(255,255,255,0.025);border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;padding:0 52px;justify-content:space-between">
-      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Documento confidencial</div>
-      <div style="font-size:6pt;color:rgba(255,255,255,0.18);font-weight:600;letter-spacing:0.08em">Elaborado por CoproActiva</div>
-    </div>
-  </div>`;
-
-  // ── PÁGINA 2: RESULTADO + ÁREAS + ÍTEMS CRÍTICOS ──────────────────────────
-  const ringR = 28;
-  const ringC = 2 * Math.PI * ringR;
-  const ringOff = ringC - (score / 100) * ringC;
-
-  // Agrupar críticos por área
-  const byArea = {};
-  crits.forEach(it => { byArea[it.area] = byArea[it.area] || []; byArea[it.area].push(it.text); });
-
-  const p1 = `<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:10pt;color:#1F1F1F;overflow:hidden;page-break-after:always">
-    ${fontLink}
-    ${hdr(2,3)}
-    <div style="padding:6mm 14mm 12mm">
-      ${sec('Resultado global del diagnóstico')}
-      <div style="background:${cBg};border:1.5px solid ${cAc};border-radius:8px;padding:14px 18px;display:flex;align-items:center;gap:16px;margin-bottom:16px">
-        <div style="position:relative;width:65px;height:65px;flex-shrink:0">
-          <svg width="65" height="65" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
-            <circle cx="32" cy="32" r="${ringR}" fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="5"/>
-            <circle cx="32" cy="32" r="${ringR}" fill="none" stroke="${cAc}" stroke-width="5" stroke-dasharray="${ringC.toFixed(1)}" stroke-dashoffset="${ringOff.toFixed(1)}" stroke-linecap="round"/>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-            <div style="font-size:16pt;font-weight:900;color:${cFg};line-height:1">${score}</div>
-            <div style="font-size:8pt;color:${cFg};font-weight:700">%</div>
-          </div>
-        </div>
-        <div style="width:1px;background:${cAc};opacity:0.2;align-self:stretch;margin:2px 0"></div>
-        <div style="flex:1">
-          <div style="font-size:16pt;font-weight:900;color:${cFg};margin-bottom:5px">${cLbl}</div>
-          <div style="font-size:10pt;color:${cFg};opacity:0.82;line-height:1.5">${crit.desc}</div>
-          ${crit.requiereIntervencion?`<div style="font-size:8pt;font-weight:800;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,0.08);color:${cFg};display:inline-block;margin-top:6px">⚠ Requiere intervención prioritaria</div>`:''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:8pt;font-weight:800;color:#9C958A">Elaborado por</div>
-          <div style="font-size:12pt;font-weight:900;color:#1F1F1F">CoproActiva</div>
-        </div>
-      </div>
-
-      ${sec('Comparativo por área')}
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:20px">
-        ${AREAS.map(a=>{
-          const s=scoreArea(a);const[sf,sb,sa,sl]=semHex(s?s.pct:null);
-          const pct=s?s.pct:null;
-          return`<div style="background:${sb};border:1px solid ${sa};border-radius:8px;padding:10px 12px">
-            <div style="font-size:8pt;font-weight:800;color:${sf};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">${a.emoji||''} ${a.label}</div>
-            <div style="font-size:22pt;font-weight:900;color:${sf};line-height:1;margin-bottom:4px">${pct!=null?pct+'%':'—'}</div>
-            <div style="height:4px;background:rgba(0,0,0,0.08);border-radius:99px;margin-bottom:5px"><div style="height:100%;width:${pct||0}%;background:${sa};border-radius:99px"></div></div>
-            <div style="font-size:8pt;font-weight:800;color:${sf};text-transform:uppercase">${sl}</div>
-          </div>`;}).join('')}
-      </div>
-
-      ${crits.length ? `
-        ${sec(`Ítems críticos faltantes · ${crits.length} sin resolver`)}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          ${Object.entries(byArea).map(([an, items]) => `
-            <div>
-              <div style="font-size:9pt;font-weight:800;color:#6B6359;text-transform:uppercase;letter-spacing:0.12em;border-bottom:0.5px solid #ECE5DA;padding-bottom:4px;margin-bottom:6px">${an}</div>
-              ${items.map(txt => `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;background:#FBE9E9;border-radius:6px;border-left:3px solid #C44545;margin-bottom:5px">
-                <div style="font-size:10pt;font-weight:900;color:#C44545">×</div>
-                <div style="font-size:9pt;color:#1F1F1F;line-height:1.4">${txt}</div>
-              </div>`).join('')}
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-    </div>
-    ${ftr()}
-  </div>`;
-
-  // ── PÁGINA 3: FACTORES + PROPUESTA + PRÓXIMO PASO ─────────────────────────
-  const linColors = { L1: { hdr: '#1A4A82', body: '#EBF1FA', border: '#B5D4F4', dot: '#378ADD' }, L2: { hdr: '#1d5c38', body: '#E8F2EC', border: '#BFDDC8', dot: '#5D9C7E' }, L3: { hdr: '#7a3e10', body: '#FDF3E7', border: '#F5C4B3', dot: '#D9853B' } };
-  const lc = linColors[lid] || linColors.L2;
-
-  const p2 = `<div style="width:210mm;height:297mm;position:relative;background:#FBF7F0;font-family:'Manrope',Arial,sans-serif;font-size:10pt;color:#1F1F1F;overflow:hidden">
-    ${fontLink}
-    ${hdr(3,3)}
-    <div style="padding:6mm 14mm 12mm">
-      ${S.factores.length ? `
-        ${sec('Factores destacados — análisis técnico')}
-        ${S.factores.map((f, i) => `<div style="background:#F5EFE4;border-radius:7px;padding:10px 14px;border-left:3px solid #D9853B;margin-bottom:10px">
-          <div style="font-size:8pt;font-weight:800;color:#D9853B;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:3px">Factor 0${i+1}</div>
-          <div style="font-size:11pt;font-weight:800;color:#1F1F1F;margin-bottom:5px">${f.titulo}</div>
-          <div style="font-size:9.5pt;color:#6B6359;line-height:1.5">${f.cuerpo}</div>
-        </div>`).join('')}
-      ` : ''}
-
-      ${sec('Propuesta de servicio')}
-      <div style="background:${lc.body};border:1.5px solid ${lc.border};border-radius:8px;overflow:hidden;margin-bottom:10px">
-        <div style="background:${lc.hdr};padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-size:12pt;font-weight:900;color:white">${lm.label}</div>
-            <div style="font-size:8pt;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:2px">Línea ${lid} · Recomendada para esta comunidad</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.12);border-radius:6px;padding:6px 12px;text-align:right">
-            <div style="font-size:7pt;color:rgba(255,255,255,0.45);font-weight:700;text-transform:uppercase">Valor mensual</div>
-            <div style="font-size:15pt;font-weight:900;color:white">$${vMin} – $${vMax}</div>
-            <div style="font-size:7pt;color:rgba(255,255,255,0.35)">CLP / mes</div>
-          </div>
-        </div>
-        <div style="padding:10px 14px">
-          <div style="font-size:9.5pt;color:#6B6359;line-height:1.5;margin-bottom:10px;border-bottom:0.5px solid ${lc.border};padding-bottom:8px">${lm.desc}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            ${lm.items.map(item => `<div style="display:flex;align-items:flex-start;gap:8px">
-              <div style="width:14px;height:14px;background:${lc.dot};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
-                <div style="width:5px;height:5px;background:white;border-radius:50%"></div>
-              </div>
-              <div style="font-size:9.5pt;color:#1F1F1F;line-height:1.4">${item}</div>
-            </div>`).join('')}
-          </div>
-        </div>
-      </div>
-
-      ${sec('Próximo paso')}
-      <div style="background:#1A1714;border-radius:7px;padding:12px 16px 12px 20px;position:relative">
-        <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#D9853B;border-radius:4px 0 0 4px"></div>
-        <div style="font-size:10pt;font-weight:800;color:#D9853B;margin-bottom:5px">Próximo paso</div>
-        <div style="font-size:9.5pt;color:rgba(255,255,255,0.55);line-height:1.6">CoproActiva los invita a una reunión de presentación con el comité, donde se revisará este diagnóstico en detalle y se confirmará el valor definitivo del servicio. Para coordinar fecha y hora, contáctenos a través de nuestros canales habituales.</div>
-      </div>
-    </div>
-    ${ftr()}
-  </div>`;
-
-  const tpl = document.getElementById('pdfTpl');
-  tpl.innerHTML = p0 + p1 + p2;
-  setTimeout(() => { window.print(); setTimeout(() => { tpl.innerHTML = ''; }, 1000); }, 200);
-}
-// ─── HOME VIEW ───────────────────────────────────────────────────────────────
-let _homeData = null;
-let _homeLoading = false;
-
-async function loadHomeData() {
-  _homeLoading = true;
-  _homeData = getSavedLocal();
-  _homeLoading = false;
-  if(S.view==='home') {
-    document.getElementById('mainContent').innerHTML = renderHome();
-  }
-  syncWithSheets();
-}
-
-function renderHome(){
-  const hist=_homeData||[];
-  return`
-  <div class="ph">
-    <div class="ph-text">
-      <div class="ph-eyebrow">Diagnóstico</div>
-      <div class="ph-title">Diagnósticos <em>guardados</em></div>
-      <div class="ph-sub">Crea nuevos diagnósticos o continúa uno existente. Se sincronizan automáticamente con Google Sheets.</div>
-    </div>
-    <div class="ph-action">
-      <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
-    </div>
-  </div>
-
-  <div class="home-header">
-    <div class="home-logo">
-      <div class="home-mark">C</div>
-      <div>
-        <div class="home-brand"><b>co</b>proactiva</div>
-        <div class="home-tag">Comunidades que funcionan</div>
-      </div>
-    </div>
-  </div>
-
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-    <div style="font-size:14px;font-weight:800;color:var(--text);letter-spacing:-0.02em">Historial</div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span id="syncIndicator" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600">
-        <span class="spin" style="width:10px;height:10px;border-width:1.5px"></span> Sincronizando...
-      </span>
-      <span style="font-size:12px;color:var(--muted);font-weight:600">${hist.length} guardado${hist.length!==1?'s':''}</span>
-    </div>
-  </div>
-  ${hist.length===0?`
-    <div class="empty-state">
-      <div class="empty-icon">📋</div>
-      <div class="empty-ttl">Sin diagnósticos aún</div>
-      <div class="empty-desc">Crea tu primer diagnóstico para comenzar<br>a captar clientes con CoproActiva.</div>
-      <br>
-      <button class="pri" onclick="nuevoDesdeHome()" style="margin-top:10px">Comenzar diagnóstico</button>
-    </div>
-  `:`<div style="display:flex;flex-direction:column;gap:10px">
-    ${hist.map(d=>{
-      const sem=semC(d.score);
-      const lm2=LINEAS[d.linea]||LINEAS.L2;
-      return`<div class="hist-card" onclick="cargarYAbrir('${encodeURIComponent(d.nombre)}')">
-        <div class="hist-score" style="background:${sem.bg};color:${sem.fg}">${d.score}%</div>
-        <div class="hist-info">
-          <div class="hist-nombre">${d.nombre}</div>
-          <div class="hist-meta">Tipo ${d.ctx?.tipo||'A'} · ${d.ctx?.unidades||'?'} unidades · ${d.fecha}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span class="hist-linea" style="background:${lm2.bg||'var(--vd-lt)'};color:${lm2.color||'var(--vd-dk)'}">${d.linea}</span>
-          <button class="btn-sm ghost" onclick="event.stopPropagation();generarPDFDesdeHistorial('${encodeURIComponent(d.nombre)}')" title="Descargar PDF">📄</button>
-          <button class="btn-sm btn-danger" onclick="event.stopPropagation();eliminarHist('${encodeURIComponent(d.nombre)}')" title="Eliminar">×</button>
-        </div>
-      </div>`;}).join('')}
-  </div>`}`;
-}
-
-function nuevoDesdeHome(){
-  const def=defaultState();
-  S.ctx=def.ctx;S.checks=def.checks;S.notes=def.notes;
-  S.factores=[];S.valorMin='';S.valorMax='';S.lineaOverride=null;
-  goTo('contexto');
-}
-
-async function cargarYAbrir(nombre){
-  await loadDiag(decodeURIComponent(nombre));
-  goTo('contexto');
-}
-
-async function eliminarHist(nombre){
-  const n=decodeURIComponent(nombre);
-  if(!confirm(`¿Eliminar el diagnóstico "${n}"?`))return;
-  await deleteSaved(n);
-  _homeData = null;
-  render();
-}
-
-async function generarPDFDesdeHistorial(nombre){
-  const _sv=await getSaved();const d=_sv.find(x=>x.nombre===decodeURIComponent(nombre));
-  if(!d)return;
-  const prevCtx={...S.ctx};const prevChecks=JSON.parse(JSON.stringify(S.checks));
-  const prevNotes={...S.notes};const prevFac=[...S.factores];
-  const prevVMin=S.valorMin;const prevVMax=S.valorMax;const prevLO=S.lineaOverride;
-  S.ctx={...d.ctx};S.checks=JSON.parse(JSON.stringify(d.checks));
-  S.notes={...d.notes};S.factores=d.factores||[];
-  S.valorMin=d.valorMin||'';S.valorMax=d.valorMax||'';S.lineaOverride=d.lineaOverride||null;
-  generarPDF();
-  setTimeout(()=>{
-    S.ctx=prevCtx;S.checks=prevChecks;S.notes=prevNotes;S.factores=prevFac;
-    S.valorMin=prevVMin;S.valorMax=prevVMax;S.lineaOverride=prevLO;
-  },500);
-}
-
-// ─── EXIT MODAL ───────────────────────────────────────────────────────────────
-function openExitModal(){
-  const nombre=S.ctx.nombre?.trim();
-  const sub=document.getElementById('exitModalSub');
-  sub.textContent=nombre
-    ? `Estás trabajando en "${nombre}". ¿Qué deseas hacer?`
-    : 'Tienes datos sin guardar en este diagnóstico.';
-  document.getElementById('exitModalBg').classList.add('show');
-}
-function closeExitModal(){document.getElementById('exitModalBg').classList.remove('show');}
-
-async function guardarYSalir(){
-  if(!S.ctx.nombre?.trim()){
-    closeExitModal();
-    alert('Ingresa el nombre del condominio para poder guardar.');
-    goTo('contexto');
-    return;
-  }
-  closeExitModal();
-  await saveDiag();
-  _homeData = null;
-  goTo('home');
-}
-function salirSinGuardar(){
-  closeExitModal();
-  goTo('home');
-}
-
-function showToast(msg, icon='💾', duration=2500){
-  const t = document.getElementById('toastGuardado');
-  document.getElementById('toastMsg').textContent = msg;
-  document.getElementById('toastIcon').textContent = icon;
-  t.style.display = 'flex';
-  t.style.opacity = '1';
-  clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(()=>{
-    t.style.opacity = '0';
-    setTimeout(()=>{ t.style.display = 'none'; }, 300);
-  }, duration);
-}
-
-function openAreaModal(aId){
-  const area = AREAS.find(a=>a.id===aId);
-  if(!area) return;
-  const s = scoreArea(area);
-  const sem = semC(s?s.pct:null);
-
-  document.getElementById('areaModalEmoji').textContent = area.emoji||'';
-  document.getElementById('areaModalTtl').textContent = area.label;
-  const scoreEl = document.getElementById('areaModalScore');
-  scoreEl.textContent = s ? s.pct+'% — '+sem.lbl : 'No aplica';
-  scoreEl.style.background = sem.bg;
-  scoreEl.style.color = sem.fg;
-
-  const fallidos = area.items.filter((it,i)=>itemApplies(it)&&!S.checks[aId][i]);
-  const cumplidos = area.items.filter((it,i)=>itemApplies(it)&&S.checks[aId][i]);
-  const note = S.notes[aId]?.trim();
-  const wLabel = {c:'Crítico',i:'Importante',b:'Básico'};
-  const wFg = {c:'var(--sr-ac)',i:'var(--sa-ac)',b:'var(--sg-ac)'};
-  const wBg = {c:'var(--sr-bg)',i:'var(--sa-bg)',b:'var(--sg-bg)'};
-
-  let html = '';
-
-  if(!s){
-    html = '<p style="color:var(--muted);font-size:13px;padding:8px 0;font-weight:500">Esta área no aplica para este condominio.</p>';
-  } else {
-    if(fallidos.length){
-      html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--sr-fg)">⚠️ Sin cumplir (${fallidos.length})</div>
-        ${fallidos.map(it=>`<div class="area-modal-item fail">
-          <span class="area-modal-badge" style="background:${wBg[it.w]};color:${wFg[it.w]}">${wLabel[it.w]}</span>
-          <span class="area-modal-item-txt">${it.t}</span>
-        </div>`).join('')}
-      </div>`;
-    }
-    if(cumplidos.length){
-      html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--sg-fg)">✓ Cumplidos (${cumplidos.length})</div>
-        ${cumplidos.map(it=>`<div class="area-modal-item ok">
-          <span class="area-modal-badge" style="background:var(--sg-bg);color:var(--sg-fg)">✓</span>
-          <span class="area-modal-item-txt" style="color:var(--az-md)">${it.t}</span>
-        </div>`).join('')}
-      </div>`;
-    }
-    if(note){
-      html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--az-md)">📝 Observación anotada</div>
-        <div class="area-modal-obs">${note}</div>
-      </div>`;
-    }
-    if(!fallidos.length && !cumplidos.length){
-      html = '<p style="color:var(--muted);font-size:13px;padding:8px 0;font-weight:500">Sin ítems evaluados en esta área.</p>';
-    }
-  }
-
-  document.getElementById('areaModalBody').innerHTML = html;
-  document.getElementById('areaModalBg').classList.add('show');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeAreaModal(){
-  document.getElementById('areaModalBg').classList.remove('show');
-  document.body.style.overflow = '';
-}
-
-function eliminarFactor(i){
-  S.factores.splice(i,1);
-  render();
-}
-
-function limpiarFactores(){
-  if(!confirm('¿Eliminar todos los factores generados?')) return;
-  S.factores=[];
-  render();
-}
-
-// ─── ACCESO ──────────────────────────────────────────────────────────────────
-const ACCESS_KEY = 'copro2025';
-
-function checkLogin(){
-  const input = document.getElementById('loginInput');
-  const val = input.value.trim();
-  if(val === ACCESS_KEY){
-    sessionStorage.setItem('ca_auth', Date.now().toString());
-    document.getElementById('loginScreen').style.display = 'none';
-    initApp();
-  } else {
-    document.getElementById('loginError').textContent = 'Clave incorrecta. Intenta nuevamente.';
-    input.value = '';
-    input.focus();
-    input.style.borderColor = 'var(--sr-ac)';
-    setTimeout(()=>{ input.style.borderColor = ''; }, 1500);
-  }
-}
-
-function checkAuth(){
-  const auth = sessionStorage.getItem('ca_auth');
-  if(auth){
-    const elapsed = Date.now() - parseInt(auth);
-    if(elapsed < 8 * 60 * 60 * 1000) return true;
-  }
-  return false;
-}
-
-function initApp(){
-  if (window.prospectoVinculado && window.prospectoVinculado.nombre) {
-    const pv = window.prospectoVinculado;
-    S.prospectoId        = pv.id             || null;
-    S.ctx.nombre         = pv.nombre         || '';
-    S.ctx.unidades       = pv.unidades       || '';
-    S.ctx.contactoNombre = pv.contactoNombre || '';
-    S.ctx.contactoCorreo = pv.contactoCorreo || '';
-    const cr = (pv.cargoContacto || '').toLowerCase().trim();
-    if      (cr.includes('president'))  S.ctx.contactoCargo = 'Presidente';
-    else if (cr.includes('secretar'))   S.ctx.contactoCargo = 'Secretario';
-    else if (cr.includes('tesorer'))    S.ctx.contactoCargo = 'Tesorero';
-    else if (cr.includes('inmobiliar')) S.ctx.contactoCargo = 'Representante inmobiliaria';
-    else if (cr.length > 0)             S.ctx.contactoCargo = 'Otro';
-    window.prospectoVinculado = null;
-    S.view = 'contexto';
-  }
-
-  setTimeout(() => {
-    fetch(`${WORKER_BASE}/diagnosticos`, {
-      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
-    })
-      .then(r => r.json())
-      .then(data => {
-        if(data.diagnosticos) {
-          const remote = data.diagnosticos.map(d => ({
-            ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
-          }));
-          localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
-          _cache = remote;
-          _cacheTime = Date.now();
-          if(S.view==='home') {
-            _homeData = remote;
-            document.getElementById('mainContent').innerHTML = renderHome();
-            const si = document.getElementById('syncIndicator');
-            if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
-          }
-        }
-      })
-      .catch(() => {
-        const si = document.getElementById('syncIndicator');
-        if(si){ si.textContent='Sin conexión con servidor'; si.style.color='var(--sa-fg)'; setTimeout(()=>si.remove(),3000); }
-      });
-  }, 100);
-
-  render();
-}
-
-if (window.parent !== window) {
-  document.body.classList.add('in-iframe');
-}
-
-(function() {
-  const params = new URLSearchParams(window.location.search);
-  const urlToken = params.get('token');
-  if (urlToken && urlToken === ACCESS_KEY) {
-    sessionStorage.setItem('ca_auth', Date.now().toString());
-  }
-})();
-
-const _pvData = sessionStorage.getItem('prospectoVinculado');
-if (_pvData) {
-  try {
-    const _pv = JSON.parse(_pvData);
-    window.prospectoVinculado = _pv;
-    sessionStorage.removeItem('prospectoVinculado');
-  } catch(e) {}
-}
-
-window.addEventListener('message', function(event) {
-  const data = event.data;
-  if (!data || !data.type) return;
-  if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
-  if (data.type === 'cambiar_paso' && data.paso) {
-    goTo(data.paso === 'datos' ? 'contexto' : data.paso);
-  }
-});
-
-if(checkAuth()){
-  document.getElementById('loginScreen').style.display = 'none';
-  initApp();
-} else {
-  setTimeout(()=>{ document.getElementById('loginInput').focus(); }, 300);
-}
-</script>
-
-<div id="pdfTpl" style="display:none"></div>
-<style>
-@media print{
-  @page{size:A4;margin:0;}
-  body>*:not(#pdfTpl){display:none !important;}
-  #pdfTpl{display:block !important;}
-}
-</style>
-</body>
-</html>
