@@ -937,16 +937,33 @@
       }
     });
 
-    box.querySelector('#btn-abrir-gmail').addEventListener('click', function() {
+      box.querySelector('#btn-abrir-gmail').addEventListener('click', async function() {
       var para   = box.querySelector('#mail-para').value.trim();
       var asunto = box.querySelector('#mail-asunto').value.trim();
       var cuerpo = box.querySelector('#mail-cuerpo').value.trim();
       var errDiv = box.querySelector('#mail-error');
+      var btn    = box.querySelector('#btn-abrir-gmail');
       if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
       errDiv.style.display = 'none';
-      window.open('https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(para) + '&su=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo), '_blank');
-    });
+      btn.disabled = true; btn.textContent = 'Creando borrador...';
+      var resp = await api('/correo', 'POST', {
+      action:      'crearBorrador',
+      prospectoId: p.id,
+      etapa:       p.etapa,
+      para, asunto, cuerpo
+  });
+  
+    if (resp.ok && resp.data && resp.data.ok) {
+    btn.textContent = '✓ Borrador creado';
+    window.open('https://mail.google.com/mail/#drafts', '_blank');
+  } else {
+    errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al crear borrador';
+    errDiv.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Abrir en Gmail';
   }
+  });  // cierra btn-abrir-gmail
+
+  }  // cierra abrirModalCorreo
 
   function obtenerCuerpoCorreo(p) {
     var n = p.nombreContacto    || 'estimado/a';
