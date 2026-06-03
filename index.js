@@ -1,6 +1,6 @@
 // ============================================================
 // CoproActiva Worker — index.js
-// Versión: 3.1 · Junio 2026
+// Versión: 3.2 · Junio 2026
 // ============================================================
 
 const ACCESS_KEY = 'copro2025';
@@ -114,7 +114,7 @@ async function notificarEmail(prospecto, env) {
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
+    const url    = new URL(request.url);
     const method = request.method;
     const origin = request.headers.get('Origin') || '';
 
@@ -125,7 +125,7 @@ export default {
     const APPS_SCRIPT_URL = env.APPS_SCRIPT_URL;
 
     // ════════════════════════════════════════════════════════
-    // RUTA PÚBLICA — formulario web contacto
+    // RUTA PÚBLICA — formulario web contacto (sin cambios)
     // ════════════════════════════════════════════════════════
     if (url.pathname === '/webhook/contacto' && method === 'POST') {
       try {
@@ -140,10 +140,10 @@ export default {
         const errores = [];
         if (!nombre)     errores.push('Nombre es obligatorio');
         if (!condominio) errores.push('Nombre del condominio es obligatorio');
-        if (!email)                  errores.push('Correo electrónico es obligatorio');
+        if (!email)                    errores.push('Correo electrónico es obligatorio');
         else if (!validarEmail(email)) errores.push('El correo electrónico no tiene un formato válido');
-        if (!telefono)                        errores.push('Teléfono es obligatorio');
-        else if (!validarTelefonoChileno(telefono)) errores.push('El teléfono no tiene un formato chileno válido (ej: +56 9 1234 5678)');
+        if (!telefono)                          errores.push('Teléfono es obligatorio');
+        else if (!validarTelefonoChileno(telefono)) errores.push('El teléfono no tiene un formato chileno válido');
         if (errores.length > 0) return jsonResponse({ ok: false, errores }, 400, origin);
 
         const utmSource   = (body.utm_source   || '').trim();
@@ -192,25 +192,19 @@ export default {
     }
 
     // ════════════════════════════════════════════════════════
-    // RUTAS PÚBLICAS — formulario completar datos prospecto
+    // RUTAS PÚBLICAS — formulario completar datos (sin cambios)
     // ════════════════════════════════════════════════════════
-
-    // GET /completar?token=XXX — obtener datos del prospecto
     if (url.pathname === '/completar' && method === 'GET') {
       try {
         const token = url.searchParams.get('token') || '';
         if (!token) return jsonResponse({ ok: false, error: 'Token requerido' }, 400, origin);
-        const data = await postAppsScript(APPS_SCRIPT_URL, {
-          action: 'obtenerDatosToken',
-          token
-        });
+        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'obtenerDatosToken', token });
         return jsonResponse({ ok: true, data }, 200, origin);
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500, origin);
       }
     }
 
-    // POST /completar — guardar datos del prospecto
     if (url.pathname === '/completar' && method === 'POST') {
       try {
         const body = await request.json();
@@ -218,10 +212,7 @@ export default {
         if (!body.comuna || !body.unidades) {
           return jsonResponse({ ok: false, error: 'Comuna y unidades son obligatorios' }, 400, origin);
         }
-        const data = await postAppsScript(APPS_SCRIPT_URL, {
-          action: 'completarDatosProspecto',
-          ...body
-        });
+        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'completarDatosProspecto', ...body });
         return jsonResponse({ ok: true, data }, 200, origin);
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500, origin);
@@ -238,6 +229,9 @@ export default {
     }
 
     try {
+
+      // ── Existentes — sin cambios ──────────────────────────
+
       if (url.pathname === '/crm' && method === 'GET') {
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getCRM');
         return jsonResponse({ ok: true, data }, 200, origin);
@@ -310,6 +304,132 @@ export default {
         }
         const action = body.action || 'enviarCorreo';
         const data = await postAppsScript(APPS_SCRIPT_URL, { ...body, action });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Nuevas — Comunidades ──────────────────────────────
+
+      if (url.pathname === '/comunidades' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (comunidadId) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getComunidades', { comunidadId });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getComunidades');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/comunidades' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Nuevas — Unidades ─────────────────────────────────
+
+      if (url.pathname === '/unidades' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getUnidades', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/unidades' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/unidades/validar' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'validarAlicuotas', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Nuevas — Propietarios ─────────────────────────────
+
+      if (url.pathname === '/propietarios' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        const unidadId    = url.searchParams.get('unidadId')    || '';
+        if (unidadId) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getPropietarioUnidad', { unidadId });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getPropietarios', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/propietarios' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/propietarios/registro' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getRegistroCopropietarios', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Nuevas — Residentes ───────────────────────────────
+
+      if (url.pathname === '/residentes' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        const unidadId    = url.searchParams.get('unidadId')    || '';
+        if (unidadId) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getResidentesUnidad', { unidadId });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getResidentes', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/residentes' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Nuevas — Documentos ───────────────────────────────
+
+      if (url.pathname === '/documentos' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        const categoria   = url.searchParams.get('categoria')   || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        if (categoria) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getDocumentosCategoria', { comunidadId, categoria });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getDocumentos', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/documentos' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/documentos/vencimientos' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getVencimientos', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/documentos/resumen' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getResumenDocumentos', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/documentos/catalogo' && method === 'GET') {
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getCatalogoDocumentos');
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
