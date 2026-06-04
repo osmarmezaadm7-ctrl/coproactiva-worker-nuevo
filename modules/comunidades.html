@@ -1360,49 +1360,20 @@
 
   // ── CARGA ASYNC ───────────────────────────────────────────────
   function cargarKpis(comunidadId) {
-    api('/comunidades?action=kpis&comunidadId=' + comunidadId).then(function(resp) {
-      if (!resp.ok || !resp.data) return;
-      // Si el endpoint devuelve kpis, actualizar cards
-    }).catch(function() {});
-
-    // Cargar incidencias
-    api('/incidencias?comunidadId=' + comunidadId).then(function(resp) {
-      var body = document.getElementById('inc-body-' + comunidadId);
-      if (!body) return;
+    // Incidencias — módulo pendiente, mostrar placeholder sin error
+    var body = document.getElementById('inc-body-' + comunidadId);
+    if (body) {
       body.innerHTML = '';
-      var lista = (resp.ok && resp.data && resp.data.data) ? resp.data.data.filter(function(i) { return i.estado !== 'cerrado'; }).slice(0, 4) : [];
-      if (lista.length === 0) {
-        var v = document.createElement('div');
-        v.className = 'com-vacio';
-        v.style.padding = '16px 0';
-        v.textContent = 'Sin incidencias activas';
-        body.appendChild(v);
-        return;
-      }
-      lista.forEach(function(inc) {
-        var row = document.createElement('div');
-        row.className = 'com-inc-row';
-        var dot = document.createElement('div');
-        dot.className = 'com-prioridad p-' + (inc.prioridad || 'baja').toLowerCase();
-        var desc = document.createElement('div');
-        desc.style.flex = '1';
-        var d1 = document.createElement('div');
-        d1.className = 'com-inc-desc';
-        d1.textContent = inc.descripcion || inc.tipo || '';
-        var d2 = document.createElement('div');
-        d2.className = 'com-inc-meta';
-        d2.textContent = formatFecha(inc.fechaRegistro);
-        desc.appendChild(d1); desc.appendChild(d2);
-        var pill = document.createElement('span');
-        pill.className = 'co-pill ' + (inc.prioridad === 'Alta' ? 'pill-crit' : inc.prioridad === 'Media' ? 'pill-warn' : 'pill-ok');
-        pill.textContent = inc.prioridad || 'Baja';
-        row.appendChild(dot); row.appendChild(desc); row.appendChild(pill);
-        body.appendChild(row);
-      });
-    }).catch(function() {
-      var body = document.getElementById('inc-body-' + comunidadId);
-      if (body) { body.innerHTML = ''; var v = document.createElement('div'); v.className = 'com-vacio'; v.style.padding = '16px 0'; v.textContent = 'Sin datos'; body.appendChild(v); }
-    });
+      var v = document.createElement('div');
+      v.className = 'com-vacio';
+      v.style.padding = '16px 0';
+      v.style.display = 'flex';
+      v.style.alignItems = 'center';
+      v.style.gap = '6px';
+      v.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5v1"/></svg>'
+        + '<span>Módulo de incidencias próximamente</span>';
+      body.appendChild(v);
+    }
   }
 
   function cargarDocumentos(comunidadId) {
