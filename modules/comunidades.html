@@ -1878,39 +1878,61 @@
 
   // ── GENERAR PLANTILLA EXCEL ───────────────────────────────────
   function descargarPlantillaDirectorio() {
+    var cargar = function() {
+      var wb = XLSX.utils.book_new();
+
+      // Hoja 1 — Copropietarios
+      var hCop = [
+        ['rut *','nombre *','email','telefono','domicilio','tipoPersona','razonSocial'],
+        ['12.345.678-9','Juan Pérez','juan@email.com','+56912345678','Av. Ejemplo 123','natural',''],
+        ['76.543.210-K','Inmobiliaria Las Palmas SpA','contacto@laspalmas.cl','+56222334455','Av. Apoquindo 456','juridica','Inmobiliaria Las Palmas SpA'],
+        ['','','','','','',''],
+        ['(*) Campos obligatorios','','','','','',''],
+        ['tipoPersona: natural / juridica','','','','','','']
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hCop), 'Copropietarios');
+
+      // Hoja 2 — Unidades
+      var hUni = [
+        ['numero *','tipo *','alicuota *','piso','rolSII','copropietario *','unidadPrincipal','condicionOcupacion'],
+        ['101','departamento','1.25','3','9870-1','12.345.678-9','','propietario residente'],
+        ['E-15','estacionamiento','0.15','-1','9870-45','12.345.678-9','101',''],
+        ['B-04','bodega','0.05','-2','','12.345.678-9','101',''],
+        ['102','departamento','1.25','3','9870-2','76.543.210-K','','arrendado'],
+        ['E-16','estacionamiento','0.15','-1','9870-46','76.543.210-K','102',''],
+        ['','','','','','','',''],
+        ['(*) Campos obligatorios','','','','','','',''],
+        ['tipo: departamento / estacionamiento / bodega / local / casa / oficina','','','','','','',''],
+        ['copropietario: RUT (debe existir en hoja Copropietarios)','','','','','','',''],
+        ['unidadPrincipal: número del depto al que pertenece (solo para estac. y bodegas)','','','','','','',''],
+        ['condicionOcupacion: propietario residente / arrendado / desocupado / en remodelacion','','','','','','','']
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hUni), 'Unidades');
+
+      // Hoja 3 — Residentes
+      var hRes = [
+        ['unidad *','rut','nombre *','email','telefonoPrincipal','telefonoSecundario','contactoEmergencia','telefonoEmergencia','electrodependiente','movilidadReducida','condicionEspecial','tieneMascotas','detalleMascotas','fechaIngreso'],
+        ['101','12.345.678-9','Juan Pérez','juan@email.com','+56912345678','','María Pérez','+56987654321','NO','NO','','NO','','01/01/2024'],
+        ['102','22.333.444-5','Pedro Soto','pedro@email.com','+56911223344','','Ana Soto','+56955667788','NO','NO','','SI','Labrador, chip 985123','15/03/2023'],
+        ['','','','','','','','','','','','','',''],
+        ['(*) Campos obligatorios','','','','','','','','','','','','',''],
+        ['unidad: número del departamento (debe existir en hoja Unidades)','','','','','','','','','','','','',''],
+        ['electrodependiente / movilidadReducida / tieneMascotas: SI o NO','','','','','','','','','','','','',''],
+        ['Solo registrar residentes de deptos — no de estacionamientos ni bodegas','','','','','','','','','','','','','']
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hRes), 'Residentes');
+
+      XLSX.writeFile(wb, 'Plantilla_Directorio_CoproActiva.xlsx');
+    };
+
     if (typeof XLSX === 'undefined') {
-      alert('Cargando librería Excel, intenta en un momento...');
       var s = document.createElement('script');
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = cargar;
       document.head.appendChild(s);
-      return;
+    } else {
+      cargar();
     }
-    var wb = XLSX.utils.book_new();
-
-    // Hoja Unidades
-    var unidadesData = [
-      ['numero','tipo','piso','alicuota','rolSII'],
-      ['101','departamento','1','1.85','9870-12'],
-      ['E-01','estacionamiento','-1','0.32',''],
-      ['B-01','bodega','-1','0.18','']
-    ];
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(unidadesData), 'Unidades');
-
-    // Hoja Propietarios
-    var propData = [
-      ['unidad','rutPropietario','nombrePropietario','emailPropietario','telefonoPropietario','domicilioPropietario','condicionOcupacion','fechaAdquisicion','fojas','numeroCBR','anioCBR'],
-      ['101','12.345.678-9','Juan Pérez','juan@email.com','+56912345678','Otra dirección 123','propietario residente','01/01/2020','125','4521','2020']
-    ];
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(propData), 'Propietarios');
-
-    // Hoja Residentes
-    var resData = [
-      ['unidad','rut','nombre','email','telefonoPrincipal','telefonoSecundario','contactoEmergencia','telefonoEmergencia','electrodependiente','movilidadReducida','condicionEspecial','tieneMascotas','detalleMascotas','fechaIngreso'],
-      ['101','12.345.678-9','Juan Pérez','juan@email.com','+56912345678','','María Pérez','+56987654321','NO','NO','','NO','','01/01/2020']
-    ];
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resData), 'Residentes');
-
-    XLSX.writeFile(wb, 'Plantilla_Directorio_CoproActiva.xlsx');
   }
 
   // ── PROCESAR ARCHIVO EXCEL ────────────────────────────────────
@@ -1942,29 +1964,29 @@
           return null;
         }
 
-        // Intentar por nombre primero, luego por posición
-        var hUnidades     = buscarHoja(wb, ['Unidades','unidades','UNIDADES'])
-                            || (wb.SheetNames[0] ? wb.Sheets[wb.SheetNames[0]] : null);
-        var hPropietarios = buscarHoja(wb, ['Propietarios','propietarios','PROPIETARIOS','Copropietarios','copropietarios'])
-                            || (wb.SheetNames[1] ? wb.Sheets[wb.SheetNames[1]] : null);
-        var hResidentes   = buscarHoja(wb, ['Residentes','residentes','RESIDENTES'])
-                            || (wb.SheetNames[2] ? wb.Sheets[wb.SheetNames[2]] : null);
+        // Buscar hojas — nueva estructura: Copropietarios / Unidades / Residentes
+        var hCopropietarios = buscarHoja(wb, ['Copropietarios','copropietarios','Propietarios','propietarios'])
+                              || (wb.SheetNames[0] ? wb.Sheets[wb.SheetNames[0]] : null);
+        var hUnidades       = buscarHoja(wb, ['Unidades','unidades'])
+                              || (wb.SheetNames[1] ? wb.Sheets[wb.SheetNames[1]] : null);
+        var hResidentes     = buscarHoja(wb, ['Residentes','residentes'])
+                              || (wb.SheetNames[2] ? wb.Sheets[wb.SheetNames[2]] : null);
 
-        var unidades     = hUnidades     ? XLSX.utils.sheet_to_json(hUnidades,     { defval: '' }) : [];
-        var propietarios = hPropietarios ? XLSX.utils.sheet_to_json(hPropietarios, { defval: '' }) : [];
-        var residentes   = hResidentes   ? XLSX.utils.sheet_to_json(hResidentes,   { defval: '' }) : [];
+        var copropietarios = hCopropietarios ? XLSX.utils.sheet_to_json(hCopropietarios, { defval: '' }) : [];
+        var unidades       = hUnidades       ? XLSX.utils.sheet_to_json(hUnidades,       { defval: '' }) : [];
+        var residentes     = hResidentes     ? XLSX.utils.sheet_to_json(hResidentes,     { defval: '' }) : [];
 
         // Validar que haya al menos unidades
         if (unidades.length === 0) {
           var errDiv = box.querySelector('.form-error');
           if (errDiv) {
-            errDiv.textContent = 'No se encontraron unidades en el archivo. Hojas detectadas: ' + wb.SheetNames.join(', ');
+            errDiv.textContent = 'No se encontraron unidades. Hojas detectadas: ' + wb.SheetNames.join(', ');
             errDiv.style.display = 'block';
           }
           return;
         }
 
-        mostrarPrevisualizacion(unidades, propietarios, residentes, comunidadId, box, overlay);
+        mostrarPrevisualizacion(copropietarios, unidades, residentes, comunidadId, box, overlay);
       } catch (err) {
         var errDiv = box.querySelector('.form-error');
         if (errDiv) { errDiv.textContent = 'Error al leer el archivo: ' + err.message; errDiv.style.display = 'block'; }
@@ -1974,7 +1996,7 @@
   }
 
   // ── PREVISUALIZACIÓN ──────────────────────────────────────────
-  function mostrarPrevisualizacion(unidades, propietarios, residentes, comunidadId, box, overlay) {
+  function mostrarPrevisualizacion(copropietarios, unidades, residentes, comunidadId, box, overlay) {
     // Limpiar contenido del box y mostrar previsualización
     box.innerHTML = '';
 
@@ -2005,9 +2027,9 @@
         + '<div style="font-size:10px;color:var(--co-mute);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">' + lbl + '</div>';
       return k;
     }
-    resumen.appendChild(kpiPrev(unidades.length,     'Unidades',     'var(--co-blue)'));
-    resumen.appendChild(kpiPrev(propietarios.length, 'Propietarios', 'var(--co-orange)'));
-    resumen.appendChild(kpiPrev(residentes.length,   'Residentes',   'var(--co-green)'));
+    resumen.appendChild(kpiPrev(unidades.length,       'Unidades',        'var(--co-blue)'));
+    resumen.appendChild(kpiPrev(copropietarios.length, 'Copropietarios',  'var(--co-orange)'));
+    resumen.appendChild(kpiPrev(residentes.length,     'Residentes',      'var(--co-green)'));
     box.appendChild(resumen);
 
     // Preview primeras 5 unidades
@@ -2023,14 +2045,20 @@
       tabla.className = 'com-dir-table';
       var thead = document.createElement('thead');
       var trh = document.createElement('tr');
-      ['Número','Tipo','Alícuota','Piso','Rol SII'].forEach(function(h) {
+      ['Número','Tipo','Alícuota','Copropietario','Unidad principal'].forEach(function(h) {
         var th = document.createElement('th'); th.textContent = h; trh.appendChild(th);
       });
       thead.appendChild(trh); tabla.appendChild(thead);
       var tbody = document.createElement('tbody');
       unidades.slice(0,5).forEach(function(u) {
         var tr = document.createElement('tr');
-        [u.numero||'—', u.tipo||'—', u.alicuota ? parseFloat(u.alicuota).toFixed(2)+'%' : '—', u.piso||'—', u.rolSII||'—'].forEach(function(v) {
+        [
+          u.numero||'—',
+          u.tipo||'—',
+          u.alicuota ? parseFloat(u.alicuota).toFixed(2)+'%' : '—',
+          u.copropietario||'—',
+          u.unidadPrincipal||'—'
+        ].forEach(function(v) {
           var td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -2075,7 +2103,7 @@
       btnConfirmar.disabled = true;
       btnConfirmar.textContent = 'Importando…';
       errDiv.style.display = 'none';
-      ejecutarImportacion(unidades, propietarios, residentes, comunidadId, btnConfirmar, errDiv, overlay);
+      ejecutarImportacion(copropietarios, unidades, residentes, comunidadId, btnConfirmar, errDiv, overlay);
     });
 
     btnRow.appendChild(btnVolver);
@@ -2084,132 +2112,197 @@
   }
 
   // ── EJECUTAR IMPORTACIÓN ──────────────────────────────────────
-  function ejecutarImportacion(unidades, propietarios, residentes, comunidadId, btn, errDiv, overlay) {
+  // Flujo en 3 pasos secuenciales:
+  // 1. Crear copropietarios → obtener mapa RUT→id
+  // 2. Crear unidades con copropietarioId y unidadPrincipalId resueltos
+  // 3. Crear residentes con unidadId resuelto
+  function ejecutarImportacion(copropietarios, unidades, residentes, comunidadId, btn, errDiv, overlay) {
 
-    // Paso 1 — crear unidades
-    var promUnidades = unidades.length > 0
-      ? api('/unidades', 'POST', {
-          action:      'crearUnidadesMasivo',
-          comunidadId: comunidadId,
-          unidades:    unidades.map(function(u) {
+    // ── PASO 1: Crear copropietarios ──────────────────────────────
+    btn.textContent = 'Creando copropietarios…';
+
+    var promCoprop = copropietarios.length > 0
+      ? api('/propietarios', 'POST', {
+          action:       'crearPropietariosMasivo',
+          comunidadId:  comunidadId,
+          propietarios: copropietarios.map(function(c) {
             return {
-              numero:   String(u.numero||''),
-              tipo:     String(u.tipo||'departamento').toLowerCase(),
-              piso:     String(u.piso||''),
-              alicuota: parseFloat(u.alicuota)||0,
-              rolSII:   String(u.rolSII||'')
+              // En el nuevo modelo, el copropietario no tiene unidadId en la hoja
+              // Se crea sin unidad — la vinculación viene desde Unidades
+              unidadId:             '',
+              rutPropietario:       String(c.rut||''),
+              nombrePropietario:    String(c.nombre||''),
+              emailPropietario:     String(c.email||''),
+              telefonoPropietario:  String(c.telefono||''),
+              domicilioPropietario: String(c.domicilio||''),
+              tipoPersona:          String(c.tipoPersona||'natural'),
+              razonSocial:          String(c.razonSocial||''),
+              estado:               'activo'
             };
           })
         })
-      : Promise.resolve({ ok: true, data: { ok: true } });
+      : Promise.resolve({ ok: true, data: { ok: true, unidades: [] } });
 
-    promUnidades.then(function(r) {
-      if (!r.ok) {
-        errDiv.textContent = r.error || 'Error al importar unidades';
+    promCoprop.then(function(rCoprop) {
+      if (!rCoprop.ok) {
+        errDiv.textContent = rCoprop.error || 'Error al crear copropietarios';
         errDiv.style.display = 'block';
         btn.disabled = false; btn.textContent = 'Reintentar';
         return;
       }
 
-      // Paso 2 — construir mapa numero → id desde la respuesta del backend
-      // (evita race condition de leer inmediatamente después de escribir)
-      btn.textContent = 'Importando propietarios y residentes…';
-      var mapaUnidades = {};
-      // Usar IDs devueltos por crearMasivo si están disponibles
-      var unidadesDevueltas = (r.data && Array.isArray(r.data.unidades)) ? r.data.unidades : [];
-      unidadesDevueltas.forEach(function(u) {
-        mapaUnidades[String(u.numero)] = u.id;
-      });
+      // Construir mapa RUT → copropietarioId desde los IDs devueltos
+      // Necesitamos recargar copropietarios para obtener sus IDs reales
+      btn.textContent = 'Obteniendo IDs de copropietarios…';
 
-      // Ejecutar como IIFE para mantener la estructura de promesas
-      (function() {
+      api('/propietarios?comunidadId=' + comunidadId).then(function(respP) {
+        var copropietariosServidor = [];
+        if (respP.ok) {
+          if (Array.isArray(respP.data)) copropietariosServidor = respP.data;
+          else if (respP.data && Array.isArray(respP.data.data)) copropietariosServidor = respP.data.data;
+        }
 
-        // Paso 3 — importar propietarios y residentes con IDs correctos
-        btn.textContent = 'Importando propietarios y residentes…';
-        var promesas2 = [];
+        // mapa RUT (normalizado) → id
+        var mapaCoprop = {};
+        copropietariosServidor.forEach(function(c) {
+          var rutNorm = String(c.rutPropietario||'').replace(/[\.\-\s]/g,'').toLowerCase();
+          mapaCoprop[rutNorm] = c.id;
+        });
 
-        if (propietarios.length > 0) {
-          promesas2.push(api('/propietarios', 'POST', {
-            action:       'crearPropietariosMasivo',
-            comunidadId:  comunidadId,
-            propietarios: propietarios.map(function(p) {
-              var uid = p.unidad ? (mapaUnidades[String(p.unidad)] || '') : '';
-              return {
-                unidadId:             uid,
-                rutPropietario:       String(p.rutPropietario||''),
-                nombrePropietario:    String(p.nombrePropietario||''),
-                emailPropietario:     String(p.emailPropietario||''),
-                telefonoPropietario:  String(p.telefonoPropietario||''),
-                domicilioPropietario: String(p.domicilioPropietario||''),
-                condicionOcupacion:   String(p.condicionOcupacion||'propietario residente'),
-                fechaAdquisicion:     String(p.fechaAdquisicion||''),
-                fojas:                String(p.fojas||''),
-                numeroCBR:            String(p.numeroCBR||''),
-                anioCBR:              String(p.anioCBR||'')
-              };
+        // ── PASO 2: Crear unidades ──────────────────────────────────
+        btn.textContent = 'Creando unidades…';
+
+        // Primero crear solo las unidades PRINCIPALES (sin unidadPrincipal)
+        // para poder resolver los IDs de los anexos
+        var unidadesPrincipales = unidades.filter(function(u) {
+          return !u.unidadPrincipal || String(u.unidadPrincipal).trim() === '';
+        });
+        var unidadesAnexas = unidades.filter(function(u) {
+          return u.unidadPrincipal && String(u.unidadPrincipal).trim() !== '';
+        });
+
+        function normRut(rut) {
+          return String(rut||'').replace(/[\.\-\s]/g,'').toLowerCase();
+        }
+
+        function mapearUnidad(u, mapaUnidades) {
+          var rutNorm       = normRut(u.copropietario);
+          var copropId      = mapaCoprop[rutNorm] || '';
+          var prinId        = u.unidadPrincipal ? (mapaUnidades[String(u.unidadPrincipal).trim()] || '') : '';
+          return {
+            numero:              String(u.numero||''),
+            tipo:                String(u.tipo||'departamento').toLowerCase(),
+            piso:                String(u.piso||''),
+            alicuota:            parseFloat(u.alicuota)||0,
+            rolSII:              String(u.rolSII||''),
+            condicionOcupacion:  String(u.condicionOcupacion||''),
+            copropietarioId:     copropId,
+            unidadPrincipalId:   prinId
+          };
+        }
+
+        var promPrincipales = unidadesPrincipales.length > 0
+          ? api('/unidades', 'POST', {
+              action:      'crearUnidadesMasivo',
+              comunidadId: comunidadId,
+              unidades:    unidadesPrincipales.map(function(u) { return mapearUnidad(u, {}); })
             })
-          }));
-        }
+          : Promise.resolve({ ok: true, data: { ok: true, unidades: [] } });
 
-        if (residentes.length > 0) {
-          promesas2.push(api('/residentes', 'POST', {
-            action:      'crearResidentesMasivo',
-            comunidadId: comunidadId,
-            residentes:  residentes.map(function(r) {
-              var uid = r.unidad ? (mapaUnidades[String(r.unidad)] || '') : '';
-              return {
-                unidadId:           uid,
-                rut:                String(r.rut||''),
-                nombre:             String(r.nombre||''),
-                email:              String(r.email||''),
-                telefonoPrincipal:  String(r.telefonoPrincipal||''),
-                telefonoSecundario: String(r.telefonoSecundario||''),
-                contactoEmergencia: String(r.contactoEmergencia||''),
-                telefonoEmergencia: String(r.telefonoEmergencia||''),
-                electrodependiente: String(r.electrodependiente||'NO'),
-                movilidadReducida:  String(r.movilidadReducida||'NO'),
-                condicionEspecial:  String(r.condicionEspecial||''),
-                tieneMascotas:      String(r.tieneMascotas||'NO'),
-                detalleMascotas:    String(r.detalleMascotas||''),
-                fechaIngreso:       String(r.fechaIngreso||'')
-              };
-            })
-          }));
-        }
-
-        // Si no hay propietarios ni residentes, terminar directo
-        if (promesas2.length === 0) {
-          btn.textContent = '✓ Importación completada';
-          btn.style.background = 'var(--co-green)';
-          setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 1200);
-          return;
-        }
-
-        Promise.all(promesas2).then(function(resps2) {
-          var errores = [];
-          resps2.forEach(function(r) {
-            if (!r.ok) errores.push(r.error || 'Error parcial');
-            else if (r.data && r.data.errores && r.data.errores.length) {
-              errores = errores.concat(r.data.errores);
-            }
-          });
-          // Mostrar resultado final
-          var creados2 = resps2.map(function(r) { return r.data && r.data.creados ? r.data.creados : 0; });
-          var total2   = creados2.reduce(function(s,v) { return s+v; }, 0);
-          btn.textContent = '✓ ' + unidadesDevueltas.length + ' unidades · ' + total2 + ' registros importados';
-          btn.style.background = 'var(--co-green)';
-          if (errores.length > 0) {
-            errDiv.textContent = errores.slice(0,3).join(' | ') + (errores.length > 3 ? ' (+' + (errores.length-3) + ' más)' : '');
+        promPrincipales.then(function(rPrinc) {
+          if (!rPrinc.ok) {
+            errDiv.textContent = rPrinc.error || 'Error al crear unidades principales';
             errDiv.style.display = 'block';
+            btn.disabled = false; btn.textContent = 'Reintentar';
+            return;
           }
-          setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 1600);
+
+          // Construir mapa numero → id de unidades principales
+          var mapaUnidades = {};
+          var unidadesCreadas = (rPrinc.data && Array.isArray(rPrinc.data.unidades)) ? rPrinc.data.unidades : [];
+          unidadesCreadas.forEach(function(u) {
+            mapaUnidades[String(u.numero)] = u.id;
+          });
+
+          // Crear anexos con unidadPrincipalId resuelto
+          var promAnexas = unidadesAnexas.length > 0
+            ? api('/unidades', 'POST', {
+                action:      'crearUnidadesMasivo',
+                comunidadId: comunidadId,
+                unidades:    unidadesAnexas.map(function(u) { return mapearUnidad(u, mapaUnidades); })
+              })
+            : Promise.resolve({ ok: true, data: { ok: true, unidades: [] } });
+
+          promAnexas.then(function(rAnex) {
+            // Combinar IDs de principales y anexas
+            var anexasCreadas = (rAnex.data && Array.isArray(rAnex.data.unidades)) ? rAnex.data.unidades : [];
+            anexasCreadas.forEach(function(u) { mapaUnidades[String(u.numero)] = u.id; });
+
+            var totalUnidades = unidadesCreadas.length + anexasCreadas.length;
+
+            // ── PASO 3: Crear residentes ──────────────────────────────
+            if (residentes.length === 0) {
+              btn.textContent = '✓ ' + totalUnidades + ' unidades importadas';
+              btn.style.background = 'var(--co-green)';
+              setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 1400);
+              return;
+            }
+
+            btn.textContent = 'Creando residentes…';
+            api('/residentes', 'POST', {
+              action:      'crearResidentesMasivo',
+              comunidadId: comunidadId,
+              residentes:  residentes.map(function(r) {
+                return {
+                  unidadId:           mapaUnidades[String(r.unidad||'').trim()] || '',
+                  rut:                String(r.rut||''),
+                  nombre:             String(r.nombre||''),
+                  email:              String(r.email||''),
+                  telefonoPrincipal:  String(r.telefonoPrincipal||''),
+                  telefonoSecundario: String(r.telefonoSecundario||''),
+                  contactoEmergencia: String(r.contactoEmergencia||''),
+                  telefonoEmergencia: String(r.telefonoEmergencia||''),
+                  electrodependiente: String(r.electrodependiente||'NO'),
+                  movilidadReducida:  String(r.movilidadReducida||'NO'),
+                  condicionEspecial:  String(r.condicionEspecial||''),
+                  tieneMascotas:      String(r.tieneMascotas||'NO'),
+                  detalleMascotas:    String(r.detalleMascotas||''),
+                  fechaIngreso:       String(r.fechaIngreso||'')
+                };
+              })
+            }).then(function(rRes) {
+              var resCreados = (rRes.data && rRes.data.creados) ? rRes.data.creados : 0;
+              var erroresRes = (rRes.data && rRes.data.errores && rRes.data.errores.length) ? rRes.data.errores : [];
+              btn.textContent = '✓ ' + totalUnidades + ' unidades · ' + resCreados + ' residentes importados';
+              btn.style.background = 'var(--co-green)';
+              if (erroresRes.length > 0) {
+                errDiv.textContent = erroresRes.slice(0,3).join(' | ');
+                errDiv.style.display = 'block';
+              }
+              setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 1600);
+            }).catch(function(err) {
+              errDiv.textContent = 'Error al crear residentes: ' + err.message;
+              errDiv.style.display = 'block';
+              btn.disabled = false; btn.textContent = 'Reintentar';
+            });
+
+          }).catch(function(err) {
+            errDiv.textContent = 'Error al crear anexos: ' + err.message;
+            errDiv.style.display = 'block';
+            btn.disabled = false; btn.textContent = 'Reintentar';
+          });
+
         }).catch(function(err) {
-          errDiv.textContent = 'Error al importar propietarios/residentes: ' + err.message;
+          errDiv.textContent = 'Error al crear unidades principales: ' + err.message;
           errDiv.style.display = 'block';
           btn.disabled = false; btn.textContent = 'Reintentar';
         });
 
-      })();
+      }).catch(function(err) {
+        errDiv.textContent = 'Error al obtener IDs: ' + err.message;
+        errDiv.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Reintentar';
+      });
 
     }).catch(function(err) {
       errDiv.textContent = 'Error de conexión: ' + err.message;
