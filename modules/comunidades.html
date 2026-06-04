@@ -1575,109 +1575,886 @@
     });
   }
 
+  // ── DIRECTORIO ───────────────────────────────────────────────
+  // Cache local del directorio para la comunidad activa
+  var _dirData = { unidades: [], propietarios: [], residentes: [], comunidadId: null };
+
   function cargarDirectorio(comunidadId) {
+    var tc = document.getElementById('tc-directorio');
+    if (!tc) return;
+    tc.innerHTML = '<div class="com-vacio">Cargando directorio…</div>';
+
     Promise.all([
       api('/unidades?comunidadId=' + comunidadId),
       api('/propietarios?comunidadId=' + comunidadId),
       api('/residentes?comunidadId=' + comunidadId)
     ]).then(function(resps) {
-      var tc = document.getElementById('tc-directorio');
-      if (!tc) return;
-      tc.innerHTML = '';
+      function extraer(r) {
+        if (!r.ok) return [];
+        if (Array.isArray(r.data)) return r.data;
+        if (r.data && Array.isArray(r.data.data)) return r.data.data;
+        return [];
+      }
+      _dirData.unidades     = extraer(resps[0]);
+      _dirData.propietarios = extraer(resps[1]);
+      _dirData.residentes   = extraer(resps[2]);
+      _dirData.comunidadId  = comunidadId;
+      renderDirectorio(comunidadId);
+    }).catch(function() {
+      var tc2 = document.getElementById('tc-directorio');
+      if (tc2) { tc2.innerHTML = '<div class="com-vacio">Error al cargar el directorio.</div>'; }
+    });
+  }
 
-      var unidades    = (resps[0].ok && resps[0].data && resps[0].data.data) ? resps[0].data.data : [];
-      var propietarios = (resps[1].ok && resps[1].data && resps[1].data.data) ? resps[1].data.data : [];
-      var residentes  = (resps[2].ok && resps[2].data && resps[2].data.data) ? resps[2].data.data : [];
+  function renderDirectorio(comunidadId) {
+    var tc = document.getElementById('tc-directorio');
+    if (!tc) return;
+    tc.innerHTML = '';
 
-      var dirHdr = document.createElement('div');
-      dirHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px';
-      var dirInfo = document.createElement('span');
-      dirInfo.style.cssText = 'font-size:12px;color:var(--co-mute);font-weight:600';
-      dirInfo.textContent = unidades.length + ' unidades \u00B7 ' + propietarios.length + ' propietarios registrados';
-      var btnImp = document.createElement('button');
-      btnImp.className = 'btn-ghost';
-      btnImp.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v8M5 8l3 3 3-3M3 13h10"/></svg>';
-      btnImp.appendChild(document.createTextNode(' Importar'));
-      dirHdr.appendChild(dirInfo); dirHdr.appendChild(btnImp);
-      tc.appendChild(dirHdr);
+    var unidades     = _dirData.unidades;
+    var propietarios = _dirData.propietarios;
+    var residentes   = _dirData.residentes;
 
-      if (unidades.length === 0) {
-        var v = document.createElement('div');
-        v.className = 'com-vacio';
-        v.textContent = 'No hay unidades registradas. Importe la tabla de prorrateo para comenzar.';
-        tc.appendChild(v);
+    // ── Header con acciones ──
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px';
+
+    var info = document.createElement('div');
+    info.style.cssText = 'font-size:12px;color:var(--co-mute);font-weight:600';
+    info.textContent = unidades.length + ' unidades · ' + propietarios.length + ' propietarios · ' + residentes.length + ' residentes';
+
+    var btns = document.createElement('div');
+    btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+
+    var btnAgregar = document.createElement('button');
+    btnAgregar.className = 'btn-ghost';
+    btnAgregar.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg> Agregar unidad';
+    btnAgregar.addEventListener('click', function() { modalAgregarUnidad(comunidadId); });
+
+    var btnImportar = document.createElement('button');
+    btnImportar.className = 'btn-nuevo';
+    btnImportar.style.fontSize = '12px';
+    btnImportar.style.padding = '8px 14px';
+    btnImportar.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Importar Excel';
+    btnImportar.addEventListener('click', function() { modalImportarDirectorio(comunidadId); });
+
+    btns.appendChild(btnAgregar);
+    btns.appendChild(btnImportar);
+    hdr.appendChild(info);
+    hdr.appendChild(btns);
+    tc.appendChild(hdr);
+
+    // ── Validación alícuotas ──
+    if (unidades.length > 0) {
+      var total = unidades.reduce(function(s, u) { return s + (parseFloat(u.alicuota) || 0); }, 0);
+      var diff  = Math.abs(total - 100);
+      var validBar = document.createElement('div');
+      validBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--co-r-md);margin-bottom:12px;font-size:12px;font-weight:600;' +
+        (diff < 0.01 ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
+      validBar.innerHTML = (diff < 0.01
+        ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 100% correctamente'
+        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + '% — Diferencia: ' + diff.toFixed(4) + '%');
+      tc.appendChild(validBar);
+    }
+
+    // ── Tabla vacía ──
+    if (unidades.length === 0) {
+      var vacio = document.createElement('div');
+      vacio.style.cssText = 'text-align:center;padding:40px 20px;border:1.5px dashed var(--co-line);border-radius:var(--co-r-lg)';
+      vacio.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--co-ink);margin-bottom:6px">Sin unidades registradas</div>'
+        + '<div style="font-size:12px;color:var(--co-mute);margin-bottom:16px">Importe la tabla de prorrateo para comenzar o agregue unidades manualmente.</div>';
+      var btnV = document.createElement('button');
+      btnV.className = 'btn-nuevo';
+      btnV.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Importar tabla de prorrateo';
+      btnV.addEventListener('click', function() { modalImportarDirectorio(comunidadId); });
+      vacio.appendChild(btnV);
+      tc.appendChild(vacio);
+      return;
+    }
+
+    // ── Mapas por unidadId ──
+    var propMap = {};
+    propietarios.forEach(function(p) { if (!propMap[p.unidadId]) propMap[p.unidadId] = p; });
+    var resMap = {};
+    residentes.forEach(function(r) { if (!resMap[r.unidadId]) resMap[r.unidadId] = r; });
+
+    // ── Tabla ──
+    var wrap = document.createElement('div');
+    wrap.className = 'com-dir-wrap';
+    var tabla = document.createElement('table');
+    tabla.className = 'com-dir-table';
+
+    var thead = document.createElement('thead');
+    var trh   = document.createElement('tr');
+    ['Unidad','Tipo','Alícuota','Propietario','RUT','Condición','Residente',''].forEach(function(h) {
+      var th = document.createElement('th');
+      th.textContent = h;
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    tabla.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    unidades.slice().sort(function(a, b) {
+      return String(a.numero).localeCompare(String(b.numero), 'es', { numeric: true });
+    }).forEach(function(u) {
+      var prop = propMap[u.id] || {};
+      var res  = resMap[u.id]  || {};
+      var tr   = document.createElement('tr');
+
+      function td(val) { var t = document.createElement('td'); t.textContent = val || '—'; return t; }
+
+      var tdTipo = document.createElement('td');
+      var tipoSpan = document.createElement('span');
+      tipoSpan.className = 'com-uni-tipo ' + (u.tipo === 'departamento' ? 't-dep' : u.tipo === 'estacionamiento' ? 't-est' : u.tipo === 'bodega' ? 't-bod' : 't-loc');
+      tipoSpan.textContent = u.tipo ? u.tipo.charAt(0).toUpperCase() + u.tipo.slice(1) : '—';
+      tdTipo.appendChild(tipoSpan);
+
+      var tdCond = document.createElement('td');
+      if (prop.condicionOcupacion) {
+        var condPill = document.createElement('span');
+        condPill.className = 'co-pill ' + (prop.condicionOcupacion === 'propietario residente' ? 'pill-ok' : prop.condicionOcupacion === 'arrendado' ? 'pill-warn' : 'pill-pend');
+        condPill.textContent = prop.condicionOcupacion.charAt(0).toUpperCase() + prop.condicionOcupacion.slice(1);
+        tdCond.appendChild(condPill);
+      } else { tdCond.textContent = '—'; }
+
+      // Botón acciones
+      var tdAcc = document.createElement('td');
+      var btnAcc = document.createElement('button');
+      btnAcc.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;color:var(--co-mute);padding:2px 6px;border-radius:4px;line-height:1';
+      btnAcc.textContent = '⋯';
+      btnAcc.title = 'Acciones';
+      btnAcc.addEventListener('click', function(e) {
+        e.stopPropagation();
+        mostrarMenuAcciones(e, u, prop, res, comunidadId);
+      });
+      tdAcc.appendChild(btnAcc);
+
+      tr.appendChild(td(u.numero));
+      tr.appendChild(tdTipo);
+      tr.appendChild(td(u.alicuota ? parseFloat(u.alicuota).toFixed(2) + '%' : '—'));
+      tr.appendChild(td(prop.nombrePropietario));
+      tr.appendChild(td(prop.rutPropietario));
+      tr.appendChild(tdCond);
+      tr.appendChild(td(res.nombre));
+      tr.appendChild(tdAcc);
+      tbody.appendChild(tr);
+    });
+    tabla.appendChild(tbody);
+    wrap.appendChild(tabla);
+    tc.appendChild(wrap);
+  }
+
+  // ── MENÚ CONTEXTUAL DE ACCIONES ──────────────────────────────
+  function mostrarMenuAcciones(e, unidad, prop, res, comunidadId) {
+    document.querySelectorAll('.dir-menu-ctx').forEach(function(m) { m.remove(); });
+    var menu = document.createElement('div');
+    menu.className = 'dir-menu-ctx';
+    menu.style.cssText = 'position:fixed;background:var(--co-surface);border:1px solid var(--co-line);border-radius:var(--co-r-md);box-shadow:var(--co-shadow-lg);z-index:3000;min-width:180px;padding:4px 0;font-family:var(--co-font)';
+
+    var rect = e.target.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + 4) + 'px';
+    menu.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+
+    function itemMenu(icono, texto, color, fn) {
+      var item = document.createElement('button');
+      item.style.cssText = 'display:flex;align-items:center;gap:9px;width:100%;padding:9px 14px;background:none;border:none;font-family:var(--co-font);font-size:12px;font-weight:600;color:' + (color || 'var(--co-ink)') + ';cursor:pointer;text-align:left';
+      item.innerHTML = icono + '<span>' + texto + '</span>';
+      item.addEventListener('mouseenter', function() { item.style.background = 'var(--co-cream)'; });
+      item.addEventListener('mouseleave', function() { item.style.background = 'none'; });
+      item.addEventListener('click', function() { menu.remove(); fn(); });
+      menu.appendChild(item);
+    }
+
+    var icoEdit = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2Z"/></svg>';
+    var icoUser = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M3 14c0-3 2-5 5-5s5 2 5 5"/></svg>';
+    var icoHome = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l6-5 6 5v7H2z"/><path d="M6 16v-5h4v5"/></svg>';
+
+    itemMenu(icoEdit, 'Editar unidad', '', function() { modalEditarUnidad(unidad, comunidadId); });
+    if (prop.id) {
+      itemMenu(icoEdit, 'Editar propietario', '', function() { modalEditarPropietario(prop, unidad, comunidadId); });
+    } else {
+      itemMenu(icoUser, 'Agregar propietario', 'var(--co-orange)', function() { modalAgregarPropietario(unidad, comunidadId); });
+    }
+    if (res.id) {
+      itemMenu(icoEdit, 'Editar residente', '', function() { modalEditarResidente(res, unidad, comunidadId); });
+    } else {
+      itemMenu(icoHome, 'Agregar residente', 'var(--co-orange)', function() { modalAgregarResidente(unidad, comunidadId); });
+    }
+
+    document.body.appendChild(menu);
+    var cerrarMenu = function(ev) { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', cerrarMenu); } };
+    setTimeout(function() { document.addEventListener('click', cerrarMenu); }, 50);
+  }
+
+  // ── MODAL IMPORTAR DIRECTORIO ─────────────────────────────────
+  function modalImportarDirectorio(comunidadId) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '640px';
+
+    var btnCerrar = document.createElement('button');
+    btnCerrar.className = 'modal-close';
+    btnCerrar.textContent = '×';
+    box.appendChild(btnCerrar);
+
+    var ey = document.createElement('div');
+    ey.className = 'modal-eyebrow';
+    ey.textContent = 'Directorio';
+    box.appendChild(ey);
+
+    var tt = document.createElement('div');
+    tt.className = 'modal-titulo';
+    tt.textContent = 'Importar tabla de prorrateo';
+    box.appendChild(tt);
+
+    var st = document.createElement('div');
+    st.className = 'modal-subtitulo';
+    st.textContent = 'Sube el archivo Excel con unidades, propietarios y residentes.';
+    box.appendChild(st);
+
+    // Paso 1 — Descargar plantilla
+    var paso1 = document.createElement('div');
+    paso1.style.cssText = 'background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:14px 16px;margin-bottom:16px';
+    paso1.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 1 — Descarga la plantilla</div>'
+      + '<div style="font-size:12px;color:var(--co-ink-3);margin-bottom:10px">La plantilla incluye 3 hojas: Unidades, Propietarios y Residentes con los campos requeridos y una fila de ejemplo.</div>';
+    var btnDesc = document.createElement('button');
+    btnDesc.className = 'btn-ghost';
+    btnDesc.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Descargar plantilla Excel';
+    btnDesc.addEventListener('click', function() { descargarPlantillaDirectorio(); });
+    paso1.appendChild(btnDesc);
+    box.appendChild(paso1);
+
+    // Paso 2 — Subir archivo
+    var paso2 = document.createElement('div');
+    paso2.style.cssText = 'border:1.5px dashed var(--co-line);border-radius:var(--co-r-md);padding:24px;text-align:center;margin-bottom:16px;cursor:pointer;transition:border-color 0.15s';
+    paso2.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 2 — Sube el archivo completado</div>'
+      + '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--co-mute)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 11v6M9 14l3-3 3 3"/></svg>'
+      + '<div style="font-size:13px;font-weight:600;color:var(--co-ink);margin-bottom:4px">Haz clic o arrastra el archivo aquí</div>'
+      + '<div style="font-size:11px;color:var(--co-mute)">.xlsx o .xls</div>';
+
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.xlsx,.xls';
+    fileInput.style.display = 'none';
+    paso2.appendChild(fileInput);
+
+    paso2.addEventListener('click', function() { fileInput.click(); });
+    paso2.addEventListener('dragover', function(e) { e.preventDefault(); paso2.style.borderColor = 'var(--co-orange)'; });
+    paso2.addEventListener('dragleave', function() { paso2.style.borderColor = 'var(--co-line)'; });
+    paso2.addEventListener('drop', function(e) {
+      e.preventDefault();
+      paso2.style.borderColor = 'var(--co-line)';
+      var f = e.dataTransfer.files[0];
+      if (f) procesarArchivoDirectorio(f, comunidadId, box, overlay);
+    });
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files[0]) procesarArchivoDirectorio(fileInput.files[0], comunidadId, box, overlay);
+    });
+
+    box.appendChild(paso2);
+
+    var errDiv = document.createElement('div');
+    errDiv.className = 'form-error';
+    errDiv.style.display = 'none';
+    box.appendChild(errDiv);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    btnCerrar.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+  }
+
+  // ── GENERAR PLANTILLA EXCEL ───────────────────────────────────
+  function descargarPlantillaDirectorio() {
+    if (typeof XLSX === 'undefined') {
+      alert('Cargando librería Excel, intenta en un momento...');
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      document.head.appendChild(s);
+      return;
+    }
+    var wb = XLSX.utils.book_new();
+
+    // Hoja Unidades
+    var unidadesData = [
+      ['numero','tipo','piso','alicuota','rolSII'],
+      ['101','departamento','1','1.85','9870-12'],
+      ['E-01','estacionamiento','-1','0.32',''],
+      ['B-01','bodega','-1','0.18','']
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(unidadesData), 'Unidades');
+
+    // Hoja Propietarios
+    var propData = [
+      ['unidad','rutPropietario','nombrePropietario','emailPropietario','telefonoPropietario','domicilioPropietario','condicionOcupacion','fechaAdquisicion','fojas','numeroCBR','anioCBR'],
+      ['101','12.345.678-9','Juan Pérez','juan@email.com','+56912345678','Otra dirección 123','propietario residente','01/01/2020','125','4521','2020']
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(propData), 'Propietarios');
+
+    // Hoja Residentes
+    var resData = [
+      ['unidad','rut','nombre','email','telefonoPrincipal','telefonoSecundario','contactoEmergencia','telefonoEmergencia','electrodependiente','movilidadReducida','condicionEspecial','tieneMascotas','detalleMascotas','fechaIngreso'],
+      ['101','12.345.678-9','Juan Pérez','juan@email.com','+56912345678','','María Pérez','+56987654321','NO','NO','','NO','','01/01/2020']
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resData), 'Residentes');
+
+    XLSX.writeFile(wb, 'Plantilla_Directorio_CoproActiva.xlsx');
+  }
+
+  // ── PROCESAR ARCHIVO EXCEL ────────────────────────────────────
+  function procesarArchivoDirectorio(file, comunidadId, box, overlay) {
+    if (typeof XLSX === 'undefined') {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = function() { procesarArchivoDirectorio(file, comunidadId, box, overlay); };
+      document.head.appendChild(s);
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var wb   = XLSX.read(e.target.result, { type: 'array' });
+        var unidades     = XLSX.utils.sheet_to_json(wb.Sheets['Unidades']     || wb.Sheets[wb.SheetNames[0]] || {});
+        var propietarios = XLSX.utils.sheet_to_json(wb.Sheets['Propietarios'] || wb.Sheets[wb.SheetNames[1]] || {});
+        var residentes   = XLSX.utils.sheet_to_json(wb.Sheets['Residentes']   || wb.Sheets[wb.SheetNames[2]] || {});
+        mostrarPrevisualizacion(unidades, propietarios, residentes, comunidadId, box, overlay);
+      } catch (err) {
+        var errDiv = box.querySelector('.form-error');
+        if (errDiv) { errDiv.textContent = 'Error al leer el archivo: ' + err.message; errDiv.style.display = 'block'; }
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ── PREVISUALIZACIÓN ──────────────────────────────────────────
+  function mostrarPrevisualizacion(unidades, propietarios, residentes, comunidadId, box, overlay) {
+    // Limpiar contenido del box y mostrar previsualización
+    box.innerHTML = '';
+
+    var btnCerrar = document.createElement('button');
+    btnCerrar.className = 'modal-close';
+    btnCerrar.textContent = '×';
+    btnCerrar.addEventListener('click', function() { overlay.remove(); });
+    box.appendChild(btnCerrar);
+
+    var ey = document.createElement('div');
+    ey.className = 'modal-eyebrow';
+    ey.textContent = 'Confirmar importación';
+    box.appendChild(ey);
+
+    var tt = document.createElement('div');
+    tt.className = 'modal-titulo';
+    tt.textContent = 'Previsualizar datos';
+    box.appendChild(tt);
+
+    // Resumen
+    var resumen = document.createElement('div');
+    resumen.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px';
+
+    function kpiPrev(num, lbl, col) {
+      var k = document.createElement('div');
+      k.style.cssText = 'background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:10px 12px;text-align:center';
+      k.innerHTML = '<div style="font-size:20px;font-weight:800;color:' + col + ';letter-spacing:-0.02em">' + num + '</div>'
+        + '<div style="font-size:10px;color:var(--co-mute);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">' + lbl + '</div>';
+      return k;
+    }
+    resumen.appendChild(kpiPrev(unidades.length,     'Unidades',     'var(--co-blue)'));
+    resumen.appendChild(kpiPrev(propietarios.length, 'Propietarios', 'var(--co-orange)'));
+    resumen.appendChild(kpiPrev(residentes.length,   'Residentes',   'var(--co-green)'));
+    box.appendChild(resumen);
+
+    // Preview primeras 5 unidades
+    if (unidades.length > 0) {
+      var prevTit = document.createElement('div');
+      prevTit.style.cssText = 'font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px';
+      prevTit.textContent = 'Vista previa — Unidades';
+      box.appendChild(prevTit);
+
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'overflow-x:auto;margin-bottom:16px';
+      var tabla = document.createElement('table');
+      tabla.className = 'com-dir-table';
+      var thead = document.createElement('thead');
+      var trh = document.createElement('tr');
+      ['Número','Tipo','Alícuota','Piso','Rol SII'].forEach(function(h) {
+        var th = document.createElement('th'); th.textContent = h; trh.appendChild(th);
+      });
+      thead.appendChild(trh); tabla.appendChild(thead);
+      var tbody = document.createElement('tbody');
+      unidades.slice(0,5).forEach(function(u) {
+        var tr = document.createElement('tr');
+        [u.numero||'—', u.tipo||'—', u.alicuota ? parseFloat(u.alicuota).toFixed(2)+'%' : '—', u.piso||'—', u.rolSII||'—'].forEach(function(v) {
+          var td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      if (unidades.length > 5) {
+        var trMore = document.createElement('tr');
+        var tdMore = document.createElement('td');
+        tdMore.colSpan = 5;
+        tdMore.style.cssText = 'text-align:center;color:var(--co-mute);font-size:11px;padding:8px';
+        tdMore.textContent = '+ ' + (unidades.length - 5) + ' unidades más';
+        trMore.appendChild(tdMore); tbody.appendChild(trMore);
+      }
+      tabla.appendChild(tbody); wrap.appendChild(tabla); box.appendChild(wrap);
+    }
+
+    // Advertencia
+    var aviso = document.createElement('div');
+    aviso.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:10px 14px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:16px;display:flex;align-items:flex-start;gap:8px';
+    aviso.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>'
+      + '<span>Esta acción creará los registros en el sistema. Verifica los datos antes de confirmar.</span>';
+    box.appendChild(aviso);
+
+    var errDiv = document.createElement('div');
+    errDiv.className = 'form-error';
+    errDiv.style.display = 'none';
+    box.appendChild(errDiv);
+
+    // Botones
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px';
+
+    var btnVolver = document.createElement('button');
+    btnVolver.className = 'btn-ghost';
+    btnVolver.textContent = '← Volver';
+    btnVolver.addEventListener('click', function() { overlay.remove(); modalImportarDirectorio(comunidadId); });
+
+    var btnConfirmar = document.createElement('button');
+    btnConfirmar.className = 'btn-guardar';
+    btnConfirmar.style.marginTop = '0';
+    btnConfirmar.textContent = 'Importar ' + unidades.length + ' unidades';
+    btnConfirmar.addEventListener('click', function() {
+      btnConfirmar.disabled = true;
+      btnConfirmar.textContent = 'Importando…';
+      errDiv.style.display = 'none';
+      ejecutarImportacion(unidades, propietarios, residentes, comunidadId, btnConfirmar, errDiv, overlay);
+    });
+
+    btnRow.appendChild(btnVolver);
+    btnRow.appendChild(btnConfirmar);
+    box.appendChild(btnRow);
+  }
+
+  // ── EJECUTAR IMPORTACIÓN ──────────────────────────────────────
+  function ejecutarImportacion(unidades, propietarios, residentes, comunidadId, btn, errDiv, overlay) {
+    var promesas = [];
+
+    if (unidades.length > 0) {
+      promesas.push(api('/unidades', 'POST', {
+        action:      'crearUnidadesMasivo',
+        comunidadId: comunidadId,
+        unidades:    unidades.map(function(u) {
+          return { numero: String(u.numero||''), tipo: String(u.tipo||'departamento').toLowerCase(), piso: String(u.piso||''), alicuota: parseFloat(u.alicuota)||0, rolSII: String(u.rolSII||'') };
+        })
+      }));
+    }
+
+    Promise.all(promesas).then(function(resps) {
+      var errores = [];
+      resps.forEach(function(r) {
+        if (!r.ok) errores.push(r.error || 'Error al importar');
+        else if (r.data && r.data.errores && r.data.errores.length) errores = errores.concat(r.data.errores);
+      });
+
+      if (errores.length > 0 && unidades.length === 0) {
+        errDiv.textContent = errores.join('. ');
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Reintentar';
         return;
       }
 
-      // Mapa propietarios por unidad
-      var propMap = {};
-      propietarios.forEach(function(p) {
-        if (!propMap[p.unidadId]) propMap[p.unidadId] = p;
+      // Importar propietarios y residentes si hay unidades creadas
+      var promesas2 = [];
+      if (propietarios.length > 0) {
+        promesas2.push(api('/propietarios', 'POST', {
+          action:       'crearPropietariosMasivo',
+          comunidadId:  comunidadId,
+          propietarios: propietarios.map(function(p) {
+            return {
+              unidadId:          p.unidad ? _buscarUnidadId(p.unidad, comunidadId) : '',
+              rutPropietario:    String(p.rutPropietario||''),
+              nombrePropietario: String(p.nombrePropietario||''),
+              emailPropietario:  String(p.emailPropietario||''),
+              telefonoPropietario: String(p.telefonoPropietario||''),
+              domicilioPropietario: String(p.domicilioPropietario||''),
+              condicionOcupacion: String(p.condicionOcupacion||'propietario residente'),
+              fechaAdquisicion:  String(p.fechaAdquisicion||''),
+              fojas:             String(p.fojas||''),
+              numeroCBR:         String(p.numeroCBR||''),
+              anioCBR:           String(p.anioCBR||'')
+            };
+          })
+        }));
+      }
+      if (residentes.length > 0) {
+        promesas2.push(api('/residentes', 'POST', {
+          action:      'crearResidentesMasivo',
+          comunidadId: comunidadId,
+          residentes:  residentes.map(function(r) {
+            return {
+              unidadId:          r.unidad ? _buscarUnidadId(r.unidad, comunidadId) : '',
+              rut:               String(r.rut||''),
+              nombre:            String(r.nombre||''),
+              email:             String(r.email||''),
+              telefonoPrincipal: String(r.telefonoPrincipal||''),
+              telefonoSecundario: String(r.telefonoSecundario||''),
+              contactoEmergencia: String(r.contactoEmergencia||''),
+              telefonoEmergencia: String(r.telefonoEmergencia||''),
+              electrodependiente: String(r.electrodependiente||'NO'),
+              movilidadReducida:  String(r.movilidadReducida||'NO'),
+              condicionEspecial:  String(r.condicionEspecial||''),
+              tieneMascotas:      String(r.tieneMascotas||'NO'),
+              detalleMascotas:    String(r.detalleMascotas||''),
+              fechaIngreso:       String(r.fechaIngreso||'')
+            };
+          })
+        }));
+      }
+
+      Promise.all(promesas2).then(function() {
+        btn.textContent = '✓ Importación completada';
+        btn.style.background = 'var(--co-green)';
+        setTimeout(function() {
+          overlay.remove();
+          cargarDirectorio(comunidadId);
+        }, 1200);
+      }).catch(function(err) {
+        errDiv.textContent = 'Error parcial: ' + err.message;
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Reintentar';
       });
-      var resMap = {};
-      residentes.forEach(function(r) {
-        if (!resMap[r.unidadId]) resMap[r.unidadId] = r;
+    }).catch(function(err) {
+      errDiv.textContent = 'Error de conexión: ' + err.message;
+      errDiv.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Reintentar';
+    });
+  }
+
+  // Helper: buscar ID de unidad por número
+  function _buscarUnidadId(numero, comunidadId) {
+    var u = _dirData.unidades.find(function(u) { return String(u.numero) === String(numero) && u.comunidadId === comunidadId; });
+    return u ? u.id : '';
+  }
+
+  // ── MODAL AGREGAR UNIDAD ──────────────────────────────────────
+  function modalAgregarUnidad(comunidadId) {
+    _modalFormDirectorio({
+      eyebrow:  'Nueva unidad',
+      titulo:   'Agregar unidad',
+      subtitulo: 'Completa los datos de la nueva unidad.',
+      campos: [
+        { id: 'u-numero',   lbl: 'Número *',  tipo: 'text',   ph: 'Ej: 101 o E-01' },
+        { id: 'u-tipo',     lbl: 'Tipo *',         tipo: 'select', opts: ['departamento','estacionamiento','bodega','local','casa','oficina'] },
+        { id: 'u-piso',     lbl: 'Piso',           tipo: 'text',   ph: 'Ej: 3 o -1' },
+        { id: 'u-alicuota', lbl: 'Alícuota %', tipo: 'number', ph: '0.00' },
+        { id: 'u-rolsii',   lbl: 'Rol SII',        tipo: 'text',   ph: '9870-12' }
+      ],
+      btnLabel: 'Agregar unidad',
+      onGuardar: function(vals, btn, errDiv, overlay) {
+        if (!vals['u-numero']) { errDiv.textContent = 'El número es obligatorio.'; errDiv.style.display = 'block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/unidades', 'POST', {
+          action: 'crearUnidad', comunidadId: comunidadId,
+          numero: vals['u-numero'], tipo: vals['u-tipo'],
+          piso: vals['u-piso'], alicuota: parseFloat(vals['u-alicuota'])||0,
+          rolSII: vals['u-rolsii']
+        }).then(function(r) {
+          if (r.ok && r.data && r.data.ok) {
+            btn.textContent = '✓ Unidad agregada'; btn.style.background = 'var(--co-green)';
+            setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+          } else {
+            errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+            errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Agregar unidad';
+          }
+        }).catch(function(e) { errDiv.textContent = 'Error: ' + e.message; errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Agregar unidad'; });
+      }
+    });
+  }
+
+  // ── MODAL EDITAR UNIDAD (con confirmación) ────────────────────
+  function modalEditarUnidad(unidad, comunidadId) {
+    _modalFormDirectorio({
+      eyebrow:   'Editar unidad',
+      titulo:    'Unidad ' + (unidad.numero || ''),
+      subtitulo: '⚠️ Estos datos afectan el cálculo del prorrateo. Confirma los cambios.',
+      advertencia: true,
+      campos: [
+        { id: 'u-numero',   lbl: 'Número',     tipo: 'text',   val: unidad.numero   || '' },
+        { id: 'u-tipo',     lbl: 'Tipo',            tipo: 'select', opts: ['departamento','estacionamiento','bodega','local','casa','oficina'], val: unidad.tipo || 'departamento' },
+        { id: 'u-piso',     lbl: 'Piso',            tipo: 'text',   val: unidad.piso     || '' },
+        { id: 'u-alicuota', lbl: 'Alícuota %', tipo: 'number', val: unidad.alicuota || '' },
+        { id: 'u-rolsii',   lbl: 'Rol SII',         tipo: 'text',   val: unidad.rolSII   || '' },
+        { id: 'u-estado',   lbl: 'Estado',          tipo: 'select', opts: ['activo','inactivo'], val: unidad.estado || 'activo' }
+      ],
+      btnLabel: 'Guardar cambios',
+      confirmMsg: '¿Confirmas los cambios en esta unidad? El prorrateo puede verse afectado.',
+      onGuardar: function(vals, btn, errDiv, overlay) {
+        if (!confirm('¿Confirmas los cambios en la unidad ' + (unidad.numero||'') + '? El prorrateo puede verse afectado.')) return;
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/unidades', 'POST', {
+          action: 'editarUnidad', id: unidad.id,
+          numero: vals['u-numero'], tipo: vals['u-tipo'],
+          piso: vals['u-piso'], alicuota: parseFloat(vals['u-alicuota'])||0,
+          rolSII: vals['u-rolsii'], estado: vals['u-estado']
+        }).then(function(r) {
+          if (r.ok && r.data && r.data.ok) {
+            btn.textContent = '✓ Cambios guardados'; btn.style.background = 'var(--co-green)';
+            setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+          } else {
+            errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+            errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
+          }
+        }).catch(function(e) { errDiv.textContent = 'Error: ' + e.message; errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios'; });
+      }
+    });
+  }
+
+  // ── MODAL AGREGAR PROPIETARIO ─────────────────────────────────
+  function modalAgregarPropietario(unidad, comunidadId) {
+    _modalFormDirectorio({
+      eyebrow:   'Propietario',
+      titulo:    'Agregar propietario — Unidad ' + (unidad.numero||''),
+      subtitulo: 'Datos del titular legal de la unidad.',
+      campos: [
+        { id: 'p-rut',     lbl: 'RUT *',           tipo: 'text',   ph: '12.345.678-9', full: true },
+        { id: 'p-nombre',  lbl: 'Nombre completo *', tipo: 'text', ph: 'Nombre del propietario', full: true },
+        { id: 'p-email',   lbl: 'Email',            tipo: 'email',  ph: 'correo@ejemplo.cl' },
+        { id: 'p-tel',     lbl: 'Teléfono',    tipo: 'tel',    ph: '+56 9...' },
+        { id: 'p-dom',     lbl: 'Domicilio',        tipo: 'text',   ph: 'Dirección si no vive en la unidad', full: true },
+        { id: 'p-cond',    lbl: 'Condición',   tipo: 'select', opts: ['propietario residente','arrendado','desocupado','en remodelacion'] },
+        { id: 'p-adq',     lbl: 'Fecha adquisición', tipo: 'text', ph: 'DD/MM/AAAA' },
+        { id: 'p-fojas',   lbl: 'Fojas CBR',        tipo: 'text',   ph: '125' },
+        { id: 'p-ncbr',    lbl: 'Número CBR',  tipo: 'text',   ph: '4521' },
+        { id: 'p-acbr',    lbl: 'Año CBR',     tipo: 'text',   ph: '2020' }
+      ],
+      btnLabel: 'Agregar propietario',
+      onGuardar: function(vals, btn, errDiv, overlay) {
+        if (!vals['p-rut'] || !vals['p-nombre']) { errDiv.textContent = 'RUT y nombre son obligatorios.'; errDiv.style.display = 'block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/propietarios', 'POST', {
+          action: 'crearPropietario', comunidadId: comunidadId, unidadId: unidad.id,
+          rutPropietario: vals['p-rut'], nombrePropietario: vals['p-nombre'],
+          emailPropietario: vals['p-email'], telefonoPropietario: vals['p-tel'],
+          domicilioPropietario: vals['p-dom'], condicionOcupacion: vals['p-cond'],
+          fechaAdquisicion: vals['p-adq'], fojas: vals['p-fojas'],
+          numeroCBR: vals['p-ncbr'], anioCBR: vals['p-acbr']
+        }).then(function(r) {
+          if (r.ok && r.data && r.data.ok) {
+            btn.textContent = '✓ Propietario agregado'; btn.style.background = 'var(--co-green)';
+            setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+          } else {
+            errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+            errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Agregar propietario';
+          }
+        }).catch(function(e) { errDiv.textContent = 'Error: ' + e.message; errDiv.style.display = 'block'; btn.disabled = false; });
+      }
+    });
+  }
+
+  // ── MODAL EDITAR PROPIETARIO (con confirmación) ───────────────
+  function modalEditarPropietario(prop, unidad, comunidadId) {
+    _modalFormDirectorio({
+      eyebrow:     'Editar propietario',
+      titulo:      'Unidad ' + (unidad.numero||'') + ' — ' + (prop.nombrePropietario||''),
+      subtitulo:   '⚠️ Información legal sensible. Confirma los cambios.',
+      advertencia: true,
+      campos: [
+        { id: 'p-rut',    lbl: 'RUT',              tipo: 'text',   val: prop.rutPropietario||'', full: true },
+        { id: 'p-nombre', lbl: 'Nombre completo',  tipo: 'text',   val: prop.nombrePropietario||'', full: true },
+        { id: 'p-email',  lbl: 'Email',            tipo: 'email',  val: prop.emailPropietario||'' },
+        { id: 'p-tel',    lbl: 'Teléfono',    tipo: 'tel',    val: prop.telefonoPropietario||'' },
+        { id: 'p-dom',    lbl: 'Domicilio',        tipo: 'text',   val: prop.domicilioPropietario||'', full: true },
+        { id: 'p-cond',   lbl: 'Condición',  tipo: 'select', opts: ['propietario residente','arrendado','desocupado','en remodelacion'], val: prop.condicionOcupacion||'propietario residente' },
+        { id: 'p-fojas',  lbl: 'Fojas CBR',        tipo: 'text',   val: prop.fojas||'' },
+        { id: 'p-ncbr',   lbl: 'Número CBR',  tipo: 'text',   val: prop.numeroCBR||'' },
+        { id: 'p-acbr',   lbl: 'Año CBR',     tipo: 'text',   val: prop.anioCBR||'' }
+      ],
+      btnLabel: 'Guardar cambios',
+      onGuardar: function(vals, btn, errDiv, overlay) {
+        if (!confirm('¿Confirmas los cambios en los datos de ' + (prop.nombrePropietario||'este propietario') + '? Esta es información legal.')) return;
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/propietarios', 'POST', {
+          action: 'editarPropietario', id: prop.id,
+          rutPropietario: vals['p-rut'], nombrePropietario: vals['p-nombre'],
+          emailPropietario: vals['p-email'], telefonoPropietario: vals['p-tel'],
+          domicilioPropietario: vals['p-dom'], condicionOcupacion: vals['p-cond'],
+          fojas: vals['p-fojas'], numeroCBR: vals['p-ncbr'], anioCBR: vals['p-acbr']
+        }).then(function(r) {
+          if (r.ok && r.data && r.data.ok) {
+            btn.textContent = '✓ Cambios guardados'; btn.style.background = 'var(--co-green)';
+            setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+          } else {
+            errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+            errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
+          }
+        }).catch(function(e) { errDiv.textContent = 'Error: ' + e.message; errDiv.style.display = 'block'; btn.disabled = false; });
+      }
+    });
+  }
+
+  // ── MODAL AGREGAR RESIDENTE ───────────────────────────────────
+  function modalAgregarResidente(unidad, comunidadId) {
+    _modalFormDirectorio({
+      eyebrow:   'Residente',
+      titulo:    'Agregar residente — Unidad ' + (unidad.numero||''),
+      subtitulo: 'Datos de quien habita la unidad.',
+      campos: [
+        { id: 'r-nombre', lbl: 'Nombre completo *', tipo: 'text',  ph: 'Nombre del residente', full: true },
+        { id: 'r-rut',    lbl: 'RUT',               tipo: 'text',  ph: '12.345.678-9' },
+        { id: 'r-email',  lbl: 'Email',             tipo: 'email', ph: 'correo@ejemplo.cl' },
+        { id: 'r-tel1',   lbl: 'Teléfono principal', tipo: 'tel', ph: '+56 9...' },
+        { id: 'r-tel2',   lbl: 'Teléfono secundario', tipo: 'tel', ph: '+56 9...' },
+        { id: 'r-cemernom', lbl: 'Contacto emergencia', tipo: 'text', ph: 'Nombre' },
+        { id: 'r-cemertel', lbl: 'Tel. emergencia',   tipo: 'tel',  ph: '+56 9...' },
+        { id: 'r-electro', lbl: 'Electrodependiente', tipo: 'select', opts: ['NO','SI'] },
+        { id: 'r-movil',   lbl: 'Movilidad reducida', tipo: 'select', opts: ['NO','SI'] },
+        { id: 'r-mascota', lbl: 'Tiene mascotas',     tipo: 'select', opts: ['NO','SI'] },
+        { id: 'r-detmas',  lbl: 'Detalle mascotas',   tipo: 'text',  ph: 'Raza, nombre, chip' },
+        { id: 'r-ingreso', lbl: 'Fecha ingreso',      tipo: 'text',  ph: 'DD/MM/AAAA' }
+      ],
+      btnLabel: 'Agregar residente',
+      onGuardar: function(vals, btn, errDiv, overlay) {
+        if (!vals['r-nombre']) { errDiv.textContent = 'El nombre es obligatorio.'; errDiv.style.display = 'block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/residentes', 'POST', {
+          action: 'crearResidente', comunidadId: comunidadId, unidadId: unidad.id,
+          nombre: vals['r-nombre'], rut: vals['r-rut'], email: vals['r-email'],
+          telefonoPrincipal: vals['r-tel1'], telefonoSecundario: vals['r-tel2'],
+          contactoEmergencia: vals['r-cemernom'], telefonoEmergencia: vals['r-cemertel'],
+          electrodependiente: vals['r-electro'], movilidadReducida: vals['r-movil'],
+          tieneMascotas: vals['r-mascota'], detalleMascotas: vals['r-detmas'],
+          fechaIngreso: vals['r-ingreso']
+        }).then(function(r) {
+          if (r.ok && r.data && r.data.ok) {
+            btn.textContent = '✓ Residente agregado'; btn.style.background = 'var(--co-green)';
+            setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+          } else {
+            errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+            errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Agregar residente';
+          }
+        }).catch(function(e) { errDiv.textContent = 'Error: ' + e.message; errDiv.style.display = 'block'; btn.disabled = false; });
+      }
+    });
+  }
+
+  // ── MODAL EDITAR RESIDENTE (con confirmación) ─────────────────
+  function modalEditarResidente(res, unidad, comunidadId) {
+    _modalFormDirectorio({
+      eyebrow:     'Editar residente',
+      titulo:      'Unidad ' + (unidad.numero||'') + ' — ' + (res.nombre||''),
+      subtitulo:   '⚠️ Confirma los cambios en los datos del residente.',
+      advertencia: true,
+      campos: [
+        { id: 'r-nombre', lbl: 'Nombre completo', tipo: 'text',   val: res.nombre||'', full: true },
+        { id: 'r-rut',    lbl: 'RUT',             tipo: 'text',   val: res.rut||'' },
+        { id: 'r-email',  lbl: 'Email',           tipo: 'email',  val: res.email||'' },
+        { id: 'r-tel1',   lbl: 'Teléfono principal', tipo: 'tel', val: res.telefonoPrincipal||'' },
+        { id: 'r-tel2',   lbl: 'Teléfono secundario', tipo: 'tel', val: res.telefonoSecundario||'' },
+        { id: 'r-cemernom', lbl: 'Contacto emergencia', tipo: 'text', val: res.contactoEmergencia||'' },
+        { id: 'r-cemertel', lbl: 'Tel. emergencia', tipo: 'tel', val: res.telefonoEmergencia||'' },
+        { id: 'r-electro', lbl: 'Electrodependiente', tipo: 'select', opts: ['NO','SI'], val: res.electrodependiente||'NO' },
+        { id: 'r-movil',   lbl: 'Movilidad reducida', tipo: 'select', opts: ['NO','SI'], val: res.movilidadReducida||'NO' },
+        { id: 'r-mascota', lbl: 'Tiene mascotas',     tipo: 'select', opts: ['NO','SI'], val: res.tieneMascotas||'NO' },
+        { id: 'r-detmas',  lbl: 'Detalle mascotas',   tipo: 'text',  val: res.detalleMascotas||'' },
+        { id: 'r-estado',  lbl: 'Estado',             tipo: 'select', opts: ['activo','inactivo'], val: res.estado||'activo' }
+      ],
+      btnLabel: 'Guardar cambios',
+      onGuardar: function(vals, btn, errDiv, overlay) {
+        if (!confirm('¿Confirmas los cambios en los datos de ' + (res.nombre||'este residente') + '?')) return;
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/residentes', 'POST', {
+          action: 'editarResidente', id: res.id,
+          nombre: vals['r-nombre'], rut: vals['r-rut'], email: vals['r-email'],
+          telefonoPrincipal: vals['r-tel1'], telefonoSecundario: vals['r-tel2'],
+          contactoEmergencia: vals['r-cemernom'], telefonoEmergencia: vals['r-cemertel'],
+          electrodependiente: vals['r-electro'], movilidadReducida: vals['r-movil'],
+          tieneMascotas: vals['r-mascota'], detalleMascotas: vals['r-detmas'],
+          estado: vals['r-estado']
+        }).then(function(r) {
+          if (r.ok && r.data && r.data.ok) {
+            btn.textContent = '✓ Cambios guardados'; btn.style.background = 'var(--co-green)';
+            setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+          } else {
+            errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+            errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
+          }
+        }).catch(function(e) { errDiv.textContent = 'Error: ' + e.message; errDiv.style.display = 'block'; btn.disabled = false; });
+      }
+    });
+  }
+
+  // ── HELPER MODAL GENÉRICO ─────────────────────────────────────
+  function _modalFormDirectorio(opts) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+
+    var btnCerrar = document.createElement('button');
+    btnCerrar.className = 'modal-close';
+    btnCerrar.textContent = '×';
+    box.appendChild(btnCerrar);
+
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = opts.eyebrow; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo';  tt.textContent = opts.titulo;  box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = opts.subtitulo; box.appendChild(st);
+
+    if (opts.advertencia) {
+      var av = document.createElement('div');
+      av.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:9px 13px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:16px;display:flex;align-items:center;gap:7px';
+      av.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>Datos sensibles — se pedirá confirmación antes de guardar';
+      box.appendChild(av);
+    }
+
+    var grid = document.createElement('div');
+    grid.className = 'form-grid';
+
+    opts.campos.forEach(function(c) {
+      var fg = document.createElement('div');
+      fg.className = 'form-group' + (c.full ? ' form-full' : '');
+      var lbl = document.createElement('label'); lbl.textContent = c.lbl; fg.appendChild(lbl);
+      var inp;
+      if (c.tipo === 'select') {
+        inp = document.createElement('select'); inp.id = c.id;
+        (c.opts || []).forEach(function(o) {
+          var opt = document.createElement('option'); opt.value = o; opt.textContent = o;
+          if (c.val && c.val === o) opt.selected = true;
+          inp.appendChild(opt);
+        });
+      } else {
+        inp = document.createElement('input'); inp.type = c.tipo; inp.id = c.id;
+        inp.placeholder = c.ph || ''; inp.value = c.val || '';
+      }
+      fg.appendChild(inp); grid.appendChild(fg);
+    });
+    box.appendChild(grid);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+
+    var btnGuardar = document.createElement('button');
+    btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = opts.btnLabel; box.appendChild(btnGuardar);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+
+    var cerrar = function() { overlay.remove(); };
+    btnCerrar.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    btnGuardar.addEventListener('click', function() {
+      var vals = {};
+      opts.campos.forEach(function(c) {
+        var el = document.getElementById(c.id);
+        if (el) vals[c.id] = el.value.trim ? el.value.trim() : el.value;
       });
-
-      var wrap = document.createElement('div');
-      wrap.className = 'com-dir-wrap';
-      var tabla = document.createElement('table');
-      tabla.className = 'com-dir-table';
-
-      var thead = document.createElement('thead');
-      var trh = document.createElement('tr');
-      ['Unidad', 'Tipo', 'Al\u00EDcuota', 'Propietario', 'RUT', 'Condici\u00F3n', 'Residente'].forEach(function(h) {
-        var th = document.createElement('th');
-        th.textContent = h;
-        trh.appendChild(th);
-      });
-      thead.appendChild(trh);
-      tabla.appendChild(thead);
-
-      var tbody = document.createElement('tbody');
-      unidades.sort(function(a, b) {
-        return String(a.numero).localeCompare(String(b.numero), 'es', { numeric: true });
-      }).forEach(function(u) {
-        var prop = propMap[u.id] || {};
-        var res  = resMap[u.id]  || {};
-        var tr = document.createElement('tr');
-
-        function td(val) { var t = document.createElement('td'); t.textContent = val || '\u2014'; return t; }
-
-        var tdNum = td(u.numero);
-        var tdTipo = document.createElement('td');
-        var tipoSpan = document.createElement('span');
-        tipoSpan.className = 'com-uni-tipo ' + (u.tipo === 'departamento' ? 't-dep' : u.tipo === 'estacionamiento' ? 't-est' : u.tipo === 'bodega' ? 't-bod' : 't-loc');
-        tipoSpan.textContent = u.tipo ? u.tipo.charAt(0).toUpperCase() + u.tipo.slice(1) : '\u2014';
-        tdTipo.appendChild(tipoSpan);
-
-        var tdAli = td((u.alicuota ? parseFloat(u.alicuota).toFixed(2) + '%' : '\u2014'));
-        var tdProp = td(prop.nombrePropietario);
-        var tdRut  = td(prop.rutPropietario);
-
-        var tdCond = document.createElement('td');
-        if (prop.condicionOcupacion) {
-          var condPill = document.createElement('span');
-          condPill.className = 'co-pill ' + (prop.condicionOcupacion === 'propietario residente' ? 'pill-ok' : prop.condicionOcupacion === 'arrendado' ? 'pill-warn' : 'pill-pend');
-          condPill.textContent = prop.condicionOcupacion.charAt(0).toUpperCase() + prop.condicionOcupacion.slice(1);
-          tdCond.appendChild(condPill);
-        } else {
-          tdCond.textContent = '\u2014';
-        }
-
-        var tdRes = td(res.nombre);
-
-        tr.appendChild(tdNum); tr.appendChild(tdTipo); tr.appendChild(tdAli);
-        tr.appendChild(tdProp); tr.appendChild(tdRut); tr.appendChild(tdCond);
-        tr.appendChild(tdRes);
-        tbody.appendChild(tr);
-      });
-      tabla.appendChild(tbody);
-      wrap.appendChild(tabla);
-      tc.appendChild(wrap);
-    }).catch(function() {
-      var tc = document.getElementById('tc-directorio');
-      if (tc) { tc.innerHTML = ''; var v = document.createElement('div'); v.className = 'com-vacio'; v.textContent = 'Error al cargar el directorio.'; tc.appendChild(v); }
+      opts.onGuardar(vals, btnGuardar, errDiv, overlay);
     });
   }
 
