@@ -846,12 +846,36 @@
 
   // ── INIT ─────────────────────────────────────────────────────
   function init() {
+    // Limpiar loading inmediatamente
+    var root = document.getElementById('com-root');
+    if (root) root.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando Comunidades</div></div></div>';
+
     api('/comunidades').then(function(resp) {
-      if (!resp.ok || !resp.data || !resp.data.ok) {
-        mostrarError(resp.data && resp.data.error ? resp.data.error : 'Error al cargar comunidades');
+      // El Worker envuelve: { ok, data: { ok, data: [...] } }
+      // Pero también puede responder: { ok, data: [...] } directamente
+      var lista = null;
+      if (resp.ok) {
+        if (Array.isArray(resp.data)) {
+          lista = resp.data;
+        } else if (resp.data && Array.isArray(resp.data.data)) {
+          lista = resp.data.data;
+        } else if (resp.data && resp.data.ok && Array.isArray(resp.data.data)) {
+          lista = resp.data.data;
+        }
+      }
+      if (lista === null) {
+        var errMsg = (resp.data && resp.data.error) || resp.error || 'Error al cargar comunidades';
+        mostrarError(errMsg);
         return;
       }
-      _comunidades = resp.data.data || [];
+      _comunidades = lista;
+      // Exponer KPIs al sidebar
+      window._comunidadesKpis = {
+        activas:  _comunidades.filter(function(c) { return c.estado === 'activo'; }).length,
+        alertas:  0,
+        venc:     0
+      };
+      if (typeof actualizarKpisComunidades === 'function') actualizarKpisComunidades();
       renderListado();
     }).catch(function(err) {
       mostrarError('Error de conexi\u00F3n: ' + err.message);
@@ -1774,8 +1798,14 @@
 
       api('/comunidades', 'POST', datos).then(function(resp) {
         if (resp.ok && resp.data && resp.data.ok) {
-          overlay.remove();
-          init();
+          // Feedback visual de éxito
+          btnGuardar.textContent = '\u2713 Comunidad creada';
+          btnGuardar.style.background = 'var(--co-green)';
+          // Cerrar modal y refrescar listado sin recargar página
+          setTimeout(function() {
+            overlay.remove();
+            _recargarListado();
+          }, 900);
         } else {
           errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al crear';
           errDiv.style.display = 'block';
@@ -1928,9 +1958,15 @@
 
       api('/comunidades', 'POST', datos).then(function(resp) {
         if (resp.ok && resp.data && resp.data.ok) {
+          // Actualizar objeto en memoria
           Object.assign(c, datos);
-          overlay.remove();
-          abrirFicha(c);
+          // Feedback visual de éxito
+          btnGuardar.textContent = '\u2713 Cambios guardados';
+          btnGuardar.style.background = 'var(--co-green)';
+          setTimeout(function() {
+            overlay.remove();
+            abrirFicha(c);
+          }, 900);
         } else {
           errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
           errDiv.style.display = 'block';
@@ -1943,6 +1979,36 @@
         btnGuardar.disabled = false;
         btnGuardar.textContent = 'Guardar cambios';
       });
+    });
+  }
+
+  // ── RECARGA LISTADO sin recargar página ─────────────────────
+  function _recargarListado() {
+    var root = document.getElementById('com-root');
+    if (root) {
+      root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--co-mute);font-size:13px;font-weight:600;gap:8px">'
+        + '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'
+        + '<path d="M13.5 8A5.5 5.5 0 1 1 8 2.5"/><path d="M13.5 2.5v3h-3"/></svg>'
+        + 'Actualizando…</div>';
+    }
+    api('/comunidades').then(function(resp) {
+      var lista = null;
+      if (resp.ok) {
+        if (Array.isArray(resp.data)) lista = resp.data;
+        else if (resp.data && Array.isArray(resp.data.data)) lista = resp.data.data;
+        else if (resp.data && resp.data.ok && Array.isArray(resp.data.data)) lista = resp.data.data;
+      }
+      if (lista === null) { mostrarError('Error al actualizar listado'); return; }
+      _comunidades = lista;
+      window._comunidadesKpis = {
+        activas: _comunidades.filter(function(c) { return c.estado === 'activo'; }).length,
+        alertas: 0,
+        venc:    0
+      };
+      if (typeof actualizarKpisComunidades === 'function') actualizarKpisComunidades();
+      renderListado();
+    }).catch(function(err) {
+      mostrarError('Error de conexión: ' + err.message);
     });
   }
 
