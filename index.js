@@ -325,7 +325,32 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-      // ── Nuevas — Unidades ─────────────────────────────────
+      // ── Directorio ────────────────────────────────────────
+
+      if (url.pathname === '/directorio' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getDirectorio', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Importación masiva (3 pasadas en Apps Script) ─────
+
+      if (url.pathname === '/directorio/importar' && method === 'POST') {
+        const body = await request.json();
+        if (!body.comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        if (!Array.isArray(body.filas) || body.filas.length === 0) {
+          return jsonResponse({ ok: false, error: 'filas requeridas' }, 400, origin);
+        }
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action:      'importarMasivo',
+          comunidadId: body.comunidadId,
+          filas:       body.filas
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Unidades ──────────────────────────────────────────
 
       if (url.pathname === '/unidades' && method === 'GET') {
         const comunidadId = url.searchParams.get('comunidadId') || '';
@@ -347,42 +372,25 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-      // ── Nuevas — Propietarios ─────────────────────────────
+      // ── Copropietarios ────────────────────────────────────
 
-      if (url.pathname === '/propietarios' && method === 'GET') {
+      if (url.pathname === '/copropietarios' && method === 'GET') {
         const comunidadId = url.searchParams.get('comunidadId') || '';
-        const unidadId    = url.searchParams.get('unidadId')    || '';
-        if (unidadId) {
-          const data = await callAppsScript(APPS_SCRIPT_URL, 'getPropietarioUnidad', { unidadId });
-          return jsonResponse({ ok: true, data }, 200, origin);
-        }
         if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
-        const data = await callAppsScript(APPS_SCRIPT_URL, 'getPropietarios', { comunidadId });
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getCopropietarios', { comunidadId });
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-      if (url.pathname === '/propietarios' && method === 'POST') {
+      if (url.pathname === '/copropietarios' && method === 'POST') {
         const body = await request.json();
         const data = await postAppsScript(APPS_SCRIPT_URL, body);
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-      if (url.pathname === '/propietarios/registro' && method === 'GET') {
-        const comunidadId = url.searchParams.get('comunidadId') || '';
-        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
-        const data = await callAppsScript(APPS_SCRIPT_URL, 'getRegistroCopropietarios', { comunidadId });
-        return jsonResponse({ ok: true, data }, 200, origin);
-      }
-
-      // ── Nuevas — Residentes ───────────────────────────────
+      // ── Residentes ────────────────────────────────────────
 
       if (url.pathname === '/residentes' && method === 'GET') {
         const comunidadId = url.searchParams.get('comunidadId') || '';
-        const unidadId    = url.searchParams.get('unidadId')    || '';
-        if (unidadId) {
-          const data = await callAppsScript(APPS_SCRIPT_URL, 'getResidentesUnidad', { unidadId });
-          return jsonResponse({ ok: true, data }, 200, origin);
-        }
         if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getResidentes', { comunidadId });
         return jsonResponse({ ok: true, data }, 200, origin);
