@@ -519,12 +519,19 @@
   .com-doc-link:hover { opacity: 0.75; }
 
   /* ── Directorio table ── */
-  .com-dir-wrap { overflow-x: auto; }
+  .com-dir-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 320px);
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-lg);
+  }
   .com-dir-table {
     width: 100%;
     border-collapse: collapse;
     min-width: 560px;
   }
+  .com-dir-table thead { position: sticky; top: 0; z-index: 10; }
   .com-dir-table th {
     font-size: 10px;
     font-weight: 700;
@@ -535,6 +542,7 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     white-space: nowrap;
+    background: var(--co-cream-deep);
   }
   .com-dir-table td {
     font-size: 12px;
