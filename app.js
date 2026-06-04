@@ -1,8 +1,6 @@
 // app.js — CoproActiva
-// Versión: 4.0 · Mayo 2026 · rediseño visual
-// Mantiene toda la lógica original: router, postMessage diagnóstico,
-// sessionStorage para prospectoVinculado, recarga forzada del módulo
-// diagnóstico, etc. Solo cambia el HTML del sidebar dinámico.
+// Versión: 4.1 · Junio 2026 · agrega módulo Comunidades
+// Mantiene toda la lógica original intacta.
 
 var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
 var ACCESS_KEY = 'copro2025';
@@ -117,7 +115,12 @@ async function cargarModulo(modulo) {
         <div class="ml-brand"><b>co</b>proactiva</div>
         <div class="ml-status">
           <span class="ml-status-dot"></span>
-          Cargando ${modulo === 'crm' ? 'CRM' : modulo === 'diagnostico' ? 'Diagnóstico' : 'Flujo de trabajo'}
+          Cargando ${
+            modulo === 'crm'          ? 'CRM'          :
+            modulo === 'diagnostico'  ? 'Diagnóstico'  :
+            modulo === 'comunidades'  ? 'Comunidades'  :
+            'Flujo de trabajo'
+          }
         </div>
       </div>
     `;
@@ -192,6 +195,29 @@ function cargarMenuLateral(modulo) {
         actualizarKpisCRM();
     }
 
+    else if (modulo === 'comunidades') {
+        sd.innerHTML = `
+          <div class="sd-section-label">Cartera</div>
+          <div class="sd-stat">
+            <div class="sd-stat-label">Activas</div>
+            <div class="sd-stat-val" id="sd-com-activas">—</div>
+          </div>
+          <div class="sd-stat">
+            <div class="sd-stat-label">Alertas docs</div>
+            <div class="sd-stat-val urgente" id="sd-com-alertas">—</div>
+          </div>
+          <div class="sd-stat">
+            <div class="sd-stat-label">Vencimientos</div>
+            <div class="sd-stat-val urgente" id="sd-com-venc">—</div>
+          </div>
+          <button class="sd-btn-nuevo" onclick="document.querySelector('#com-root .btn-nuevo')?.click()">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+            Nueva comunidad
+          </button>
+        `;
+        actualizarKpisComunidades();
+    }
+
     else if (modulo === 'diagnostico') {
         const pasosFijos = [
             { id: 'contexto',   label: 'Datos comunidad' },
@@ -260,6 +286,22 @@ function actualizarKpisCRM() {
             if (el.ganados)  el.ganados.textContent  = window._crmKpis.ganados  ?? '—';
         }
     }, 800);
+}
+
+// ── Actualizar KPIs de Comunidades en el sidebar ──────────────────────────────
+function actualizarKpisComunidades() {
+    setTimeout(() => {
+        if (window._comunidadesKpis) {
+            const el = {
+                activas:  document.getElementById('sd-com-activas'),
+                alertas:  document.getElementById('sd-com-alertas'),
+                venc:     document.getElementById('sd-com-venc'),
+            };
+            if (el.activas) el.activas.textContent = window._comunidadesKpis.activas ?? '—';
+            if (el.alertas) el.alertas.textContent = window._comunidadesKpis.alertas ?? '—';
+            if (el.venc)    el.venc.textContent    = window._comunidadesKpis.venc    ?? '—';
+        }
+    }, 1200);
 }
 
 // ── Actualizar sidebar del diagnóstico desde postMessage ──────────────────────
