@@ -274,9 +274,7 @@
 
   <!-- ── Contenido principal ───────────────────────────────── -->
   <main class="main-content" id="mainContent">
-
     <div id="contentArea"></div>
-
   </main>
 
   <!-- ── Barra inferior móvil ──────────────────────────────── -->
@@ -319,17 +317,14 @@
 <script>
 // ── Navegación sidebar dinámico ───────────────────────────────
 
-// Mapa: módulo → { título, sección, subMódulo activo }
 const NAV_STATE = {
   modActivo: 'crm',
   subActivo: 'pipeline',
   modAbierto: 'crm',
 };
 
-// Módulos sin sub-items (navegación directa)
 const MOD_PLANOS = ['panel', 'config'];
 
-// Top actions por módulo
 const TOP_ACTIONS = {
   'crm':            { label: 'Nuevo prospecto',   show: true  },
   'comunidades':    { label: 'Nueva comunidad',   show: true  },
@@ -341,7 +336,6 @@ const TOP_ACTIONS = {
   'documentos':     { label: 'Subir documento',   show: true  },
 };
 
-// Títulos topbar por sub-módulo
 const TOPBAR = {
   'panel':                   ['Panel maestro',         ''],
   'comunidades-listado':     ['Listado de comunidades','· General'],
@@ -385,31 +379,25 @@ const TOPBAR = {
 };
 
 function navFlat(modId, titulo, seccion) {
-  // Cerrar módulo abierto anterior
   if (NAV_STATE.modAbierto && NAV_STATE.modAbierto !== modId) {
     _cerrarSub(NAV_STATE.modAbierto);
   }
-  // Limpiar activos
   _limpiarActivos();
-  // Marcar activo
   const btn = document.querySelector(`[data-mod="${modId}"]`) ||
               document.querySelector(`.mod-row[onclick*="navFlat('${modId}'"]`);
   if (btn) btn.classList.add('mod-active');
   NAV_STATE.modActivo = modId;
   NAV_STATE.subActivo = null;
   NAV_STATE.modAbierto = null;
-  // Actualizar topbar
   _actualizarTopbar(modId, titulo, seccion);
-  // Cargar módulo
   _cargarModulo(modId);
 }
 
 function navToggle(modId) {
-  const sub = document.getElementById('sub-' + modId);
+  const sub    = document.getElementById('sub-' + modId);
   const modRow = document.querySelector(`#mod-${modId} .mod-row`);
   const yaAbierto = sub && sub.classList.contains('sub-open');
 
-  // Cerrar anterior si es distinto
   if (NAV_STATE.modAbierto && NAV_STATE.modAbierto !== modId) {
     _cerrarSub(NAV_STATE.modAbierto);
     const prevRow = document.querySelector(`#mod-${NAV_STATE.modAbierto} .mod-row`);
@@ -417,46 +405,37 @@ function navToggle(modId) {
   }
 
   if (yaAbierto) {
-    // Cerrar
-    if (sub) sub.classList.remove('sub-open');
+    if (sub)    sub.classList.remove('sub-open');
     if (modRow) modRow.classList.remove('mod-open', 'mod-active');
     NAV_STATE.modAbierto = null;
   } else {
-    // Abrir
-    if (sub) sub.classList.add('sub-open');
+    if (sub)    sub.classList.add('sub-open');
     if (modRow) modRow.classList.add('mod-open');
     NAV_STATE.modAbierto = modId;
-    // Si no hay sub activo de este módulo, activar el primero
     const primerSub = sub && sub.querySelector('.sub-item');
     if (primerSub && NAV_STATE.modActivo !== modId) {
-      const onclick = primerSub.getAttribute('onclick');
-      if (onclick) primerSub.click();
+      primerSub.click();
       return;
     }
   }
 }
 
 function navSub(modId, subId, titulo) {
-  // Limpiar sub-items activos
   document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('sub-active'));
-  // Marcar nuevo activo
-  const key = `${modId}-${subId}`;
   const items = document.querySelectorAll(`#sub-${modId} .sub-item`);
   items.forEach(el => {
     if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${subId}'`)) {
       el.classList.add('sub-active');
     }
   });
-  // Marcar módulo padre como activo
   const modRow = document.querySelector(`#mod-${modId} .mod-row`);
   if (modRow) { modRow.classList.add('mod-active'); modRow.classList.add('mod-open'); }
   NAV_STATE.modActivo = modId;
   NAV_STATE.subActivo = subId;
-  // Topbar
-  const tb = TOPBAR[key];
+  const key = `${modId}-${subId}`;
+  const tb  = TOPBAR[key];
   if (tb) _actualizarTopbar(key, tb[0], tb[1]);
   else    _actualizarTopbar(key, titulo, '');
-  // Cargar módulo (mapeo a módulos GAS existentes + nuevos)
   _cargarModulo(modId, subId);
 }
 
@@ -475,42 +454,49 @@ function _actualizarTopbar(key, titulo, trail) {
   const r = document.getElementById('modTopbarTrail');
   if (t) t.textContent = titulo;
   if (r) r.textContent = trail;
-  // Top action
-  const modId = key.split('-')[0];
+  const modId  = key.split('-')[0];
   const accion = TOP_ACTIONS[modId];
-  const btn = document.getElementById('btnTopAction');
-  const lbl = document.getElementById('btnTopActionLabel');
+  const btn    = document.getElementById('btnTopAction');
+  const lbl    = document.getElementById('btnTopActionLabel');
   if (btn && lbl) {
     if (accion && accion.show) {
       btn.style.display = 'flex';
-      lbl.textContent = accion.label;
-      btn.onclick = () => _topAction(modId);
+      lbl.textContent   = accion.label;
+      btn.onclick       = () => _topAction(modId);
     } else {
       btn.style.display = 'none';
     }
   }
 }
 
-// Mapeo módulos → función del app.js original o nueva pantalla
+// ── MAPEO MÓDULOS → cargarModulo() ────────────────────────────
+// Solo los módulos con HTML real en /modules se agregan aquí.
+// El resto cae en _mostrarProximamente().
 function _cargarModulo(modId, subId) {
-  // Módulos GAS existentes: key → nombre de módulo para cargarModulo()
   const MODULOS_GAS = {
-    'crm':              'crm',
-    'crm-pipeline':     'crm',
-    'crm-prospectos':   'crm',
-    'crm-diagnostico':  'diagnostico',
-    'crm-propuesta':    'flujo',
-    'crm-flujo':        'flujo',
+    // CRM
+    'crm':                    'crm',
+    'crm-pipeline':           'crm',
+    'crm-prospectos':         'crm',
+    'crm-diagnostico':        'diagnostico',
+    'crm-propuesta':          'flujo',
+    'crm-flujo':              'flujo',
+    // Comunidades — todos los sub-items cargan el mismo módulo
+    'comunidades':            'comunidades',
+    'comunidades-listado':    'comunidades',
+    'comunidades-ficha':      'comunidades',
+    'comunidades-unidades':   'comunidades',
+    'comunidades-residentes': 'comunidades',
+    'comunidades-comite':     'comunidades',
   };
 
-  const key = subId ? `${modId}-${subId}` : modId;
+  const key      = subId ? `${modId}-${subId}` : modId;
   const gasModulo = MODULOS_GAS[key] || MODULOS_GAS[modId];
 
   if (gasModulo && typeof cargarModulo === 'function') {
-    // Ocultar wrappers WIP antes de que app.js muestre el módulo cacheado
     const cache = window.moduleElements || {};
     Object.keys(cache).forEach(k => {
-      if (!['crm','diagnostico','flujo'].includes(k) && cache[k] && cache[k].style) {
+      if (!['crm','diagnostico','flujo','comunidades'].includes(k) && cache[k] && cache[k].style) {
         cache[k].style.display = 'none';
       }
     });
@@ -518,31 +504,25 @@ function _cargarModulo(modId, subId) {
     return;
   }
 
-  // Módulos nuevos → pantalla WIP usando el mismo sistema de cache del app.js
   _mostrarProximamente(key, modId, subId);
 }
 
 function _mostrarProximamente(cacheKey, modId, subId) {
-  // Usar el cache del app.js para no destruir los wrappers de CRM/diagnóstico
   const cache = window.moduleElements || {};
   const ca    = document.getElementById('contentArea');
   if (!ca) return;
 
-  // Ocultar el módulo activo anterior (igual que hace cargarModulo en app.js)
   Object.values(cache).forEach(el => { if (el && el.style) el.style.display = 'none'; });
 
-  // Limpiar el sidebar dinámico (cada módulo tiene el suyo)
   const sd = document.getElementById('sidebarDynamic');
   if (sd) sd.innerHTML = '';
 
-  // Si ya existe un wrapper WIP para esta key, mostrarlo
   if (cache[cacheKey]) {
     cache[cacheKey].style.display = 'block';
     return;
   }
 
-  // Crear wrapper nuevo y cachearlo
-  const tb    = TOPBAR[cacheKey];
+  const tb     = TOPBAR[cacheKey];
   const titulo = tb ? tb[0] : (subId || modId);
 
   const wrapper = document.createElement('div');
@@ -579,7 +559,8 @@ function _mostrarProximamente(cacheKey, modId, subId) {
 function _topAction(modId) {
   const acciones = {
     'crm':            () => document.getElementById('btn-nuevo')?.click(),
-    'comunidades':    () => _mostrarProximamente('comunidades-nueva',    'comunidades', 'nueva'),
+    // Comunidades: dispara el botón "Nueva comunidad" dentro del módulo
+    'comunidades':    () => document.querySelector('#com-root .btn-nuevo')?.click(),
     'finanzas':       () => _mostrarProximamente('finanzas-emitir',      'finanzas',    'emitir-gc'),
     'remuneraciones': () => _mostrarProximamente('rem-nueva-liq',        'remuneraciones','nueva-liquidacion'),
     'incidencias':    () => _mostrarProximamente('incidencias-nueva',    'incidencias', 'nueva'),
@@ -591,8 +572,6 @@ function _topAction(modId) {
 }
 
 function abrirMenuMovil() {
-  // En móvil, abrir un overlay con todos los módulos
-  // Por ahora activa el sidebar temporalmente en pantallas pequeñas
   const sb = document.querySelector('.sidebar');
   if (sb) {
     sb.style.display = sb.style.display === 'flex' ? 'none' : 'flex';
@@ -603,27 +582,22 @@ function abrirMenuMovil() {
   }
 }
 
-// ── Bottom nav active state ───────────────────────────────────
 function bnav(el) {
   document.querySelectorAll('.bottom-nav .nav-btn').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
 }
 
-// ── Toggle sidebar nav ───────────────────────────────────────
 function toggleSbNav() {
   const navArea = document.getElementById('sbNavArea');
-  const dynArea = document.getElementById('sidebarDynamic');
   const btn     = document.getElementById('btnToggleNav');
   if (!navArea) return;
   const pinned = navArea.classList.contains('sb-pinned');
   if (pinned) {
-    // Volver a colapsar — restaurar estado original
     navArea.classList.remove('sb-pinned');
     navArea.classList.add('sb-collapsed');
     if (btn) btn.title = 'Ver menú completo';
     if (btn) btn.style.opacity = '1';
   } else {
-    // Expandir y pinear — mostrar nav sobre el contenido dinámico
     navArea.classList.remove('sb-collapsed');
     navArea.classList.add('sb-pinned');
     if (btn) btn.title = 'Ocultar menú';
@@ -633,7 +607,6 @@ function toggleSbNav() {
 
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Marcar CRM activo en sidebar
   const subCrm    = document.getElementById('sub-crm');
   const modCrmRow = document.querySelector('#mod-crm .mod-row');
   if (subCrm)    subCrm.classList.add('sub-open');
@@ -641,18 +614,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const primerSubCrm = subCrm && subCrm.querySelector('.sub-item');
   if (primerSubCrm)  primerSubCrm.classList.add('sub-active');
 
-  // MutationObserver: cuando sidebarDynamic tiene contenido → colapsar nav
-  // cuando está vacío → mostrar nav con todos los módulos
   const navArea = document.getElementById('sbNavArea');
   const dynArea = document.getElementById('sidebarDynamic');
   if (navArea && dynArea) {
     const observer = new MutationObserver(() => {
       const tieneContenido = dynArea.innerHTML.trim().length > 0;
-      // Si está pinned por el usuario, no colapsar
       if (!navArea.classList.contains('sb-pinned')) {
         navArea.classList.toggle('sb-collapsed', tieneContenido);
       }
-      // Mostrar/ocultar botón toggle
       const btn = document.getElementById('btnToggleNav');
       if (btn) btn.style.display = tieneContenido ? 'flex' : 'none';
     });
