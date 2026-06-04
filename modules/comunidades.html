@@ -1917,10 +1917,45 @@
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
-        var wb   = XLSX.read(e.target.result, { type: 'array' });
-        var unidades     = XLSX.utils.sheet_to_json(wb.Sheets['Unidades']     || wb.Sheets[wb.SheetNames[0]] || {});
-        var propietarios = XLSX.utils.sheet_to_json(wb.Sheets['Propietarios'] || wb.Sheets[wb.SheetNames[1]] || {});
-        var residentes   = XLSX.utils.sheet_to_json(wb.Sheets['Residentes']   || wb.Sheets[wb.SheetNames[2]] || {});
+        var wb = XLSX.read(e.target.result, { type: 'array' });
+
+        // Buscar hoja por nombre (insensible a mayúsculas y espacios)
+        function buscarHoja(wb, nombres) {
+          var sheetNames = wb.SheetNames;
+          for (var i = 0; i < nombres.length; i++) {
+            var buscar = nombres[i].toLowerCase().trim();
+            for (var j = 0; j < sheetNames.length; j++) {
+              if (sheetNames[j].toLowerCase().trim() === buscar) {
+                return wb.Sheets[sheetNames[j]];
+              }
+            }
+          }
+          // Fallback: usar por índice si no se encuentra por nombre
+          return null;
+        }
+
+        // Intentar por nombre primero, luego por posición
+        var hUnidades     = buscarHoja(wb, ['Unidades','unidades','UNIDADES'])
+                            || (wb.SheetNames[0] ? wb.Sheets[wb.SheetNames[0]] : null);
+        var hPropietarios = buscarHoja(wb, ['Propietarios','propietarios','PROPIETARIOS','Copropietarios','copropietarios'])
+                            || (wb.SheetNames[1] ? wb.Sheets[wb.SheetNames[1]] : null);
+        var hResidentes   = buscarHoja(wb, ['Residentes','residentes','RESIDENTES'])
+                            || (wb.SheetNames[2] ? wb.Sheets[wb.SheetNames[2]] : null);
+
+        var unidades     = hUnidades     ? XLSX.utils.sheet_to_json(hUnidades,     { defval: '' }) : [];
+        var propietarios = hPropietarios ? XLSX.utils.sheet_to_json(hPropietarios, { defval: '' }) : [];
+        var residentes   = hResidentes   ? XLSX.utils.sheet_to_json(hResidentes,   { defval: '' }) : [];
+
+        // Validar que haya al menos unidades
+        if (unidades.length === 0) {
+          var errDiv = box.querySelector('.form-error');
+          if (errDiv) {
+            errDiv.textContent = 'No se encontraron unidades en el archivo. Hojas detectadas: ' + wb.SheetNames.join(', ');
+            errDiv.style.display = 'block';
+          }
+          return;
+        }
+
         mostrarPrevisualizacion(unidades, propietarios, residentes, comunidadId, box, overlay);
       } catch (err) {
         var errDiv = box.querySelector('.form-error');
@@ -2042,105 +2077,144 @@
 
   // ── EJECUTAR IMPORTACIÓN ──────────────────────────────────────
   function ejecutarImportacion(unidades, propietarios, residentes, comunidadId, btn, errDiv, overlay) {
-    var promesas = [];
 
-    if (unidades.length > 0) {
-      promesas.push(api('/unidades', 'POST', {
-        action:      'crearUnidadesMasivo',
-        comunidadId: comunidadId,
-        unidades:    unidades.map(function(u) {
-          return { numero: String(u.numero||''), tipo: String(u.tipo||'departamento').toLowerCase(), piso: String(u.piso||''), alicuota: parseFloat(u.alicuota)||0, rolSII: String(u.rolSII||'') };
+    // Paso 1 — crear unidades
+    var promUnidades = unidades.length > 0
+      ? api('/unidades', 'POST', {
+          action:      'crearUnidadesMasivo',
+          comunidadId: comunidadId,
+          unidades:    unidades.map(function(u) {
+            return {
+              numero:   String(u.numero||''),
+              tipo:     String(u.tipo||'departamento').toLowerCase(),
+              piso:     String(u.piso||''),
+              alicuota: parseFloat(u.alicuota)||0,
+              rolSII:   String(u.rolSII||'')
+            };
+          })
         })
-      }));
-    }
+      : Promise.resolve({ ok: true, data: { ok: true } });
 
-    Promise.all(promesas).then(function(resps) {
-      var errores = [];
-      resps.forEach(function(r) {
-        if (!r.ok) errores.push(r.error || 'Error al importar');
-        else if (r.data && r.data.errores && r.data.errores.length) errores = errores.concat(r.data.errores);
-      });
-
-      if (errores.length > 0 && unidades.length === 0) {
-        errDiv.textContent = errores.join('. ');
+    promUnidades.then(function(r) {
+      if (!r.ok) {
+        errDiv.textContent = r.error || 'Error al importar unidades';
         errDiv.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Reintentar';
+        btn.disabled = false; btn.textContent = 'Reintentar';
         return;
       }
 
-      // Importar propietarios y residentes si hay unidades creadas
-      var promesas2 = [];
-      if (propietarios.length > 0) {
-        promesas2.push(api('/propietarios', 'POST', {
-          action:       'crearPropietariosMasivo',
-          comunidadId:  comunidadId,
-          propietarios: propietarios.map(function(p) {
-            return {
-              unidadId:          p.unidad ? _buscarUnidadId(p.unidad, comunidadId) : '',
-              rutPropietario:    String(p.rutPropietario||''),
-              nombrePropietario: String(p.nombrePropietario||''),
-              emailPropietario:  String(p.emailPropietario||''),
-              telefonoPropietario: String(p.telefonoPropietario||''),
-              domicilioPropietario: String(p.domicilioPropietario||''),
-              condicionOcupacion: String(p.condicionOcupacion||'propietario residente'),
-              fechaAdquisicion:  String(p.fechaAdquisicion||''),
-              fojas:             String(p.fojas||''),
-              numeroCBR:         String(p.numeroCBR||''),
-              anioCBR:           String(p.anioCBR||'')
-            };
-          })
-        }));
-      }
-      if (residentes.length > 0) {
-        promesas2.push(api('/residentes', 'POST', {
-          action:      'crearResidentesMasivo',
-          comunidadId: comunidadId,
-          residentes:  residentes.map(function(r) {
-            return {
-              unidadId:          r.unidad ? _buscarUnidadId(r.unidad, comunidadId) : '',
-              rut:               String(r.rut||''),
-              nombre:            String(r.nombre||''),
-              email:             String(r.email||''),
-              telefonoPrincipal: String(r.telefonoPrincipal||''),
-              telefonoSecundario: String(r.telefonoSecundario||''),
-              contactoEmergencia: String(r.contactoEmergencia||''),
-              telefonoEmergencia: String(r.telefonoEmergencia||''),
-              electrodependiente: String(r.electrodependiente||'NO'),
-              movilidadReducida:  String(r.movilidadReducida||'NO'),
-              condicionEspecial:  String(r.condicionEspecial||''),
-              tieneMascotas:      String(r.tieneMascotas||'NO'),
-              detalleMascotas:    String(r.detalleMascotas||''),
-              fechaIngreso:       String(r.fechaIngreso||'')
-            };
-          })
-        }));
-      }
-
-      Promise.all(promesas2).then(function() {
-        btn.textContent = '✓ Importación completada';
-        btn.style.background = 'var(--co-green)';
-        setTimeout(function() {
-          overlay.remove();
-          cargarDirectorio(comunidadId);
-        }, 1200);
-      }).catch(function(err) {
-        errDiv.textContent = 'Error parcial: ' + err.message;
-        errDiv.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Reintentar';
+      // Paso 2 — construir mapa numero → id desde la respuesta del backend
+      // (evita race condition de leer inmediatamente después de escribir)
+      btn.textContent = 'Importando propietarios y residentes…';
+      var mapaUnidades = {};
+      // Usar IDs devueltos por crearMasivo si están disponibles
+      var unidadesDevueltas = (r.data && Array.isArray(r.data.unidades)) ? r.data.unidades : [];
+      unidadesDevueltas.forEach(function(u) {
+        mapaUnidades[String(u.numero)] = u.id;
       });
+
+      // Ejecutar como IIFE para mantener la estructura de promesas
+      (function() {
+
+        // Paso 3 — importar propietarios y residentes con IDs correctos
+        btn.textContent = 'Importando propietarios y residentes…';
+        var promesas2 = [];
+
+        if (propietarios.length > 0) {
+          promesas2.push(api('/propietarios', 'POST', {
+            action:       'crearPropietariosMasivo',
+            comunidadId:  comunidadId,
+            propietarios: propietarios.map(function(p) {
+              var uid = p.unidad ? (mapaUnidades[String(p.unidad)] || '') : '';
+              return {
+                unidadId:             uid,
+                rutPropietario:       String(p.rutPropietario||''),
+                nombrePropietario:    String(p.nombrePropietario||''),
+                emailPropietario:     String(p.emailPropietario||''),
+                telefonoPropietario:  String(p.telefonoPropietario||''),
+                domicilioPropietario: String(p.domicilioPropietario||''),
+                condicionOcupacion:   String(p.condicionOcupacion||'propietario residente'),
+                fechaAdquisicion:     String(p.fechaAdquisicion||''),
+                fojas:                String(p.fojas||''),
+                numeroCBR:            String(p.numeroCBR||''),
+                anioCBR:              String(p.anioCBR||'')
+              };
+            })
+          }));
+        }
+
+        if (residentes.length > 0) {
+          promesas2.push(api('/residentes', 'POST', {
+            action:      'crearResidentesMasivo',
+            comunidadId: comunidadId,
+            residentes:  residentes.map(function(r) {
+              var uid = r.unidad ? (mapaUnidades[String(r.unidad)] || '') : '';
+              return {
+                unidadId:           uid,
+                rut:                String(r.rut||''),
+                nombre:             String(r.nombre||''),
+                email:              String(r.email||''),
+                telefonoPrincipal:  String(r.telefonoPrincipal||''),
+                telefonoSecundario: String(r.telefonoSecundario||''),
+                contactoEmergencia: String(r.contactoEmergencia||''),
+                telefonoEmergencia: String(r.telefonoEmergencia||''),
+                electrodependiente: String(r.electrodependiente||'NO'),
+                movilidadReducida:  String(r.movilidadReducida||'NO'),
+                condicionEspecial:  String(r.condicionEspecial||''),
+                tieneMascotas:      String(r.tieneMascotas||'NO'),
+                detalleMascotas:    String(r.detalleMascotas||''),
+                fechaIngreso:       String(r.fechaIngreso||'')
+              };
+            })
+          }));
+        }
+
+        // Si no hay propietarios ni residentes, terminar directo
+        if (promesas2.length === 0) {
+          btn.textContent = '✓ Importación completada';
+          btn.style.background = 'var(--co-green)';
+          setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 1200);
+          return;
+        }
+
+        Promise.all(promesas2).then(function(resps2) {
+          var errores = [];
+          resps2.forEach(function(r) {
+            if (!r.ok) errores.push(r.error || 'Error parcial');
+            else if (r.data && r.data.errores && r.data.errores.length) {
+              errores = errores.concat(r.data.errores);
+            }
+          });
+          // Mostrar resultado final
+          var creados2 = resps2.map(function(r) { return r.data && r.data.creados ? r.data.creados : 0; });
+          var total2   = creados2.reduce(function(s,v) { return s+v; }, 0);
+          btn.textContent = '✓ ' + unidadesServidor.length + ' unidades · ' + total2 + ' registros importados';
+          btn.style.background = 'var(--co-green)';
+          if (errores.length > 0) {
+            errDiv.textContent = errores.slice(0,3).join(' | ') + (errores.length > 3 ? ' (+' + (errores.length-3) + ' más)' : '');
+            errDiv.style.display = 'block';
+          }
+          setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 1600);
+        }).catch(function(err) {
+          errDiv.textContent = 'Error al importar propietarios/residentes: ' + err.message;
+          errDiv.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Reintentar';
+        });
+
+      })();
+
     }).catch(function(err) {
       errDiv.textContent = 'Error de conexión: ' + err.message;
       errDiv.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = 'Reintentar';
+      btn.disabled = false; btn.textContent = 'Reintentar';
     });
   }
 
-  // Helper: buscar ID de unidad por número
+  // Helper: buscar ID de unidad por número en cache local
   function _buscarUnidadId(numero, comunidadId) {
-    var u = _dirData.unidades.find(function(u) { return String(u.numero) === String(numero) && u.comunidadId === comunidadId; });
+    var u = _dirData.unidades.find(function(u) {
+      return String(u.numero) === String(numero) && u.comunidadId === comunidadId;
+    });
     return u ? u.id : '';
   }
 
