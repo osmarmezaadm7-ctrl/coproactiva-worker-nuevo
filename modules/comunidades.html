@@ -1572,10 +1572,17 @@
       }
       _dirData.unidades    = extraer(resp);
       _dirData.comunidadId = comunidadId;
-      renderDirectorio(comunidadId);
-    }).catch(function() {
+      try {
+        renderDirectorio(comunidadId);
+      } catch(renderErr) {
+        console.error('Error en renderDirectorio:', renderErr);
+        var tc2 = document.getElementById('tc-directorio');
+        if (tc2) { tc2.innerHTML = '<div class="com-vacio">Error al renderizar: ' + renderErr.message + '</div>'; }
+      }
+    }).catch(function(fetchErr) {
+      console.error('Error al cargar directorio:', fetchErr);
       var tc2 = document.getElementById('tc-directorio');
-      if (tc2) { tc2.innerHTML = '<div class="com-vacio">Error al cargar el directorio.</div>'; }
+      if (tc2) { tc2.innerHTML = '<div class="com-vacio">Error de conexión: ' + (fetchErr.message || fetchErr) + '</div>'; }
     });
   }
 
