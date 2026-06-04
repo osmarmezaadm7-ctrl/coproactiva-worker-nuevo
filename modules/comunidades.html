@@ -2188,7 +2188,7 @@
           // Mostrar resultado final
           var creados2 = resps2.map(function(r) { return r.data && r.data.creados ? r.data.creados : 0; });
           var total2   = creados2.reduce(function(s,v) { return s+v; }, 0);
-          btn.textContent = '✓ ' + unidadesServidor.length + ' unidades · ' + total2 + ' registros importados';
+          btn.textContent = '✓ ' + unidadesDevueltas.length + ' unidades · ' + total2 + ' registros importados';
           btn.style.background = 'var(--co-green)';
           if (errores.length > 0) {
             errDiv.textContent = errores.slice(0,3).join(' | ') + (errores.length > 3 ? ' (+' + (errores.length-3) + ' más)' : '');
