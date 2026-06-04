@@ -1600,7 +1600,9 @@
 
     var info = document.createElement('div');
     info.style.cssText = 'font-size:12px;color:var(--co-mute);font-weight:600';
-    info.textContent = unidades.length + ' unidades · ' + propietarios.length + ' propietarios · ' + residentes.length + ' residentes';
+    var nCoprop = unidades.filter(function(u) { return u.idCopropietario; }).length;
+    var nResid  = unidades.filter(function(u) { return u.idResidente; }).length;
+    info.textContent = unidades.length + ' unidades · ' + nCoprop + ' con copropietario · ' + nResid + ' con residente';
 
     var btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
