@@ -1572,6 +1572,7 @@
       }
       _dirData.unidades    = extraer(resp);
       _dirData.comunidadId = comunidadId;
+      _dirComunidad        = window._comunidades ? window._comunidades.find(function(c){ return c.id === comunidadId; }) || {} : {};
       try {
         renderDirectorio(comunidadId);
       } catch(renderErr) {
@@ -1635,7 +1636,14 @@
     btnImportar.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Importar Excel';
     btnImportar.addEventListener('click', function() { modalImportarDirectorio(comunidadId); });
 
+    var btnExportar = document.createElement('button');
+    btnExportar.className = 'btn-ghost';
+    btnExportar.style.fontSize = '12px';
+    btnExportar.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Exportar';
+    btnExportar.addEventListener('click', function() { modalExportarDirectorio(unidades, _dirComunidad); });
+
     btns.appendChild(btnAgregar);
+    btns.appendChild(btnExportar);
     btns.appendChild(btnImportar);
     hdr.appendChild(info);
     hdr.appendChild(btns);
@@ -2044,6 +2052,329 @@
     });
   }
 
+  // ── Variable para comunidad activa en directorio ────────────
+  var _dirComunidad = {};
+
+  // ── MODAL EXPORTAR DIRECTORIO ─────────────────────────────────
+  function modalExportarDirectorio(unidades, comunidad) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '460px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '×';
+    btnX.addEventListener('click', function() { overlay.remove(); });
+    box.appendChild(btnX);
+
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Directorio'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Exportar datos'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Selecciona el documento a generar.'; box.appendChild(st);
+
+    var opciones = [
+      { id:'exp-dir',  ico:'M3 13h10M8 3v8M5 8l3 3 3-3', titulo:'Directorio completo', desc:'Excel con 3 hojas: Deptos, Estac., Bodegas y Resumen', fn: function(){ overlay.remove(); exportarDirectorioExcel(unidades, comunidad); } },
+      { id:'exp-cop-xls', ico:'M3 13h10M8 3v8M5 8l3 3 3-3', titulo:'Registro copropietarios', desc:'Excel con datos consolidados por copropietario', fn: function(){ overlay.remove(); exportarCopropietariosExcel(unidades, comunidad); } },
+      { id:'exp-cop-pdf', ico:'M13 3H5a1 1 0 00-1 1v10a1 1 0 001 1h8l3-3V4a1 1 0 00-1-1zM13 12v2l2-2h-2', titulo:'Registro copropietarios PDF', desc:'Documento formal para asamblea o comité', fn: function(){ overlay.remove(); exportarCopropietariosPDF(unidades, comunidad); } },
+      { id:'exp-cop-pdf2', ico:'M13 3H5a1 1 0 00-1 1v10a1 1 0 001 1h8l3-3V4a1 1 0 00-1-1zM13 12v2l2-2h-2', titulo:'Directorio completo PDF', desc:'Tabla completa para imprimir o archivar', fn: function(){ overlay.remove(); exportarDirectorioPDF(unidades, comunidad); } }
+    ];
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;gap:8px;margin-top:4px';
+
+    opciones.forEach(function(o) {
+      var card = document.createElement('button');
+      card.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;border:0.5px solid var(--co-line);border-radius:var(--co-r-md);background:var(--co-cream-deep);cursor:pointer;text-align:left;transition:border-color 0.15s';
+      card.addEventListener('mouseenter', function() { card.style.borderColor = 'var(--co-orange)'; });
+      card.addEventListener('mouseleave', function() { card.style.borderColor = 'var(--co-line)'; });
+      var ico = document.createElement('div');
+      ico.style.cssText = 'width:36px;height:36px;border-radius:8px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0';
+      ico.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--co-orange)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + o.ico + '"/></svg>';
+      var txt = document.createElement('div');
+      var t1 = document.createElement('div'); t1.style.cssText = 'font-size:13px;font-weight:700;color:var(--co-ink)'; t1.textContent = o.titulo;
+      var t2 = document.createElement('div'); t2.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:2px'; t2.textContent = o.desc;
+      txt.appendChild(t1); txt.appendChild(t2);
+      var arr = document.createElement('div'); arr.style.cssText = 'margin-left:auto;color:var(--co-mute)'; arr.textContent = '→';
+      card.appendChild(ico); card.appendChild(txt); card.appendChild(arr);
+      card.addEventListener('click', o.fn);
+      grid.appendChild(card);
+    });
+
+    box.appendChild(grid);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  }
+
+  // ── EXPORTAR DIRECTORIO EXCEL ─────────────────────────────────
+  function exportarDirectorioExcel(unidades, comunidad) {
+    _cargarXLSX(function() {
+      var wb = XLSX.utils.book_new();
+      var nomCom = comunidad.nombre || 'Comunidad';
+      var fecha  = new Date().toLocaleDateString('es-CL');
+
+      // Función para crear hoja con diseño
+      function crearHoja(titulo, cols, filas) {
+        var data = [];
+        // Fila de título
+        data.push([nomCom + ' — ' + titulo]);
+        data.push(['Exportado: ' + fecha + ' · CoproActiva Administración SpA']);
+        data.push([]); // espacio
+        data.push(cols);
+        filas.forEach(function(f) { data.push(f); });
+        var ws = XLSX.utils.aoa_to_sheet(data);
+        // Ancho de columnas
+        ws['!cols'] = cols.map(function() { return { wch: 20 }; });
+        return ws;
+      }
+
+      // Hoja Deptos
+      var deptos = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'DEPTO' || String(u.tipoUnidad||'').toUpperCase() === 'CASA'; });
+      var wsD = crearHoja('Departamentos',
+        ['Nº Unidad','Alícuota %','Copropietario','RUT / ID','Condición','Residente','Teléfono'],
+        deptos.map(function(u) { return [
+          u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%',
+          u.nombreCopropietario||'', u.numeroIdCopropietario||'',
+          u.condicionOcupacion||'', u.nombreResidente||'', u.telefonoResidente||''
+        ]; })
+      );
+      XLSX.utils.book_append_sheet(wb, wsD, 'Deptos');
+
+      // Hoja Estac.
+      var estac = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'ESTAC' || String(u.tipoUnidad||'').toUpperCase() === 'ESTACIONAMIENTO'; });
+      if (estac.length > 0) {
+        var wsE = crearHoja('Estacionamientos',
+          ['Nº Unidad','Alícuota %','Copropietario','RUT / ID','Unidad Principal','Residente'],
+          estac.map(function(u) { return [
+            u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%',
+            u.nombreCopropietario||'', u.numeroIdCopropietario||'',
+            u.idUnidadPrincipal||'', u.nombreResidente||''
+          ]; })
+        );
+        XLSX.utils.book_append_sheet(wb, wsE, 'Estac.');
+      }
+
+      // Hoja Bodegas
+      var bodegas = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'BODEGA'; });
+      if (bodegas.length > 0) {
+        var wsB = crearHoja('Bodegas',
+          ['Nº Unidad','Alícuota %','Copropietario','RUT / ID','Unidad Principal','Residente'],
+          bodegas.map(function(u) { return [
+            u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%',
+            u.nombreCopropietario||'', u.numeroIdCopropietario||'',
+            u.idUnidadPrincipal||'', u.nombreResidente||''
+          ]; })
+        );
+        XLSX.utils.book_append_sheet(wb, wsB, 'Bodegas');
+      }
+
+      // Hoja Resumen
+      var totalAlic = unidades.reduce(function(s,u){ return s + (parseFloat(u.alicuota)||0); }, 0);
+      var setCop = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
+      var setRes = {}; unidades.forEach(function(u){ if(u.idResidente) setRes[u.idResidente]=true; });
+      var wsR = XLSX.utils.aoa_to_sheet([
+        [nomCom + ' — Resumen'],
+        ['Generado: ' + fecha],
+        [],
+        ['Concepto','Valor'],
+        ['Departamentos', deptos.length],
+        ['Estacionamientos', estac.length],
+        ['Bodegas', bodegas.length],
+        ['Total unidades', unidades.length],
+        [],
+        ['Copropietarios únicos', Object.keys(setCop).length],
+        ['Residentes únicos', Object.keys(setRes).length],
+        [],
+        ['Suma alícuotas (factor)', totalAlic.toFixed(6)],
+        ['Suma alícuotas (%)', (totalAlic*100).toFixed(4)+'%'],
+        ['Alícuotas válidas', Math.abs(totalAlic-1) < 0.0001 ? 'Sí ✓' : 'No ✗']
+      ]);
+      wsR['!cols'] = [{ wch: 28 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, wsR, 'Resumen');
+
+      XLSX.writeFile(wb, 'Directorio_' + nomCom.replace(/\s/g,'-') + '_' + fecha.replace(/\//g,'-') + '.xlsx');
+    });
+  }
+
+  // ── EXPORTAR REGISTRO COPROPIETARIOS EXCEL ────────────────────
+  function exportarCopropietariosExcel(unidades, comunidad) {
+    _cargarXLSX(function() {
+      var nomCom = comunidad.nombre || 'Comunidad';
+      var fecha  = new Date().toLocaleDateString('es-CL');
+
+      // Consolidar por copropietario
+      var mapaCop = {};
+      unidades.forEach(function(u) {
+        if (!u.idCopropietario) return;
+        if (!mapaCop[u.idCopropietario]) {
+          mapaCop[u.idCopropietario] = {
+            nombre: u.nombreCopropietario || '',
+            nroId:  u.numeroIdCopropietario || '',
+            email:  u.emailCopropietario || '',
+            tel:    u.telefonoCopropietario || '',
+            unidades: [], alicuota: 0
+          };
+        }
+        mapaCop[u.idCopropietario].unidades.push(u.numeroUnidad);
+        mapaCop[u.idCopropietario].alicuota += parseFloat(u.alicuota) || 0;
+      });
+
+      var filas = Object.values(mapaCop).sort(function(a,b){ return a.nombre.localeCompare(b.nombre,'es'); });
+
+      var data = [
+        [nomCom + ' — Registro de Copropietarios'],
+        ['Generado: ' + fecha + ' · CoproActiva Administración SpA · Ley N°21.442'],
+        [],
+        ['Copropietario','RUT / ID','Unidades','Alícuota total %','Email','Teléfono']
+      ];
+      filas.forEach(function(c) {
+        data.push([
+          c.nombre, c.nroId,
+          c.unidades.join(', '),
+          (c.alicuota*100).toFixed(4)+'%',
+          c.email, c.tel
+        ]);
+      });
+
+      var wb = XLSX.utils.book_new();
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [{ wch:28 },{ wch:16 },{ wch:20 },{ wch:16 },{ wch:28 },{ wch:16 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Copropietarios');
+      XLSX.writeFile(wb, 'Copropietarios_' + nomCom.replace(/\s/g,'-') + '_' + fecha.replace(/\//g,'-') + '.xlsx');
+    });
+  }
+
+  // ── EXPORTAR REGISTRO COPROPIETARIOS PDF ─────────────────────
+  function exportarCopropietariosPDF(unidades, comunidad) {
+    var nomCom = comunidad.nombre || 'Comunidad';
+    var fecha  = new Date().toLocaleDateString('es-CL');
+
+    // Consolidar por copropietario
+    var mapaCop = {};
+    unidades.forEach(function(u) {
+      if (!u.idCopropietario) return;
+      if (!mapaCop[u.idCopropietario]) {
+        mapaCop[u.idCopropietario] = {
+          nombre: u.nombreCopropietario||'', nroId: u.numeroIdCopropietario||'',
+          email: u.emailCopropietario||'', tel: u.telefonoCopropietario||'',
+          unidades: [], alicuota: 0
+        };
+      }
+      mapaCop[u.idCopropietario].unidades.push(u.numeroUnidad);
+      mapaCop[u.idCopropietario].alicuota += parseFloat(u.alicuota)||0;
+    });
+
+    var filas = Object.values(mapaCop).sort(function(a,b){ return a.nombre.localeCompare(b.nombre,'es'); });
+
+    var filaHTML = filas.map(function(c, i) {
+      return '<tr style="background:' + (i%2===0?'#fff':'#f9f7f5') + '">'
+        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + (i+1) + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0;font-weight:600">' + c.nombre + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + c.nroId + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + c.unidades.join(', ') + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0;color:#D9853B;font-weight:700">' + (c.alicuota*100).toFixed(4)+'%' + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + c.email + '</td>'
+        + '</tr>';
+    }).join('');
+
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+      + '<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1A1714}'
+      + 'table{width:100%;border-collapse:collapse;font-size:11px}'
+      + 'th{background:#1A1714;color:#fff;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.04em}'
+      + 'th:first-child{width:30px} @media print{.no-print{display:none}}'
+      + '</style></head><body>'
+      + '<div style="background:#1A1714;padding:16px 24px;display:flex;justify-content:space-between;align-items:center">'
+      + '<div style="color:#fff;font-size:18px;font-weight:800"><span style="color:#D9853B">co</span>proactiva</div>'
+      + '<div style="color:rgba(255,255,255,0.7);font-size:11px;text-align:right">' + nomCom + '<br>Registro de Copropietarios · ' + fecha + '</div>'
+      + '</div>'
+      + '<div style="background:#D9853B;padding:8px 24px">'
+      + '<p style="color:#fff;font-size:11px;font-weight:700;margin:0;letter-spacing:0.06em;text-transform:uppercase">Registro oficial de copropietarios · Ley N°21.442</p>'
+      + '</div>'
+      + '<div style="padding:16px 24px">'
+      + '<table><thead><tr><th>Nº</th><th>Copropietario</th><th>RUT / ID</th><th>Unidades</th><th>Alícuota total</th><th>Email</th></tr></thead>'
+      + '<tbody>' + filaHTML + '</tbody></table>'
+      + '</div>'
+      + '<div style="background:#f9f7f5;padding:12px 24px;border-top:2px solid #D9853B;display:flex;justify-content:space-between;margin-top:16px">'
+      + '<span style="font-size:10px;color:#888">' + filas.length + ' copropietarios · ' + nomCom + '</span>'
+      + '<span style="font-size:10px;color:#888">Documento generado por CoproActiva · Confidencial</span>'
+      + '</div>'
+      + '<div class="no-print" style="padding:16px 24px;text-align:center">'
+      + '<button onclick="window.print()" style="background:#D9853B;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Imprimir / Guardar PDF</button>'
+      + '</div>'
+      + '</body></html>';
+
+    var win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+  }
+
+  // ── EXPORTAR DIRECTORIO COMPLETO PDF ─────────────────────────
+  function exportarDirectorioPDF(unidades, comunidad) {
+    var nomCom = comunidad.nombre || 'Comunidad';
+    var fecha  = new Date().toLocaleDateString('es-CL');
+
+    var TIPOS_ORDEN = {'DEPTO':1,'CASA':1,'LOCAL':2,'OFICINA':2,'ESTAC':3,'ESTACIONAMIENTO':3,'BODEGA':4};
+    var sorted = unidades.slice().sort(function(a,b){
+      var ta = TIPOS_ORDEN[String(a.tipoUnidad||'').toUpperCase()] || 5;
+      var tb = TIPOS_ORDEN[String(b.tipoUnidad||'').toUpperCase()] || 5;
+      if (ta !== tb) return ta - tb;
+      return String(a.numeroUnidad).localeCompare(String(b.numeroUnidad),'es',{numeric:true});
+    });
+
+    var filaHTML = sorted.map(function(u, i) {
+      var cond = u.condicionOcupacion || '';
+      var condColor = cond === 'propietario residente' ? '#3B6D11' : cond === 'arrendado' ? '#854F0B' : '#888';
+      var condBg    = cond === 'propietario residente' ? '#EAF3DE' : cond === 'arrendado' ? '#FFF3E7' : '#f5f5f5';
+      return '<tr style="background:' + (i%2===0?'#fff':'#f9f7f5') + '">'
+        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-weight:700;color:#D9853B">' + u.numeroUnidad + '</td>'
+        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-size:10px">' + u.tipoUnidad + '</td>'
+        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;color:#D9853B;font-weight:700">' + ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%' + '</td>'
+        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-weight:600">' + (u.nombreCopropietario||'—') + '</td>'
+        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0">' + (u.numeroIdCopropietario||'—') + '</td>'
+        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0"><span style="background:'+condBg+';color:'+condColor+';padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700">' + (cond||'—') + '</span></td>'
+        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0">' + (u.nombreResidente||'—') + '</td>'
+        + '</tr>';
+    }).join('');
+
+    var totalAlic = unidades.reduce(function(s,u){ return s+(parseFloat(u.alicuota)||0); }, 0);
+    var setCop = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
+
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+      + '<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1A1714;font-size:11px}'
+      + 'table{width:100%;border-collapse:collapse} th{background:#1A1714;color:#fff;padding:7px 8px;text-align:left;font-size:10px;letter-spacing:0.04em}'
+      + '@media print{.no-print{display:none}@page{margin:1.5cm}}</style></head><body>'
+      + '<div style="background:#1A1714;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">'
+      + '<div style="color:#fff;font-size:16px;font-weight:800"><span style="color:#D9853B">co</span>proactiva</div>'
+      + '<div style="color:rgba(255,255,255,0.7);font-size:10px;text-align:right">' + nomCom + '<br>Directorio · ' + fecha + '</div>'
+      + '</div>'
+      + '<div style="background:#D9853B;padding:7px 20px">'
+      + '<p style="color:#fff;font-size:10px;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:0.06em">Directorio de unidades · Ley N°21.442</p>'
+      + '</div>'
+      + '<div style="padding:12px 20px">'
+      + '<table><thead><tr><th>Unidad</th><th>Tipo</th><th>Alícuota</th><th>Copropietario</th><th>RUT / ID</th><th>Condición</th><th>Residente</th></tr></thead>'
+      + '<tbody>' + filaHTML + '</tbody></table>'
+      + '</div>'
+      + '<div style="background:#f9f7f5;padding:10px 20px;border-top:2px solid #D9853B;display:flex;justify-content:space-between">'
+      + '<span style="font-size:10px;color:#888">' + unidades.length + ' unidades · ' + Object.keys(setCop).length + ' copropietarios · alícuotas suman ' + (totalAlic*100).toFixed(4) + '%</span>'
+      + '<span style="font-size:10px;color:#888">CoproActiva · Confidencial</span>'
+      + '</div>'
+      + '<div class="no-print" style="padding:14px 20px;text-align:center">'
+      + '<button onclick="window.print()" style="background:#D9853B;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Imprimir / Guardar PDF</button>'
+      + '</div></body></html>';
+
+    var win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+  }
+
+  // ── HELPER CARGAR XLSX ────────────────────────────────────────
+  function _cargarXLSX(cb) {
+    if (typeof XLSX !== 'undefined') { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+
   function modalImportarDirectorio(comunidadId) {
     var overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -2128,48 +2459,58 @@
   function descargarPlantillaDirectorio() {
     var cargar = function() {
       var wb   = XLSX.utils.book_new();
-      var data = [
-        // Headers
-        ['n_unidad *','tipo_unidad *','rol_sii','alicuota *','subdivision',
-         'rut_propietario *','nombre_propietario *','correo_propietario',
+      var headers = ['n_unidad','tipo_unidad','rol_sii','alicuota','subdivision',
+         'rut_propietario','nombre_propietario','correo_propietario',
          'rut_residente','nombre_residente','celular_residente',
-         'patentes_separadas_por_comas','condicion_ocupacion'],
-        // Ejemplo depto con propietario residente
-        ['101','DEPTO','9870-1','0.0125','',
+         'patentes_separadas_por_comas','condicion_ocupacion'];
+
+      var ejemplos = [
+        ['D001','DEPTO','9870-1',0.0110,'',
          '12.345.678-9','Juan Pérez','juan@email.com',
-         '12.345.678-9','Juan Pérez','+56912345678',
-         'KKKK11','propietario residente'],
-        // Estac del mismo propietario (rut_residente vacío = sin residente directo)
-        ['E-15','ESTAC','9870-45','0.0015','',
+         '12.345.678-9','Juan Pérez','+56912345678','KKKK11','propietario residente'],
+        ['E-15','ESTACIONAMIENTO','9870-45',0.0015,'',
          '12.345.678-9','Juan Pérez','juan@email.com',
-         '','','','',''],
-        // Bodega del mismo propietario
-        ['B-04','BODEGA','','0.0005','',
+         '12.345.678-9','Juan Pérez','','','propietario residente'],
+        ['B-04','BODEGA','',0.0005,'',
          '12.345.678-9','Juan Pérez','juan@email.com',
-         '','','','',''],
-        // Depto arrendado (propietario ≠ residente)
-        ['102','DEPTO','9870-2','0.0125','',
+         '12.345.678-9','Juan Pérez','','','propietario residente'],
+        ['D002','DEPTO','9870-2',0.0125,'',
          '98.765.432-1','Ana Gómez','ana@email.com',
-         '22.333.444-5','Luis Soto','+56911223344',
-         'LLLL22, MMNN33','arrendado'],
-        // Estac del mismo propietario Ana Gómez
-        ['E-16','ESTAC','9870-46','0.0015','',
+         '22.333.444-5','Luis Soto','+56911223344','LLLL22','arrendado'],
+        ['E-16','ESTACIONAMIENTO','9870-46',0.0015,'',
          '98.765.432-1','Ana Gómez','ana@email.com',
-         '','','','',''],
-        [],
-        ['INSTRUCCIONES:'],
-        ['tipo_unidad: DEPTO / ESTAC / BODEGA / LOCAL / CASA / OFICINA'],
-        ['alicuota: decimal. La suma de todas las filas debe ser 1.0000 (ej: 0.0125 = 1.25%)'],
-        ['rut_residente: dejar vacío si el propietario vive en la unidad'],
-        ['ESTAC y BODEGA se vinculan automáticamente al DEPTO del mismo rut_propietario'],
-        ['patentes: separar con coma si tiene más de una'],
-        ['condicion_ocupacion: propietario residente / arrendado / desocupado / en remodelacion']
+         '22.333.444-5','Luis Soto','','','arrendado']
       ];
 
-      var ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = data[0].map(function() { return { wch: 24 }; });
-      XLSX.utils.book_append_sheet(wb, ws, 'Carga_Masiva');
-      XLSX.writeFile(wb, 'Plantilla_CargaMasiva_CoproActiva.xlsx');
+      var instrucciones = [
+        [],
+        ['INSTRUCCIONES DE USO'],
+        ['tipo_unidad: DEPTO / ESTACIONAMIENTO / BODEGA / LOCAL / CASA / OFICINA'],
+        ['alicuota: factor decimal. La suma de TODAS las filas debe ser exactamente 1.0000'],
+        ['        Ejemplo: 0.0125 equivale a 1.25%'],
+        ['rut_propietario: obligatorio. Identifica al copropietario (obligado legal de OOEE)'],
+        ['correo_propietario: recomendado para comunicaciones'],
+        ['subdivision: opcional. Usar si el condominio tiene torres o bloques (ej: Torre A)'],
+        ['rut_residente: RUT de quien habita la unidad. Si vacío, se asume el propietario'],
+        ['patentes: separar con coma si tiene más de una (ej: KKKK11, LLLL22)'],
+        ['condicion_ocupacion: propietario residente / arrendado / desocupado / en remodelacion'],
+        [],
+        ['OBLIGATORIO (naranja)', 'RECOMENDADO (negro)', 'OPCIONAL (gris)'],
+        ['n_unidad, tipo_unidad, alicuota, rut_propietario, nombre_propietario',
+         'rol_sii, correo_propietario, subdivision', 'rut_residente, nombre_residente, celular_residente, patentes, condicion_ocupacion']
+      ];
+
+      var data = [headers].concat(ejemplos).concat(instrucciones);
+      var wb2  = XLSX.utils.book_new();
+      var ws   = XLSX.utils.aoa_to_sheet(data);
+
+      // Estilos via !merges y col widths
+      ws['!cols'] = headers.map(function(h) {
+        var w = h.length > 15 ? 26 : h.length > 10 ? 22 : 16;
+        return { wch: w };
+      });
+      XLSX.utils.book_append_sheet(wb2, ws, 'Carga_Masiva');
+      XLSX.writeFile(wb2, 'Plantilla_CargaMasiva_CoproActiva.xlsx');
     };
 
     if (typeof XLSX === 'undefined') {
