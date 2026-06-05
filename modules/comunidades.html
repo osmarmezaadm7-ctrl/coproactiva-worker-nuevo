@@ -1634,7 +1634,7 @@
         (diff < 0.01 ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
       validBar.innerHTML = (diff < 0.01
         ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 1.0000 — 100% correcto'
-        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + ' (' + (total*100).toFixed(2) + '%) — Falta ' + diff.toFixed(4) + ' para completar 1.0000');
+        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + ' (' + (total*100).toFixed(2) + '%) — Falta ' + diff.toFixed(4) + ' (' + (diff*100).toFixed(2) + '%) para completar 1.0000');
       tc.appendChild(validBar);
     }
 
