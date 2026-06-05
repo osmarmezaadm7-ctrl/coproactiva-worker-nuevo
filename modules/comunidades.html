@@ -1633,8 +1633,8 @@
       validBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--co-r-md);margin-bottom:12px;font-size:12px;font-weight:600;' +
         (diff < 0.01 ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
       validBar.innerHTML = (diff < 0.01
-        ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 100% correctamente'
-        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + '% — Diferencia: ' + diff.toFixed(4) + '%');
+        ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 1.0000 — 100% correcto'
+        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + ' (' + (total*100).toFixed(2) + '%) — Falta ' + diff.toFixed(4) + ' para completar 1.0000');
       tc.appendChild(validBar);
     }
 
@@ -1710,7 +1710,7 @@
       tdAcc.appendChild(btnAcc);
 
       // Alícuota como porcentaje para mostrar
-      var alicDisplay = u.alicuota ? (parseFloat(u.alicuota) * 100).toFixed(4) + '%' : '—';
+      var alicDisplay = u.alicuota ? (parseFloat(u.alicuota) * 100).toFixed(2) + '%' : '—';
 
       tr.appendChild(td(u.numeroUnidad));
       tr.appendChild(tdTipo);
@@ -2059,7 +2059,7 @@
     var paso1 = document.createElement('div');
     paso1.style.cssText = 'background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:14px 16px;margin-bottom:16px';
     paso1.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 1 — Descarga la plantilla</div>'
-      + '<div style="font-size:12px;color:var(--co-ink-3);margin-bottom:10px">La plantilla incluye 3 hojas: Unidades, Propietarios y Residentes con los campos requeridos y una fila de ejemplo.</div>';
+      + '<div style="font-size:12px;color:var(--co-ink-3);margin-bottom:10px">La plantilla tiene una sola hoja “Carga_Masiva” con una fila por unidad. Incluye datos de copropietario y residente en las mismas columnas.</div>';
     var btnDesc = document.createElement('button');
     btnDesc.className = 'btn-ghost';
     btnDesc.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Descargar plantilla Excel';
@@ -2287,8 +2287,8 @@
     alicBar.style.cssText = 'padding:8px 12px;border-radius:var(--co-r-md);margin-bottom:12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;'
       + (alicValida ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
     alicBar.innerHTML = (alicValida
-      ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman ' + sumaAlic.toFixed(4) + ' — Válido'
-      : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + sumaAlic.toFixed(4) + ' — Debe ser 1.0000');
+      ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 1.0000 — 100% correcto'
+      : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + sumaAlic.toFixed(4) + ' (' + (sumaAlic*100).toFixed(2) + '%) — Debe ser 1.0000 (100%)');
     box.appendChild(alicBar);
 
     // Preview primeras 5 filas
@@ -2395,7 +2395,7 @@
 
       // Alerta si alícuotas no suman 1
       if (r.alicuotasValidas === false) {
-        errDiv.textContent = '⚠️ Alícuotas suman ' + (r.sumaAlicuotas || '?') + ' — Revisa la tabla de prorrateo.';
+        errDiv.textContent = '⚠️ Alícuotas suman ' + (r.sumaAlicuotas || '?') + ' (' + ((r.sumaAlicuotas||0)*100).toFixed(2) + '%) — Debe ser 1.0000 (100%). Revisa la tabla de prorrateo.';
         errDiv.style.display = 'block';
       }
 
