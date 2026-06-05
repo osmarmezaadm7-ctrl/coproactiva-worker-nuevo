@@ -1670,8 +1670,12 @@
     tabla.appendChild(thead);
 
     var tbody = document.createElement('tbody');
+    var ORDEN_TIPO = { 'DEPTO':1, 'CASA':1, 'LOCAL':2, 'OFICINA':2, 'ESTAC':3, 'ESTACIONAMIENTO':3, 'BODEGA':4 };
     unidades.slice().sort(function(a, b) {
-      return String(a.numero).localeCompare(String(b.numero), 'es', { numeric: true });
+      var ta = ORDEN_TIPO[String(a.tipoUnidad||'').toUpperCase()] || 5;
+      var tb = ORDEN_TIPO[String(b.tipoUnidad||'').toUpperCase()] || 5;
+      if (ta !== tb) return ta - tb;
+      return String(a.numeroUnidad).localeCompare(String(b.numeroUnidad), 'es', { numeric: true });
     }).forEach(function(u) {
       var tr = document.createElement('tr');
       function td(val) { var t = document.createElement('td'); t.textContent = val || '—'; return t; }
