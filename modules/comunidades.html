@@ -1706,7 +1706,7 @@
       tdAcc.appendChild(btnAcc);
 
       // Alícuota como porcentaje para mostrar
-      var alicDisplay = u.alicuota ? parseFloat(u.alicuota).toFixed(4) + '%' : '—';
+      var alicDisplay = u.alicuota ? (parseFloat(u.alicuota) * 100).toFixed(4) + '%' : '—';
 
       tr.appendChild(td(u.numeroUnidad));
       tr.appendChild(tdTipo);
