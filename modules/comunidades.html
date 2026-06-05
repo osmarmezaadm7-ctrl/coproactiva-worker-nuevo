@@ -2192,7 +2192,17 @@
         var hoja = buscarHoja(wb, ['carga_masiva','carga masiva','directorio','unidades','data']);
         var filas = hoja ? XLSX.utils.sheet_to_json(hoja, { defval: '' }) : [];
 
-        // Filtrar filas de instrucciones (sin n_unidad)
+        // Normalizar headers — quitar asteriscos y espacios
+        filas = filas.map(function(f) {
+          var norm = {};
+          Object.keys(f).forEach(function(k) {
+            var kn = k.replace(/\s*\*\s*/g, '').trim();
+            norm[kn] = f[k];
+          });
+          return norm;
+        });
+
+        // Filtrar filas de instrucciones (sin n_unidad o tipo_unidad)
         filas = filas.filter(function(f) {
           return f.n_unidad && String(f.n_unidad).trim() !== '' &&
                  f.tipo_unidad && String(f.tipo_unidad).trim() !== '';
