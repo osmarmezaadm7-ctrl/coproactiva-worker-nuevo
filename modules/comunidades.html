@@ -1628,13 +1628,13 @@
     // ── Validación alícuotas ──
     if (unidades.length > 0) {
       var total = unidades.reduce(function(s, u) { return s + (parseFloat(u.alicuota) || 0); }, 0);
-      var diff  = Math.abs(total - 100);
+      var diff  = Math.abs(total - 1);
       var validBar = document.createElement('div');
       validBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--co-r-md);margin-bottom:12px;font-size:12px;font-weight:600;' +
-        (diff < 0.01 ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
-      validBar.innerHTML = (diff < 0.01
+        (diff < 0.0001 ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
+      validBar.innerHTML = (diff < 0.0001
         ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 1.0000 — 100% correcto'
-        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + ' (' + (total*100).toFixed(2) + '%) — Falta ' + diff.toFixed(4) + ' (' + (diff*100).toFixed(2) + '%) para completar 1.0000');
+        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + ' (' + (total*100).toFixed(2) + '%) — Falta ' + diff.toFixed(4) + ' (' + (diff*100).toFixed(2) + '%) para completar 1.0000 (100%)');
       tc.appendChild(validBar);
     }
 
