@@ -2458,59 +2458,68 @@
   // ── GENERAR PLANTILLA EXCEL ───────────────────────────────────
   function descargarPlantillaDirectorio() {
     var cargar = function() {
-      var wb   = XLSX.utils.book_new();
-      var headers = ['n_unidad','tipo_unidad','rol_sii','alicuota','subdivision',
-         'rut_propietario','nombre_propietario','correo_propietario',
-         'rut_residente','nombre_residente','celular_residente',
-         'patentes_separadas_por_comas','condicion_ocupacion'];
-
+      // Nombres exactos — NO cambiar, la importación depende de ellos
+      var headers = [
+        'n_unidad','tipo_unidad','rol_sii','alicuota','subdivision',
+        'rut_propietario','nombre_propietario','correo_propietario',
+        'rut_residente','nombre_residente','celular_residente',
+        'patentes_separadas_por_comas','condicion_ocupacion'
+      ];
+      var tipos = [
+        'obligatorio','obligatorio','recomendado','obligatorio','recomendado',
+        'obligatorio','obligatorio','recomendado',
+        'opcional','opcional','opcional','opcional','opcional'
+      ];
       var ejemplos = [
-        ['D001','DEPTO','9870-1',0.0110,'',
-         '12.345.678-9','Juan Pérez','juan@email.com',
-         '12.345.678-9','Juan Pérez','+56912345678','KKKK11','propietario residente'],
-        ['E-15','ESTACIONAMIENTO','9870-45',0.0015,'',
-         '12.345.678-9','Juan Pérez','juan@email.com',
-         '12.345.678-9','Juan Pérez','','','propietario residente'],
-        ['B-04','BODEGA','',0.0005,'',
-         '12.345.678-9','Juan Pérez','juan@email.com',
-         '12.345.678-9','Juan Pérez','','','propietario residente'],
-        ['D002','DEPTO','9870-2',0.0125,'',
-         '98.765.432-1','Ana Gómez','ana@email.com',
-         '22.333.444-5','Luis Soto','+56911223344','LLLL22','arrendado'],
-        ['E-16','ESTACIONAMIENTO','9870-46',0.0015,'',
-         '98.765.432-1','Ana Gómez','ana@email.com',
-         '22.333.444-5','Luis Soto','','','arrendado']
+        ['D001','DEPTO','9870-1',0.0110,'','12.345.678-9','Juan Pérez','juan@email.com','12.345.678-9','Juan Pérez','+56987736350','KKKK11','propietario residente'],
+        ['E-15','ESTACIONAMIENTO','9870-45',0.0015,'','12.345.678-9','Juan Pérez','juan@email.com','12.345.678-9','Juan Pérez','','','propietario residente'],
+        ['B-04','BODEGA','',0.0005,'','12.345.678-9','Juan Pérez','juan@email.com','12.345.678-9','Juan Pérez','','','propietario residente'],
+        ['D002','DEPTO','9870-2',0.0125,'Torre A','98.765.432-1','Ana Gómez','ana@email.com','22.333.444-5','Luis Soto','+56911223344','LLLL22','arrendado'],
+        ['E-16','ESTACIONAMIENTO','9870-46',0.0015,'Torre A','98.765.432-1','Ana Gómez','ana@email.com','22.333.444-5','Luis Soto','','','arrendado']
       ];
 
-      var instrucciones = [
-        [],
-        ['INSTRUCCIONES DE USO'],
-        ['tipo_unidad: DEPTO / ESTACIONAMIENTO / BODEGA / LOCAL / CASA / OFICINA'],
-        ['alicuota: factor decimal. La suma de TODAS las filas debe ser exactamente 1.0000'],
-        ['        Ejemplo: 0.0125 equivale a 1.25%'],
-        ['rut_propietario: obligatorio. Identifica al copropietario (obligado legal de OOEE)'],
-        ['correo_propietario: recomendado para comunicaciones'],
-        ['subdivision: opcional. Usar si el condominio tiene torres o bloques (ej: Torre A)'],
-        ['rut_residente: RUT de quien habita la unidad. Si vacío, se asume el propietario'],
-        ['patentes: separar con coma si tiene más de una (ej: KKKK11, LLLL22)'],
-        ['condicion_ocupacion: propietario residente / arrendado / desocupado / en remodelacion'],
-        [],
-        ['OBLIGATORIO (naranja)', 'RECOMENDADO (negro)', 'OPCIONAL (gris)'],
-        ['n_unidad, tipo_unidad, alicuota, rut_propietario, nombre_propietario',
-         'rol_sii, correo_propietario, subdivision', 'rut_residente, nombre_residente, celular_residente, patentes, condicion_ocupacion']
+      var wb = XLSX.utils.book_new();
+
+      // ── Hoja Carga_Masiva ──
+      var data = [headers].concat(ejemplos);
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [12,18,12,10,12,16,22,24,16,20,16,22,22].map(function(w){ return { wch: w }; });
+      XLSX.utils.book_append_sheet(wb, ws, 'Carga_Masiva');
+
+      // ── Hoja Instrucciones ──
+      var inst = [
+        ['coproactiva — Instrucciones de uso',''],
+        ['',''],
+        ['OBLIGATORIOS','Descripción'],
+        ['n_unidad','Número de la unidad. Ej: D001, E-15, B-04'],
+        ['tipo_unidad','DEPTO / ESTACIONAMIENTO / BODEGA / LOCAL / CASA / OFICINA'],
+        ['alicuota','Factor decimal. 0.0110 = 1.10%. La SUMA de todas las filas debe ser exactamente 1.0000'],
+        ['rut_propietario','RUT del copropietario (obligado legal de gastos comunes). Ej: 12.345.678-9'],
+        ['nombre_propietario','Nombre completo del copropietario'],
+        ['',''],
+        ['RECOMENDADOS','Descripción'],
+        ['rol_sii','Rol SII de la unidad. Ej: 9870-1'],
+        ['subdivision','Torre o bloque si corresponde. Ej: Torre A. Dejar vacío si no aplica.'],
+        ['correo_propietario','Email del copropietario para comunicaciones'],
+        ['',''],
+        ['OPCIONALES','Descripción'],
+        ['rut_residente','RUT de quien habita. Si vacío, se asume el propietario como residente.'],
+        ['nombre_residente','Nombre del residente si es distinto al propietario'],
+        ['celular_residente','Teléfono del residente. Ej: +56912345678'],
+        ['patentes_separadas_por_comas','Patentes del residente. Separar con coma. Ej: KKKK11, LLLL22'],
+        ['condicion_ocupacion','propietario residente / arrendado / desocupado / en remodelacion'],
+        ['',''],
+        ['REGLAS',''],
+        ['Unidades principales','DEPTO, CASA, LOCAL, OFICINA'],
+        ['Unidades anexas','ESTACIONAMIENTO, BODEGA — se vinculan al DEPTO del mismo rut_propietario'],
+        ['Propiedad múltiple','Repetir el RUT del propietario en cada fila de sus unidades'],
+        ['Suma alícuotas','La suma de TODOS los factores debe ser 1.0000 (100%)']
       ];
+      var wsI = XLSX.utils.aoa_to_sheet(inst);
+      wsI['!cols'] = [{ wch: 32 }, { wch: 68 }];
+      XLSX.utils.book_append_sheet(wb, wsI, 'Instrucciones');
 
-      var data = [headers].concat(ejemplos).concat(instrucciones);
-      var wb2  = XLSX.utils.book_new();
-      var ws   = XLSX.utils.aoa_to_sheet(data);
-
-      // Estilos via !merges y col widths
-      ws['!cols'] = headers.map(function(h) {
-        var w = h.length > 15 ? 26 : h.length > 10 ? 22 : 16;
-        return { wch: w };
-      });
-      XLSX.utils.book_append_sheet(wb2, ws, 'Carga_Masiva');
-      XLSX.writeFile(wb2, 'Plantilla_CargaMasiva_CoproActiva.xlsx');
+      XLSX.writeFile(wb, 'Plantilla_CargaMasiva_CoproActiva.xlsx');
     };
 
     if (typeof XLSX === 'undefined') {
