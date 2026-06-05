@@ -1706,7 +1706,7 @@
       tdAcc.appendChild(btnAcc);
 
       // Alícuota como porcentaje para mostrar
-      var alicDisplay = u.alicuota ? (parseFloat(u.alicuota) * 100).toFixed(4) + '%' : '—';
+      var alicDisplay = u.alicuota ? parseFloat(u.alicuota).toFixed(4) + '%' : '—';
 
       tr.appendChild(td(u.numeroUnidad));
       tr.appendChild(tdTipo);
@@ -1750,13 +1750,13 @@
     var icoHome = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l6-5 6 5v7H2z"/><path d="M6 16v-5h4v5"/></svg>';
 
     itemMenu(icoEdit, 'Editar unidad', '', function() { modalEditarUnidad(unidad, comunidadId); });
-    if (prop.id) {
-      itemMenu(icoEdit, 'Editar propietario', '', function() { modalEditarPropietario(prop, unidad, comunidadId); });
+    if (unidad.idCopropietario) {
+      itemMenu(icoEdit, 'Editar copropietario', '', function() { modalEditarCopropietario(unidad, comunidadId); });
     } else {
-      itemMenu(icoUser, 'Agregar propietario', 'var(--co-orange)', function() { modalAgregarPropietario(unidad, comunidadId); });
+      itemMenu(icoUser, 'Agregar copropietario', 'var(--co-orange)', function() { modalAgregarPropietario(unidad, comunidadId); });
     }
-    if (res.id) {
-      itemMenu(icoEdit, 'Editar residente', '', function() { modalEditarResidente(res, unidad, comunidadId); });
+    if (unidad.idResidente) {
+      itemMenu(icoEdit, 'Editar residente', '', function() { modalEditarResidente(unidad, comunidadId); });
     } else {
       itemMenu(icoHome, 'Agregar residente', 'var(--co-orange)', function() { modalAgregarResidente(unidad, comunidadId); });
     }
@@ -1767,6 +1767,263 @@
   }
 
   // ── MODAL IMPORTAR DIRECTORIO ─────────────────────────────────
+  // ── MODAL AGREGAR UNIDAD ──────────────────────────────────────
+  function modalAgregarUnidad(comunidadId) {
+    _modalFormDir({
+      eyebrow: 'Nueva unidad', titulo: 'Agregar unidad',
+      campos: [
+        { id:'u-numero',   lbl:'Número *',        tipo:'text',   ph:'Ej: 101 o E-01' },
+        { id:'u-tipo',     lbl:'Tipo *',               tipo:'select', opts:['departamento','estacionamiento','bodega','local','casa','oficina'] },
+        { id:'u-alicuota', lbl:'Alícuota (decimal)', tipo:'number', ph:'0.0125' },
+        { id:'u-piso',     lbl:'Piso',                 tipo:'text',   ph:'Ej: 3 o -1' },
+        { id:'u-rolsii',   lbl:'Rol SII',              tipo:'text',   ph:'9870-1' },
+        { id:'u-cond',     lbl:'Condición',       tipo:'select', opts:['','propietario residente','arrendado','desocupado','en remodelacion'] },
+        { id:'u-subdiv',   lbl:'Subdivisión',     tipo:'text',   ph:'Torre A (opcional)' }
+      ],
+      btnLabel: 'Agregar unidad',
+      onGuardar: function(v, btn, err, overlay) {
+        if (!v['u-numero'] || !v['u-tipo']) { err.textContent = 'Número y tipo son obligatorios.'; err.style.display='block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/unidades','POST',{ action:'crearUnidad', idComunidad:comunidadId,
+          numeroUnidad:v['u-numero'], tipoUnidad:v['u-tipo'].toUpperCase(),
+          alicuota:parseFloat(v['u-alicuota'])||0, piso:v['u-piso'],
+          rolSII:v['u-rolsii'], condicionOcupacion:v['u-cond'], subdivision:v['u-subdiv']
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Unidad agregada','Agregar unidad',function(){ cargarDirectorio(comunidadId); }); })
+         .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; btn.textContent='Agregar unidad'; });
+      }
+    });
+  }
+
+  // ── MODAL EDITAR UNIDAD ───────────────────────────────────────
+  function modalEditarUnidad(u, comunidadId) {
+    _modalFormDir({
+      eyebrow: 'Editar unidad', titulo: 'Unidad ' + (u.numeroUnidad||''),
+      advertencia: true,
+      campos: [
+        { id:'u-numero',   lbl:'Número',          tipo:'text',   val:String(u.numeroUnidad||'') },
+        { id:'u-tipo',     lbl:'Tipo',                 tipo:'select', opts:['departamento','estacionamiento','bodega','local','casa','oficina'], val:String(u.tipoUnidad||'').toLowerCase() },
+        { id:'u-alicuota', lbl:'Alícuota (decimal)', tipo:'number', val:String(u.alicuota||'') },
+        { id:'u-piso',     lbl:'Piso',                 tipo:'text',   val:String(u.piso||'') },
+        { id:'u-rolsii',   lbl:'Rol SII',              tipo:'text',   val:String(u.rolSII||'') },
+        { id:'u-cond',     lbl:'Condición',       tipo:'select', opts:['','propietario residente','arrendado','desocupado','en remodelacion'], val:u.condicionOcupacion||'' },
+        { id:'u-subdiv',   lbl:'Subdivisión',     tipo:'text',   val:String(u.subdivision||'') },
+        { id:'u-cbrjur',   lbl:'CBR Jurisdicción', tipo:'text',  val:String(u.cbrJurisdiccion||'') },
+        { id:'u-cbrnum',   lbl:'CBR Número',      tipo:'text',   val:String(u.cbrNumero||'') },
+        { id:'u-cbranio',  lbl:'CBR Año',         tipo:'text',   val:String(u.cbrAnio||'') }
+      ],
+      btnLabel: 'Guardar cambios',
+      onGuardar: function(v, btn, err, overlay) {
+        if (!confirm('¿Confirmas los cambios en la unidad ' + (u.numeroUnidad||'') + '? Afecta el prorrateo.')) return;
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/unidades','POST',{ action:'editarUnidad', id:u.idUnidad,
+          numeroUnidad:v['u-numero'], tipoUnidad:v['u-tipo'].toUpperCase(),
+          alicuota:parseFloat(v['u-alicuota'])||0, piso:v['u-piso'],
+          rolSII:v['u-rolsii'], condicionOcupacion:v['u-cond'], subdivision:v['u-subdiv'],
+          cbrJurisdiccion:v['u-cbrjur'], cbrNumero:v['u-cbrnum'], cbrAnio:v['u-cbranio']
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
+         .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; btn.textContent='Guardar cambios'; });
+      }
+    });
+  }
+
+  // ── MODAL AGREGAR COPROPIETARIO ───────────────────────────────
+  function modalAgregarPropietario(u, comunidadId) {
+    _modalFormDir({
+      eyebrow: 'Copropietario', titulo: 'Agregar copropietario — Unidad ' + (u.numeroUnidad||''),
+      campos: [
+        { id:'c-nombre', lbl:'Nombre completo *', tipo:'text',  ph:'Nombre', full:true },
+        { id:'c-tipoid', lbl:'Tipo ID',           tipo:'select', opts:['RUT','PASAPORTE'] },
+        { id:'c-nid',    lbl:'Nº ID *',      tipo:'text',  ph:'12.345.678-9' },
+        { id:'c-email',  lbl:'Email',             tipo:'email', ph:'correo@ejemplo.cl' },
+        { id:'c-tel',    lbl:'Teléfono',     tipo:'tel',   ph:'+56 9...' },
+        { id:'c-dom',    lbl:'Domicilio',         tipo:'text',  ph:'Si no vive en la unidad', full:true }
+      ],
+      btnLabel: 'Agregar copropietario',
+      onGuardar: function(v, btn, err, overlay) {
+        if (!v['c-nombre'] || !v['c-nid']) { err.textContent = 'Nombre y Nº ID son obligatorios.'; err.style.display='block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/copropietarios','POST',{ action:'crearCopropietario', idComunidad:comunidadId,
+          nombreCopropietario:v['c-nombre'], tipoIdCopropietario:v['c-tipoid'],
+          numeroIdCopropietario:v['c-nid'], emailCopropietario:v['c-email'],
+          telefonoCopropietario:v['c-tel'], domicilioCopropietario:v['c-dom']
+        }).then(function(r){
+          if (r.ok && r.data && r.data.ok) {
+            // Vincular el copropietario a la unidad
+            api('/unidades','POST',{ action:'editarUnidad', id:u.idUnidad, idCopropietario:r.data.id }).then(function(){
+              btn.textContent='✓ Copropietario agregado'; btn.style.background='var(--co-green)';
+              setTimeout(function(){ overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+            });
+          } else { err.textContent=(r.data&&r.data.error)||r.error||'Error al guardar'; err.style.display='block'; btn.disabled=false; btn.textContent='Agregar copropietario'; }
+        }).catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; });
+      }
+    });
+  }
+
+  // ── MODAL EDITAR COPROPIETARIO ────────────────────────────────
+  function modalEditarCopropietario(u, comunidadId) {
+    _modalFormDir({
+      eyebrow: 'Editar copropietario', titulo: u.nombreCopropietario || 'Sin copropietario',
+      advertencia: true,
+      campos: [
+        { id:'c-nombre', lbl:'Nombre completo', tipo:'text',   val:u.nombreCopropietario||'', full:true },
+        { id:'c-tipoid', lbl:'Tipo ID',         tipo:'select', opts:['RUT','PASAPORTE'], val:u.tipoIdCopropietario||'RUT' },
+        { id:'c-nid',    lbl:'Nº ID',      tipo:'text',   val:u.numeroIdCopropietario||'' },
+        { id:'c-email',  lbl:'Email',           tipo:'email',  val:u.emailCopropietario||'' },
+        { id:'c-tel',    lbl:'Teléfono',   tipo:'tel',    val:u.telefonoCopropietario||'' },
+        { id:'c-dom',    lbl:'Domicilio',       tipo:'text',   val:u.domicilioCopropietario||'', full:true }
+      ],
+      btnLabel: 'Guardar cambios',
+      onGuardar: function(v, btn, err, overlay) {
+        if (!confirm('¿Confirmas los cambios en los datos de ' + (u.nombreCopropietario||'este copropietario') + '?')) return;
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/copropietarios','POST',{ action:'editarCopropietario', id:u.idCopropietario,
+          nombreCopropietario:v['c-nombre'], tipoIdCopropietario:v['c-tipoid'],
+          numeroIdCopropietario:v['c-nid'], emailCopropietario:v['c-email'],
+          telefonoCopropietario:v['c-tel'], domicilioCopropietario:v['c-dom']
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
+         .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; });
+      }
+    });
+  }
+
+  // ── MODAL AGREGAR RESIDENTE ───────────────────────────────────
+  function modalAgregarResidente(u, comunidadId) {
+    _modalFormDir({
+      eyebrow: 'Residente', titulo: 'Agregar residente — Unidad ' + (u.numeroUnidad||''),
+      campos: [
+        { id:'r-nombre', lbl:'Nombre completo *', tipo:'text',  ph:'Nombre', full:true },
+        { id:'r-tipoid', lbl:'Tipo ID',           tipo:'select', opts:['RUT','PASAPORTE'] },
+        { id:'r-nid',    lbl:'Nº ID',        tipo:'text',  ph:'12.345.678-9' },
+        { id:'r-email',  lbl:'Email',             tipo:'email', ph:'correo@ejemplo.cl' },
+        { id:'r-tel',    lbl:'Teléfono',     tipo:'tel',   ph:'+56 9...' },
+        { id:'r-patente', lbl:'Patentes vehículo', tipo:'text', ph:'KKKK11, LLLL22', full:true },
+        { id:'r-electro', lbl:'Electrodependiente', tipo:'select', opts:['NO','SI'] },
+        { id:'r-movil',   lbl:'Movilidad reducida', tipo:'select', opts:['NO','SI'] },
+        { id:'r-mascota', lbl:'Tiene mascotas',     tipo:'select', opts:['NO','SI'] },
+        { id:'r-detmas',  lbl:'Detalle mascotas',   tipo:'text',  ph:'Raza, nombre' }
+      ],
+      btnLabel: 'Agregar residente',
+      onGuardar: function(v, btn, err, overlay) {
+        if (!v['r-nombre']) { err.textContent = 'El nombre es obligatorio.'; err.style.display='block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/residentes','POST',{ action:'crearResidente', idComunidad:comunidadId,
+          nombreResidente:v['r-nombre'], tipoIdResidente:v['r-tipoid'],
+          numeroIdResidente:v['r-nid'], email:v['r-email'],
+          telefonoPrincipal:v['r-tel'], patenteVehiculo:v['r-patente'],
+          electrodependiente:v['r-electro'], movilidadReducida:v['r-movil'],
+          tieneMascotas:v['r-mascota'], detalleMascotas:v['r-detmas'], estado:'activo'
+        }).then(function(r){
+          if (r.ok && r.data && r.data.ok) {
+            api('/unidades','POST',{ action:'editarUnidad', id:u.idUnidad, idResidente:r.data.id }).then(function(){
+              btn.textContent='✓ Residente agregado'; btn.style.background='var(--co-green)';
+              setTimeout(function(){ overlay.remove(); cargarDirectorio(comunidadId); }, 900);
+            });
+          } else { err.textContent=(r.data&&r.data.error)||r.error||'Error al guardar'; err.style.display='block'; btn.disabled=false; btn.textContent='Agregar residente'; }
+        }).catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; });
+      }
+    });
+  }
+
+  // ── MODAL EDITAR RESIDENTE ────────────────────────────────────
+  function modalEditarResidente(u, comunidadId) {
+    _modalFormDir({
+      eyebrow: 'Editar residente', titulo: u.nombreResidente || 'Sin residente',
+      advertencia: true,
+      campos: [
+        { id:'r-nombre', lbl:'Nombre completo', tipo:'text',   val:u.nombreResidente||'', full:true },
+        { id:'r-tipoid', lbl:'Tipo ID',         tipo:'select', opts:['RUT','PASAPORTE'], val:u.tipoIdResidente||'RUT' },
+        { id:'r-nid',    lbl:'Nº ID',      tipo:'text',   val:u.numeroIdResidente||'' },
+        { id:'r-email',  lbl:'Email',           tipo:'email',  val:u.emailResidente||'' },
+        { id:'r-tel',    lbl:'Teléfono',   tipo:'tel',    val:u.telefonoResidente||'' },
+        { id:'r-patente', lbl:'Patentes',       tipo:'text',   val:u.patenteVehiculo||'', full:true },
+        { id:'r-electro', lbl:'Electrodependiente', tipo:'select', opts:['NO','SI'], val:u.electrodependiente||'NO' },
+        { id:'r-movil',   lbl:'Movilidad reducida', tipo:'select', opts:['NO','SI'], val:u.movilidadReducida||'NO' },
+        { id:'r-mascota', lbl:'Tiene mascotas',     tipo:'select', opts:['NO','SI'], val:u.tieneMascotas||'NO' }
+      ],
+      btnLabel: 'Guardar cambios',
+      onGuardar: function(v, btn, err, overlay) {
+        if (!confirm('¿Confirmas los cambios en los datos de ' + (u.nombreResidente||'este residente') + '?')) return;
+        btn.disabled = true; btn.textContent = 'Guardando…';
+        api('/residentes','POST',{ action:'editarResidente', id:u.idResidente,
+          nombreResidente:v['r-nombre'], tipoIdResidente:v['r-tipoid'],
+          numeroIdResidente:v['r-nid'], email:v['r-email'],
+          telefonoPrincipal:v['r-tel'], patenteVehiculo:v['r-patente'],
+          electrodependiente:v['r-electro'], movilidadReducida:v['r-movil'],
+          tieneMascotas:v['r-mascota']
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
+         .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; });
+      }
+    });
+  }
+
+  // ── HELPER FEEDBACK MODAL ─────────────────────────────────────
+  function _feedbackModal(r, btn, err, overlay, msgOk, msgErr, onOk) {
+    if (r.ok && r.data && r.data.ok) {
+      btn.textContent = msgOk; btn.style.background = 'var(--co-green)';
+      setTimeout(function() { overlay.remove(); if (onOk) onOk(); }, 900);
+    } else {
+      err.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+      err.style.display = 'block'; btn.disabled = false; btn.textContent = msgErr;
+    }
+  }
+
+  // ── HELPER MODAL GENÉRICO DIRECTORIO ─────────────────────────
+  function _modalFormDir(opts) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '×';
+    box.appendChild(btnX);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = opts.eyebrow; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo';   tt.textContent = opts.titulo;  box.appendChild(tt);
+
+    if (opts.advertencia) {
+      var av = document.createElement('div');
+      av.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:9px 13px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:14px;display:flex;align-items:center;gap:7px';
+      av.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>Datos sensibles — se pedirá confirmación antes de guardar';
+      box.appendChild(av);
+    }
+
+    var grid = document.createElement('div'); grid.className = 'form-grid';
+    opts.campos.forEach(function(c) {
+      var fg = document.createElement('div');
+      fg.className = 'form-group' + (c.full ? ' form-full' : '');
+      var lbl = document.createElement('label'); lbl.textContent = c.lbl; fg.appendChild(lbl);
+      var inp;
+      if (c.tipo === 'select') {
+        inp = document.createElement('select'); inp.id = c.id;
+        (c.opts||[]).forEach(function(o) {
+          var opt = document.createElement('option'); opt.value = o; opt.textContent = o || '(ninguna)';
+          if (c.val !== undefined && c.val === o) opt.selected = true;
+          inp.appendChild(opt);
+        });
+      } else {
+        inp = document.createElement('input'); inp.type = c.tipo; inp.id = c.id;
+        inp.placeholder = c.ph || ''; inp.value = c.val !== undefined ? c.val : '';
+      }
+      fg.appendChild(inp); grid.appendChild(fg);
+    });
+    box.appendChild(grid);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnG = document.createElement('button'); btnG.className = 'btn-guardar'; btnG.textContent = opts.btnLabel; box.appendChild(btnG);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+    btnG.addEventListener('click', function() {
+      var vals = {};
+      opts.campos.forEach(function(c) {
+        var el = document.getElementById(c.id);
+        if (el) vals[c.id] = el.value.trim ? el.value.trim() : el.value;
+      });
+      opts.onGuardar(vals, btnG, errDiv, overlay);
+    });
+  }
+
   function modalImportarDirectorio(comunidadId) {
     var overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -2043,7 +2300,7 @@
       [
         String(f.n_unidad||'—'),
         String(f.tipo_unidad||'—'),
-        isNaN(alic) ? '—' : (alic * 100).toFixed(4) + '%',
+        isNaN(alic) ? '—' : alic.toFixed(4) + '%',
         String(f.nombre_propietario||'—'),
         String(f.nombre_residente||f.nombre_propietario||'—')
       ].forEach(function(v) {
