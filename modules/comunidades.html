@@ -1,5 +1,6 @@
 <!-- modules/comunidades.html — CoproActiva Comunidades -->
-<!-- Versión: 1.0 · Junio 2026 -->
+<!-- Versión: 2.1 · Junio 2026 -->
+<!-- Cambio v2.1: módulo Documentos con catálogo adaptable por instalaciones -->
 
 <style>
   #com-root { font-family: var(--co-font); color: var(--co-ink); }
@@ -127,10 +128,10 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .sem-dot.verde   { background: var(--co-green); }
+  .sem-dot.verde    { background: var(--co-green); }
   .sem-dot.amarillo { background: var(--co-amber); }
-  .sem-dot.rojo    { background: var(--co-red); }
-  .sem-dot.gris    { background: var(--co-mute); }
+  .sem-dot.rojo     { background: var(--co-red); }
+  .sem-dot.gris     { background: var(--co-mute); }
   .com-badge {
     font-size: 10px;
     font-weight: 700;
@@ -487,7 +488,9 @@
     gap: 9px;
     padding: 7px 4px;
     border-bottom: 1px solid var(--co-line-soft);
+    transition: background 0.1s;
   }
+  .com-doc-row:hover { background: var(--co-cream); }
   .com-doc-row:last-child { border-bottom: none; }
   .com-doc-nombre {
     font-size: 12px;
@@ -801,6 +804,119 @@
 
   var MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
+  // ── Catálogos (espejo de Documentos.gs — actualizar en ambos si cambia) ──
+  var CATALOGO_DOCS = {
+    Legal: [
+      'Reglamento de copropiedad',
+      'Certificado CBR',
+      'Tabla de prorrateo',
+      'Registro de copropietarios',
+      'Acta constitución comité',
+      'Libro de actas',
+      'Planos de la comunidad',
+      'Certificados de dominio vigente'
+    ],
+    Seguridad: [
+      'Póliza seguro incendio bienes comunes',
+      'Plan de emergencia y evacuación',
+      'Hojas de seguridad de químicos',
+      'Pólizas seguro unidades individuales',
+      'Directiva de funcionamiento OS-10',
+      'Credenciales OS-10 vigentes',
+      'Seguro de vida personal de seguridad',
+      'Comprobante envío Plan de Emergencia a Bomberos y Carabineros',
+      'Fichas MINVU ascensores',
+      'Certificado red seca y húmeda'
+    ],
+    Tecnico: [
+      'Certificación gas — Sello Verde SEC',
+      'Certificación ascensores y montacargas MINVU',
+      'Certificación climatización y calderas',
+      'Libros de mantención',
+      'Planos de instalaciones técnicas'
+    ],
+    Residentes: [
+      'Registro de arrendatarios',
+      'Registro de mascotas',
+      'Catastro estacionamientos y bodegas'
+    ],
+    Financiero: [
+      'Cartolas bancarias',
+      'Respaldos de gastos',
+      'Informes de gastos comunes',
+      'Rendición de cuentas',
+      'Conciliaciones bancarias'
+    ],
+    Laboral: [
+      'Contratos de trabajo',
+      'Liquidaciones de sueldo',
+      'Planillas Previred',
+      'Control de asistencia',
+      'Finiquitos y cartas de despido',
+      'RIHS',
+      'RIOHS',
+      'Matriz IPER',
+      'Programa de trabajo preventivo',
+      'Certificado de adhesión a la mutualidad',
+      'Registro de entrega de EPP',
+      'CPHS o Delegado de Seguridad'
+    ]
+  };
+
+  var DOCS_CON_VENCIMIENTO = [
+    'Póliza seguro incendio bienes comunes',
+    'Plan de emergencia y evacuación',
+    'Pólizas seguro unidades individuales',
+    'Directiva de funcionamiento OS-10',
+    'Credenciales OS-10 vigentes',
+    'Seguro de vida personal de seguridad',
+    'Certificado red seca y húmeda',
+    'Certificación gas — Sello Verde SEC',
+    'Certificación ascensores y montacargas MINVU',
+    'Certificación climatización y calderas',
+    'Certificado de adhesión a la mutualidad'
+  ];
+
+  var DOCS_MENSUALES = [
+    'Cartolas bancarias',
+    'Respaldos de gastos',
+    'Informes de gastos comunes',
+    'Rendición de cuentas',
+    'Conciliaciones bancarias',
+    'Liquidaciones de sueldo',
+    'Planillas Previred',
+    'Control de asistencia',
+    'Fichas MINVU ascensores'
+  ];
+
+  // Tipos condicionados por instalación
+  var DOCS_POR_INSTALACION = {
+    ascensores:    ['Fichas MINVU ascensores','Certificación ascensores y montacargas MINVU'],
+    calderas:      ['Certificación climatización y calderas'],
+    gas:           ['Certificación gas — Sello Verde SEC'],
+    redHumedaSeca: ['Certificado red seca y húmeda'],
+    personalOS10:  ['Directiva de funcionamiento OS-10','Credenciales OS-10 vigentes','Seguro de vida personal de seguridad'],
+    trabajadores:  ['Contratos de trabajo','Liquidaciones de sueldo','Planillas Previred',
+                    'Control de asistencia','Finiquitos y cartas de despido','RIHS','RIOHS',
+                    'Matriz IPER','Programa de trabajo preventivo',
+                    'Certificado de adhesión a la mutualidad',
+                    'Registro de entrega de EPP','CPHS o Delegado de Seguridad']
+  };
+
+  var INSTALACIONES_OPTS = [
+    { key: 'ascensores',       label: 'Ascensores / montacargas' },
+    { key: 'calderas',         label: 'Calderas' },
+    { key: 'gas',              label: 'Gas centralizado (Sello Verde SEC)' },
+    { key: 'grupoElectrogeno', label: 'Grupo electrógeno' },
+    { key: 'redHumedaSeca',    label: 'Red húmeda y/o red seca' },
+    { key: 'piscina',          label: 'Piscina / SPA' },
+    { key: 'personalOS10',     label: 'Personal de seguridad OS-10' },
+    { key: 'trabajadores',     label: 'Trabajadores dependientes (conserjes, limpieza, etc.)' },
+    { key: 'cercoElectrico',   label: 'Cerco eléctrico' },
+    { key: 'panelesSolares',   label: 'Paneles solares' }
+  ];
+
+  // ── Helpers generales ─────────────────────────────────────
   function api(path, method, body) {
     method = method || 'GET';
     var opts = {
@@ -852,24 +968,39 @@
     return span;
   }
 
+  function _parsearInstalaciones(raw) {
+    if (!raw) return null;
+    try { return typeof raw === 'string' ? JSON.parse(raw) : raw; }
+    catch (e) { return null; }
+  }
+
+  function _catalogoFiltrado(instalaciones) {
+    var inst = instalaciones || {};
+    var excluidos = {};
+    Object.keys(DOCS_POR_INSTALACION).forEach(function(key) {
+      if (!inst[key]) {
+        DOCS_POR_INSTALACION[key].forEach(function(tipo) { excluidos[tipo] = true; });
+      }
+    });
+    var resultado = {};
+    Object.keys(CATALOGO_DOCS).forEach(function(cat) {
+      var tipos = CATALOGO_DOCS[cat].filter(function(t) { return !excluidos[t]; });
+      if (tipos.length > 0) resultado[cat] = tipos;
+    });
+    return resultado;
+  }
+
   // ── INIT ─────────────────────────────────────────────────────
   function init() {
-    // Limpiar loading inmediatamente
     var root = document.getElementById('com-root');
     if (root) root.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando Comunidades</div></div></div>';
 
     api('/comunidades').then(function(resp) {
-      // El Worker envuelve: { ok, data: { ok, data: [...] } }
-      // Pero también puede responder: { ok, data: [...] } directamente
       var lista = null;
       if (resp.ok) {
-        if (Array.isArray(resp.data)) {
-          lista = resp.data;
-        } else if (resp.data && Array.isArray(resp.data.data)) {
-          lista = resp.data.data;
-        } else if (resp.data && resp.data.ok && Array.isArray(resp.data.data)) {
-          lista = resp.data.data;
-        }
+        if (Array.isArray(resp.data)) lista = resp.data;
+        else if (resp.data && Array.isArray(resp.data.data)) lista = resp.data.data;
+        else if (resp.data && resp.data.ok && Array.isArray(resp.data.data)) lista = resp.data.data;
       }
       if (lista === null) {
         var errMsg = (resp.data && resp.data.error) || resp.error || 'Error al cargar comunidades';
@@ -877,11 +1008,10 @@
         return;
       }
       _comunidades = lista;
-      // Exponer KPIs al sidebar
       window._comunidadesKpis = {
-        activas:  _comunidades.filter(function(c) { return c.estado === 'activo'; }).length,
-        alertas:  0,
-        venc:     0
+        activas: _comunidades.filter(function(c) { return c.estado === 'activo'; }).length,
+        alertas: 0,
+        venc:    0
       };
       if (typeof actualizarKpisComunidades === 'function') actualizarKpisComunidades();
       renderListado();
@@ -920,7 +1050,6 @@
     pageHdr.appendChild(btnNueva);
     root.appendChild(pageHdr);
 
-    // Barra búsqueda
     var searchBar = document.createElement('div');
     searchBar.className = 'com-search-bar';
     var searchBox = document.createElement('div');
@@ -936,15 +1065,14 @@
     searchBar.appendChild(searchBox);
     root.appendChild(searchBar);
 
-    // Filtros
     var filtrosDiv = document.createElement('div');
     filtrosDiv.className = 'com-filtros';
     var filtros = [
-      { key: 'todas', lbl: 'Todas (' + _comunidades.length + ')' },
+      { key: 'todas',    lbl: 'Todas (' + _comunidades.length + ')' },
       { key: 'Integral', lbl: 'Integral' },
-      { key: 'Nueva', lbl: 'Nueva admin.' },
-      { key: 'Auditoria', lbl: 'Auditor\u00EDa' },
-      { key: 'activo', lbl: 'Activas' },
+      { key: 'Nueva',    lbl: 'Nueva admin.' },
+      { key: 'Auditoria',lbl: 'Auditor\u00EDa' },
+      { key: 'activo',   lbl: 'Activas' },
       { key: 'inactivo', lbl: 'Inactivas' }
     ];
     filtros.forEach(function(f) {
@@ -961,7 +1089,6 @@
     });
     root.appendChild(filtrosDiv);
 
-    // Lista
     var lista = document.createElement('div');
     lista.className = 'com-list';
     lista.id = 'com-lista';
@@ -1000,8 +1127,7 @@
     }
 
     filtradas.forEach(function(c) {
-      var row = crearRowComunidad(c);
-      lista.appendChild(row);
+      lista.appendChild(crearRowComunidad(c));
     });
   }
 
@@ -1010,16 +1136,13 @@
     row.className = 'com-row';
     row.addEventListener('click', function() { abrirFicha(c); });
 
-    // Ícono
     var ico = document.createElement('div');
     ico.className = 'com-row-ico';
     ico.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21V9h6v12M3 9l9-6 9 6"/></svg>';
     row.appendChild(ico);
 
-    // Info
     var info = document.createElement('div');
     info.className = 'com-row-info';
-
     var nombreWrap = document.createElement('div');
     nombreWrap.style.display = 'flex';
     nombreWrap.style.alignItems = 'center';
@@ -1030,7 +1153,6 @@
     nombreWrap.appendChild(nombre);
     if (c.modalidad) nombreWrap.appendChild(badgeModalidad(c.modalidad));
     info.appendChild(nombreWrap);
-
     var sub = document.createElement('div');
     sub.className = 'com-row-sub';
     sub.innerHTML = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 14S3 9.5 3 6a5 5 0 0 1 10 0c0 3.5-5 8-5 8z"/><circle cx="8" cy="6" r="1.5"/></svg>';
@@ -1038,10 +1160,8 @@
     info.appendChild(sub);
     row.appendChild(info);
 
-    // KPIs mini (de kpisComunidad si estuvieran disponibles)
     var kpis = document.createElement('div');
     kpis.className = 'com-row-kpis';
-
     function kpiMini(val, lbl, cls) {
       var k = document.createElement('div');
       k.className = 'com-kpi-mini';
@@ -1054,13 +1174,11 @@
       k.appendChild(v); k.appendChild(l);
       return k;
     }
-
     kpis.appendChild(kpiMini(c.unidades || 0, 'Unidades', ''));
     kpis.appendChild(kpiMini('\u2014', 'Morosos', ''));
     kpis.appendChild(kpiMini('\u2014', 'Alertas', ''));
     row.appendChild(kpis);
 
-    // Semáforos
     var sems = document.createElement('div');
     sems.className = 'com-sems';
     sems.title = 'Docs \u00B7 Eventos \u00B7 Estado';
@@ -1079,7 +1197,6 @@
     _comunidadActiva = c;
     _tabActiva = 'dashboard';
     renderFicha(c);
-    // Cargar datos extra en paralelo
     cargarKpis(c.id);
     cargarDocumentos(c.id);
     cargarEventos(c.id);
@@ -1090,7 +1207,6 @@
     var root = document.getElementById('com-root');
     root.innerHTML = '';
 
-    // Botón volver
     var back = document.createElement('button');
     back.className = 'com-back';
     back.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4L6 8l4 4"/></svg>';
@@ -1098,18 +1214,14 @@
     back.addEventListener('click', function() { renderListado(); });
     root.appendChild(back);
 
-    // Header ficha
     var hdr = document.createElement('div');
     hdr.className = 'com-ficha-hdr';
-
     var fIco = document.createElement('div');
     fIco.className = 'com-ficha-ico';
     fIco.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21V9h6v12M3 9l9-6 9 6"/></svg>';
-
     var fInfo = document.createElement('div');
     fInfo.style.flex = '1';
     fInfo.style.minWidth = '0';
-
     var fNombreRow = document.createElement('div');
     fNombreRow.style.display = 'flex';
     fNombreRow.style.alignItems = 'center';
@@ -1121,7 +1233,6 @@
     fNombreRow.appendChild(fNombre);
     if (c.modalidad) fNombreRow.appendChild(badgeModalidad(c.modalidad));
     fInfo.appendChild(fNombreRow);
-
     var fMeta = document.createElement('div');
     fMeta.className = 'com-ficha-meta';
     fMeta.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 14S3 9.5 3 6a5 5 0 0 1 10 0c0 3.5-5 8-5 8z"/><circle cx="8" cy="6" r="1.5"/></svg>';
@@ -1131,43 +1242,37 @@
       ' \u00B7 ' + (c.unidades || 0) + ' unidades'
     ));
     fInfo.appendChild(fMeta);
-
     var fActs = document.createElement('div');
     fActs.className = 'com-ficha-acts';
-
     var btnEditar = document.createElement('button');
     btnEditar.className = 'btn-ghost';
     btnEditar.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2Z"/></svg>';
     btnEditar.appendChild(document.createTextNode(' Editar'));
     btnEditar.addEventListener('click', function() { abrirModalEditar(c); });
-
     var btnDrive = document.createElement('button');
     btnDrive.className = 'btn-ghost';
-    btnDrive.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2L8.5 9 5 5.5 2 14"/><path d="M14 2H9"/><path d="M14 2v5"/></svg>';
+    btnDrive.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13l4-7h8M6 6l3 7M2 13h12"/></svg>';
     btnDrive.appendChild(document.createTextNode(' Drive'));
     if (c.carpetaDriveId) {
       btnDrive.addEventListener('click', function() {
         window.open('https://drive.google.com/drive/folders/' + c.carpetaDriveId, '_blank');
       });
     }
-
     fActs.appendChild(btnEditar);
     fActs.appendChild(btnDrive);
-
     hdr.appendChild(fIco);
     hdr.appendChild(fInfo);
     hdr.appendChild(fActs);
     root.appendChild(hdr);
 
-    // Tabs
     var tabsDiv = document.createElement('div');
     tabsDiv.className = 'com-tabs';
     var tabs = [
-      { key: 'dashboard', lbl: 'Dashboard' },
-      { key: 'eventos',   lbl: 'Eventos' },
+      { key: 'dashboard',  lbl: 'Dashboard' },
+      { key: 'eventos',    lbl: 'Eventos' },
       { key: 'documentos', lbl: 'Documentos' },
       { key: 'directorio', lbl: 'Directorio' },
-      { key: 'contrato',  lbl: 'Contrato' }
+      { key: 'contrato',   lbl: 'Contrato' }
     ];
     tabs.forEach(function(t) {
       var btn = document.createElement('button');
@@ -1186,13 +1291,11 @@
     });
     root.appendChild(tabsDiv);
 
-    // Contenidos de tabs
     tabs.forEach(function(t) {
       var tc = document.createElement('div');
       tc.className = 'com-tab-content' + (t.key === _tabActiva ? ' act' : '');
       tc.dataset.tab = t.key;
       tc.id = 'tc-' + t.key;
-
       if (t.key === 'dashboard') renderTabDashboard(tc, c);
       else if (t.key === 'contrato') renderTabContrato(tc, c);
       else {
@@ -1201,24 +1304,22 @@
         carg.textContent = 'Cargando\u2026';
         tc.appendChild(carg);
       }
-
       root.appendChild(tc);
     });
   }
 
   // ── TAB DASHBOARD ─────────────────────────────────────────────
   function renderTabDashboard(tc, c) {
-    // KPIs
     var kpiGrid = document.createElement('div');
     kpiGrid.className = 'com-kpi-grid';
     kpiGrid.id = 'kpi-grid-' + c.id;
     var kpisData = [
-      { lbl: 'Unidades', val: c.unidades || 0, cls: '', sub: '' },
-      { lbl: 'Morosidad', val: '\u2014', cls: '', sub: 'cargando\u2026' },
-      { lbl: 'Deuda total', val: '\u2014', cls: '', sub: '' },
-      { lbl: 'GC emitidos', val: '\u2014', cls: '', sub: '' },
-      { lbl: 'Incidencias', val: '\u2014', cls: '', sub: '' },
-      { lbl: 'Pr\u00F3x. alerta', val: '\u2014', cls: '', sub: '' }
+      { lbl: 'Unidades',    val: c.unidades || 0, cls: '', sub: '' },
+      { lbl: 'Morosidad',   val: '\u2014',         cls: '', sub: 'cargando\u2026' },
+      { lbl: 'Deuda total', val: '\u2014',         cls: '', sub: '' },
+      { lbl: 'GC emitidos', val: '\u2014',         cls: '', sub: '' },
+      { lbl: 'Incidencias', val: '\u2014',         cls: '', sub: '' },
+      { lbl: 'Pr\u00F3x. alerta', val: '\u2014',  cls: '', sub: '' }
     ];
     kpisData.forEach(function(k) {
       var card = document.createElement('div');
@@ -1240,7 +1341,6 @@
     });
     tc.appendChild(kpiGrid);
 
-    // Barra recaudación
     var moraWrap = document.createElement('div');
     moraWrap.className = 'com-panel';
     moraWrap.style.marginBottom = '12px';
@@ -1269,11 +1369,9 @@
     moraWrap.appendChild(barBg);
     tc.appendChild(moraWrap);
 
-    // Dos paneles
     var twoCol = document.createElement('div');
     twoCol.className = 'com-two-col';
 
-    // Panel incidencias
     var panelInc = document.createElement('div');
     panelInc.className = 'com-panel';
     var panelIncHdr = document.createElement('div');
@@ -1296,7 +1394,6 @@
     incBody.appendChild(incCarg);
     panelInc.appendChild(incBody);
 
-    // Panel alertas
     var panelAlt = document.createElement('div');
     panelAlt.className = 'com-panel';
     var panelAltHdr = document.createElement('div');
@@ -1329,16 +1426,16 @@
     var grid = document.createElement('div');
     grid.className = 'com-datos-grid';
     var campos = [
-      { lbl: 'RUT comunidad',   val: c.rut || '\u2014' },
-      { lbl: 'Modalidad',       val: c.modalidad || '\u2014' },
-      { lbl: 'Direcci\u00F3n', val: c.direccion || '\u2014' },
-      { lbl: 'Comuna',          val: c.comuna || '\u2014' },
-      { lbl: 'Inicio contrato', val: formatFecha(c.fechaInicioContrato) },
-      { lbl: 'Renovaci\u00F3n', val: formatFecha(c.fechaRenovacion) },
-      { lbl: 'Honorario',       val: formatMiles(c.honorario) },
-      { lbl: 'Estado',          val: c.estado || '\u2014' },
+      { lbl: 'RUT comunidad',       val: c.rut || '\u2014' },
+      { lbl: 'Modalidad',           val: c.modalidad || '\u2014' },
+      { lbl: 'Direcci\u00F3n',      val: c.direccion || '\u2014' },
+      { lbl: 'Comuna',              val: c.comuna || '\u2014' },
+      { lbl: 'Inicio contrato',     val: formatFecha(c.fechaInicioContrato) },
+      { lbl: 'Renovaci\u00F3n',     val: formatFecha(c.fechaRenovacion) },
+      { lbl: 'Honorario',           val: formatMiles(c.honorario) },
+      { lbl: 'Estado',              val: c.estado || '\u2014' },
       { lbl: 'Contacto comit\u00E9', val: c.contactoNombre || '\u2014' },
-      { lbl: 'Tel\u00E9fono',   val: c.contactoTelefono || '\u2014' }
+      { lbl: 'Tel\u00E9fono',       val: c.contactoTelefono || '\u2014' }
     ];
     campos.forEach(function(campo) {
       var d = document.createElement('div');
@@ -1360,7 +1457,6 @@
 
   // ── CARGA ASYNC ───────────────────────────────────────────────
   function cargarKpis(comunidadId) {
-    // Incidencias — módulo pendiente, mostrar placeholder sin error
     var body = document.getElementById('inc-body-' + comunidadId);
     if (body) {
       body.innerHTML = '';
@@ -1371,29 +1467,41 @@
       v.style.alignItems = 'center';
       v.style.gap = '6px';
       v.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5v1"/></svg>'
-        + '<span>Módulo de incidencias próximamente</span>';
+        + '<span>M\u00F3dulo de incidencias pr\u00F3ximamente</span>';
       body.appendChild(v);
     }
   }
 
+  // ── TAB DOCUMENTOS ────────────────────────────────────────────
   function cargarDocumentos(comunidadId) {
     api('/documentos?comunidadId=' + comunidadId).then(function(resp) {
       var tc = document.getElementById('tc-documentos');
       if (!tc) return;
       tc.innerHTML = '';
 
-      // Vencimientos en panel alertas dashboard
+      var docsRegistrados = [];
+      if (resp.ok) {
+        if (resp.data && Array.isArray(resp.data.data)) docsRegistrados = resp.data.data;
+        else if (Array.isArray(resp.data)) docsRegistrados = resp.data;
+      }
+
+      // Mapa tipo → último doc registrado
+      var mapaRegistrados = {};
+      docsRegistrados.forEach(function(d) { mapaRegistrados[d.tipo] = d; });
+
+      // Actualizar panel alertas en dashboard
       var altBody = document.getElementById('alt-body-' + comunidadId);
       if (altBody) {
         altBody.innerHTML = '';
-        var docs = (resp.ok && resp.data && resp.data.data) ? resp.data.data : [];
-        var vencidos = docs.filter(function(d) { return d.semaforo === 'rojo' || d.semaforo === 'amarillo'; }).slice(0, 4);
+        var vencidos = docsRegistrados
+          .filter(function(d) { return d.semaforo === 'rojo' || d.semaforo === 'amarillo'; })
+          .slice(0, 4);
         if (vencidos.length === 0) {
-          var v = document.createElement('div');
-          v.className = 'com-vacio';
-          v.style.padding = '16px 0';
-          v.textContent = 'Sin alertas activas';
-          altBody.appendChild(v);
+          var vv = document.createElement('div');
+          vv.className = 'com-vacio';
+          vv.style.padding = '16px 0';
+          vv.textContent = 'Sin alertas activas';
+          altBody.appendChild(vv);
         } else {
           vencidos.forEach(function(d) {
             var dias = diasHasta(d.fechaVencimiento);
@@ -1411,76 +1519,224 @@
             n2.className = 'com-alert-cat';
             n2.textContent = d.categoria || '';
             txt.appendChild(n1); txt.appendChild(n2);
-            var dias2 = document.createElement('span');
-            dias2.className = 'com-alert-dias ' + (d.semaforo === 'rojo' ? 'dias-r' : 'dias-a');
-            dias2.textContent = dias === null ? '\u2014' : dias < 0 ? 'Vencido' : dias + ' d\u00EDas';
-            row.appendChild(icoDiv); row.appendChild(txt); row.appendChild(dias2);
+            var diasEl = document.createElement('span');
+            diasEl.className = 'com-alert-dias ' + (d.semaforo === 'rojo' ? 'dias-r' : 'dias-a');
+            diasEl.textContent = dias === null ? '\u2014' : dias < 0 ? 'Vencido' : dias + ' d\u00EDas';
+            row.appendChild(icoDiv); row.appendChild(txt); row.appendChild(diasEl);
             altBody.appendChild(row);
           });
         }
       }
 
-      // Tab documentos
-      if (!resp.ok || !resp.data || !resp.data.data || resp.data.data.length === 0) {
-        var v2 = document.createElement('div');
-        v2.className = 'com-vacio';
-        v2.textContent = 'No hay documentos registrados para esta comunidad.';
-        tc.appendChild(v2);
+      // Obtener instalaciones de la comunidad activa
+      var com = _comunidadActiva || {};
+      var instalaciones = _parsearInstalaciones(com.instalaciones);
+
+      // Sin instalaciones → aviso de configuración + preview
+      if (!instalaciones) {
+        _renderAvisoInstalaciones(tc, mapaRegistrados, com);
         return;
       }
-      var docsData = resp.data.data;
-      var cats = ['Legal', 'Seguridad', 'Tecnico', 'Residentes', 'Financiero', 'Laboral'];
-      cats.forEach(function(cat) {
-        var catDocs = docsData.filter(function(d) { return d.categoria === cat; });
-        if (catDocs.length === 0) return;
-        var venc = catDocs.filter(function(d) { return d.semaforo === 'rojo'; }).length;
-        var prox = catDocs.filter(function(d) { return d.semaforo === 'amarillo'; }).length;
 
-        var catHdr = document.createElement('div');
-        catHdr.className = 'com-doc-cat-hdr';
-        var dot = document.createElement('div');
-        dot.className = 'com-doc-cat-dot sem-dot ' + (venc > 0 ? 'rojo' : prox > 0 ? 'amarillo' : 'verde');
-        var title = document.createElement('div');
-        title.className = 'com-doc-cat-title';
-        title.textContent = cat;
-        var sub = document.createElement('div');
-        sub.className = 'com-doc-cat-sub';
-        sub.textContent = venc > 0 ? venc + ' vencido(s)' : prox > 0 ? prox + ' por vencer' : 'Al d\u00EDa';
-        catHdr.appendChild(dot); catHdr.appendChild(title); catHdr.appendChild(sub);
-        tc.appendChild(catHdr);
+      // Catálogo filtrado y render
+      var catalogo = _catalogoFiltrado(instalaciones);
+      _renderCatalogo(tc, catalogo, mapaRegistrados, com);
 
-        catDocs.forEach(function(d) {
-          var row = document.createElement('div');
-          row.className = 'com-doc-row';
-          var nom = document.createElement('div');
-          nom.className = 'com-doc-nombre';
-          nom.textContent = d.tipo || d.descripcion || '';
-          var fecha = document.createElement('div');
-          fecha.className = 'com-doc-fecha';
-          fecha.textContent = formatFecha(d.fechaDocumento);
-          var pill = document.createElement('span');
-          pill.className = 'co-pill ' + (d.estado === 'vencido' ? 'pill-crit' : d.estado === 'vigente' ? 'pill-ok' : 'pill-warn');
-          pill.textContent = d.estado === 'vencido' ? 'Vencido' : d.estado === 'vigente' ? 'Vigente' : 'Pendiente';
-          var link = document.createElement('button');
-          link.className = 'com-doc-link';
-          if (d.urlDrive) {
-            link.textContent = 'Ver';
-            link.innerHTML += ' <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3v10h10V9M9 3h4v4M13 3L7 9"/></svg>';
-            link.addEventListener('click', function() { window.open(d.urlDrive, '_blank'); });
-          } else {
-            link.textContent = 'Subir';
-            link.innerHTML += ' <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v8M5 6l3-3 3 3M3 13h10"/></svg>';
-          }
-          row.appendChild(nom); row.appendChild(fecha); row.appendChild(pill); row.appendChild(link);
-          tc.appendChild(row);
-        });
-      });
     }).catch(function() {
       var tc = document.getElementById('tc-documentos');
-      if (tc) { tc.innerHTML = ''; var v = document.createElement('div'); v.className = 'com-vacio'; v.textContent = 'Error al cargar documentos.'; tc.appendChild(v); }
+      if (tc) {
+        tc.innerHTML = '';
+        var v = document.createElement('div');
+        v.className = 'com-vacio';
+        v.textContent = 'Error al cargar documentos.';
+        tc.appendChild(v);
+      }
     });
   }
 
+  // ── Aviso instalaciones no configuradas ───────────────────────
+  function _renderAvisoInstalaciones(tc, mapaRegistrados, com) {
+    var aviso = document.createElement('div');
+    aviso.style.cssText = 'background:var(--co-amber-soft);border:1px solid var(--co-line);border-radius:var(--co-r-lg);padding:18px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px';
+    var icoAviso = document.createElement('div');
+    icoAviso.innerHTML = '<svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="var(--co-amber)" stroke-width="1.8" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>';
+    var txtAviso = document.createElement('div');
+    txtAviso.style.flex = '1';
+    var t1 = document.createElement('div');
+    t1.style.cssText = 'font-size:13px;font-weight:700;color:var(--co-amber);margin-bottom:4px';
+    t1.textContent = 'Instalaciones no configuradas';
+    var t2 = document.createElement('div');
+    t2.style.cssText = 'font-size:12px;color:var(--co-ink-3);margin-bottom:12px;line-height:1.5';
+    t2.textContent = 'Indica qué instalaciones y equipamientos tiene esta comunidad para mostrar solo los documentos que corresponden.';
+    var btnConf = document.createElement('button');
+    btnConf.className = 'btn-nuevo';
+    btnConf.style.fontSize = '12px';
+    btnConf.textContent = 'Configurar instalaciones';
+    btnConf.addEventListener('click', function() { modalInstalaciones(com); });
+    txtAviso.appendChild(t1); txtAviso.appendChild(t2); txtAviso.appendChild(btnConf);
+    aviso.appendChild(icoAviso); aviso.appendChild(txtAviso);
+    tc.appendChild(aviso);
+
+    // Preview del catálogo completo en gris
+    var preview = document.createElement('div');
+    preview.style.cssText = 'opacity:0.45;pointer-events:none';
+    _renderCatalogo(preview, CATALOGO_DOCS, mapaRegistrados, com);
+    tc.appendChild(preview);
+  }
+
+  // ── Render catálogo documentos ────────────────────────────────
+  function _renderCatalogo(tc, catalogo, mapaRegistrados, com) {
+    // Toolbar resumen
+    var toolbar = document.createElement('div');
+    toolbar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px';
+
+    var vigentes = 0; var porVencer = 0; var vencidos = 0; var pendientes = 0;
+    Object.keys(catalogo).forEach(function(cat) {
+      catalogo[cat].forEach(function(tipo) {
+        var d = mapaRegistrados[tipo];
+        if (!d) pendientes++;
+        else if (d.semaforo === 'rojo')    vencidos++;
+        else if (d.semaforo === 'amarillo') porVencer++;
+        else vigentes++;
+      });
+    });
+
+    var pills = document.createElement('div');
+    pills.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center';
+    function addPill(n, lbl, color) {
+      if (n === 0) return;
+      var p = document.createElement('span');
+      p.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--co-line);background:var(--co-surface);color:var(--co-mute)';
+      var dot = document.createElement('span');
+      dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:' + color;
+      p.appendChild(dot);
+      p.appendChild(document.createTextNode(lbl + ' (' + n + ')'));
+      pills.appendChild(p);
+    }
+    addPill(vigentes,  'Vigente',    'var(--co-green)');
+    addPill(porVencer, 'Por vencer', 'var(--co-amber)');
+    addPill(vencidos,  'Vencido',    'var(--co-red)');
+    addPill(pendientes,'Pendiente',  'var(--co-mute)');
+
+    var btnConf = document.createElement('button');
+    btnConf.className = 'btn-ghost';
+    btnConf.style.fontSize = '12px';
+    btnConf.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M3.3 12.7l1.4-1.4M11.3 4.7l1.4-1.4"/></svg> Instalaciones';
+    btnConf.addEventListener('click', function() { modalInstalaciones(com); });
+
+    toolbar.appendChild(pills);
+    toolbar.appendChild(btnConf);
+    tc.appendChild(toolbar);
+
+    // Categorías
+    Object.keys(catalogo).forEach(function(cat) {
+      var tipos = catalogo[cat];
+      var catVenc = tipos.filter(function(t) { var d = mapaRegistrados[t]; return d && d.semaforo === 'rojo'; }).length;
+      var catProx = tipos.filter(function(t) { var d = mapaRegistrados[t]; return d && d.semaforo === 'amarillo'; }).length;
+      var catPend = tipos.filter(function(t) { return !mapaRegistrados[t]; }).length;
+      var semCat  = catVenc > 0 ? 'var(--co-red)' : catProx > 0 ? 'var(--co-amber)' : catPend > 0 ? 'var(--co-mute)' : 'var(--co-green)';
+      var metaCat = catVenc > 0 ? catVenc + ' vencido(s)' : catProx > 0 ? catProx + ' por vencer' : catPend > 0 ? catPend + ' pendiente(s)' : 'Al d\u00EDa';
+
+      var catHdr = document.createElement('div');
+      catHdr.className = 'com-doc-cat-hdr';
+      var dot = document.createElement('div');
+      dot.className = 'com-doc-cat-dot';
+      dot.style.background = semCat;
+      var title = document.createElement('div');
+      title.className = 'com-doc-cat-title';
+      title.textContent = cat;
+      var meta = document.createElement('div');
+      meta.className = 'com-doc-cat-sub';
+      meta.textContent = metaCat + ' \u00B7 ' + tipos.length + ' tipos';
+      var btnAdd = document.createElement('button');
+      btnAdd.className = 'com-panel-ver';
+      btnAdd.textContent = '+ Agregar';
+      btnAdd.addEventListener('click', function(e) {
+        e.stopPropagation();
+        modalDocumento(null, cat, com);
+      });
+      catHdr.appendChild(dot); catHdr.appendChild(title); catHdr.appendChild(meta); catHdr.appendChild(btnAdd);
+      tc.appendChild(catHdr);
+
+      // Filas de tipos
+      tipos.forEach(function(tipo) {
+        var d = mapaRegistrados[tipo];
+        var row = document.createElement('div');
+        row.className = 'com-doc-row';
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function() { modalDocumento(d || null, cat, com, tipo); });
+
+        // Ícono estado
+        var icoWrap = document.createElement('div');
+        icoWrap.style.cssText = 'width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+        if (!d) {
+          icoWrap.style.background = 'var(--co-cream-deep)';
+          icoWrap.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--co-mute)" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>';
+        } else if (d.semaforo === 'rojo') {
+          icoWrap.style.background = 'var(--co-red-soft)';
+          icoWrap.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--co-red)" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>';
+        } else if (d.semaforo === 'amarillo') {
+          icoWrap.style.background = 'var(--co-amber-soft)';
+          icoWrap.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--co-amber)" stroke-width="2" stroke-linecap="round"><path d="M8 5v3M8 10v1"/><circle cx="8" cy="8" r="6"/></svg>';
+        } else {
+          icoWrap.style.background = 'var(--co-green-soft)';
+          icoWrap.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--co-green)" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg>';
+        }
+
+        var nom = document.createElement('div');
+        nom.className = 'com-doc-nombre';
+        nom.textContent = tipo;
+
+        var fechaEl = document.createElement('div');
+        fechaEl.className = 'com-doc-fecha';
+        fechaEl.textContent = d ? formatFecha(d.fechaDocumento) : '\u2014';
+
+        // Días hasta vencimiento
+        var diasEl = document.createElement('div');
+        diasEl.style.cssText = 'font-size:11px;font-weight:600;min-width:72px;text-align:right';
+        if (d && d.fechaVencimiento && DOCS_CON_VENCIMIENTO.indexOf(tipo) !== -1) {
+          var dias = diasHasta(d.fechaVencimiento);
+          if (dias === null) {
+            diasEl.textContent = '\u2014';
+          } else if (dias < 0) {
+            diasEl.style.color = 'var(--co-red)';
+            diasEl.textContent = 'Vencido';
+          } else if (dias <= 60) {
+            diasEl.style.color = 'var(--co-amber)';
+            diasEl.textContent = dias + ' d\u00EDas';
+          } else {
+            diasEl.style.color = 'var(--co-green)';
+            diasEl.textContent = dias + ' d\u00EDas';
+          }
+        }
+
+        var pill = document.createElement('span');
+        pill.className = 'co-pill';
+        if (!d)                          { pill.className += ' pill-pend'; pill.textContent = 'Pendiente'; }
+        else if (d.semaforo === 'rojo')  { pill.className += ' pill-crit'; pill.textContent = 'Vencido'; }
+        else if (d.semaforo === 'amarillo') { pill.className += ' pill-warn'; pill.textContent = 'Por vencer'; }
+        else                             { pill.className += ' pill-ok';   pill.textContent = 'Vigente'; }
+
+        var btnVer = document.createElement('button');
+        btnVer.className = 'com-doc-link';
+        if (d && d.urlDrive) {
+          btnVer.textContent = 'Ver';
+          btnVer.innerHTML += ' <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3v10h10V9M9 3h4v4M13 3L7 9"/></svg>';
+          btnVer.addEventListener('click', function(e) { e.stopPropagation(); window.open(d.urlDrive, '_blank'); });
+        } else {
+          btnVer.style.color = 'var(--co-mute)';
+          btnVer.textContent = '+ Subir';
+          btnVer.addEventListener('click', function(e) { e.stopPropagation(); modalDocumento(null, cat, com, tipo); });
+        }
+
+        row.appendChild(icoWrap); row.appendChild(nom); row.appendChild(fechaEl);
+        row.appendChild(diasEl); row.appendChild(pill); row.appendChild(btnVer);
+        tc.appendChild(row);
+      });
+    });
+  }
+
+  // ── TAB EVENTOS ───────────────────────────────────────────────
   function cargarEventos(comunidadId) {
     api('/documentos/vencimientos?comunidadId=' + comunidadId).then(function(resp) {
       var tc = document.getElementById('tc-eventos');
@@ -1506,8 +1762,8 @@
         return (da === null ? 999 : da) - (db === null ? 999 : db);
       }).slice(0, 10).forEach(function(d) {
         var dias = diasHasta(d.fechaVencimiento);
-        var sem = semColorDias(dias);
-        var fv = d.fechaVencimiento ? new Date(d.fechaVencimiento) : null;
+        var sem  = semColorDias(dias);
+        var fv   = d.fechaVencimiento ? new Date(d.fechaVencimiento) : null;
 
         var row = document.createElement('div');
         row.className = 'com-evento-row';
@@ -1550,18 +1806,429 @@
       tc.appendChild(panel);
     }).catch(function() {
       var tc = document.getElementById('tc-eventos');
-      if (tc) { tc.innerHTML = ''; var v = document.createElement('div'); v.className = 'com-vacio'; v.textContent = 'Error al cargar eventos.'; tc.appendChild(v); }
+      if (tc) {
+        tc.innerHTML = '';
+        var v = document.createElement('div');
+        v.className = 'com-vacio';
+        v.textContent = 'Error al cargar eventos.';
+        tc.appendChild(v);
+      }
+    });
+  }
+
+  // ── MODAL DOCUMENTO (agregar / editar) ────────────────────────
+  function modalDocumento(doc, categoria, com, tipoPresel) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '600px';
+
+    var btnX = document.createElement('button');
+    btnX.className = 'modal-close';
+    btnX.textContent = '\u00D7';
+    box.appendChild(btnX);
+
+    var ey = document.createElement('div');
+    ey.className = 'modal-eyebrow';
+    ey.textContent = doc ? 'Editar documento' : 'Agregar documento';
+    box.appendChild(ey);
+
+    var tt = document.createElement('div');
+    tt.className = 'modal-titulo';
+    tt.textContent = doc ? (doc.tipo || 'Documento') : 'Nuevo documento';
+    box.appendChild(tt);
+
+    var st = document.createElement('div');
+    st.className = 'modal-subtitulo';
+    st.textContent = (com && com.nombre) || '';
+    box.appendChild(st);
+
+    var grid = document.createElement('div');
+    grid.className = 'form-grid';
+
+    // Categoría
+    var fgCat = document.createElement('div');
+    fgCat.className = 'form-group';
+    var lblCat = document.createElement('label');
+    lblCat.textContent = 'Categor\u00EDa';
+    var selCat = document.createElement('select');
+    selCat.id = 'doc-cat';
+    Object.keys(CATALOGO_DOCS).forEach(function(cat) {
+      var opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat;
+      if ((categoria && cat === categoria) || (doc && doc.categoria === cat)) opt.selected = true;
+      selCat.appendChild(opt);
+    });
+    fgCat.appendChild(lblCat); fgCat.appendChild(selCat);
+
+    // Tipo
+    var fgTipo = document.createElement('div');
+    fgTipo.className = 'form-group';
+    var lblTipo = document.createElement('label');
+    lblTipo.textContent = 'Tipo de documento';
+    var selTipo = document.createElement('select');
+    selTipo.id = 'doc-tipo';
+
+    function llenarTipos(cat) {
+      selTipo.innerHTML = '';
+      var inst = _parsearInstalaciones(com && com.instalaciones);
+      var catalogo = _catalogoFiltrado(inst || {});
+      var tipos = catalogo[cat] || CATALOGO_DOCS[cat] || [];
+      tipos.forEach(function(t) {
+        var opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        if ((tipoPresel && t === tipoPresel) || (doc && doc.tipo === t)) opt.selected = true;
+        selTipo.appendChild(opt);
+      });
+      actualizarCondicionales();
+    }
+
+    selCat.addEventListener('change', function() { llenarTipos(selCat.value); });
+    fgTipo.appendChild(lblTipo); fgTipo.appendChild(selTipo);
+
+    // Descripción
+    var fgDesc = document.createElement('div');
+    fgDesc.className = 'form-group form-full';
+    var lblDesc = document.createElement('label');
+    lblDesc.textContent = 'Descripci\u00F3n (opcional)';
+    var inpDesc = document.createElement('input');
+    inpDesc.type = 'text'; inpDesc.id = 'doc-desc';
+    inpDesc.placeholder = 'Ej: Versi\u00F3n aprobada en asamblea';
+    inpDesc.value = (doc && doc.descripcion) || '';
+    fgDesc.appendChild(lblDesc); fgDesc.appendChild(inpDesc);
+
+    // Fecha documento
+    var fgFecha = document.createElement('div');
+    fgFecha.className = 'form-group';
+    var lblFecha = document.createElement('label');
+    lblFecha.textContent = 'Fecha del documento';
+    var inpFecha = document.createElement('input');
+    inpFecha.type = 'date'; inpFecha.id = 'doc-fecha';
+    if (doc && doc.fechaDocumento) {
+      try { inpFecha.value = new Date(doc.fechaDocumento).toISOString().split('T')[0]; } catch(e) {}
+    }
+    fgFecha.appendChild(lblFecha); fgFecha.appendChild(inpFecha);
+
+    // Fecha vencimiento (condicional)
+    var fgVenc = document.createElement('div');
+    fgVenc.className = 'form-group';
+    fgVenc.id = 'doc-venc-group';
+    var lblVenc = document.createElement('label');
+    lblVenc.textContent = 'Fecha de vencimiento';
+    var inpVenc = document.createElement('input');
+    inpVenc.type = 'date'; inpVenc.id = 'doc-venc';
+    if (doc && doc.fechaVencimiento) {
+      try { inpVenc.value = new Date(doc.fechaVencimiento).toISOString().split('T')[0]; } catch(e) {}
+    }
+    fgVenc.appendChild(lblVenc); fgVenc.appendChild(inpVenc);
+
+    // Período (condicional para docs mensuales)
+    var fgPer = document.createElement('div');
+    fgPer.className = 'form-group';
+    fgPer.id = 'doc-per-group';
+    var lblPer = document.createElement('label');
+    lblPer.textContent = 'Per\u00EDodo (mes/a\u00F1o)';
+    var inpPer = document.createElement('input');
+    inpPer.type = 'text'; inpPer.id = 'doc-per';
+    inpPer.placeholder = 'Ej: Mayo 2026';
+    inpPer.value = (doc && doc.periodo) || '';
+    fgPer.appendChild(lblPer); fgPer.appendChild(inpPer);
+
+    // URL Drive + botón abrir carpeta
+    var fgUrl = document.createElement('div');
+    fgUrl.className = 'form-group form-full';
+    var lblUrl = document.createElement('label');
+    lblUrl.textContent = 'URL del documento en Drive';
+    var urlRow = document.createElement('div');
+    urlRow.style.cssText = 'display:flex;gap:8px;align-items:center';
+    var inpUrl = document.createElement('input');
+    inpUrl.type = 'text'; inpUrl.id = 'doc-url';
+    inpUrl.placeholder = 'Pega el link del archivo aquí';
+    inpUrl.value = (doc && doc.urlDrive) || '';
+    inpUrl.style.flex = '1';
+
+    var btnDriveModal = document.createElement('button');
+    btnDriveModal.type = 'button';
+    btnDriveModal.style.cssText = 'display:flex;align-items:center;gap:6px;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:600;color:var(--co-ink);background:var(--co-cream-deep);cursor:pointer;white-space:nowrap;min-height:44px;transition:border-color 0.13s';
+    btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Abrir carpeta';
+
+    btnDriveModal.addEventListener('click', function() {
+      if (!com || !com.carpetaDriveId) {
+        window.open('https://drive.google.com/drive/my-drive', '_blank');
+        return;
+      }
+      var catActual = selCat.value;
+      btnDriveModal.disabled = true;
+      btnDriveModal.textContent = 'Buscando\u2026';
+      api('/subcarpeta?carpetaRaizId=' + encodeURIComponent(com.carpetaDriveId) + '&nombre=' + encodeURIComponent(catActual))
+        .then(function(r) {
+          btnDriveModal.disabled = false;
+          btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Abrir carpeta';
+          var fid = (r.ok && r.data && r.data.id) ? r.data.id : null;
+          window.open(
+            fid
+              ? 'https://drive.google.com/drive/folders/' + fid
+              : 'https://drive.google.com/drive/folders/' + com.carpetaDriveId,
+            '_blank'
+          );
+        })
+        .catch(function() {
+          btnDriveModal.disabled = false;
+          btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Abrir carpeta';
+          window.open('https://drive.google.com/drive/folders/' + com.carpetaDriveId, '_blank');
+        });
+    });
+
+    urlRow.appendChild(inpUrl); urlRow.appendChild(btnDriveModal);
+    fgUrl.appendChild(lblUrl); fgUrl.appendChild(urlRow);
+
+    grid.appendChild(fgCat); grid.appendChild(fgTipo);
+    grid.appendChild(fgDesc);
+    grid.appendChild(fgFecha); grid.appendChild(fgVenc);
+    grid.appendChild(fgPer);
+    grid.appendChild(fgUrl);
+    box.appendChild(grid);
+
+    // Hint vencimiento
+    var hintVenc = document.createElement('div');
+    hintVenc.id = 'doc-hint-venc';
+    hintVenc.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:8px 12px;font-size:11px;font-weight:600;color:var(--co-amber);margin-top:10px;display:flex;align-items:center;gap:7px';
+    hintVenc.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>Este documento requiere control de vencimiento.';
+    box.appendChild(hintVenc);
+
+    var errDiv = document.createElement('div');
+    errDiv.className = 'form-error';
+    errDiv.style.display = 'none';
+    box.appendChild(errDiv);
+
+    // Botones
+    if (doc) {
+      var btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:20px';
+      var btnGuardar = document.createElement('button');
+      btnGuardar.className = 'btn-guardar';
+      btnGuardar.style.marginTop = '0';
+      btnGuardar.textContent = 'Guardar cambios';
+      var btnEliminar = document.createElement('button');
+      btnEliminar.style.cssText = 'padding:14px 16px;border:1.5px solid var(--co-red);border-radius:var(--co-r-md);background:none;color:var(--co-red);font-family:var(--co-font);font-size:13px;font-weight:700;cursor:pointer';
+      btnEliminar.textContent = 'Eliminar';
+      btnEliminar.addEventListener('click', function() {
+        if (!confirm('\u00BFEliminar este documento? Esta acci\u00F3n no se puede deshacer.')) return;
+        btnEliminar.disabled = true;
+        api('/documentos', 'POST', { action: 'eliminarDocumento', id: doc.id })
+          .then(function(r) {
+            if (r.ok && r.data && r.data.ok) {
+              overlay.remove();
+              cargarDocumentos(_comunidadActiva.id);
+            } else {
+              errDiv.textContent = (r.data && r.data.error) || 'Error al eliminar';
+              errDiv.style.display = 'block';
+              btnEliminar.disabled = false;
+            }
+          }).catch(function(e) { errDiv.textContent = e.message; errDiv.style.display = 'block'; btnEliminar.disabled = false; });
+      });
+      btnRow.appendChild(btnGuardar); btnRow.appendChild(btnEliminar);
+      box.appendChild(btnRow);
+      btnGuardar.addEventListener('click', function() { _guardarDocumento(doc, overlay, btnGuardar, errDiv); });
+    } else {
+      var btnGuardar = document.createElement('button');
+      btnGuardar.className = 'btn-guardar';
+      btnGuardar.textContent = 'Guardar documento';
+      box.appendChild(btnGuardar);
+      btnGuardar.addEventListener('click', function() { _guardarDocumento(null, overlay, btnGuardar, errDiv); });
+    }
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    function actualizarCondicionales() {
+      var tipo = selTipo.value;
+      var esVenc = DOCS_CON_VENCIMIENTO.indexOf(tipo) !== -1;
+      var esMens = DOCS_MENSUALES.indexOf(tipo) !== -1;
+      fgVenc.style.display   = esVenc ? '' : 'none';
+      hintVenc.style.display = esVenc ? '' : 'none';
+      fgPer.style.display    = esMens ? '' : 'none';
+    }
+
+    selTipo.addEventListener('change', actualizarCondicionales);
+
+    var cerrar = function() { overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    llenarTipos(selCat.value);
+  }
+
+  // ── Guardar documento ─────────────────────────────────────────
+  function _guardarDocumento(doc, overlay, btn, errDiv) {
+    var cat   = document.getElementById('doc-cat').value;
+    var tipo  = document.getElementById('doc-tipo').value;
+    var desc  = document.getElementById('doc-desc').value.trim();
+    var fecha = document.getElementById('doc-fecha').value;
+    var vencGrp = document.getElementById('doc-venc-group');
+    var venc  = (vencGrp && vencGrp.style.display !== 'none') ? document.getElementById('doc-venc').value : '';
+    var perGrp = document.getElementById('doc-per-group');
+    var per   = (perGrp && perGrp.style.display !== 'none') ? document.getElementById('doc-per').value.trim() : '';
+    var url   = document.getElementById('doc-url').value.trim();
+
+    if (!tipo) { errDiv.textContent = 'Selecciona un tipo de documento.'; errDiv.style.display = 'block'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Guardando\u2026';
+    errDiv.style.display = 'none';
+
+    var payload = doc
+      ? { action: 'editarDocumento', id: doc.id, categoria: cat, tipo: tipo,
+          descripcion: desc, fechaDocumento: fecha, fechaVencimiento: venc,
+          periodo: per, urlDrive: url }
+      : { action: 'crearDocumento', comunidadId: _comunidadActiva.id,
+          categoria: cat, tipo: tipo, descripcion: desc,
+          fechaDocumento: fecha, fechaVencimiento: venc,
+          periodo: per, urlDrive: url };
+
+    api('/documentos', 'POST', payload).then(function(r) {
+      if (r.ok && r.data && r.data.ok) {
+        btn.textContent = '\u2713 Guardado';
+        btn.style.background = 'var(--co-green)';
+        setTimeout(function() {
+          overlay.remove();
+          cargarDocumentos(_comunidadActiva.id);
+        }, 800);
+      } else {
+        errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al guardar';
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = doc ? 'Guardar cambios' : 'Guardar documento';
+      }
+    }).catch(function(e) {
+      errDiv.textContent = e.message;
+      errDiv.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = doc ? 'Guardar cambios' : 'Guardar documento';
+    });
+  }
+
+  // ── MODAL INSTALACIONES ───────────────────────────────────────
+  function modalInstalaciones(com) {
+    if (!com) return;
+    var instActual = _parsearInstalaciones(com.instalaciones) || {};
+
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '500px';
+
+    var btnX = document.createElement('button');
+    btnX.className = 'modal-close';
+    btnX.textContent = '\u00D7';
+    box.appendChild(btnX);
+
+    var ey = document.createElement('div');
+    ey.className = 'modal-eyebrow';
+    ey.textContent = 'Configuraci\u00F3n';
+    box.appendChild(ey);
+
+    var tt = document.createElement('div');
+    tt.className = 'modal-titulo';
+    tt.textContent = 'Instalaciones y equipamientos';
+    box.appendChild(tt);
+
+    var st = document.createElement('div');
+    st.className = 'modal-subtitulo';
+    st.textContent = 'Marca lo que tiene ' + (com.nombre || 'esta comunidad') + '. El cat\u00E1logo de documentos se ajustar\u00E1 autom\u00E1ticamente.';
+    box.appendChild(st);
+
+    var lista = document.createElement('div');
+    lista.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:20px';
+
+    INSTALACIONES_OPTS.forEach(function(inst) {
+      var item = document.createElement('label');
+      item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;transition:border-color 0.13s;font-size:13px;font-weight:500;color:var(--co-ink)';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.id = 'inst-' + inst.key;
+      chk.checked = !!instActual[inst.key];
+      chk.style.cssText = 'width:16px;height:16px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0';
+      chk.addEventListener('change', function() {
+        item.style.borderColor = chk.checked ? 'var(--co-orange)' : 'var(--co-line)';
+      });
+      if (chk.checked) item.style.borderColor = 'var(--co-orange)';
+      item.appendChild(chk);
+      item.appendChild(document.createTextNode(inst.label));
+      lista.appendChild(item);
+    });
+    box.appendChild(lista);
+
+    var errDiv = document.createElement('div');
+    errDiv.className = 'form-error';
+    errDiv.style.display = 'none';
+    box.appendChild(errDiv);
+
+    var btnGuardar = document.createElement('button');
+    btnGuardar.className = 'btn-guardar';
+    btnGuardar.textContent = 'Guardar instalaciones';
+    box.appendChild(btnGuardar);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    var cerrar = function() { overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    btnGuardar.addEventListener('click', function() {
+      var nuevaInst = {};
+      INSTALACIONES_OPTS.forEach(function(inst) {
+        var chk = document.getElementById('inst-' + inst.key);
+        if (chk && chk.checked) nuevaInst[inst.key] = true;
+      });
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = 'Guardando\u2026';
+
+      api('/comunidades', 'POST', {
+        action: 'editarComunidad',
+        id: com.id,
+        instalaciones: JSON.stringify(nuevaInst)
+      }).then(function(r) {
+        if (r.ok && r.data && r.data.ok) {
+          // Actualizar objeto en memoria
+          com.instalaciones = JSON.stringify(nuevaInst);
+          var idx = -1;
+          for (var i = 0; i < _comunidades.length; i++) {
+            if (_comunidades[i].id === com.id) { idx = i; break; }
+          }
+          if (idx !== -1) _comunidades[idx].instalaciones = com.instalaciones;
+          btnGuardar.textContent = '\u2713 Guardado';
+          btnGuardar.style.background = 'var(--co-green)';
+          setTimeout(function() {
+            overlay.remove();
+            cargarDocumentos(com.id);
+          }, 800);
+        } else {
+          errDiv.textContent = (r.data && r.data.error) || 'Error al guardar';
+          errDiv.style.display = 'block';
+          btnGuardar.disabled = false;
+          btnGuardar.textContent = 'Guardar instalaciones';
+        }
+      }).catch(function(e) {
+        errDiv.textContent = e.message;
+        errDiv.style.display = 'block';
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = 'Guardar instalaciones';
+      });
     });
   }
 
   // ── DIRECTORIO ───────────────────────────────────────────────
-  // Cache local del directorio para la comunidad activa
   var _dirData = { unidades: [], propietarios: [], residentes: [], comunidadId: null };
+  var _dirComunidad = {};
 
   function cargarDirectorio(comunidadId) {
     var tc = document.getElementById('tc-directorio');
     if (!tc) return;
-    tc.innerHTML = '<div class="com-vacio">Cargando directorio…</div>';
+    tc.innerHTML = '<div class="com-vacio">Cargando directorio\u2026</div>';
 
     api('/directorio?comunidadId=' + comunidadId).then(function(resp) {
       function extraer(r) {
@@ -1583,7 +2250,7 @@
     }).catch(function(fetchErr) {
       console.error('Error al cargar directorio:', fetchErr);
       var tc2 = document.getElementById('tc-directorio');
-      if (tc2) { tc2.innerHTML = '<div class="com-vacio">Error de conexión: ' + (fetchErr.message || fetchErr) + '</div>'; }
+      if (tc2) { tc2.innerHTML = '<div class="com-vacio">Error de conexi\u00F3n: ' + (fetchErr.message || fetchErr) + '</div>'; }
     });
   }
 
@@ -1592,10 +2259,8 @@
     if (!tc) return;
     tc.innerHTML = '';
 
-    // El directorio ya viene consolidado desde listarDirectorio()
     var unidades = _dirData.unidades;
 
-    // ── Header con acciones ──
     var hdr = document.createElement('div');
     hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px';
 
@@ -1604,9 +2269,7 @@
     var nDeptos = unidades.filter(function(u) { var t = String(u.tipoUnidad||'').toUpperCase(); return t==='DEPTO'||t==='CASA'; }).length;
     var nEstac  = unidades.filter(function(u) { var t = String(u.tipoUnidad||'').toUpperCase(); return t==='ESTAC'||t==='ESTACIONAMIENTO'; }).length;
     var nBodega = unidades.filter(function(u) { var t = String(u.tipoUnidad||'').toUpperCase(); return t==='BODEGA'; }).length;
-    // Copropietarios y residentes únicos (no contar duplicados por anexos)
-    var setCoprop = {};
-    var setResid  = {};
+    var setCoprop = {}; var setResid = {};
     unidades.forEach(function(u) {
       if (u.idCopropietario) setCoprop[u.idCopropietario] = true;
       if (u.idResidente)     setResid[u.idResidente]      = true;
@@ -1619,7 +2282,7 @@
     if (nBodega > 0) partes.push(nBodega + ' bodega' + (nBodega !== 1 ? 's' : ''));
     partes.push(nCoprop + ' copropietarios');
     partes.push(nResid  + ' residentes');
-    info.textContent = partes.join(' · ');
+    info.textContent = partes.join(' \u00B7 ');
 
     var btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
@@ -1649,7 +2312,6 @@
     hdr.appendChild(btns);
     tc.appendChild(hdr);
 
-    // ── Validación alícuotas ──
     if (unidades.length > 0) {
       var total = unidades.reduce(function(s, u) { return s + (parseFloat(u.alicuota) || 0); }, 0);
       var diff  = Math.abs(total - 1);
@@ -1657,12 +2319,11 @@
       validBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--co-r-md);margin-bottom:12px;font-size:12px;font-weight:600;' +
         (diff < 0.0001 ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
       validBar.innerHTML = (diff < 0.0001
-        ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 1.0000 — 100% correcto'
-        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + total.toFixed(4) + ' (' + (total*100).toFixed(2) + '%) — Falta ' + diff.toFixed(4) + ' (' + (diff*100).toFixed(2) + '%) para completar 1.0000 (100%)');
+        ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Al\u00EDcuotas suman 1.0000 \u2014 100% correcto'
+        : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Al\u00EDcuotas suman ' + total.toFixed(4) + ' (' + (total*100).toFixed(2) + '%) \u2014 Falta ' + diff.toFixed(4) + ' para completar 1.0000 (100%)');
       tc.appendChild(validBar);
     }
 
-    // ── Tabla vacía ──
     if (unidades.length === 0) {
       var vacio = document.createElement('div');
       vacio.style.cssText = 'text-align:center;padding:40px 20px;border:1.5px dashed var(--co-line);border-radius:var(--co-r-lg)';
@@ -1677,7 +2338,6 @@
       return;
     }
 
-    // ── Tabla ──
     var wrap = document.createElement('div');
     wrap.className = 'com-dir-wrap';
     var tabla = document.createElement('table');
@@ -1685,7 +2345,7 @@
 
     var thead = document.createElement('thead');
     var trh   = document.createElement('tr');
-    ['Unidad','Tipo','Alícuota','Copropietario','Nº ID','Condición','Residente','Teléfono',''].forEach(function(h) {
+    ['Unidad','Tipo','Al\u00EDcuota','Copropietario','N\u00BA ID','Condici\u00F3n','Residente','Tel\u00E9fono',''].forEach(function(h) {
       var th = document.createElement('th');
       th.textContent = h;
       trh.appendChild(th);
@@ -1694,7 +2354,7 @@
     tabla.appendChild(thead);
 
     var tbody = document.createElement('tbody');
-    var ORDEN_TIPO = { 'DEPTO':1, 'CASA':1, 'LOCAL':2, 'OFICINA':2, 'ESTAC':3, 'ESTACIONAMIENTO':3, 'BODEGA':4 };
+    var ORDEN_TIPO = { 'DEPTO':1,'CASA':1,'LOCAL':2,'OFICINA':2,'ESTAC':3,'ESTACIONAMIENTO':3,'BODEGA':4 };
     unidades.slice().sort(function(a, b) {
       var ta = ORDEN_TIPO[String(a.tipoUnidad||'').toUpperCase()] || 5;
       var tb = ORDEN_TIPO[String(b.tipoUnidad||'').toUpperCase()] || 5;
@@ -1702,30 +2362,27 @@
       return String(a.numeroUnidad).localeCompare(String(b.numeroUnidad), 'es', { numeric: true });
     }).forEach(function(u) {
       var tr = document.createElement('tr');
-      function td(val) { var t = document.createElement('td'); t.textContent = val || '—'; return t; }
+      function td(val) { var t = document.createElement('td'); t.textContent = val || '\u2014'; return t; }
 
-      // Tipo con color
       var tdTipo = document.createElement('td');
       var tipoSpan = document.createElement('span');
       var tipoNorm = String(u.tipoUnidad||'').toUpperCase();
       tipoSpan.className = 'com-uni-tipo ' + (tipoNorm==='DEPTO'||tipoNorm==='CASA' ? 't-dep' : tipoNorm==='ESTAC' ? 't-est' : tipoNorm==='BODEGA' ? 't-bod' : 't-loc');
-      tipoSpan.textContent = u.tipoUnidad || '—';
+      tipoSpan.textContent = u.tipoUnidad || '\u2014';
       tdTipo.appendChild(tipoSpan);
 
-      // Condición con pill
       var tdCond = document.createElement('td');
       if (u.condicionOcupacion) {
         var condPill = document.createElement('span');
         condPill.className = 'co-pill ' + (u.condicionOcupacion === 'propietario residente' ? 'pill-ok' : u.condicionOcupacion === 'arrendado' ? 'pill-warn' : 'pill-pend');
         condPill.textContent = u.condicionOcupacion.charAt(0).toUpperCase() + u.condicionOcupacion.slice(1);
         tdCond.appendChild(condPill);
-      } else { tdCond.textContent = '—'; }
+      } else { tdCond.textContent = '\u2014'; }
 
-      // Botón acciones
       var tdAcc = document.createElement('td');
       var btnAcc = document.createElement('button');
       btnAcc.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;color:var(--co-mute);padding:2px 6px;border-radius:4px;line-height:1';
-      btnAcc.textContent = '⋯';
+      btnAcc.textContent = '\u22EF';
       btnAcc.title = 'Acciones';
       btnAcc.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1733,8 +2390,7 @@
       });
       tdAcc.appendChild(btnAcc);
 
-      // Alícuota como porcentaje para mostrar
-      var alicDisplay = u.alicuota ? (parseFloat(u.alicuota) * 100).toFixed(2) + '%' : '—';
+      var alicDisplay = u.alicuota ? (parseFloat(u.alicuota) * 100).toFixed(2) + '%' : '\u2014';
 
       tr.appendChild(td(u.numeroUnidad));
       tr.appendChild(tdTipo);
@@ -1752,7 +2408,7 @@
     tc.appendChild(wrap);
   }
 
-  // ── MENÚ CONTEXTUAL DE ACCIONES ──────────────────────────────
+  // ── MENÚ CONTEXTUAL DIRECTORIO ───────────────────────────────
   function mostrarMenuAcciones(e, unidad, prop, res, comunidadId) {
     document.querySelectorAll('.dir-menu-ctx').forEach(function(m) { m.remove(); });
     var menu = document.createElement('div');
@@ -1794,91 +2450,87 @@
     setTimeout(function() { document.addEventListener('click', cerrarMenu); }, 50);
   }
 
-  // ── MODAL IMPORTAR DIRECTORIO ─────────────────────────────────
-  // ── MODAL AGREGAR UNIDAD ──────────────────────────────────────
+  // ── MODALES DIRECTORIO (sin cambios) ─────────────────────────
   function modalAgregarUnidad(comunidadId) {
     _modalFormDir({
       eyebrow: 'Nueva unidad', titulo: 'Agregar unidad',
       campos: [
-        { id:'u-numero',   lbl:'Número *',        tipo:'text',   ph:'Ej: 101 o E-01' },
-        { id:'u-tipo',     lbl:'Tipo *',               tipo:'select', opts:['departamento','estacionamiento','bodega','local','casa','oficina'] },
-        { id:'u-alicuota', lbl:'Alícuota (decimal)', tipo:'number', ph:'0.0125' },
-        { id:'u-piso',     lbl:'Piso',                 tipo:'text',   ph:'Ej: 3 o -1' },
-        { id:'u-rolsii',   lbl:'Rol SII',              tipo:'text',   ph:'9870-1' },
-        { id:'u-cond',     lbl:'Condición',       tipo:'select', opts:['','propietario residente','arrendado','desocupado','en remodelacion'] },
-        { id:'u-subdiv',   lbl:'Subdivisión',     tipo:'text',   ph:'Torre A (opcional)' }
+        { id:'u-numero',   lbl:'N\u00FAmero *',          tipo:'text',   ph:'Ej: 101 o E-01' },
+        { id:'u-tipo',     lbl:'Tipo *',                 tipo:'select', opts:['departamento','estacionamiento','bodega','local','casa','oficina'] },
+        { id:'u-alicuota', lbl:'Al\u00EDcuota (decimal)', tipo:'number', ph:'0.0125' },
+        { id:'u-piso',     lbl:'Piso',                   tipo:'text',   ph:'Ej: 3 o -1' },
+        { id:'u-rolsii',   lbl:'Rol SII',                tipo:'text',   ph:'9870-1' },
+        { id:'u-cond',     lbl:'Condici\u00F3n',         tipo:'select', opts:['','propietario residente','arrendado','desocupado','en remodelacion'] },
+        { id:'u-subdiv',   lbl:'Subdivisi\u00F3n',       tipo:'text',   ph:'Torre A (opcional)' }
       ],
       btnLabel: 'Agregar unidad',
       onGuardar: function(v, btn, err, overlay) {
-        if (!v['u-numero'] || !v['u-tipo']) { err.textContent = 'Número y tipo son obligatorios.'; err.style.display='block'; return; }
-        btn.disabled = true; btn.textContent = 'Guardando…';
+        if (!v['u-numero'] || !v['u-tipo']) { err.textContent = 'N\u00FAmero y tipo son obligatorios.'; err.style.display='block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando\u2026';
         api('/unidades','POST',{ action:'crearUnidad', idComunidad:comunidadId,
           numeroUnidad:v['u-numero'], tipoUnidad:v['u-tipo'],
           alicuota:parseFloat(v['u-alicuota'])||0, piso:v['u-piso'],
           rolSII:v['u-rolsii'], condicionOcupacion:v['u-cond'], subdivision:v['u-subdiv']
-        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Unidad agregada','Agregar unidad',function(){ cargarDirectorio(comunidadId); }); })
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'\u2713 Unidad agregada','Agregar unidad',function(){ cargarDirectorio(comunidadId); }); })
          .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; btn.textContent='Agregar unidad'; });
       }
     });
   }
 
-  // ── MODAL EDITAR UNIDAD ───────────────────────────────────────
   function modalEditarUnidad(u, comunidadId) {
     _modalFormDir({
       eyebrow: 'Editar unidad', titulo: 'Unidad ' + (u.numeroUnidad||''),
       advertencia: true,
       campos: [
-        { id:'u-numero',   lbl:'Número',          tipo:'text',   val:String(u.numeroUnidad||'') },
-        { id:'u-tipo',     lbl:'Tipo',                 tipo:'select', opts:['departamento','estacionamiento','bodega','local','casa','oficina'], val:String(u.tipoUnidad||'').toLowerCase() },
-        { id:'u-alicuota', lbl:'Alícuota (decimal)', tipo:'number', val:String(u.alicuota||'') },
-        { id:'u-piso',     lbl:'Piso',                 tipo:'text',   val:String(u.piso||'') },
-        { id:'u-rolsii',   lbl:'Rol SII',              tipo:'text',   val:String(u.rolSII||'') },
-        { id:'u-cond',     lbl:'Condición',       tipo:'select', opts:['','propietario residente','arrendado','desocupado','en remodelacion'], val:u.condicionOcupacion||'' },
-        { id:'u-subdiv',   lbl:'Subdivisión',     tipo:'text',   val:String(u.subdivision||'') },
-        { id:'u-cbrjur',   lbl:'CBR Jurisdicción', tipo:'text',  val:String(u.cbrJurisdiccion||'') },
-        { id:'u-cbrnum',   lbl:'CBR Número',      tipo:'text',   val:String(u.cbrNumero||'') },
-        { id:'u-cbranio',  lbl:'CBR Año',         tipo:'text',   val:String(u.cbrAnio||'') }
+        { id:'u-numero',   lbl:'N\u00FAmero',             tipo:'text',   val:String(u.numeroUnidad||'') },
+        { id:'u-tipo',     lbl:'Tipo',                    tipo:'select', opts:['departamento','estacionamiento','bodega','local','casa','oficina'], val:String(u.tipoUnidad||'').toLowerCase() },
+        { id:'u-alicuota', lbl:'Al\u00EDcuota (decimal)', tipo:'number', val:String(u.alicuota||'') },
+        { id:'u-piso',     lbl:'Piso',                    tipo:'text',   val:String(u.piso||'') },
+        { id:'u-rolsii',   lbl:'Rol SII',                 tipo:'text',   val:String(u.rolSII||'') },
+        { id:'u-cond',     lbl:'Condici\u00F3n',          tipo:'select', opts:['','propietario residente','arrendado','desocupado','en remodelacion'], val:u.condicionOcupacion||'' },
+        { id:'u-subdiv',   lbl:'Subdivisi\u00F3n',        tipo:'text',   val:String(u.subdivision||'') },
+        { id:'u-cbrjur',   lbl:'CBR Jurisdicci\u00F3n',  tipo:'text',   val:String(u.cbrJurisdiccion||'') },
+        { id:'u-cbrnum',   lbl:'CBR N\u00FAmero',         tipo:'text',   val:String(u.cbrNumero||'') },
+        { id:'u-cbranio',  lbl:'CBR A\u00F1o',            tipo:'text',   val:String(u.cbrAnio||'') }
       ],
       btnLabel: 'Guardar cambios',
       onGuardar: function(v, btn, err, overlay) {
-        if (!confirm('¿Confirmas los cambios en la unidad ' + (u.numeroUnidad||'') + '? Afecta el prorrateo.')) return;
-        btn.disabled = true; btn.textContent = 'Guardando…';
+        if (!confirm('\u00BFConfirmas los cambios en la unidad ' + (u.numeroUnidad||'') + '? Afecta el prorrateo.')) return;
+        btn.disabled = true; btn.textContent = 'Guardando\u2026';
         api('/unidades','POST',{ action:'editarUnidad', id:u.idUnidad,
           numeroUnidad:v['u-numero'], tipoUnidad:v['u-tipo'].toUpperCase(),
           alicuota:parseFloat(v['u-alicuota'])||0, piso:v['u-piso'],
           rolSII:v['u-rolsii'], condicionOcupacion:v['u-cond'], subdivision:v['u-subdiv'],
           cbrJurisdiccion:v['u-cbrjur'], cbrNumero:v['u-cbrnum'], cbrAnio:v['u-cbranio']
-        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'\u2713 Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
          .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; btn.textContent='Guardar cambios'; });
       }
     });
   }
 
-  // ── MODAL AGREGAR COPROPIETARIO ───────────────────────────────
   function modalAgregarPropietario(u, comunidadId) {
     _modalFormDir({
-      eyebrow: 'Copropietario', titulo: 'Agregar copropietario — Unidad ' + (u.numeroUnidad||''),
+      eyebrow: 'Copropietario', titulo: 'Agregar copropietario \u2014 Unidad ' + (u.numeroUnidad||''),
       campos: [
-        { id:'c-nombre', lbl:'Nombre completo *', tipo:'text',  ph:'Nombre', full:true },
-        { id:'c-tipoid', lbl:'Tipo ID',           tipo:'select', opts:['RUT','PASAPORTE'] },
-        { id:'c-nid',    lbl:'Nº ID *',      tipo:'text',  ph:'12.345.678-9' },
-        { id:'c-email',  lbl:'Email',             tipo:'email', ph:'correo@ejemplo.cl' },
-        { id:'c-tel',    lbl:'Teléfono',     tipo:'tel',   ph:'+56 9...' },
-        { id:'c-dom',    lbl:'Domicilio',         tipo:'text',  ph:'Si no vive en la unidad', full:true }
+        { id:'c-nombre', lbl:'Nombre completo *', tipo:'text',   ph:'Nombre', full:true },
+        { id:'c-tipoid', lbl:'Tipo ID',            tipo:'select', opts:['RUT','PASAPORTE'] },
+        { id:'c-nid',    lbl:'N\u00BA ID *',       tipo:'text',   ph:'12.345.678-9' },
+        { id:'c-email',  lbl:'Email',              tipo:'email',  ph:'correo@ejemplo.cl' },
+        { id:'c-tel',    lbl:'Tel\u00E9fono',      tipo:'tel',    ph:'+56 9...' },
+        { id:'c-dom',    lbl:'Domicilio',          tipo:'text',   ph:'Si no vive en la unidad', full:true }
       ],
       btnLabel: 'Agregar copropietario',
       onGuardar: function(v, btn, err, overlay) {
-        if (!v['c-nombre'] || !v['c-nid']) { err.textContent = 'Nombre y Nº ID son obligatorios.'; err.style.display='block'; return; }
-        btn.disabled = true; btn.textContent = 'Guardando…';
+        if (!v['c-nombre'] || !v['c-nid']) { err.textContent = 'Nombre y N\u00BA ID son obligatorios.'; err.style.display='block'; return; }
+        btn.disabled = true; btn.textContent = 'Guardando\u2026';
         api('/copropietarios','POST',{ action:'crearCopropietario', idComunidad:comunidadId,
           nombreCopropietario:v['c-nombre'], tipoIdCopropietario:v['c-tipoid'],
           numeroIdCopropietario:v['c-nid'], emailCopropietario:v['c-email'],
           telefonoCopropietario:v['c-tel'], domicilioCopropietario:v['c-dom']
         }).then(function(r){
           if (r.ok && r.data && r.data.ok) {
-            // Vincular el copropietario a la unidad
             api('/unidades','POST',{ action:'editarUnidad', id:u.idUnidad, idCopropietario:r.data.id }).then(function(){
-              btn.textContent='✓ Copropietario agregado'; btn.style.background='var(--co-green)';
+              btn.textContent='\u2713 Copropietario agregado'; btn.style.background='var(--co-green)';
               setTimeout(function(){ overlay.remove(); cargarDirectorio(comunidadId); }, 900);
             });
           } else { err.textContent=(r.data&&r.data.error)||r.error||'Error al guardar'; err.style.display='block'; btn.disabled=false; btn.textContent='Agregar copropietario'; }
@@ -1887,7 +2539,6 @@
     });
   }
 
-  // ── MODAL EDITAR COPROPIETARIO ────────────────────────────────
   function modalEditarCopropietario(u, comunidadId) {
     _modalFormDir({
       eyebrow: 'Editar copropietario', titulo: u.nombreCopropietario || 'Sin copropietario',
@@ -1895,45 +2546,44 @@
       campos: [
         { id:'c-nombre', lbl:'Nombre completo', tipo:'text',   val:u.nombreCopropietario||'', full:true },
         { id:'c-tipoid', lbl:'Tipo ID',         tipo:'select', opts:['RUT','PASAPORTE'], val:u.tipoIdCopropietario||'RUT' },
-        { id:'c-nid',    lbl:'Nº ID',      tipo:'text',   val:u.numeroIdCopropietario||'' },
+        { id:'c-nid',    lbl:'N\u00BA ID',      tipo:'text',   val:u.numeroIdCopropietario||'' },
         { id:'c-email',  lbl:'Email',           tipo:'email',  val:u.emailCopropietario||'' },
-        { id:'c-tel',    lbl:'Teléfono',   tipo:'tel',    val:u.telefonoCopropietario||'' },
+        { id:'c-tel',    lbl:'Tel\u00E9fono',   tipo:'tel',    val:u.telefonoCopropietario||'' },
         { id:'c-dom',    lbl:'Domicilio',       tipo:'text',   val:u.domicilioCopropietario||'', full:true }
       ],
       btnLabel: 'Guardar cambios',
       onGuardar: function(v, btn, err, overlay) {
-        if (!confirm('¿Confirmas los cambios en los datos de ' + (u.nombreCopropietario||'este copropietario') + '?')) return;
-        btn.disabled = true; btn.textContent = 'Guardando…';
+        if (!confirm('\u00BFConfirmas los cambios en los datos de ' + (u.nombreCopropietario||'este copropietario') + '?')) return;
+        btn.disabled = true; btn.textContent = 'Guardando\u2026';
         api('/copropietarios','POST',{ action:'editarCopropietario', id:u.idCopropietario,
           nombreCopropietario:v['c-nombre'], tipoIdCopropietario:v['c-tipoid'],
           numeroIdCopropietario:v['c-nid'], emailCopropietario:v['c-email'],
           telefonoCopropietario:v['c-tel'], domicilioCopropietario:v['c-dom']
-        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'\u2713 Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
          .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; });
       }
     });
   }
 
-  // ── MODAL AGREGAR RESIDENTE ───────────────────────────────────
   function modalAgregarResidente(u, comunidadId) {
     _modalFormDir({
-      eyebrow: 'Residente', titulo: 'Agregar residente — Unidad ' + (u.numeroUnidad||''),
+      eyebrow: 'Residente', titulo: 'Agregar residente \u2014 Unidad ' + (u.numeroUnidad||''),
       campos: [
-        { id:'r-nombre', lbl:'Nombre completo *', tipo:'text',  ph:'Nombre', full:true },
-        { id:'r-tipoid', lbl:'Tipo ID',           tipo:'select', opts:['RUT','PASAPORTE'] },
-        { id:'r-nid',    lbl:'Nº ID',        tipo:'text',  ph:'12.345.678-9' },
-        { id:'r-email',  lbl:'Email',             tipo:'email', ph:'correo@ejemplo.cl' },
-        { id:'r-tel',    lbl:'Teléfono',     tipo:'tel',   ph:'+56 9...' },
-        { id:'r-patente', lbl:'Patentes vehículo', tipo:'text', ph:'KKKK11, LLLL22', full:true },
-        { id:'r-electro', lbl:'Electrodependiente', tipo:'select', opts:['NO','SI'] },
-        { id:'r-movil',   lbl:'Movilidad reducida', tipo:'select', opts:['NO','SI'] },
-        { id:'r-mascota', lbl:'Tiene mascotas',     tipo:'select', opts:['NO','SI'] },
-        { id:'r-detmas',  lbl:'Detalle mascotas',   tipo:'text',  ph:'Raza, nombre' }
+        { id:'r-nombre',  lbl:'Nombre completo *',     tipo:'text',   ph:'Nombre', full:true },
+        { id:'r-tipoid',  lbl:'Tipo ID',               tipo:'select', opts:['RUT','PASAPORTE'] },
+        { id:'r-nid',     lbl:'N\u00BA ID',            tipo:'text',   ph:'12.345.678-9' },
+        { id:'r-email',   lbl:'Email',                 tipo:'email',  ph:'correo@ejemplo.cl' },
+        { id:'r-tel',     lbl:'Tel\u00E9fono',         tipo:'tel',    ph:'+56 9...' },
+        { id:'r-patente', lbl:'Patentes veh\u00EDculo', tipo:'text',  ph:'KKKK11, LLLL22', full:true },
+        { id:'r-electro', lbl:'Electrodependiente',    tipo:'select', opts:['NO','SI'] },
+        { id:'r-movil',   lbl:'Movilidad reducida',    tipo:'select', opts:['NO','SI'] },
+        { id:'r-mascota', lbl:'Tiene mascotas',        tipo:'select', opts:['NO','SI'] },
+        { id:'r-detmas',  lbl:'Detalle mascotas',      tipo:'text',   ph:'Raza, nombre' }
       ],
       btnLabel: 'Agregar residente',
       onGuardar: function(v, btn, err, overlay) {
         if (!v['r-nombre']) { err.textContent = 'El nombre es obligatorio.'; err.style.display='block'; return; }
-        btn.disabled = true; btn.textContent = 'Guardando…';
+        btn.disabled = true; btn.textContent = 'Guardando\u2026';
         api('/residentes','POST',{ action:'crearResidente', idComunidad:comunidadId,
           nombreResidente:v['r-nombre'], tipoIdResidente:v['r-tipoid'],
           numeroIdResidente:v['r-nid'], email:v['r-email'],
@@ -1943,7 +2593,7 @@
         }).then(function(r){
           if (r.ok && r.data && r.data.ok) {
             api('/unidades','POST',{ action:'editarUnidad', id:u.idUnidad, idResidente:r.data.id }).then(function(){
-              btn.textContent='✓ Residente agregado'; btn.style.background='var(--co-green)';
+              btn.textContent='\u2713 Residente agregado'; btn.style.background='var(--co-green)';
               setTimeout(function(){ overlay.remove(); cargarDirectorio(comunidadId); }, 900);
             });
           } else { err.textContent=(r.data&&r.data.error)||r.error||'Error al guardar'; err.style.display='block'; btn.disabled=false; btn.textContent='Agregar residente'; }
@@ -1952,39 +2602,37 @@
     });
   }
 
-  // ── MODAL EDITAR RESIDENTE ────────────────────────────────────
   function modalEditarResidente(u, comunidadId) {
     _modalFormDir({
       eyebrow: 'Editar residente', titulo: u.nombreResidente || 'Sin residente',
       advertencia: true,
       campos: [
-        { id:'r-nombre', lbl:'Nombre completo', tipo:'text',   val:u.nombreResidente||'', full:true },
-        { id:'r-tipoid', lbl:'Tipo ID',         tipo:'select', opts:['RUT','PASAPORTE'], val:u.tipoIdResidente||'RUT' },
-        { id:'r-nid',    lbl:'Nº ID',      tipo:'text',   val:u.numeroIdResidente||'' },
-        { id:'r-email',  lbl:'Email',           tipo:'email',  val:u.emailResidente||'' },
-        { id:'r-tel',    lbl:'Teléfono',   tipo:'tel',    val:u.telefonoResidente||'' },
-        { id:'r-patente', lbl:'Patentes',       tipo:'text',   val:u.patenteVehiculo||'', full:true },
+        { id:'r-nombre',  lbl:'Nombre completo',    tipo:'text',   val:u.nombreResidente||'', full:true },
+        { id:'r-tipoid',  lbl:'Tipo ID',            tipo:'select', opts:['RUT','PASAPORTE'], val:u.tipoIdResidente||'RUT' },
+        { id:'r-nid',     lbl:'N\u00BA ID',         tipo:'text',   val:u.numeroIdResidente||'' },
+        { id:'r-email',   lbl:'Email',              tipo:'email',  val:u.emailResidente||'' },
+        { id:'r-tel',     lbl:'Tel\u00E9fono',      tipo:'tel',    val:u.telefonoResidente||'' },
+        { id:'r-patente', lbl:'Patentes',           tipo:'text',   val:u.patenteVehiculo||'', full:true },
         { id:'r-electro', lbl:'Electrodependiente', tipo:'select', opts:['NO','SI'], val:u.electrodependiente||'NO' },
         { id:'r-movil',   lbl:'Movilidad reducida', tipo:'select', opts:['NO','SI'], val:u.movilidadReducida||'NO' },
         { id:'r-mascota', lbl:'Tiene mascotas',     tipo:'select', opts:['NO','SI'], val:u.tieneMascotas||'NO' }
       ],
       btnLabel: 'Guardar cambios',
       onGuardar: function(v, btn, err, overlay) {
-        if (!confirm('¿Confirmas los cambios en los datos de ' + (u.nombreResidente||'este residente') + '?')) return;
-        btn.disabled = true; btn.textContent = 'Guardando…';
+        if (!confirm('\u00BFConfirmas los cambios en los datos de ' + (u.nombreResidente||'este residente') + '?')) return;
+        btn.disabled = true; btn.textContent = 'Guardando\u2026';
         api('/residentes','POST',{ action:'editarResidente', id:u.idResidente,
           nombreResidente:v['r-nombre'], tipoIdResidente:v['r-tipoid'],
           numeroIdResidente:v['r-nid'], email:v['r-email'],
           telefonoPrincipal:v['r-tel'], patenteVehiculo:v['r-patente'],
           electrodependiente:v['r-electro'], movilidadReducida:v['r-movil'],
           tieneMascotas:v['r-mascota']
-        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'✓ Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
+        }).then(function(r){ _feedbackModal(r,btn,err,overlay,'\u2713 Cambios guardados','Guardar cambios',function(){ cargarDirectorio(comunidadId); }); })
          .catch(function(e){ err.textContent=e.message; err.style.display='block'; btn.disabled=false; });
       }
     });
   }
 
-  // ── HELPER FEEDBACK MODAL ─────────────────────────────────────
   function _feedbackModal(r, btn, err, overlay, msgOk, msgErr, onOk) {
     if (r.ok && r.data && r.data.ok) {
       btn.textContent = msgOk; btn.style.background = 'var(--co-green)';
@@ -1995,14 +2643,13 @@
     }
   }
 
-  // ── HELPER MODAL GENÉRICO DIRECTORIO ─────────────────────────
   function _modalFormDir(opts) {
     var overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     var box = document.createElement('div');
     box.className = 'modal-box';
 
-    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '×';
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7';
     box.appendChild(btnX);
     var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = opts.eyebrow; box.appendChild(ey);
     var tt = document.createElement('div'); tt.className = 'modal-titulo';   tt.textContent = opts.titulo;  box.appendChild(tt);
@@ -2010,7 +2657,7 @@
     if (opts.advertencia) {
       var av = document.createElement('div');
       av.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:9px 13px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:14px;display:flex;align-items:center;gap:7px';
-      av.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>Datos sensibles — se pedirá confirmación antes de guardar';
+      av.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>Datos sensibles \u2014 se pedir\u00E1 confirmaci\u00F3n antes de guardar';
       box.appendChild(av);
     }
 
@@ -2052,9 +2699,6 @@
     });
   }
 
-  // ── Variable para comunidad activa en directorio ────────────
-  var _dirComunidad = {};
-
   // ── MODAL EXPORTAR DIRECTORIO ─────────────────────────────────
   function modalExportarDirectorio(unidades, comunidad) {
     var overlay = document.createElement('div');
@@ -2063,7 +2707,7 @@
     box.className = 'modal-box';
     box.style.maxWidth = '460px';
 
-    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '×';
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7';
     btnX.addEventListener('click', function() { overlay.remove(); });
     box.appendChild(btnX);
 
@@ -2072,15 +2716,14 @@
     var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Selecciona el documento a generar.'; box.appendChild(st);
 
     var opciones = [
-      { id:'exp-dir',  ico:'M3 13h10M8 3v8M5 8l3 3 3-3', titulo:'Directorio completo', desc:'Excel con 3 hojas: Deptos, Estac., Bodegas y Resumen', fn: function(){ overlay.remove(); exportarDirectorioExcel(unidades, comunidad); } },
-      { id:'exp-cop-xls', ico:'M3 13h10M8 3v8M5 8l3 3 3-3', titulo:'Registro copropietarios', desc:'Excel con datos consolidados por copropietario', fn: function(){ overlay.remove(); exportarCopropietariosExcel(unidades, comunidad); } },
-      { id:'exp-cop-pdf', ico:'M13 3H5a1 1 0 00-1 1v10a1 1 0 001 1h8l3-3V4a1 1 0 00-1-1zM13 12v2l2-2h-2', titulo:'Registro copropietarios PDF', desc:'Documento formal para asamblea o comité', fn: function(){ overlay.remove(); exportarCopropietariosPDF(unidades, comunidad); } },
-      { id:'exp-cop-pdf2', ico:'M13 3H5a1 1 0 00-1 1v10a1 1 0 001 1h8l3-3V4a1 1 0 00-1-1zM13 12v2l2-2h-2', titulo:'Directorio completo PDF', desc:'Tabla completa para imprimir o archivar', fn: function(){ overlay.remove(); exportarDirectorioPDF(unidades, comunidad); } }
+      { titulo:'Directorio completo',         desc:'Excel con 3 hojas: Deptos, Estac., Bodegas y Resumen', fn: function(){ overlay.remove(); exportarDirectorioExcel(unidades, comunidad); } },
+      { titulo:'Registro copropietarios',     desc:'Excel con datos consolidados por copropietario',        fn: function(){ overlay.remove(); exportarCopropietariosExcel(unidades, comunidad); } },
+      { titulo:'Registro copropietarios PDF', desc:'Documento formal para asamblea o comit\u00E9',          fn: function(){ overlay.remove(); exportarCopropietariosPDF(unidades, comunidad); } },
+      { titulo:'Directorio completo PDF',     desc:'Tabla completa para imprimir o archivar',              fn: function(){ overlay.remove(); exportarDirectorioPDF(unidades, comunidad); } }
     ];
 
     var grid = document.createElement('div');
     grid.style.cssText = 'display:grid;gap:8px;margin-top:4px';
-
     opciones.forEach(function(o) {
       var card = document.createElement('button');
       card.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;border:0.5px solid var(--co-line);border-radius:var(--co-r-md);background:var(--co-cream-deep);cursor:pointer;text-align:left;transition:border-color 0.15s';
@@ -2088,291 +2731,132 @@
       card.addEventListener('mouseleave', function() { card.style.borderColor = 'var(--co-line)'; });
       var ico = document.createElement('div');
       ico.style.cssText = 'width:36px;height:36px;border-radius:8px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0';
-      ico.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--co-orange)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + o.ico + '"/></svg>';
+      ico.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--co-orange)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h10M8 3v8M5 8l3 3 3-3"/></svg>';
       var txt = document.createElement('div');
       var t1 = document.createElement('div'); t1.style.cssText = 'font-size:13px;font-weight:700;color:var(--co-ink)'; t1.textContent = o.titulo;
       var t2 = document.createElement('div'); t2.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:2px'; t2.textContent = o.desc;
       txt.appendChild(t1); txt.appendChild(t2);
-      var arr = document.createElement('div'); arr.style.cssText = 'margin-left:auto;color:var(--co-mute)'; arr.textContent = '→';
+      var arr = document.createElement('div'); arr.style.cssText = 'margin-left:auto;color:var(--co-mute)'; arr.textContent = '\u2192';
       card.appendChild(ico); card.appendChild(txt); card.appendChild(arr);
       card.addEventListener('click', o.fn);
       grid.appendChild(card);
     });
-
     box.appendChild(grid);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   }
 
-  // ── EXPORTAR DIRECTORIO EXCEL ─────────────────────────────────
-  function exportarDirectorioExcel(unidades, comunidad) {
-    _cargarXLSX(function() {
-      var wb = XLSX.utils.book_new();
-      var nomCom = comunidad.nombre || 'Comunidad';
-      var fecha  = new Date().toLocaleDateString('es-CL');
-
-      // Función para crear hoja con diseño
-      function crearHoja(titulo, cols, filas) {
-        var data = [];
-        // Fila de título
-        data.push([nomCom + ' — ' + titulo]);
-        data.push(['Exportado: ' + fecha + ' · CoproActiva Administración SpA']);
-        data.push([]); // espacio
-        data.push(cols);
-        filas.forEach(function(f) { data.push(f); });
-        var ws = XLSX.utils.aoa_to_sheet(data);
-        // Ancho de columnas
-        ws['!cols'] = cols.map(function() { return { wch: 20 }; });
-        return ws;
-      }
-
-      // Hoja Deptos
-      var deptos = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'DEPTO' || String(u.tipoUnidad||'').toUpperCase() === 'CASA'; });
-      var wsD = crearHoja('Departamentos',
-        ['Nº Unidad','Alícuota %','Copropietario','RUT / ID','Condición','Residente','Teléfono'],
-        deptos.map(function(u) { return [
-          u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%',
-          u.nombreCopropietario||'', u.numeroIdCopropietario||'',
-          u.condicionOcupacion||'', u.nombreResidente||'', u.telefonoResidente||''
-        ]; })
-      );
-      XLSX.utils.book_append_sheet(wb, wsD, 'Deptos');
-
-      // Hoja Estac.
-      var estac = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'ESTAC' || String(u.tipoUnidad||'').toUpperCase() === 'ESTACIONAMIENTO'; });
-      if (estac.length > 0) {
-        var wsE = crearHoja('Estacionamientos',
-          ['Nº Unidad','Alícuota %','Copropietario','RUT / ID','Unidad Principal','Residente'],
-          estac.map(function(u) { return [
-            u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%',
-            u.nombreCopropietario||'', u.numeroIdCopropietario||'',
-            u.idUnidadPrincipal||'', u.nombreResidente||''
-          ]; })
-        );
-        XLSX.utils.book_append_sheet(wb, wsE, 'Estac.');
-      }
-
-      // Hoja Bodegas
-      var bodegas = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'BODEGA'; });
-      if (bodegas.length > 0) {
-        var wsB = crearHoja('Bodegas',
-          ['Nº Unidad','Alícuota %','Copropietario','RUT / ID','Unidad Principal','Residente'],
-          bodegas.map(function(u) { return [
-            u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%',
-            u.nombreCopropietario||'', u.numeroIdCopropietario||'',
-            u.idUnidadPrincipal||'', u.nombreResidente||''
-          ]; })
-        );
-        XLSX.utils.book_append_sheet(wb, wsB, 'Bodegas');
-      }
-
-      // Hoja Resumen
-      var totalAlic = unidades.reduce(function(s,u){ return s + (parseFloat(u.alicuota)||0); }, 0);
-      var setCop = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
-      var setRes = {}; unidades.forEach(function(u){ if(u.idResidente) setRes[u.idResidente]=true; });
-      var wsR = XLSX.utils.aoa_to_sheet([
-        [nomCom + ' — Resumen'],
-        ['Generado: ' + fecha],
-        [],
-        ['Concepto','Valor'],
-        ['Departamentos', deptos.length],
-        ['Estacionamientos', estac.length],
-        ['Bodegas', bodegas.length],
-        ['Total unidades', unidades.length],
-        [],
-        ['Copropietarios únicos', Object.keys(setCop).length],
-        ['Residentes únicos', Object.keys(setRes).length],
-        [],
-        ['Suma alícuotas (factor)', totalAlic.toFixed(6)],
-        ['Suma alícuotas (%)', (totalAlic*100).toFixed(4)+'%'],
-        ['Alícuotas válidas', Math.abs(totalAlic-1) < 0.0001 ? 'Sí ✓' : 'No ✗']
-      ]);
-      wsR['!cols'] = [{ wch: 28 }, { wch: 16 }];
-      XLSX.utils.book_append_sheet(wb, wsR, 'Resumen');
-
-      XLSX.writeFile(wb, 'Directorio_' + nomCom.replace(/\s/g,'-') + '_' + fecha.replace(/\//g,'-') + '.xlsx');
-    });
-  }
-
-  // ── EXPORTAR REGISTRO COPROPIETARIOS EXCEL ────────────────────
-  function exportarCopropietariosExcel(unidades, comunidad) {
-    _cargarXLSX(function() {
-      var nomCom = comunidad.nombre || 'Comunidad';
-      var fecha  = new Date().toLocaleDateString('es-CL');
-
-      // Consolidar por copropietario
-      var mapaCop = {};
-      unidades.forEach(function(u) {
-        if (!u.idCopropietario) return;
-        if (!mapaCop[u.idCopropietario]) {
-          mapaCop[u.idCopropietario] = {
-            nombre: u.nombreCopropietario || '',
-            nroId:  u.numeroIdCopropietario || '',
-            email:  u.emailCopropietario || '',
-            tel:    u.telefonoCopropietario || '',
-            unidades: [], alicuota: 0
-          };
-        }
-        mapaCop[u.idCopropietario].unidades.push(u.numeroUnidad);
-        mapaCop[u.idCopropietario].alicuota += parseFloat(u.alicuota) || 0;
-      });
-
-      var filas = Object.values(mapaCop).sort(function(a,b){ return a.nombre.localeCompare(b.nombre,'es'); });
-
-      var data = [
-        [nomCom + ' — Registro de Copropietarios'],
-        ['Generado: ' + fecha + ' · CoproActiva Administración SpA · Ley N°21.442'],
-        [],
-        ['Copropietario','RUT / ID','Unidades','Alícuota total %','Email','Teléfono']
-      ];
-      filas.forEach(function(c) {
-        data.push([
-          c.nombre, c.nroId,
-          c.unidades.join(', '),
-          (c.alicuota*100).toFixed(4)+'%',
-          c.email, c.tel
-        ]);
-      });
-
-      var wb = XLSX.utils.book_new();
-      var ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = [{ wch:28 },{ wch:16 },{ wch:20 },{ wch:16 },{ wch:28 },{ wch:16 }];
-      XLSX.utils.book_append_sheet(wb, ws, 'Copropietarios');
-      XLSX.writeFile(wb, 'Copropietarios_' + nomCom.replace(/\s/g,'-') + '_' + fecha.replace(/\//g,'-') + '.xlsx');
-    });
-  }
-
-  // ── EXPORTAR REGISTRO COPROPIETARIOS PDF ─────────────────────
-  function exportarCopropietariosPDF(unidades, comunidad) {
-    var nomCom = comunidad.nombre || 'Comunidad';
-    var fecha  = new Date().toLocaleDateString('es-CL');
-
-    // Consolidar por copropietario
-    var mapaCop = {};
-    unidades.forEach(function(u) {
-      if (!u.idCopropietario) return;
-      if (!mapaCop[u.idCopropietario]) {
-        mapaCop[u.idCopropietario] = {
-          nombre: u.nombreCopropietario||'', nroId: u.numeroIdCopropietario||'',
-          email: u.emailCopropietario||'', tel: u.telefonoCopropietario||'',
-          unidades: [], alicuota: 0
-        };
-      }
-      mapaCop[u.idCopropietario].unidades.push(u.numeroUnidad);
-      mapaCop[u.idCopropietario].alicuota += parseFloat(u.alicuota)||0;
-    });
-
-    var filas = Object.values(mapaCop).sort(function(a,b){ return a.nombre.localeCompare(b.nombre,'es'); });
-
-    var filaHTML = filas.map(function(c, i) {
-      return '<tr style="background:' + (i%2===0?'#fff':'#f9f7f5') + '">'
-        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + (i+1) + '</td>'
-        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0;font-weight:600">' + c.nombre + '</td>'
-        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + c.nroId + '</td>'
-        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + c.unidades.join(', ') + '</td>'
-        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0;color:#D9853B;font-weight:700">' + (c.alicuota*100).toFixed(4)+'%' + '</td>'
-        + '<td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">' + c.email + '</td>'
-        + '</tr>';
-    }).join('');
-
-    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
-      + '<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1A1714}'
-      + 'table{width:100%;border-collapse:collapse;font-size:11px}'
-      + 'th{background:#1A1714;color:#fff;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.04em}'
-      + 'th:first-child{width:30px} @media print{.no-print{display:none}}'
-      + '</style></head><body>'
-      + '<div style="background:#1A1714;padding:16px 24px;display:flex;justify-content:space-between;align-items:center">'
-      + '<div style="color:#fff;font-size:18px;font-weight:800"><span style="color:#D9853B">co</span>proactiva</div>'
-      + '<div style="color:rgba(255,255,255,0.7);font-size:11px;text-align:right">' + nomCom + '<br>Registro de Copropietarios · ' + fecha + '</div>'
-      + '</div>'
-      + '<div style="background:#D9853B;padding:8px 24px">'
-      + '<p style="color:#fff;font-size:11px;font-weight:700;margin:0;letter-spacing:0.06em;text-transform:uppercase">Registro oficial de copropietarios · Ley N°21.442</p>'
-      + '</div>'
-      + '<div style="padding:16px 24px">'
-      + '<table><thead><tr><th>Nº</th><th>Copropietario</th><th>RUT / ID</th><th>Unidades</th><th>Alícuota total</th><th>Email</th></tr></thead>'
-      + '<tbody>' + filaHTML + '</tbody></table>'
-      + '</div>'
-      + '<div style="background:#f9f7f5;padding:12px 24px;border-top:2px solid #D9853B;display:flex;justify-content:space-between;margin-top:16px">'
-      + '<span style="font-size:10px;color:#888">' + filas.length + ' copropietarios · ' + nomCom + '</span>'
-      + '<span style="font-size:10px;color:#888">Documento generado por CoproActiva · Confidencial</span>'
-      + '</div>'
-      + '<div class="no-print" style="padding:16px 24px;text-align:center">'
-      + '<button onclick="window.print()" style="background:#D9853B;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Imprimir / Guardar PDF</button>'
-      + '</div>'
-      + '</body></html>';
-
-    var win = window.open('', '_blank');
-    win.document.write(html);
-    win.document.close();
-  }
-
-  // ── EXPORTAR DIRECTORIO COMPLETO PDF ─────────────────────────
-  function exportarDirectorioPDF(unidades, comunidad) {
-    var nomCom = comunidad.nombre || 'Comunidad';
-    var fecha  = new Date().toLocaleDateString('es-CL');
-
-    var TIPOS_ORDEN = {'DEPTO':1,'CASA':1,'LOCAL':2,'OFICINA':2,'ESTAC':3,'ESTACIONAMIENTO':3,'BODEGA':4};
-    var sorted = unidades.slice().sort(function(a,b){
-      var ta = TIPOS_ORDEN[String(a.tipoUnidad||'').toUpperCase()] || 5;
-      var tb = TIPOS_ORDEN[String(b.tipoUnidad||'').toUpperCase()] || 5;
-      if (ta !== tb) return ta - tb;
-      return String(a.numeroUnidad).localeCompare(String(b.numeroUnidad),'es',{numeric:true});
-    });
-
-    var filaHTML = sorted.map(function(u, i) {
-      var cond = u.condicionOcupacion || '';
-      var condColor = cond === 'propietario residente' ? '#3B6D11' : cond === 'arrendado' ? '#854F0B' : '#888';
-      var condBg    = cond === 'propietario residente' ? '#EAF3DE' : cond === 'arrendado' ? '#FFF3E7' : '#f5f5f5';
-      return '<tr style="background:' + (i%2===0?'#fff':'#f9f7f5') + '">'
-        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-weight:700;color:#D9853B">' + u.numeroUnidad + '</td>'
-        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-size:10px">' + u.tipoUnidad + '</td>'
-        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;color:#D9853B;font-weight:700">' + ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%' + '</td>'
-        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-weight:600">' + (u.nombreCopropietario||'—') + '</td>'
-        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0">' + (u.numeroIdCopropietario||'—') + '</td>'
-        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0"><span style="background:'+condBg+';color:'+condColor+';padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700">' + (cond||'—') + '</span></td>'
-        + '<td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0">' + (u.nombreResidente||'—') + '</td>'
-        + '</tr>';
-    }).join('');
-
-    var totalAlic = unidades.reduce(function(s,u){ return s+(parseFloat(u.alicuota)||0); }, 0);
-    var setCop = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
-
-    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
-      + '<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1A1714;font-size:11px}'
-      + 'table{width:100%;border-collapse:collapse} th{background:#1A1714;color:#fff;padding:7px 8px;text-align:left;font-size:10px;letter-spacing:0.04em}'
-      + '@media print{.no-print{display:none}@page{margin:1.5cm}}</style></head><body>'
-      + '<div style="background:#1A1714;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">'
-      + '<div style="color:#fff;font-size:16px;font-weight:800"><span style="color:#D9853B">co</span>proactiva</div>'
-      + '<div style="color:rgba(255,255,255,0.7);font-size:10px;text-align:right">' + nomCom + '<br>Directorio · ' + fecha + '</div>'
-      + '</div>'
-      + '<div style="background:#D9853B;padding:7px 20px">'
-      + '<p style="color:#fff;font-size:10px;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:0.06em">Directorio de unidades · Ley N°21.442</p>'
-      + '</div>'
-      + '<div style="padding:12px 20px">'
-      + '<table><thead><tr><th>Unidad</th><th>Tipo</th><th>Alícuota</th><th>Copropietario</th><th>RUT / ID</th><th>Condición</th><th>Residente</th></tr></thead>'
-      + '<tbody>' + filaHTML + '</tbody></table>'
-      + '</div>'
-      + '<div style="background:#f9f7f5;padding:10px 20px;border-top:2px solid #D9853B;display:flex;justify-content:space-between">'
-      + '<span style="font-size:10px;color:#888">' + unidades.length + ' unidades · ' + Object.keys(setCop).length + ' copropietarios · alícuotas suman ' + (totalAlic*100).toFixed(4) + '%</span>'
-      + '<span style="font-size:10px;color:#888">CoproActiva · Confidencial</span>'
-      + '</div>'
-      + '<div class="no-print" style="padding:14px 20px;text-align:center">'
-      + '<button onclick="window.print()" style="background:#D9853B;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Imprimir / Guardar PDF</button>'
-      + '</div></body></html>';
-
-    var win = window.open('', '_blank');
-    win.document.write(html);
-    win.document.close();
-  }
-
-  // ── HELPER CARGAR XLSX ────────────────────────────────────────
   function _cargarXLSX(cb) {
     if (typeof XLSX !== 'undefined') { cb(); return; }
     var s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
     s.onload = cb;
     document.head.appendChild(s);
+  }
+
+  function exportarDirectorioExcel(unidades, comunidad) {
+    _cargarXLSX(function() {
+      var wb = XLSX.utils.book_new();
+      var nomCom = comunidad.nombre || 'Comunidad';
+      var fecha  = new Date().toLocaleDateString('es-CL');
+      function crearHoja(titulo, cols, filas) {
+        var data = [[nomCom + ' \u2014 ' + titulo],['Exportado: ' + fecha + ' \u00B7 CoproActiva Administraci\u00F3n SpA'],[],cols];
+        filas.forEach(function(f) { data.push(f); });
+        var ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = cols.map(function() { return { wch: 20 }; });
+        return ws;
+      }
+      var deptos = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'DEPTO' || String(u.tipoUnidad||'').toUpperCase() === 'CASA'; });
+      var wsD = crearHoja('Departamentos',
+        ['N\u00BA Unidad','Al\u00EDcuota %','Copropietario','RUT / ID','Condici\u00F3n','Residente','Tel\u00E9fono'],
+        deptos.map(function(u) { return [u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%', u.nombreCopropietario||'', u.numeroIdCopropietario||'', u.condicionOcupacion||'', u.nombreResidente||'', u.telefonoResidente||'']; })
+      );
+      XLSX.utils.book_append_sheet(wb, wsD, 'Deptos');
+      var estac = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'ESTAC' || String(u.tipoUnidad||'').toUpperCase() === 'ESTACIONAMIENTO'; });
+      if (estac.length > 0) {
+        var wsE = crearHoja('Estacionamientos',
+          ['N\u00BA Unidad','Al\u00EDcuota %','Copropietario','RUT / ID','Unidad Principal','Residente'],
+          estac.map(function(u) { return [u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%', u.nombreCopropietario||'', u.numeroIdCopropietario||'', u.idUnidadPrincipal||'', u.nombreResidente||'']; })
+        );
+        XLSX.utils.book_append_sheet(wb, wsE, 'Estac.');
+      }
+      var bodegas = unidades.filter(function(u) { return String(u.tipoUnidad||'').toUpperCase() === 'BODEGA'; });
+      if (bodegas.length > 0) {
+        var wsB = crearHoja('Bodegas',
+          ['N\u00BA Unidad','Al\u00EDcuota %','Copropietario','RUT / ID','Unidad Principal','Residente'],
+          bodegas.map(function(u) { return [u.numeroUnidad, ((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%', u.nombreCopropietario||'', u.numeroIdCopropietario||'', u.idUnidadPrincipal||'', u.nombreResidente||'']; })
+        );
+        XLSX.utils.book_append_sheet(wb, wsB, 'Bodegas');
+      }
+      var totalAlic = unidades.reduce(function(s,u){ return s+(parseFloat(u.alicuota)||0); }, 0);
+      var setCop = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
+      var setRes = {}; unidades.forEach(function(u){ if(u.idResidente) setRes[u.idResidente]=true; });
+      var wsR = XLSX.utils.aoa_to_sheet([[nomCom+' \u2014 Resumen'],['Generado: '+fecha],[],['Concepto','Valor'],['Departamentos',deptos.length],['Estacionamientos',estac.length],['Bodegas',bodegas.length],['Total unidades',unidades.length],[],['Copropietarios \u00FAnicos',Object.keys(setCop).length],['Residentes \u00FAnicos',Object.keys(setRes).length],[],['Suma al\u00EDcuotas (factor)',totalAlic.toFixed(6)],['Suma al\u00EDcuotas (%)',(totalAlic*100).toFixed(4)+'%'],['Al\u00EDcuotas v\u00E1lidas',Math.abs(totalAlic-1)<0.0001?'S\u00ED \u2713':'No \u2717']]);
+      wsR['!cols'] = [{ wch: 28 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, wsR, 'Resumen');
+      XLSX.writeFile(wb, 'Directorio_' + nomCom.replace(/\s/g,'-') + '_' + fecha.replace(/\//g,'-') + '.xlsx');
+    });
+  }
+
+  function exportarCopropietariosExcel(unidades, comunidad) {
+    _cargarXLSX(function() {
+      var nomCom = comunidad.nombre || 'Comunidad';
+      var fecha  = new Date().toLocaleDateString('es-CL');
+      var mapaCop = {};
+      unidades.forEach(function(u) {
+        if (!u.idCopropietario) return;
+        if (!mapaCop[u.idCopropietario]) mapaCop[u.idCopropietario] = { nombre:u.nombreCopropietario||'', nroId:u.numeroIdCopropietario||'', email:u.emailCopropietario||'', tel:u.telefonoCopropietario||'', unidades:[], alicuota:0 };
+        mapaCop[u.idCopropietario].unidades.push(u.numeroUnidad);
+        mapaCop[u.idCopropietario].alicuota += parseFloat(u.alicuota)||0;
+      });
+      var filas = Object.values(mapaCop).sort(function(a,b){ return a.nombre.localeCompare(b.nombre,'es'); });
+      var data = [[nomCom+' \u2014 Registro de Copropietarios'],['Generado: '+fecha+' \u00B7 CoproActiva Administraci\u00F3n SpA \u00B7 Ley N\u00B021.442'],[],['Copropietario','RUT / ID','Unidades','Al\u00EDcuota total %','Email','Tel\u00E9fono']];
+      filas.forEach(function(c) { data.push([c.nombre,c.nroId,c.unidades.join(', '),(c.alicuota*100).toFixed(4)+'%',c.email,c.tel]); });
+      var wb = XLSX.utils.book_new();
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [{wch:28},{wch:16},{wch:20},{wch:16},{wch:28},{wch:16}];
+      XLSX.utils.book_append_sheet(wb, ws, 'Copropietarios');
+      XLSX.writeFile(wb, 'Copropietarios_' + nomCom.replace(/\s/g,'-') + '_' + fecha.replace(/\//g,'-') + '.xlsx');
+    });
+  }
+
+  function exportarCopropietariosPDF(unidades, comunidad) {
+    var nomCom = comunidad.nombre || 'Comunidad';
+    var fecha  = new Date().toLocaleDateString('es-CL');
+    var mapaCop = {};
+    unidades.forEach(function(u) {
+      if (!u.idCopropietario) return;
+      if (!mapaCop[u.idCopropietario]) mapaCop[u.idCopropietario] = { nombre:u.nombreCopropietario||'',nroId:u.numeroIdCopropietario||'',email:u.emailCopropietario||'',tel:u.telefonoCopropietario||'',unidades:[],alicuota:0 };
+      mapaCop[u.idCopropietario].unidades.push(u.numeroUnidad);
+      mapaCop[u.idCopropietario].alicuota += parseFloat(u.alicuota)||0;
+    });
+    var filas = Object.values(mapaCop).sort(function(a,b){ return a.nombre.localeCompare(b.nombre,'es'); });
+    var filaHTML = filas.map(function(c,i){ return '<tr style="background:'+(i%2===0?'#fff':'#f9f7f5')+'"><td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">'+(i+1)+'</td><td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0;font-weight:600">'+c.nombre+'</td><td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">'+c.nroId+'</td><td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">'+c.unidades.join(', ')+'</td><td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0;color:#D9853B;font-weight:700">'+(c.alicuota*100).toFixed(4)+'%'+'</td><td style="padding:6px 10px;border-bottom:0.5px solid #e0d8d0">'+c.email+'</td></tr>'; }).join('');
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1A1714}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#1A1714;color:#fff;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:0.04em}@media print{.no-print{display:none}}</style></head><body>'
+      +'<div style="background:#1A1714;padding:16px 24px;display:flex;justify-content:space-between;align-items:center"><div style="color:#fff;font-size:18px;font-weight:800"><span style="color:#D9853B">co</span>proactiva</div><div style="color:rgba(255,255,255,0.7);font-size:11px;text-align:right">'+nomCom+'<br>Registro de Copropietarios \u00B7 '+fecha+'</div></div>'
+      +'<div style="background:#D9853B;padding:8px 24px"><p style="color:#fff;font-size:11px;font-weight:700;margin:0;letter-spacing:0.06em;text-transform:uppercase">Registro oficial de copropietarios \u00B7 Ley N\u00B021.442</p></div>'
+      +'<div style="padding:16px 24px"><table><thead><tr><th>N\u00BA</th><th>Copropietario</th><th>RUT / ID</th><th>Unidades</th><th>Al\u00EDcuota total</th><th>Email</th></tr></thead><tbody>'+filaHTML+'</tbody></table></div>'
+      +'<div style="background:#f9f7f5;padding:12px 24px;border-top:2px solid #D9853B;display:flex;justify-content:space-between;margin-top:16px"><span style="font-size:10px;color:#888">'+filas.length+' copropietarios \u00B7 '+nomCom+'</span><span style="font-size:10px;color:#888">Documento generado por CoproActiva \u00B7 Confidencial</span></div>'
+      +'<div class="no-print" style="padding:16px 24px;text-align:center"><button onclick="window.print()" style="background:#D9853B;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Imprimir / Guardar PDF</button></div>'
+      +'</body></html>';
+    var win = window.open('', '_blank'); win.document.write(html); win.document.close();
+  }
+
+  function exportarDirectorioPDF(unidades, comunidad) {
+    var nomCom = comunidad.nombre || 'Comunidad';
+    var fecha  = new Date().toLocaleDateString('es-CL');
+    var TIPOS_ORDEN = {'DEPTO':1,'CASA':1,'LOCAL':2,'OFICINA':2,'ESTAC':3,'ESTACIONAMIENTO':3,'BODEGA':4};
+    var sorted = unidades.slice().sort(function(a,b){ var ta=TIPOS_ORDEN[String(a.tipoUnidad||'').toUpperCase()]||5; var tb=TIPOS_ORDEN[String(b.tipoUnidad||'').toUpperCase()]||5; if(ta!==tb) return ta-tb; return String(a.numeroUnidad).localeCompare(String(b.numeroUnidad),'es',{numeric:true}); });
+    var filaHTML = sorted.map(function(u,i){ var cond=u.condicionOcupacion||''; var condColor=cond==='propietario residente'?'#3B6D11':cond==='arrendado'?'#854F0B':'#888'; var condBg=cond==='propietario residente'?'#EAF3DE':cond==='arrendado'?'#FFF3E7':'#f5f5f5'; return '<tr style="background:'+(i%2===0?'#fff':'#f9f7f5')+'"><td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-weight:700;color:#D9853B">'+u.numeroUnidad+'</td><td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-size:10px">'+u.tipoUnidad+'</td><td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;color:#D9853B;font-weight:700">'+((parseFloat(u.alicuota)||0)*100).toFixed(4)+'%'+'</td><td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0;font-weight:600">'+(u.nombreCopropietario||'\u2014')+'</td><td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0">'+(u.numeroIdCopropietario||'\u2014')+'</td><td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0"><span style="background:'+condBg+';color:'+condColor+';padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700">'+(cond||'\u2014')+'</span></td><td style="padding:5px 8px;border-bottom:0.5px solid #e0d8d0">'+(u.nombreResidente||'\u2014')+'</td></tr>'; }).join('');
+    var totalAlic=unidades.reduce(function(s,u){return s+(parseFloat(u.alicuota)||0);},0); var setCop={}; unidades.forEach(function(u){if(u.idCopropietario)setCop[u.idCopropietario]=true;});
+    var html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1A1714;font-size:11px}table{width:100%;border-collapse:collapse}th{background:#1A1714;color:#fff;padding:7px 8px;text-align:left;font-size:10px;letter-spacing:0.04em}@media print{.no-print{display:none}@page{margin:1.5cm}}</style></head><body>'
+      +'<div style="background:#1A1714;padding:14px 20px;display:flex;justify-content:space-between;align-items:center"><div style="color:#fff;font-size:16px;font-weight:800"><span style="color:#D9853B">co</span>proactiva</div><div style="color:rgba(255,255,255,0.7);font-size:10px;text-align:right">'+nomCom+'<br>Directorio \u00B7 '+fecha+'</div></div>'
+      +'<div style="background:#D9853B;padding:7px 20px"><p style="color:#fff;font-size:10px;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:0.06em">Directorio de unidades \u00B7 Ley N\u00B021.442</p></div>'
+      +'<div style="padding:12px 20px"><table><thead><tr><th>Unidad</th><th>Tipo</th><th>Al\u00EDcuota</th><th>Copropietario</th><th>RUT / ID</th><th>Condici\u00F3n</th><th>Residente</th></tr></thead><tbody>'+filaHTML+'</tbody></table></div>'
+      +'<div style="background:#f9f7f5;padding:10px 20px;border-top:2px solid #D9853B;display:flex;justify-content:space-between"><span style="font-size:10px;color:#888">'+unidades.length+' unidades \u00B7 '+Object.keys(setCop).length+' copropietarios \u00B7 al\u00EDcuotas suman '+(totalAlic*100).toFixed(4)+'%</span><span style="font-size:10px;color:#888">CoproActiva \u00B7 Confidencial</span></div>'
+      +'<div class="no-print" style="padding:14px 20px;text-align:center"><button onclick="window.print()" style="background:#D9853B;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Imprimir / Guardar PDF</button></div></body></html>';
+    var win = window.open('', '_blank'); win.document.write(html); win.document.close();
   }
 
   function modalImportarDirectorio(comunidadId) {
@@ -2382,781 +2866,250 @@
     box.className = 'modal-box';
     box.style.maxWidth = '640px';
 
-    var btnCerrar = document.createElement('button');
-    btnCerrar.className = 'modal-close';
-    btnCerrar.textContent = '×';
+    var btnCerrar = document.createElement('button'); btnCerrar.className = 'modal-close'; btnCerrar.textContent = '\u00D7';
     box.appendChild(btnCerrar);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Directorio'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Importar tabla de prorrateo'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Sube el archivo Excel con unidades, propietarios y residentes.'; box.appendChild(st);
 
-    var ey = document.createElement('div');
-    ey.className = 'modal-eyebrow';
-    ey.textContent = 'Directorio';
-    box.appendChild(ey);
-
-    var tt = document.createElement('div');
-    tt.className = 'modal-titulo';
-    tt.textContent = 'Importar tabla de prorrateo';
-    box.appendChild(tt);
-
-    var st = document.createElement('div');
-    st.className = 'modal-subtitulo';
-    st.textContent = 'Sube el archivo Excel con unidades, propietarios y residentes.';
-    box.appendChild(st);
-
-    // Paso 1 — Descargar plantilla
     var paso1 = document.createElement('div');
     paso1.style.cssText = 'background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:14px 16px;margin-bottom:16px';
-    paso1.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 1 — Descarga la plantilla</div>'
-      + '<div style="font-size:12px;color:var(--co-ink-3);margin-bottom:10px">La plantilla tiene una sola hoja “Carga_Masiva” con una fila por unidad. Incluye datos de copropietario y residente en las mismas columnas.</div>';
-    var btnDesc = document.createElement('button');
-    btnDesc.className = 'btn-ghost';
-    btnDesc.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Descargar plantilla Excel';
+    paso1.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 1 \u2014 Descarga la plantilla</div><div style="font-size:12px;color:var(--co-ink-3);margin-bottom:10px">La plantilla tiene una sola hoja "Carga_Masiva" con una fila por unidad.</div>';
+    var btnDesc = document.createElement('button'); btnDesc.className = 'btn-ghost'; btnDesc.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Descargar plantilla Excel';
     btnDesc.addEventListener('click', function() { descargarPlantillaDirectorio(); });
     paso1.appendChild(btnDesc);
     box.appendChild(paso1);
 
-    // Paso 2 — Subir archivo
     var paso2 = document.createElement('div');
     paso2.style.cssText = 'border:1.5px dashed var(--co-line);border-radius:var(--co-r-md);padding:24px;text-align:center;margin-bottom:16px;cursor:pointer;transition:border-color 0.15s';
-    paso2.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 2 — Sube el archivo completado</div>'
-      + '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--co-mute)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 11v6M9 14l3-3 3 3"/></svg>'
-      + '<div style="font-size:13px;font-weight:600;color:var(--co-ink);margin-bottom:4px">Haz clic o arrastra el archivo aquí</div>'
-      + '<div style="font-size:11px;color:var(--co-mute)">.xlsx o .xls</div>';
+    paso2.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 2 \u2014 Sube el archivo completado</div><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--co-mute)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 11v6M9 14l3-3 3 3"/></svg><div style="font-size:13px;font-weight:600;color:var(--co-ink);margin-bottom:4px">Haz clic o arrastra el archivo aqu\u00ED</div><div style="font-size:11px;color:var(--co-mute)">.xlsx o .xls</div>';
 
-    var fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.xlsx,.xls';
-    fileInput.style.display = 'none';
+    var fileInput = document.createElement('input'); fileInput.type = 'file'; fileInput.accept = '.xlsx,.xls'; fileInput.style.display = 'none';
     paso2.appendChild(fileInput);
-
     paso2.addEventListener('click', function() { fileInput.click(); });
     paso2.addEventListener('dragover', function(e) { e.preventDefault(); paso2.style.borderColor = 'var(--co-orange)'; });
     paso2.addEventListener('dragleave', function() { paso2.style.borderColor = 'var(--co-line)'; });
-    paso2.addEventListener('drop', function(e) {
-      e.preventDefault();
-      paso2.style.borderColor = 'var(--co-line)';
-      var f = e.dataTransfer.files[0];
-      if (f) procesarArchivoDirectorio(f, comunidadId, box, overlay);
-    });
-    fileInput.addEventListener('change', function() {
-      if (fileInput.files[0]) procesarArchivoDirectorio(fileInput.files[0], comunidadId, box, overlay);
-    });
-
+    paso2.addEventListener('drop', function(e) { e.preventDefault(); paso2.style.borderColor = 'var(--co-line)'; var f = e.dataTransfer.files[0]; if (f) procesarArchivoDirectorio(f, comunidadId, box, overlay); });
+    fileInput.addEventListener('change', function() { if (fileInput.files[0]) procesarArchivoDirectorio(fileInput.files[0], comunidadId, box, overlay); });
     box.appendChild(paso2);
 
-    var errDiv = document.createElement('div');
-    errDiv.className = 'form-error';
-    errDiv.style.display = 'none';
-    box.appendChild(errDiv);
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    overlay.appendChild(box); document.body.appendChild(overlay);
     var cerrar = function() { overlay.remove(); };
     btnCerrar.addEventListener('click', cerrar);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
   }
 
-  // ── GENERAR PLANTILLA EXCEL ───────────────────────────────────
   function descargarPlantillaDirectorio() {
     var cargar = function() {
-      // Nombres exactos — NO cambiar, la importación depende de ellos
-      var headers = [
-        'n_unidad','tipo_unidad','rol_sii','alicuota','subdivision',
-        'rut_propietario','nombre_propietario','correo_propietario',
-        'rut_residente','nombre_residente','celular_residente',
-        'patentes_separadas_por_comas','condicion_ocupacion'
-      ];
-      var tipos = [
-        'obligatorio','obligatorio','recomendado','obligatorio','recomendado',
-        'obligatorio','obligatorio','recomendado',
-        'opcional','opcional','opcional','opcional','opcional'
-      ];
+      var headers = ['n_unidad','tipo_unidad','rol_sii','alicuota','subdivision','rut_propietario','nombre_propietario','correo_propietario','rut_residente','nombre_residente','celular_residente','patentes_separadas_por_comas','condicion_ocupacion'];
       var ejemplos = [
-        ['D001','DEPTO','9870-1',0.0110,'','12.345.678-9','Juan Pérez','juan@email.com','12.345.678-9','Juan Pérez','+56987736350','KKKK11','propietario residente'],
-        ['E-15','ESTACIONAMIENTO','9870-45',0.0015,'','12.345.678-9','Juan Pérez','juan@email.com','12.345.678-9','Juan Pérez','','','propietario residente'],
-        ['B-04','BODEGA','',0.0005,'','12.345.678-9','Juan Pérez','juan@email.com','12.345.678-9','Juan Pérez','','','propietario residente'],
-        ['D002','DEPTO','9870-2',0.0125,'Torre A','98.765.432-1','Ana Gómez','ana@email.com','22.333.444-5','Luis Soto','+56911223344','LLLL22','arrendado'],
-        ['E-16','ESTACIONAMIENTO','9870-46',0.0015,'Torre A','98.765.432-1','Ana Gómez','ana@email.com','22.333.444-5','Luis Soto','','','arrendado']
+        ['D001','DEPTO','9870-1',0.0110,'','12.345.678-9','Juan P\u00E9rez','juan@email.com','12.345.678-9','Juan P\u00E9rez','+56987736350','KKKK11','propietario residente'],
+        ['E-15','ESTACIONAMIENTO','9870-45',0.0015,'','12.345.678-9','Juan P\u00E9rez','juan@email.com','12.345.678-9','Juan P\u00E9rez','','','propietario residente'],
+        ['B-04','BODEGA','',0.0005,'','12.345.678-9','Juan P\u00E9rez','juan@email.com','12.345.678-9','Juan P\u00E9rez','','','propietario residente'],
+        ['D002','DEPTO','9870-2',0.0125,'Torre A','98.765.432-1','Ana G\u00F3mez','ana@email.com','22.333.444-5','Luis Soto','+56911223344','LLLL22','arrendado']
       ];
-
       var wb = XLSX.utils.book_new();
-
-      // ── Hoja Carga_Masiva ──
       var data = [headers].concat(ejemplos);
       var ws = XLSX.utils.aoa_to_sheet(data);
       ws['!cols'] = [12,18,12,10,12,16,22,24,16,20,16,22,22].map(function(w){ return { wch: w }; });
       XLSX.utils.book_append_sheet(wb, ws, 'Carga_Masiva');
-
-      // ── Hoja Instrucciones ──
-      var inst = [
-        ['coproactiva — Instrucciones de uso',''],
-        ['',''],
-        ['OBLIGATORIOS','Descripción'],
-        ['n_unidad','Número de la unidad. Ej: D001, E-15, B-04'],
-        ['tipo_unidad','DEPTO / ESTACIONAMIENTO / BODEGA / LOCAL / CASA / OFICINA'],
-        ['alicuota','Factor decimal. 0.0110 = 1.10%. La SUMA de todas las filas debe ser exactamente 1.0000'],
-        ['rut_propietario','RUT del copropietario (obligado legal de gastos comunes). Ej: 12.345.678-9'],
-        ['nombre_propietario','Nombre completo del copropietario'],
-        ['',''],
-        ['RECOMENDADOS','Descripción'],
-        ['rol_sii','Rol SII de la unidad. Ej: 9870-1'],
-        ['subdivision','Torre o bloque si corresponde. Ej: Torre A. Dejar vacío si no aplica.'],
-        ['correo_propietario','Email del copropietario para comunicaciones'],
-        ['',''],
-        ['OPCIONALES','Descripción'],
-        ['rut_residente','RUT de quien habita. Si vacío, se asume el propietario como residente.'],
-        ['nombre_residente','Nombre del residente si es distinto al propietario'],
-        ['celular_residente','Teléfono del residente. Ej: +56912345678'],
-        ['patentes_separadas_por_comas','Patentes del residente. Separar con coma. Ej: KKKK11, LLLL22'],
-        ['condicion_ocupacion','propietario residente / arrendado / desocupado / en remodelacion'],
-        ['',''],
-        ['REGLAS',''],
-        ['Unidades principales','DEPTO, CASA, LOCAL, OFICINA'],
-        ['Unidades anexas','ESTACIONAMIENTO, BODEGA — se vinculan al DEPTO del mismo rut_propietario'],
-        ['Propiedad múltiple','Repetir el RUT del propietario en cada fila de sus unidades'],
-        ['Suma alícuotas','La suma de TODOS los factores debe ser 1.0000 (100%)']
-      ];
+      var inst = [['coproactiva \u2014 Instrucciones de uso',''],['',''],['OBLIGATORIOS','Descripci\u00F3n'],['n_unidad','N\u00FAmero de la unidad'],['tipo_unidad','DEPTO / ESTACIONAMIENTO / BODEGA / LOCAL / CASA / OFICINA'],['alicuota','Factor decimal. 0.0110 = 1.10%. La SUMA debe ser exactamente 1.0000'],['rut_propietario','RUT del copropietario'],['nombre_propietario','Nombre completo del copropietario'],['',''],['OPCIONALES','Descripci\u00F3n'],['rut_residente','RUT de quien habita. Si vac\u00EDo, se asume el propietario.'],['nombre_residente','Nombre del residente si es distinto al propietario'],['celular_residente','Tel\u00E9fono del residente'],['condicion_ocupacion','propietario residente / arrendado / desocupado / en remodelacion']];
       var wsI = XLSX.utils.aoa_to_sheet(inst);
       wsI['!cols'] = [{ wch: 32 }, { wch: 68 }];
       XLSX.utils.book_append_sheet(wb, wsI, 'Instrucciones');
-
       XLSX.writeFile(wb, 'Plantilla_CargaMasiva_CoproActiva.xlsx');
     };
-
-    if (typeof XLSX === 'undefined') {
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload = cargar;
-      document.head.appendChild(s);
-    } else {
-      cargar();
-    }
+    if (typeof XLSX === 'undefined') { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = cargar; document.head.appendChild(s); } else { cargar(); }
   }
 
-  // ── PROCESAR ARCHIVO EXCEL ────────────────────────────────────
   function procesarArchivoDirectorio(file, comunidadId, box, overlay) {
-    if (typeof XLSX === 'undefined') {
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload = function() { procesarArchivoDirectorio(file, comunidadId, box, overlay); };
-      document.head.appendChild(s);
-      return;
-    }
+    if (typeof XLSX === 'undefined') { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = function() { procesarArchivoDirectorio(file, comunidadId, box, overlay); }; document.head.appendChild(s); return; }
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
         var wb = XLSX.read(e.target.result, { type: 'array' });
-
-        // Buscar hoja de carga masiva — acepta cualquier nombre
-        function buscarHoja(wb, nombres) {
-          for (var i = 0; i < nombres.length; i++) {
-            var buscar = nombres[i].toLowerCase().trim();
-            for (var j = 0; j < wb.SheetNames.length; j++) {
-              if (wb.SheetNames[j].toLowerCase().trim() === buscar) {
-                return wb.Sheets[wb.SheetNames[j]];
-              }
-            }
-          }
-          return wb.Sheets[wb.SheetNames[0]] || null;
-        }
-
+        function buscarHoja(wb, nombres) { for (var i=0;i<nombres.length;i++){ var buscar=nombres[i].toLowerCase().trim(); for (var j=0;j<wb.SheetNames.length;j++){ if(wb.SheetNames[j].toLowerCase().trim()===buscar) return wb.Sheets[wb.SheetNames[j]]; } } return wb.Sheets[wb.SheetNames[0]]||null; }
         var hoja = buscarHoja(wb, ['carga_masiva','carga masiva','directorio','unidades','data']);
         var filas = hoja ? XLSX.utils.sheet_to_json(hoja, { defval: '' }) : [];
-
-        // Normalizar headers — quitar asteriscos y espacios
-        filas = filas.map(function(f) {
-          var norm = {};
-          Object.keys(f).forEach(function(k) {
-            var kn = k.replace(/\s*\*\s*/g, '').trim();
-            norm[kn] = f[k];
-          });
-          return norm;
-        });
-
-        // Filtrar filas de instrucciones (sin n_unidad o tipo_unidad)
-        filas = filas.filter(function(f) {
-          return f.n_unidad && String(f.n_unidad).trim() !== '' &&
-                 f.tipo_unidad && String(f.tipo_unidad).trim() !== '';
-        });
-
-        if (filas.length === 0) {
-          var errDiv = box.querySelector('.form-error');
-          if (errDiv) {
-            errDiv.textContent = 'No se encontraron datos válidos. Hojas detectadas: ' + wb.SheetNames.join(', ');
-            errDiv.style.display = 'block';
-          }
-          return;
-        }
-
+        filas = filas.map(function(f){ var norm={}; Object.keys(f).forEach(function(k){ var kn=k.replace(/\s*\*\s*/g,'').trim(); norm[kn]=f[k]; }); return norm; });
+        filas = filas.filter(function(f){ return f.n_unidad && String(f.n_unidad).trim()!=='' && f.tipo_unidad && String(f.tipo_unidad).trim()!==''; });
+        if (filas.length === 0) { var errDiv=box.querySelector('.form-error'); if(errDiv){ errDiv.textContent='No se encontraron datos v\u00E1lidos. Hojas: '+wb.SheetNames.join(', '); errDiv.style.display='block'; } return; }
         mostrarPrevisualizacion(filas, comunidadId, box, overlay);
-      } catch (err) {
-        var errDiv = box.querySelector('.form-error');
-        if (errDiv) { errDiv.textContent = 'Error al leer el archivo: ' + err.message; errDiv.style.display = 'block'; }
-      }
+      } catch (err) { var errDiv=box.querySelector('.form-error'); if(errDiv){ errDiv.textContent='Error al leer el archivo: '+err.message; errDiv.style.display='block'; } }
     };
     reader.readAsArrayBuffer(file);
   }
 
-  // ── PREVISUALIZACIÓN ──────────────────────────────────────────
   function mostrarPrevisualizacion(filas, comunidadId, box, overlay) {
     box.innerHTML = '';
+    var btnCerrar = document.createElement('button'); btnCerrar.className = 'modal-close'; btnCerrar.textContent = '\u00D7'; btnCerrar.addEventListener('click', function() { overlay.remove(); }); box.appendChild(btnCerrar);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Confirmar importaci\u00F3n'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Previsualizar datos'; box.appendChild(tt);
 
-    var btnCerrar = document.createElement('button');
-    btnCerrar.className = 'modal-close';
-    btnCerrar.textContent = '×';
-    btnCerrar.addEventListener('click', function() { overlay.remove(); });
-    box.appendChild(btnCerrar);
+    var rutsCop={}, rutsRes={};
+    filas.forEach(function(f){ if(f.rut_propietario) rutsCop[String(f.rut_propietario).replace(/[\.\-\s]/g,'')]=true; var rutR=f.rut_residente||f.rut_propietario; if(rutR) rutsRes[String(rutR).replace(/[\.\-\s]/g,'')]=true; });
+    var sumaAlic=filas.reduce(function(s,f){ return s+(parseFloat(String(f.alicuota||'0').replace(',','.'))||0); },0);
+    var alicValida=Math.abs(sumaAlic-1)<0.0001;
 
-    var ey = document.createElement('div');
-    ey.className = 'modal-eyebrow';
-    ey.textContent = 'Confirmar importación';
-    box.appendChild(ey);
-
-    var tt = document.createElement('div');
-    tt.className = 'modal-titulo';
-    tt.textContent = 'Previsualizar datos';
-    box.appendChild(tt);
-
-    // Calcular resumen desde filas planas
-    var rutsCop = {};
-    var rutsRes = {};
-    filas.forEach(function(f) {
-      if (f.rut_propietario) rutsCop[String(f.rut_propietario).replace(/[\.\-\s]/g,'')] = true;
-      var rutR = f.rut_residente || f.rut_propietario;
-      if (rutR) rutsRes[String(rutR).replace(/[\.\-\s]/g,'')] = true;
-    });
-    var nCoprop   = Object.keys(rutsCop).length;
-    var nResidentes = Object.keys(rutsRes).length;
-
-    // Validar alícuotas
-    var sumaAlic = filas.reduce(function(s, f) {
-      return s + (parseFloat(String(f.alicuota||'0').replace(',','.')) || 0);
-    }, 0);
-    var alicValida = Math.abs(sumaAlic - 1) < 0.0001;
-
-    // KPIs
-    var resumen = document.createElement('div');
-    resumen.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px';
-    function kpiPrev(num, lbl, col) {
-      var k = document.createElement('div');
-      k.style.cssText = 'background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:10px 12px;text-align:center';
-      k.innerHTML = '<div style="font-size:20px;font-weight:800;color:' + col + ';letter-spacing:-0.02em">' + num + '</div>'
-        + '<div style="font-size:10px;color:var(--co-mute);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">' + lbl + '</div>';
-      return k;
-    }
-    resumen.appendChild(kpiPrev(filas.length, 'Unidades', 'var(--co-blue)'));
-    resumen.appendChild(kpiPrev(nCoprop, 'Copropietarios', 'var(--co-orange)'));
-    resumen.appendChild(kpiPrev(nResidentes, 'Residentes', 'var(--co-green)'));
+    var resumen=document.createElement('div'); resumen.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px';
+    function kpiPrev(num,lbl,col){ var k=document.createElement('div'); k.style.cssText='background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:10px 12px;text-align:center'; k.innerHTML='<div style="font-size:20px;font-weight:800;color:'+col+';letter-spacing:-0.02em">'+num+'</div><div style="font-size:10px;color:var(--co-mute);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">'+lbl+'</div>'; return k; }
+    resumen.appendChild(kpiPrev(filas.length,'Unidades','var(--co-blue)'));
+    resumen.appendChild(kpiPrev(Object.keys(rutsCop).length,'Copropietarios','var(--co-orange)'));
+    resumen.appendChild(kpiPrev(Object.keys(rutsRes).length,'Residentes','var(--co-green)'));
     box.appendChild(resumen);
 
-    // Barra alícuotas
-    var alicBar = document.createElement('div');
-    alicBar.style.cssText = 'padding:8px 12px;border-radius:var(--co-r-md);margin-bottom:12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;'
-      + (alicValida ? 'background:var(--co-green-soft);color:var(--co-green)' : 'background:var(--co-red-soft);color:var(--co-red)');
-    alicBar.innerHTML = (alicValida
-      ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Alícuotas suman 1.0000 — 100% correcto'
-      : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Alícuotas suman ' + sumaAlic.toFixed(4) + ' (' + (sumaAlic*100).toFixed(2) + '%) — Debe ser 1.0000 (100%)');
+    var alicBar=document.createElement('div'); alicBar.style.cssText='padding:8px 12px;border-radius:var(--co-r-md);margin-bottom:12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;'+(alicValida?'background:var(--co-green-soft);color:var(--co-green)':'background:var(--co-red-soft);color:var(--co-red)');
+    alicBar.innerHTML=(alicValida?'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8l4 4 6-6"/></svg> Al\u00EDcuotas suman 1.0000 \u2014 100% correcto':'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg> Al\u00EDcuotas suman '+sumaAlic.toFixed(4)+' \u2014 Debe ser 1.0000');
     box.appendChild(alicBar);
 
-    // Preview primeras 5 filas
-    var prevTit = document.createElement('div');
-    prevTit.style.cssText = 'font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px';
-    prevTit.textContent = 'Vista previa';
-    box.appendChild(prevTit);
-
-    var wrap = document.createElement('div');
-    wrap.style.cssText = 'overflow-x:auto;margin-bottom:14px';
-    var tabla = document.createElement('table');
-    tabla.className = 'com-dir-table';
-    var thead = document.createElement('thead');
-    var trh   = document.createElement('tr');
-    ['Número','Tipo','Alícuota','Propietario','Residente'].forEach(function(h) {
-      var th = document.createElement('th'); th.textContent = h; trh.appendChild(th);
-    });
+    var prevTit=document.createElement('div'); prevTit.style.cssText='font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px'; prevTit.textContent='Vista previa'; box.appendChild(prevTit);
+    var wrap=document.createElement('div'); wrap.style.cssText='overflow-x:auto;margin-bottom:14px';
+    var tabla=document.createElement('table'); tabla.className='com-dir-table';
+    var thead=document.createElement('thead'); var trh=document.createElement('tr');
+    ['N\u00FAmero','Tipo','Al\u00EDcuota','Propietario','Residente'].forEach(function(h){ var th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
     thead.appendChild(trh); tabla.appendChild(thead);
-    var tbody = document.createElement('tbody');
-    filas.slice(0,5).forEach(function(f) {
-      var tr = document.createElement('tr');
-      var alic = parseFloat(String(f.alicuota||'0').replace(',','.'));
-      [
-        String(f.n_unidad||'—'),
-        String(f.tipo_unidad||'—'),
-        isNaN(alic) ? '—' : alic.toFixed(4) + '%',
-        String(f.nombre_propietario||'—'),
-        String(f.nombre_residente||f.nombre_propietario||'—')
-      ].forEach(function(v) {
-        var td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-    if (filas.length > 5) {
-      var trM = document.createElement('tr');
-      var tdM = document.createElement('td');
-      tdM.colSpan = 5;
-      tdM.style.cssText = 'text-align:center;color:var(--co-mute);font-size:11px;padding:8px';
-      tdM.textContent = '+ ' + (filas.length - 5) + ' filas más';
-      trM.appendChild(tdM); tbody.appendChild(trM);
-    }
+    var tbody=document.createElement('tbody');
+    filas.slice(0,5).forEach(function(f){ var tr=document.createElement('tr'); var alic=parseFloat(String(f.alicuota||'0').replace(',','.')); [String(f.n_unidad||'\u2014'),String(f.tipo_unidad||'\u2014'),isNaN(alic)?'\u2014':alic.toFixed(4)+'%',String(f.nombre_propietario||'\u2014'),String(f.nombre_residente||f.nombre_propietario||'\u2014')].forEach(function(v){ var td=document.createElement('td'); td.textContent=v; tr.appendChild(td); }); tbody.appendChild(tr); });
+    if (filas.length>5){ var trM=document.createElement('tr'); var tdM=document.createElement('td'); tdM.colSpan=5; tdM.style.cssText='text-align:center;color:var(--co-mute);font-size:11px;padding:8px'; tdM.textContent='+ '+(filas.length-5)+' filas m\u00E1s'; trM.appendChild(tdM); tbody.appendChild(trM); }
     tabla.appendChild(tbody); wrap.appendChild(tabla); box.appendChild(wrap);
 
-    // Advertencia
-    var aviso = document.createElement('div');
-    aviso.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:10px 14px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:14px;display:flex;align-items:flex-start;gap:8px';
-    aviso.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>'
-      + '<span>Esta acción creará los registros en el sistema. Verifica los datos antes de confirmar.</span>';
+    var aviso=document.createElement('div'); aviso.style.cssText='background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:10px 14px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:14px;display:flex;align-items:flex-start;gap:8px';
+    aviso.innerHTML='<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg><span>Esta acci\u00F3n crear\u00E1 los registros en el sistema. Verifica los datos antes de confirmar.</span>';
     box.appendChild(aviso);
 
-    var errDiv = document.createElement('div');
-    errDiv.className = 'form-error';
-    errDiv.style.display = 'none';
-    box.appendChild(errDiv);
-
-    var btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px';
-
-    var btnVolver = document.createElement('button');
-    btnVolver.className = 'btn-ghost';
-    btnVolver.textContent = '← Volver';
-    btnVolver.addEventListener('click', function() { overlay.remove(); modalImportarDirectorio(comunidadId); });
-
-    var btnConfirmar = document.createElement('button');
-    btnConfirmar.className = 'btn-guardar';
-    btnConfirmar.style.marginTop = '0';
-    btnConfirmar.textContent = 'Importar ' + filas.length + ' unidades';
-    btnConfirmar.addEventListener('click', function() {
-      btnConfirmar.disabled = true;
-      btnConfirmar.textContent = 'Importando…';
-      errDiv.style.display = 'none';
-      ejecutarImportacion(filas, comunidadId, btnConfirmar, errDiv, overlay);
-    });
-
-    btnRow.appendChild(btnVolver);
-    btnRow.appendChild(btnConfirmar);
-    box.appendChild(btnRow);
+    var errDiv=document.createElement('div'); errDiv.className='form-error'; errDiv.style.display='none'; box.appendChild(errDiv);
+    var btnRow=document.createElement('div'); btnRow.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px';
+    var btnVolver=document.createElement('button'); btnVolver.className='btn-ghost'; btnVolver.textContent='\u2190 Volver'; btnVolver.addEventListener('click', function(){ overlay.remove(); modalImportarDirectorio(comunidadId); });
+    var btnConfirmar=document.createElement('button'); btnConfirmar.className='btn-guardar'; btnConfirmar.style.marginTop='0'; btnConfirmar.textContent='Importar '+filas.length+' unidades';
+    btnConfirmar.addEventListener('click', function(){ btnConfirmar.disabled=true; btnConfirmar.textContent='Importando\u2026'; errDiv.style.display='none'; ejecutarImportacion(filas, comunidadId, btnConfirmar, errDiv, overlay); });
+    btnRow.appendChild(btnVolver); btnRow.appendChild(btnConfirmar); box.appendChild(btnRow);
   }
 
-  // ── EJECUTAR IMPORTACIÓN ──────────────────────────────────────
-  // Delega toda la lógica de 3 pasadas al backend (Unidades.importarMasivo)
   function ejecutarImportacion(filas, comunidadId, btn, errDiv, overlay) {
-    btn.textContent = 'Procesando…';
-
-    api('/directorio/importar', 'POST', {
-      comunidadId: comunidadId,
-      filas:       filas
-    }).then(function(resp) {
+    btn.textContent = 'Procesando\u2026';
+    api('/directorio/importar', 'POST', { comunidadId: comunidadId, filas: filas }).then(function(resp) {
       var r = resp.data || resp;
-      if (!resp.ok || !r.ok) {
-        errDiv.textContent = r.error || resp.error || 'Error al importar';
-        errDiv.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Reintentar';
-        return;
-      }
-
-      // Mostrar resultado
-      var msg = '✓ ' + (r.creadas || 0) + ' unidades'
-              + ' · ' + (r.copropietarios || 0) + ' copropietarios'
-              + ' · ' + (r.residentes || 0) + ' residentes';
-      btn.textContent = msg;
-      btn.style.background = 'var(--co-green)';
-
-      // Alerta si alícuotas no suman 1
-      if (r.alicuotasValidas === false) {
-        errDiv.textContent = '⚠️ Alícuotas suman ' + (r.sumaAlicuotas || '?') + ' (' + ((r.sumaAlicuotas||0)*100).toFixed(2) + '%) — Debe ser 1.0000 (100%). Revisa la tabla de prorrateo.';
-        errDiv.style.display = 'block';
-      }
-
-      // Mostrar errores parciales si los hay
-      if (r.errores && r.errores.length > 0) {
-        errDiv.textContent = (errDiv.textContent ? errDiv.textContent + ' | ' : '') +
-          r.errores.slice(0, 3).join(' | ') + (r.errores.length > 3 ? ' (+' + (r.errores.length - 3) + ' más)' : '');
-        errDiv.style.display = 'block';
-      }
-
-      setTimeout(function() { overlay.remove(); cargarDirectorio(comunidadId); }, 1600);
-    }).catch(function(err) {
-      errDiv.textContent = 'Error de conexión: ' + err.message;
-      errDiv.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = 'Reintentar';
-    });
-  }
-  // ── HELPER MODAL GENÉRICO ─────────────────────────────────────
-  function _modalFormDirectorio(opts) {
-    var overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    var box = document.createElement('div');
-    box.className = 'modal-box';
-
-    var btnCerrar = document.createElement('button');
-    btnCerrar.className = 'modal-close';
-    btnCerrar.textContent = '×';
-    box.appendChild(btnCerrar);
-
-    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = opts.eyebrow; box.appendChild(ey);
-    var tt = document.createElement('div'); tt.className = 'modal-titulo';  tt.textContent = opts.titulo;  box.appendChild(tt);
-    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = opts.subtitulo; box.appendChild(st);
-
-    if (opts.advertencia) {
-      var av = document.createElement('div');
-      av.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:9px 13px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:16px;display:flex;align-items:center;gap:7px';
-      av.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>Datos sensibles — se pedirá confirmación antes de guardar';
-      box.appendChild(av);
-    }
-
-    var grid = document.createElement('div');
-    grid.className = 'form-grid';
-
-    opts.campos.forEach(function(c) {
-      var fg = document.createElement('div');
-      fg.className = 'form-group' + (c.full ? ' form-full' : '');
-      var lbl = document.createElement('label'); lbl.textContent = c.lbl; fg.appendChild(lbl);
-      var inp;
-      if (c.tipo === 'select') {
-        inp = document.createElement('select'); inp.id = c.id;
-        (c.opts || []).forEach(function(o) {
-          var opt = document.createElement('option'); opt.value = o; opt.textContent = o;
-          if (c.val && c.val === o) opt.selected = true;
-          inp.appendChild(opt);
-        });
-      } else {
-        inp = document.createElement('input'); inp.type = c.tipo; inp.id = c.id;
-        inp.placeholder = c.ph || ''; inp.value = c.val || '';
-      }
-      fg.appendChild(inp); grid.appendChild(fg);
-    });
-    box.appendChild(grid);
-
-    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
-
-    var btnGuardar = document.createElement('button');
-    btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = opts.btnLabel; box.appendChild(btnGuardar);
-
-    overlay.appendChild(box); document.body.appendChild(overlay);
-
-    var cerrar = function() { overlay.remove(); };
-    btnCerrar.addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    btnGuardar.addEventListener('click', function() {
-      var vals = {};
-      opts.campos.forEach(function(c) {
-        var el = document.getElementById(c.id);
-        if (el) vals[c.id] = el.value.trim ? el.value.trim() : el.value;
-      });
-      opts.onGuardar(vals, btnGuardar, errDiv, overlay);
-    });
+      if (!resp.ok || !r.ok) { errDiv.textContent = r.error || resp.error || 'Error al importar'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Reintentar'; return; }
+      var msg = '\u2713 ' + (r.creadas||0) + ' unidades \u00B7 ' + (r.copropietarios||0) + ' copropietarios \u00B7 ' + (r.residentes||0) + ' residentes';
+      btn.textContent = msg; btn.style.background = 'var(--co-green)';
+      if (r.alicuotasValidas === false) { errDiv.textContent = '\u26A0\uFE0F Al\u00EDcuotas suman ' + (r.sumaAlicuotas||'?') + ' \u2014 Debe ser 1.0000'; errDiv.style.display='block'; }
+      if (r.errores && r.errores.length > 0) { errDiv.textContent = (errDiv.textContent ? errDiv.textContent+' | ':'')+r.errores.slice(0,3).join(' | ')+(r.errores.length>3?' (+'+(r.errores.length-3)+' m\u00E1s)':''); errDiv.style.display='block'; }
+      setTimeout(function(){ overlay.remove(); cargarDirectorio(comunidadId); }, 1600);
+    }).catch(function(err){ errDiv.textContent='Error de conexi\u00F3n: '+err.message; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Reintentar'; });
   }
 
-  // ── MODAL NUEVA COMUNIDAD ─────────────────────────────────────
+  // ── MODALES NUEVA / EDITAR COMUNIDAD ─────────────────────────
   function abrirModalNueva() {
     var overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     var box = document.createElement('div');
     box.className = 'modal-box';
-
-    var btnCerrar = document.createElement('button');
-    btnCerrar.className = 'modal-close';
-    btnCerrar.textContent = '\u00D7';
-    box.appendChild(btnCerrar);
-
-    var ey = document.createElement('div');
-    ey.className = 'modal-eyebrow';
-    ey.textContent = 'Nueva comunidad';
-    box.appendChild(ey);
-
-    var tt = document.createElement('div');
-    tt.className = 'modal-titulo';
-    tt.textContent = 'Registrar comunidad';
-    box.appendChild(tt);
-
-    var st = document.createElement('div');
-    st.className = 'modal-subtitulo';
-    st.textContent = 'Datos b\u00E1sicos del condominio y contrato';
-    box.appendChild(st);
-
-    var grid = document.createElement('div');
-    grid.className = 'form-grid';
-
+    var btnCerrar = document.createElement('button'); btnCerrar.className = 'modal-close'; btnCerrar.textContent = '\u00D7'; box.appendChild(btnCerrar);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Nueva comunidad'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Registrar comunidad'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Datos b\u00E1sicos del condominio y contrato'; box.appendChild(st);
+    var grid = document.createElement('div'); grid.className = 'form-grid';
     var campos = [
-      { id: 'n-nombre',    lbl: 'Nombre *',         tipo: 'text',   ph: 'Ej: Condominio Las Rosas', full: true },
-      { id: 'n-direccion', lbl: 'Direcci\u00F3n *',  tipo: 'text',   ph: 'Calle y n\u00FAmero' },
-      { id: 'n-comuna',    lbl: 'Comuna *',          tipo: 'text',   ph: 'Ej: San Bernardo' },
-      { id: 'n-rut',       lbl: 'RUT comunidad',     tipo: 'text',   ph: '76.XXX.XXX-X' },
-      { id: 'n-unidades',  lbl: 'Unidades',          tipo: 'number', ph: '0' },
-      { id: 'n-honorario', lbl: 'Honorario ($)',     tipo: 'number', ph: '0' },
-      { id: 'n-modalidad', lbl: 'Modalidad',         tipo: 'select', opts: ['Integral', 'Nueva', 'Auditoria'] },
-      { id: 'n-contacto',  lbl: 'Contacto comit\u00E9', tipo: 'text', ph: 'Nombre completo' },
-      { id: 'n-telefono',  lbl: 'Tel\u00E9fono',     tipo: 'tel',    ph: '+56 9...' },
-      { id: 'n-inicio',    lbl: 'Inicio contrato',   tipo: 'text',   ph: 'DD/MM/AAAA' },
-      { id: 'n-renovacion', lbl: 'Renovaci\u00F3n',  tipo: 'text',   ph: 'DD/MM/AAAA' }
+      { id:'n-nombre',    lbl:'Nombre *',              tipo:'text',   ph:'Ej: Condominio Las Rosas', full:true },
+      { id:'n-direccion', lbl:'Direcci\u00F3n *',      tipo:'text',   ph:'Calle y n\u00FAmero' },
+      { id:'n-comuna',    lbl:'Comuna *',              tipo:'text',   ph:'Ej: San Bernardo' },
+      { id:'n-rut',       lbl:'RUT comunidad',         tipo:'text',   ph:'76.XXX.XXX-X' },
+      { id:'n-unidades',  lbl:'Unidades',              tipo:'number', ph:'0' },
+      { id:'n-honorario', lbl:'Honorario ($)',         tipo:'number', ph:'0' },
+      { id:'n-modalidad', lbl:'Modalidad',             tipo:'select', opts:['Integral','Nueva','Auditoria'] },
+      { id:'n-contacto',  lbl:'Contacto comit\u00E9', tipo:'text',   ph:'Nombre completo' },
+      { id:'n-telefono',  lbl:'Tel\u00E9fono',        tipo:'tel',    ph:'+56 9...' },
+      { id:'n-inicio',    lbl:'Inicio contrato',      tipo:'text',   ph:'DD/MM/AAAA' },
+      { id:'n-renovacion',lbl:'Renovaci\u00F3n',      tipo:'text',   ph:'DD/MM/AAAA' }
     ];
-
     campos.forEach(function(c) {
-      var fg = document.createElement('div');
-      fg.className = 'form-group' + (c.full ? ' form-full' : '');
-      var lbl = document.createElement('label');
-      lbl.textContent = c.lbl;
-      fg.appendChild(lbl);
+      var fg = document.createElement('div'); fg.className = 'form-group' + (c.full?' form-full':'');
+      var lbl = document.createElement('label'); lbl.textContent = c.lbl; fg.appendChild(lbl);
       var inp;
-      if (c.tipo === 'select') {
-        inp = document.createElement('select');
-        inp.id = c.id;
-        c.opts.forEach(function(o) {
-          var opt = document.createElement('option');
-          opt.value = o; opt.textContent = o;
-          inp.appendChild(opt);
-        });
-      } else {
-        inp = document.createElement('input');
-        inp.type = c.tipo;
-        inp.id = c.id;
-        inp.placeholder = c.ph || '';
-      }
-      fg.appendChild(inp);
-      grid.appendChild(fg);
+      if (c.tipo === 'select') { inp = document.createElement('select'); inp.id = c.id; c.opts.forEach(function(o){ var opt=document.createElement('option'); opt.value=o; opt.textContent=o; inp.appendChild(opt); }); }
+      else { inp = document.createElement('input'); inp.type=c.tipo; inp.id=c.id; inp.placeholder=c.ph||''; }
+      fg.appendChild(inp); grid.appendChild(fg);
     });
     box.appendChild(grid);
-
-    var errDiv = document.createElement('div');
-    errDiv.className = 'form-error';
-    errDiv.style.display = 'none';
-    box.appendChild(errDiv);
-
-    var btnGuardar = document.createElement('button');
-    btnGuardar.className = 'btn-guardar';
-    btnGuardar.textContent = 'Crear comunidad';
-    box.appendChild(btnGuardar);
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = 'Crear comunidad'; box.appendChild(btnGuardar);
+    overlay.appendChild(box); document.body.appendChild(overlay);
     var cerrar = function() { overlay.remove(); };
     btnCerrar.addEventListener('click', cerrar);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
     btnGuardar.addEventListener('click', function() {
       var nombre    = document.getElementById('n-nombre').value.trim();
       var direccion = document.getElementById('n-direccion').value.trim();
       var comuna    = document.getElementById('n-comuna').value.trim();
-      if (!nombre || !direccion || !comuna) {
-        errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.';
-        errDiv.style.display = 'block';
-        return;
-      }
-      btnGuardar.disabled = true;
-      btnGuardar.textContent = 'Creando\u2026';
-      errDiv.style.display = 'none';
-
-      var datos = {
-        action:               'crearComunidad',
-        nombre:               nombre,
-        direccion:            direccion,
-        comuna:               comuna,
-        rut:                  document.getElementById('n-rut').value.trim(),
-        unidades:             document.getElementById('n-unidades').value || 0,
-        honorario:            document.getElementById('n-honorario').value || 0,
-        modalidad:            document.getElementById('n-modalidad').value,
-        contactoNombre:       document.getElementById('n-contacto').value.trim(),
-        contactoTelefono:     document.getElementById('n-telefono').value.trim(),
-        fechaInicioContrato:  document.getElementById('n-inicio').value.trim(),
-        fechaRenovacion:      document.getElementById('n-renovacion').value.trim()
-      };
-
+      if (!nombre || !direccion || !comuna) { errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.'; errDiv.style.display='block'; return; }
+      btnGuardar.disabled = true; btnGuardar.textContent = 'Creando\u2026'; errDiv.style.display = 'none';
+      var datos = { action:'crearComunidad', nombre:nombre, direccion:direccion, comuna:comuna, rut:document.getElementById('n-rut').value.trim(), unidades:document.getElementById('n-unidades').value||0, honorario:document.getElementById('n-honorario').value||0, modalidad:document.getElementById('n-modalidad').value, contactoNombre:document.getElementById('n-contacto').value.trim(), contactoTelefono:document.getElementById('n-telefono').value.trim(), fechaInicioContrato:document.getElementById('n-inicio').value.trim(), fechaRenovacion:document.getElementById('n-renovacion').value.trim() };
       api('/comunidades', 'POST', datos).then(function(resp) {
-        if (resp.ok && resp.data && resp.data.ok) {
-          // Feedback visual de éxito
-          btnGuardar.textContent = '\u2713 Comunidad creada';
-          btnGuardar.style.background = 'var(--co-green)';
-          // Cerrar modal y refrescar listado sin recargar página
-          setTimeout(function() {
-            overlay.remove();
-            _recargarListado();
-          }, 900);
-        } else {
-          errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al crear';
-          errDiv.style.display = 'block';
-          btnGuardar.disabled = false;
-          btnGuardar.textContent = 'Crear comunidad';
-        }
-      }).catch(function(err) {
-        errDiv.textContent = 'Error de conexi\u00F3n: ' + err.message;
-        errDiv.style.display = 'block';
-        btnGuardar.disabled = false;
-        btnGuardar.textContent = 'Crear comunidad';
-      });
+        if (resp.ok && resp.data && resp.data.ok) { btnGuardar.textContent = '\u2713 Comunidad creada'; btnGuardar.style.background = 'var(--co-green)'; setTimeout(function(){ overlay.remove(); _recargarListado(); }, 900); }
+        else { errDiv.textContent=(resp.data&&resp.data.error)||resp.error||'Error al crear'; errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Crear comunidad'; }
+      }).catch(function(err){ errDiv.textContent='Error de conexi\u00F3n: '+err.message; errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Crear comunidad'; });
     });
   }
 
-  // ── MODAL EDITAR ──────────────────────────────────────────────
   function abrirModalEditar(c) {
     var overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     var box = document.createElement('div');
     box.className = 'modal-box';
-
-    var btnCerrar = document.createElement('button');
-    btnCerrar.className = 'modal-close';
-    btnCerrar.textContent = '\u00D7';
-    box.appendChild(btnCerrar);
-
-    var ey = document.createElement('div');
-    ey.className = 'modal-eyebrow';
-    ey.textContent = 'Editar comunidad';
-    box.appendChild(ey);
-
-    var tt = document.createElement('div');
-    tt.className = 'modal-titulo';
-    tt.textContent = c.nombre || '';
-    box.appendChild(tt);
-
-    var st = document.createElement('div');
-    st.className = 'modal-subtitulo';
-    st.textContent = 'Modifica los datos y guarda los cambios';
-    box.appendChild(st);
-
-    var grid = document.createElement('div');
-    grid.className = 'form-grid';
-
-    var vals = {
-      'e-nombre':     c.nombre || '',
-      'e-direccion':  c.direccion || '',
-      'e-comuna':     c.comuna || '',
-      'e-rut':        c.rut || '',
-      'e-unidades':   c.unidades || '',
-      'e-honorario':  c.honorario || '',
-      'e-modalidad':  c.modalidad || 'Integral',
-      'e-contacto':   c.contactoNombre || '',
-      'e-telefono':   c.contactoTelefono || '',
-      'e-inicio':     c.fechaInicioContrato || '',
-      'e-renovacion': c.fechaRenovacion || '',
-      'e-estado':     c.estado || 'activo'
-    };
-
+    var btnCerrar = document.createElement('button'); btnCerrar.className = 'modal-close'; btnCerrar.textContent = '\u00D7'; box.appendChild(btnCerrar);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Editar comunidad'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = c.nombre || ''; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Modifica los datos y guarda los cambios'; box.appendChild(st);
+    var grid = document.createElement('div'); grid.className = 'form-grid';
+    var vals = { 'e-nombre':c.nombre||'','e-direccion':c.direccion||'','e-comuna':c.comuna||'','e-rut':c.rut||'','e-unidades':c.unidades||'','e-honorario':c.honorario||'','e-modalidad':c.modalidad||'Integral','e-contacto':c.contactoNombre||'','e-telefono':c.contactoTelefono||'','e-inicio':c.fechaInicioContrato||'','e-renovacion':c.fechaRenovacion||'','e-estado':c.estado||'activo' };
     var camposE = [
-      { id: 'e-nombre',    lbl: 'Nombre *',           tipo: 'text',   full: true },
-      { id: 'e-direccion', lbl: 'Direcci\u00F3n *',    tipo: 'text' },
-      { id: 'e-comuna',    lbl: 'Comuna *',            tipo: 'text' },
-      { id: 'e-rut',       lbl: 'RUT comunidad',       tipo: 'text' },
-      { id: 'e-unidades',  lbl: 'Unidades',            tipo: 'number' },
-      { id: 'e-honorario', lbl: 'Honorario ($)',       tipo: 'number' },
-      { id: 'e-modalidad', lbl: 'Modalidad',           tipo: 'select', opts: ['Integral', 'Nueva', 'Auditoria'] },
-      { id: 'e-contacto',  lbl: 'Contacto comit\u00E9', tipo: 'text' },
-      { id: 'e-telefono',  lbl: 'Tel\u00E9fono',       tipo: 'tel' },
-      { id: 'e-inicio',    lbl: 'Inicio contrato',     tipo: 'text' },
-      { id: 'e-renovacion', lbl: 'Renovaci\u00F3n',    tipo: 'text' },
-      { id: 'e-estado',    lbl: 'Estado',              tipo: 'select', opts: ['activo', 'inactivo'] }
+      { id:'e-nombre',    lbl:'Nombre *',           tipo:'text',   full:true },
+      { id:'e-direccion', lbl:'Direcci\u00F3n *',   tipo:'text' },
+      { id:'e-comuna',    lbl:'Comuna *',           tipo:'text' },
+      { id:'e-rut',       lbl:'RUT comunidad',      tipo:'text' },
+      { id:'e-unidades',  lbl:'Unidades',           tipo:'number' },
+      { id:'e-honorario', lbl:'Honorario ($)',      tipo:'number' },
+      { id:'e-modalidad', lbl:'Modalidad',          tipo:'select', opts:['Integral','Nueva','Auditoria'] },
+      { id:'e-contacto',  lbl:'Contacto comit\u00E9', tipo:'text' },
+      { id:'e-telefono',  lbl:'Tel\u00E9fono',      tipo:'tel' },
+      { id:'e-inicio',    lbl:'Inicio contrato',   tipo:'text' },
+      { id:'e-renovacion',lbl:'Renovaci\u00F3n',   tipo:'text' },
+      { id:'e-estado',    lbl:'Estado',            tipo:'select', opts:['activo','inactivo'] }
     ];
-
     camposE.forEach(function(campo) {
-      var fg = document.createElement('div');
-      fg.className = 'form-group' + (campo.full ? ' form-full' : '');
-      var lbl = document.createElement('label');
-      lbl.textContent = campo.lbl;
-      fg.appendChild(lbl);
+      var fg = document.createElement('div'); fg.className = 'form-group' + (campo.full?' form-full':'');
+      var lbl = document.createElement('label'); lbl.textContent = campo.lbl; fg.appendChild(lbl);
       var inp;
-      if (campo.tipo === 'select') {
-        inp = document.createElement('select');
-        inp.id = campo.id;
-        campo.opts.forEach(function(o) {
-          var opt = document.createElement('option');
-          opt.value = o;
-          opt.textContent = o;
-          if (vals[campo.id] === o) opt.selected = true;
-          inp.appendChild(opt);
-        });
-      } else {
-        inp = document.createElement('input');
-        inp.type = campo.tipo;
-        inp.id = campo.id;
-        inp.value = vals[campo.id];
-      }
-      fg.appendChild(inp);
-      grid.appendChild(fg);
+      if (campo.tipo === 'select') { inp = document.createElement('select'); inp.id = campo.id; campo.opts.forEach(function(o){ var opt=document.createElement('option'); opt.value=o; opt.textContent=o; if(vals[campo.id]===o) opt.selected=true; inp.appendChild(opt); }); }
+      else { inp = document.createElement('input'); inp.type=campo.tipo; inp.id=campo.id; inp.value=vals[campo.id]; }
+      fg.appendChild(inp); grid.appendChild(fg);
     });
     box.appendChild(grid);
-
-    var errDiv = document.createElement('div');
-    errDiv.className = 'form-error';
-    errDiv.style.display = 'none';
-    box.appendChild(errDiv);
-
-    var btnGuardar = document.createElement('button');
-    btnGuardar.className = 'btn-guardar';
-    btnGuardar.textContent = 'Guardar cambios';
-    box.appendChild(btnGuardar);
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = 'Guardar cambios'; box.appendChild(btnGuardar);
+    overlay.appendChild(box); document.body.appendChild(overlay);
     var cerrar = function() { overlay.remove(); };
     btnCerrar.addEventListener('click', cerrar);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
     btnGuardar.addEventListener('click', function() {
       var nombre    = document.getElementById('e-nombre').value.trim();
       var direccion = document.getElementById('e-direccion').value.trim();
       var comuna    = document.getElementById('e-comuna').value.trim();
-      if (!nombre || !direccion || !comuna) {
-        errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.';
-        errDiv.style.display = 'block';
-        return;
-      }
-      btnGuardar.disabled = true;
-      btnGuardar.textContent = 'Guardando\u2026';
-      errDiv.style.display = 'none';
-
-      var datos = {
-        action:               'editarComunidad',
-        id:                   c.id,
-        nombre:               nombre,
-        direccion:            direccion,
-        comuna:               comuna,
-        rut:                  document.getElementById('e-rut').value.trim(),
-        unidades:             document.getElementById('e-unidades').value || 0,
-        honorario:            document.getElementById('e-honorario').value || 0,
-        modalidad:            document.getElementById('e-modalidad').value,
-        contactoNombre:       document.getElementById('e-contacto').value.trim(),
-        contactoTelefono:     document.getElementById('e-telefono').value.trim(),
-        fechaInicioContrato:  document.getElementById('e-inicio').value.trim(),
-        fechaRenovacion:      document.getElementById('e-renovacion').value.trim(),
-        estado:               document.getElementById('e-estado').value
-      };
-
+      if (!nombre || !direccion || !comuna) { errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.'; errDiv.style.display='block'; return; }
+      btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
+      var datos = { action:'editarComunidad', id:c.id, nombre:nombre, direccion:direccion, comuna:comuna, rut:document.getElementById('e-rut').value.trim(), unidades:document.getElementById('e-unidades').value||0, honorario:document.getElementById('e-honorario').value||0, modalidad:document.getElementById('e-modalidad').value, contactoNombre:document.getElementById('e-contacto').value.trim(), contactoTelefono:document.getElementById('e-telefono').value.trim(), fechaInicioContrato:document.getElementById('e-inicio').value.trim(), fechaRenovacion:document.getElementById('e-renovacion').value.trim(), estado:document.getElementById('e-estado').value };
       api('/comunidades', 'POST', datos).then(function(resp) {
-        if (resp.ok && resp.data && resp.data.ok) {
-          // Actualizar objeto en memoria
-          Object.assign(c, datos);
-          // Feedback visual de éxito
-          btnGuardar.textContent = '\u2713 Cambios guardados';
-          btnGuardar.style.background = 'var(--co-green)';
-          setTimeout(function() {
-            overlay.remove();
-            abrirFicha(c);
-          }, 900);
-        } else {
-          errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
-          errDiv.style.display = 'block';
-          btnGuardar.disabled = false;
-          btnGuardar.textContent = 'Guardar cambios';
-        }
-      }).catch(function(err) {
-        errDiv.textContent = 'Error de conexi\u00F3n: ' + err.message;
-        errDiv.style.display = 'block';
-        btnGuardar.disabled = false;
-        btnGuardar.textContent = 'Guardar cambios';
-      });
+        if (resp.ok && resp.data && resp.data.ok) { Object.assign(c, datos); btnGuardar.textContent = '\u2713 Cambios guardados'; btnGuardar.style.background = 'var(--co-green)'; setTimeout(function(){ overlay.remove(); abrirFicha(c); }, 900); }
+        else { errDiv.textContent=(resp.data&&resp.data.error)||resp.error||'Error al guardar'; errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Guardar cambios'; }
+      }).catch(function(err){ errDiv.textContent='Error de conexi\u00F3n: '+err.message; errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Guardar cambios'; });
     });
   }
 
-  // ── RECARGA LISTADO sin recargar página ─────────────────────
+  // ── RECARGA LISTADO ───────────────────────────────────────────
   function _recargarListado() {
     var root = document.getElementById('com-root');
-    if (root) {
-      root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--co-mute);font-size:13px;font-weight:600;gap:8px">'
-        + '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'
-        + '<path d="M13.5 8A5.5 5.5 0 1 1 8 2.5"/><path d="M13.5 2.5v3h-3"/></svg>'
-        + 'Actualizando…</div>';
-    }
+    if (root) root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--co-mute);font-size:13px;font-weight:600;gap:8px"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5"/><path d="M13.5 2.5v3h-3"/></svg>Actualizando\u2026</div>';
     api('/comunidades').then(function(resp) {
       var lista = null;
       if (resp.ok) {
@@ -3166,16 +3119,10 @@
       }
       if (lista === null) { mostrarError('Error al actualizar listado'); return; }
       _comunidades = lista;
-      window._comunidadesKpis = {
-        activas: _comunidades.filter(function(c) { return c.estado === 'activo'; }).length,
-        alertas: 0,
-        venc:    0
-      };
+      window._comunidadesKpis = { activas: _comunidades.filter(function(c){ return c.estado==='activo'; }).length, alertas: 0, venc: 0 };
       if (typeof actualizarKpisComunidades === 'function') actualizarKpisComunidades();
       renderListado();
-    }).catch(function(err) {
-      mostrarError('Error de conexión: ' + err.message);
-    });
+    }).catch(function(err){ mostrarError('Error de conexi\u00F3n: ' + err.message); });
   }
 
   function mostrarError(msg) {
