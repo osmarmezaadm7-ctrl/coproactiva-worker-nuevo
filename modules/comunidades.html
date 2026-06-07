@@ -103,6 +103,15 @@
     gap: 12px;
     align-items: center;
   }
+  @media (max-width: 600px) {
+    .com-row { flex-wrap: nowrap; gap: 8px; align-items: flex-start; }
+    .com-row-kpis { display: none; }
+    .com-sems { display: none; }
+    .com-row-nombre { white-space: normal; font-size: 13px; font-weight: 700; }
+    .com-row-sub { white-space: normal; flex-wrap: wrap; font-size: 10px; }
+    .com-row-info { min-width: 0; flex: 1; }
+    .com-row-ico { flex-shrink: 0; }
+  }
   .com-kpi-mini { text-align: center; min-width: 50px; }
   .com-kpi-mini-val {
     font-size: 15px;
@@ -486,7 +495,7 @@
     display: flex;
     align-items: center;
     gap: 9px;
-    padding: 7px 4px;
+    padding: 7px 14px;
     border-bottom: 1px solid var(--co-line-soft);
     transition: background 0.1s;
   }
@@ -498,12 +507,19 @@
     color: var(--co-ink);
     flex: 1;
     line-height: 1.3;
+    min-width: 0;
   }
   .com-doc-fecha {
     font-size: 11px;
     color: var(--co-mute);
     min-width: 80px;
     text-align: right;
+  }
+  @media (max-width: 600px) {
+    .com-doc-fecha { display: none; }
+    .com-doc-dias  { display: none; }
+    .com-doc-row   { gap: 7px; padding: 8px 12px; }
+    .com-doc-nombre { font-size: 12px; }
   }
   .com-doc-link {
     font-size: 11px;
@@ -1291,17 +1307,7 @@
     btnEditar.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2Z"/></svg>';
     btnEditar.appendChild(document.createTextNode(' Editar'));
     btnEditar.addEventListener('click', function() { abrirModalEditar(c); });
-    var btnDrive = document.createElement('button');
-    btnDrive.className = 'btn-ghost';
-    btnDrive.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13l4-7h8M6 6l3 7M2 13h12"/></svg>';
-    btnDrive.appendChild(document.createTextNode(' Drive'));
-    if (c.carpetaDriveId) {
-      btnDrive.addEventListener('click', function() {
-        window.open('https://drive.google.com/drive/folders/' + c.carpetaDriveId, '_blank');
-      });
-    }
     fActs.appendChild(btnEditar);
-    fActs.appendChild(btnDrive);
     hdr.appendChild(fIco);
     hdr.appendChild(fInfo);
     hdr.appendChild(fActs);
@@ -1759,6 +1765,8 @@
 
         // Días hasta vencimiento
         var diasEl = document.createElement('div');
+        diasEl.className = 'com-doc-dias';
+        diasEl.className = 'com-doc-dias';
         diasEl.style.cssText = 'font-size:11px;font-weight:600;min-width:72px;text-align:right';
         if (d && d.fechaVencimiento && DOCS_CON_VENCIMIENTO.indexOf(tipo) !== -1) {
           var dias = diasHasta(d.fechaVencimiento);
@@ -2238,7 +2246,7 @@
     var btnDriveModal = document.createElement('button');
     btnDriveModal.type = 'button';
     btnDriveModal.style.cssText = 'display:flex;align-items:center;gap:6px;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:600;color:var(--co-ink);background:var(--co-cream-deep);cursor:pointer;white-space:nowrap;min-height:44px;transition:border-color 0.13s';
-    btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Abrir carpeta';
+    btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Abrir en Drive';
 
     btnDriveModal.addEventListener('click', function() {
       if (!com || !com.carpetaDriveId) {
@@ -2251,7 +2259,7 @@
       api('/subcarpeta?carpetaRaizId=' + encodeURIComponent(com.carpetaDriveId) + '&nombre=' + encodeURIComponent(catActual))
         .then(function(r) {
           btnDriveModal.disabled = false;
-          btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Abrir carpeta';
+          btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Abrir en Drive';
           var fid = (r.ok && r.data && r.data.id) ? r.data.id : null;
           window.open(
             fid
@@ -2262,7 +2270,7 @@
         })
         .catch(function() {
           btnDriveModal.disabled = false;
-          btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Abrir carpeta';
+          btnDriveModal.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Abrir en Drive';
           window.open('https://drive.google.com/drive/folders/' + com.carpetaDriveId, '_blank');
         });
     });
