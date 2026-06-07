@@ -755,6 +755,22 @@
     margin-top: 2px;
   }
 
+  /* ── Catálogo scroll ── */
+  .com-doc-scroll {
+    overflow-y: auto;
+    max-height: calc(100vh - 320px);
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-lg);
+  }
+  .com-doc-cat-hdr-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--co-cream-deep);
+    padding: 8px 14px;
+  }
+  .com-doc-row { padding: 7px 14px; }
+
   /* ── Vacío ── */
   .com-vacio {
     text-align: center;
@@ -974,18 +990,44 @@
     catch (e) { return null; }
   }
 
-  function _catalogoFiltrado(instalaciones) {
+  function _parsearCatalogoCustom(raw) {
+    if (!raw) return { eliminados: {}, renombrados: {}, extras: [] };
+    try {
+      var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return {
+        eliminados:  parsed.eliminados  || {},
+        renombrados: parsed.renombrados || {},
+        extras:      parsed.extras      || []
+      };
+    } catch (e) { return { eliminados: {}, renombrados: {}, extras: [] }; }
+  }
+
+  function _catalogoFiltrado(instalaciones, custom) {
     var inst = instalaciones || {};
+    var c    = custom || { eliminados: {}, renombrados: {}, extras: [] };
     var excluidos = {};
     Object.keys(DOCS_POR_INSTALACION).forEach(function(key) {
       if (!inst[key]) {
         DOCS_POR_INSTALACION[key].forEach(function(tipo) { excluidos[tipo] = true; });
       }
     });
+    Object.keys(c.eliminados).forEach(function(tipo) {
+      if (c.eliminados[tipo]) excluidos[tipo] = true;
+    });
     var resultado = {};
     Object.keys(CATALOGO_DOCS).forEach(function(cat) {
-      var tipos = CATALOGO_DOCS[cat].filter(function(t) { return !excluidos[t]; });
+      var tipos = CATALOGO_DOCS[cat]
+        .filter(function(t) { return !excluidos[t]; })
+        .map(function(t) { return c.renombrados[t] ? c.renombrados[t] : t; });
       if (tipos.length > 0) resultado[cat] = tipos;
+    });
+    c.extras.forEach(function(extra) {
+      if (!extra.nombre || !extra.categoria) return;
+      if (!resultado[extra.categoria]) resultado[extra.categoria] = [];
+      resultado[extra.categoria].push(extra.nombre);
+      if (extra.vence && DOCS_CON_VENCIMIENTO.indexOf(extra.nombre) === -1) {
+        DOCS_CON_VENCIMIENTO.push(extra.nombre);
+      }
     });
     return resultado;
   }
@@ -1539,8 +1581,9 @@
       }
 
       // Catálogo filtrado y render
-      var catalogo = _catalogoFiltrado(instalaciones);
-      _renderCatalogo(tc, catalogo, mapaRegistrados, com);
+      var custom = _parsearCatalogoCustom(com.catalogoCustom);
+      var catalogo = _catalogoFiltrado(instalaciones, custom);
+      _renderCatalogo(tc, catalogo, mapaRegistrados, com, custom);
 
     }).catch(function() {
       var tc = document.getElementById('tc-documentos');
@@ -1580,12 +1623,14 @@
     // Preview del catálogo completo en gris
     var preview = document.createElement('div');
     preview.style.cssText = 'opacity:0.45;pointer-events:none';
-    _renderCatalogo(preview, CATALOGO_DOCS, mapaRegistrados, com);
+    _renderCatalogo(preview, CATALOGO_DOCS, mapaRegistrados, com, { eliminados: {}, renombrados: {}, extras: [] });
     tc.appendChild(preview);
   }
 
   // ── Render catálogo documentos ────────────────────────────────
-  function _renderCatalogo(tc, catalogo, mapaRegistrados, com) {
+  function _renderCatalogo(tc, catalogo, mapaRegistrados, com, custom) {
+    custom = custom || { eliminados: {}, renombrados: {}, extras: [] };
+
     // Toolbar resumen
     var toolbar = document.createElement('div');
     toolbar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px';
@@ -1595,7 +1640,7 @@
       catalogo[cat].forEach(function(tipo) {
         var d = mapaRegistrados[tipo];
         if (!d) pendientes++;
-        else if (d.semaforo === 'rojo')    vencidos++;
+        else if (d.semaforo === 'rojo')     vencidos++;
         else if (d.semaforo === 'amarillo') porVencer++;
         else vigentes++;
       });
@@ -1618,15 +1663,23 @@
     addPill(vencidos,  'Vencido',    'var(--co-red)');
     addPill(pendientes,'Pendiente',  'var(--co-mute)');
 
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:6px';
+
     var btnConf = document.createElement('button');
     btnConf.className = 'btn-ghost';
     btnConf.style.fontSize = '12px';
-    btnConf.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M3.3 12.7l1.4-1.4M11.3 4.7l1.4-1.4"/></svg> Instalaciones';
+    btnConf.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/></svg> Instalaciones';
     btnConf.addEventListener('click', function() { modalInstalaciones(com); });
 
+    btnRow.appendChild(btnConf);
     toolbar.appendChild(pills);
-    toolbar.appendChild(btnConf);
+    toolbar.appendChild(btnRow);
     tc.appendChild(toolbar);
+
+    // Contenedor con scroll — headers de categoría fijos dentro del scroll
+    var scrollWrap = document.createElement('div');
+    scrollWrap.style.cssText = 'overflow-y:auto;max-height:calc(100vh - 320px);border:1px solid var(--co-line);border-radius:var(--co-r-lg);';
 
     // Categorías
     Object.keys(catalogo).forEach(function(cat) {
@@ -1637,8 +1690,10 @@
       var semCat  = catVenc > 0 ? 'var(--co-red)' : catProx > 0 ? 'var(--co-amber)' : catPend > 0 ? 'var(--co-mute)' : 'var(--co-green)';
       var metaCat = catVenc > 0 ? catVenc + ' vencido(s)' : catProx > 0 ? catProx + ' por vencer' : catPend > 0 ? catPend + ' pendiente(s)' : 'Al d\u00EDa';
 
+      // Header categoría — sticky dentro del scroll
       var catHdr = document.createElement('div');
       catHdr.className = 'com-doc-cat-hdr';
+      catHdr.style.cssText = 'position:sticky;top:0;z-index:5;background:var(--co-cream-deep);padding:8px 14px;';
       var dot = document.createElement('div');
       dot.className = 'com-doc-cat-dot';
       dot.style.background = semCat;
@@ -1648,22 +1703,33 @@
       var meta = document.createElement('div');
       meta.className = 'com-doc-cat-sub';
       meta.textContent = metaCat + ' \u00B7 ' + tipos.length + ' tipos';
+
+      // Botón + Agregar tipo
       var btnAdd = document.createElement('button');
       btnAdd.className = 'com-panel-ver';
       btnAdd.textContent = '+ Agregar';
+      btnAdd.title = 'Agregar tipo de documento a esta categor\u00EDa';
       btnAdd.addEventListener('click', function(e) {
         e.stopPropagation();
-        modalDocumento(null, cat, com);
+        modalAgregarTipo(cat, com, custom, function() { cargarDocumentos(com.id); });
       });
+
       catHdr.appendChild(dot); catHdr.appendChild(title); catHdr.appendChild(meta); catHdr.appendChild(btnAdd);
-      tc.appendChild(catHdr);
+      scrollWrap.appendChild(catHdr);
 
       // Filas de tipos
       tipos.forEach(function(tipo) {
+        // Buscar nombre original (antes de renombrar) para operaciones sobre custom
+        var nombreOriginal = tipo;
+        Object.keys(custom.renombrados).forEach(function(orig) {
+          if (custom.renombrados[orig] === tipo) nombreOriginal = orig;
+        });
+        var esExtra = custom.extras.some(function(ex) { return ex.nombre === tipo; });
+
         var d = mapaRegistrados[tipo];
         var row = document.createElement('div');
         row.className = 'com-doc-row';
-        row.style.cursor = 'pointer';
+        row.style.cssText = 'cursor:pointer;padding:7px 14px;';
         row.addEventListener('click', function() { modalDocumento(d || null, cat, com, tipo); });
 
         // Ícono estado
@@ -1696,26 +1762,18 @@
         diasEl.style.cssText = 'font-size:11px;font-weight:600;min-width:72px;text-align:right';
         if (d && d.fechaVencimiento && DOCS_CON_VENCIMIENTO.indexOf(tipo) !== -1) {
           var dias = diasHasta(d.fechaVencimiento);
-          if (dias === null) {
-            diasEl.textContent = '\u2014';
-          } else if (dias < 0) {
-            diasEl.style.color = 'var(--co-red)';
-            diasEl.textContent = 'Vencido';
-          } else if (dias <= 60) {
-            diasEl.style.color = 'var(--co-amber)';
-            diasEl.textContent = dias + ' d\u00EDas';
-          } else {
-            diasEl.style.color = 'var(--co-green)';
-            diasEl.textContent = dias + ' d\u00EDas';
-          }
+          if (dias === null)       { diasEl.textContent = '\u2014'; }
+          else if (dias < 0)       { diasEl.style.color = 'var(--co-red)';   diasEl.textContent = 'Vencido'; }
+          else if (dias <= 60)     { diasEl.style.color = 'var(--co-amber)'; diasEl.textContent = dias + ' d\u00EDas'; }
+          else                     { diasEl.style.color = 'var(--co-green)'; diasEl.textContent = dias + ' d\u00EDas'; }
         }
 
         var pill = document.createElement('span');
         pill.className = 'co-pill';
-        if (!d)                          { pill.className += ' pill-pend'; pill.textContent = 'Pendiente'; }
-        else if (d.semaforo === 'rojo')  { pill.className += ' pill-crit'; pill.textContent = 'Vencido'; }
+        if (!d)                             { pill.className += ' pill-pend'; pill.textContent = 'Pendiente'; }
+        else if (d.semaforo === 'rojo')     { pill.className += ' pill-crit'; pill.textContent = 'Vencido'; }
         else if (d.semaforo === 'amarillo') { pill.className += ' pill-warn'; pill.textContent = 'Por vencer'; }
-        else                             { pill.className += ' pill-ok';   pill.textContent = 'Vigente'; }
+        else                                { pill.className += ' pill-ok';   pill.textContent = 'Vigente'; }
 
         var btnVer = document.createElement('button');
         btnVer.className = 'com-doc-link';
@@ -1725,15 +1783,244 @@
           btnVer.addEventListener('click', function(e) { e.stopPropagation(); window.open(d.urlDrive, '_blank'); });
         } else {
           btnVer.style.color = 'var(--co-mute)';
-          btnVer.textContent = '+ Subir';
+          btnVer.textContent = '+ Registrar';
           btnVer.addEventListener('click', function(e) { e.stopPropagation(); modalDocumento(null, cat, com, tipo); });
         }
 
+        // Menú ⋯ — Editar y Eliminar tipo
+        var btnMenu = document.createElement('button');
+        btnMenu.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;color:var(--co-mute);padding:2px 6px;border-radius:4px;line-height:1;margin-left:4px;flex-shrink:0';
+        btnMenu.textContent = '\u22EF';
+        btnMenu.title = 'Opciones';
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          _menuOpcionesTipo(e, tipo, nombreOriginal, cat, esExtra, com, custom, function() { cargarDocumentos(com.id); });
+        });
+
         row.appendChild(icoWrap); row.appendChild(nom); row.appendChild(fechaEl);
-        row.appendChild(diasEl); row.appendChild(pill); row.appendChild(btnVer);
-        tc.appendChild(row);
+        row.appendChild(diasEl); row.appendChild(pill); row.appendChild(btnVer); row.appendChild(btnMenu);
+        scrollWrap.appendChild(row);
       });
     });
+
+    tc.appendChild(scrollWrap);
+  }
+
+  // ── Menú contextual opciones de tipo ─────────────────────────
+  function _menuOpcionesTipo(e, tipo, nombreOriginal, cat, esExtra, com, custom, onDone) {
+    document.querySelectorAll('.doc-tipo-menu').forEach(function(m) { m.remove(); });
+
+    var menu = document.createElement('div');
+    menu.className = 'doc-tipo-menu';
+    menu.style.cssText = 'position:fixed;background:var(--co-surface);border:1px solid var(--co-line);border-radius:var(--co-r-md);box-shadow:var(--co-shadow-lg);z-index:3000;min-width:170px;padding:4px 0;font-family:var(--co-font)';
+
+    var rect = e.target.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + 4) + 'px';
+    menu.style.left = Math.min(rect.left, window.innerWidth - 190) + 'px';
+
+    function itemMenu(ico, txt, color, fn) {
+      var item = document.createElement('button');
+      item.style.cssText = 'display:flex;align-items:center;gap:9px;width:100%;padding:9px 14px;background:none;border:none;font-family:var(--co-font);font-size:12px;font-weight:600;color:' + (color || 'var(--co-ink)') + ';cursor:pointer;text-align:left';
+      item.innerHTML = ico + '<span>' + txt + '</span>';
+      item.addEventListener('mouseenter', function() { item.style.background = 'var(--co-cream)'; });
+      item.addEventListener('mouseleave', function() { item.style.background = 'none'; });
+      item.addEventListener('click', function() { menu.remove(); fn(); });
+      menu.appendChild(item);
+    }
+
+    var icoEdit = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2Z"/></svg>';
+    var icoDel  = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M5 4V3h6v1M6 7v5M10 7v5"/><rect x="4" y="4" width="8" height="10" rx="1"/></svg>';
+
+    itemMenu(icoEdit, 'Renombrar tipo', '', function() {
+      modalRenombrarTipo(tipo, nombreOriginal, esExtra, com, custom, onDone);
+    });
+    itemMenu(icoDel, 'Eliminar de lista', 'var(--co-red)', function() {
+      if (!confirm('\u00BFEliminar "' + tipo + '" del cat\u00E1logo de esta comunidad? Los documentos ya registrados no se borran.')) return;
+      _eliminarTipo(nombreOriginal, esExtra, com, custom, onDone);
+    });
+
+    document.body.appendChild(menu);
+    var cerrar = function(ev) { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', cerrar); } };
+    setTimeout(function() { document.addEventListener('click', cerrar); }, 50);
+  }
+
+  // ── Modal agregar tipo personalizado ─────────────────────────
+  function modalAgregarTipo(catPresel, com, custom, onDone) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '460px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7'; box.appendChild(btnX);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Documentos'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Agregar tipo de documento'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Crea un tipo personalizado para esta comunidad.'; box.appendChild(st);
+
+    var grid = document.createElement('div'); grid.className = 'form-grid';
+
+    // Nombre
+    var fgNom = document.createElement('div'); fgNom.className = 'form-group form-full';
+    var lblNom = document.createElement('label'); lblNom.textContent = 'Nombre del tipo *';
+    var inpNom = document.createElement('input'); inpNom.type = 'text'; inpNom.id = 'nt-nombre'; inpNom.placeholder = 'Ej: Certificado SEC especial';
+    fgNom.appendChild(lblNom); fgNom.appendChild(inpNom);
+
+    // Categoría
+    var fgCat = document.createElement('div'); fgCat.className = 'form-group';
+    var lblCat = document.createElement('label'); lblCat.textContent = 'Categor\u00EDa';
+    var selCat = document.createElement('select'); selCat.id = 'nt-cat';
+    Object.keys(CATALOGO_DOCS).forEach(function(cat) {
+      var opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+      if (cat === catPresel) opt.selected = true;
+      selCat.appendChild(opt);
+    });
+    fgCat.appendChild(lblCat); fgCat.appendChild(selCat);
+
+    // ¿Vence?
+    var fgVence = document.createElement('div'); fgVence.className = 'form-group';
+    var lblVence = document.createElement('label'); lblVence.textContent = '\u00BFRequiere control de vencimiento?';
+    var selVence = document.createElement('select'); selVence.id = 'nt-vence';
+    [['NO','No vence'],['SI','S\u00ED, requiere fecha de vencimiento']].forEach(function(o) {
+      var opt = document.createElement('option'); opt.value = o[0]; opt.textContent = o[1]; selVence.appendChild(opt);
+    });
+    fgVence.appendChild(lblVence); fgVence.appendChild(selVence);
+
+    grid.appendChild(fgNom); grid.appendChild(fgCat); grid.appendChild(fgVence);
+    box.appendChild(grid);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = 'Agregar al cat\u00E1logo'; box.appendChild(btnGuardar);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(ev) { if (ev.target === overlay) cerrar(); });
+
+    btnGuardar.addEventListener('click', function() {
+      var nombre = document.getElementById('nt-nombre').value.trim();
+      var cat    = document.getElementById('nt-cat').value;
+      var vence  = document.getElementById('nt-vence').value === 'SI';
+      if (!nombre) { errDiv.textContent = 'El nombre es obligatorio.'; errDiv.style.display = 'block'; return; }
+
+      // Generar id único
+      var nuevoExtra = { id: 'CUSTOM-' + Date.now(), nombre: nombre, categoria: cat, vence: vence };
+      custom.extras.push(nuevoExtra);
+
+      btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
+      _guardarCatalogoCustom(com, custom, function(ok, err) {
+        if (ok) {
+          btnGuardar.textContent = '\u2713 Agregado';
+          btnGuardar.style.background = 'var(--co-green)';
+          setTimeout(function() { overlay.remove(); if (onDone) onDone(); }, 700);
+        } else {
+          custom.extras.pop(); // revertir
+          errDiv.textContent = err || 'Error al guardar'; errDiv.style.display = 'block';
+          btnGuardar.disabled = false; btnGuardar.textContent = 'Agregar al cat\u00E1logo';
+        }
+      });
+    });
+  }
+
+  // ── Modal renombrar tipo ──────────────────────────────────────
+  function modalRenombrarTipo(tipoActual, nombreOriginal, esExtra, com, custom, onDone) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '420px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7'; box.appendChild(btnX);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Renombrar'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = tipoActual; box.appendChild(tt);
+
+    var fg = document.createElement('div'); fg.className = 'form-group form-full'; fg.style.marginTop = '20px';
+    var lbl = document.createElement('label'); lbl.textContent = 'Nuevo nombre';
+    var inp = document.createElement('input'); inp.type = 'text'; inp.id = 'rt-nombre'; inp.value = tipoActual;
+    fg.appendChild(lbl); fg.appendChild(inp);
+    box.appendChild(fg);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = 'Guardar nombre'; box.appendChild(btnGuardar);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(ev) { if (ev.target === overlay) cerrar(); });
+
+    btnGuardar.addEventListener('click', function() {
+      var nuevoNombre = document.getElementById('rt-nombre').value.trim();
+      if (!nuevoNombre || nuevoNombre === tipoActual) { cerrar(); return; }
+
+      var previo;
+      if (esExtra) {
+        var ex = custom.extras.find(function(e) { return e.nombre === tipoActual; });
+        if (ex) { previo = ex.nombre; ex.nombre = nuevoNombre; }
+      } else {
+        previo = custom.renombrados[nombreOriginal];
+        custom.renombrados[nombreOriginal] = nuevoNombre;
+      }
+
+      btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando\u2026';
+      _guardarCatalogoCustom(com, custom, function(ok, err) {
+        if (ok) {
+          btnGuardar.textContent = '\u2713 Guardado';
+          btnGuardar.style.background = 'var(--co-green)';
+          setTimeout(function() { overlay.remove(); if (onDone) onDone(); }, 700);
+        } else {
+          // revertir
+          if (esExtra) { var ex2 = custom.extras.find(function(e) { return e.nombre === nuevoNombre; }); if (ex2) ex2.nombre = tipoActual; }
+          else { if (previo !== undefined) custom.renombrados[nombreOriginal] = previo; else delete custom.renombrados[nombreOriginal]; }
+          errDiv.textContent = err || 'Error al guardar'; errDiv.style.display = 'block';
+          btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar nombre';
+        }
+      });
+    });
+
+    setTimeout(function() { inp.focus(); inp.select(); }, 100);
+  }
+
+  // ── Eliminar tipo del catálogo ────────────────────────────────
+  function _eliminarTipo(nombreOriginal, esExtra, com, custom, onDone) {
+    var prevExtras = custom.extras.slice();
+    var prevElim   = Object.assign({}, custom.eliminados);
+
+    if (esExtra) {
+      custom.extras = custom.extras.filter(function(e) { return e.nombre !== nombreOriginal; });
+    } else {
+      custom.eliminados[nombreOriginal] = true;
+    }
+
+    _guardarCatalogoCustom(com, custom, function(ok, err) {
+      if (ok) {
+        if (onDone) onDone();
+      } else {
+        custom.extras     = prevExtras;
+        custom.eliminados = prevElim;
+        alert('Error al eliminar: ' + (err || 'intenta de nuevo'));
+      }
+    });
+  }
+
+  // ── Guardar catalogoCustom en backend ────────────────────────
+  function _guardarCatalogoCustom(com, custom, cb) {
+    var payload = JSON.stringify(custom);
+    api('/comunidades', 'POST', {
+      action: 'editarComunidad',
+      id: com.id,
+      catalogoCustom: payload
+    }).then(function(r) {
+      if (r.ok && r.data && r.data.ok) {
+        com.catalogoCustom = payload;
+        var idx = -1;
+        for (var i = 0; i < _comunidades.length; i++) {
+          if (_comunidades[i].id === com.id) { idx = i; break; }
+        }
+        if (idx !== -1) _comunidades[idx].catalogoCustom = payload;
+        cb(true);
+      } else {
+        cb(false, (r.data && r.data.error) || r.error || 'Error desconocido');
+      }
+    }).catch(function(e) { cb(false, e.message); });
   }
 
   // ── TAB EVENTOS ───────────────────────────────────────────────
