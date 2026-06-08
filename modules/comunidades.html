@@ -1196,7 +1196,7 @@
 
     var ico = document.createElement('div');
     ico.className = 'com-row-ico';
-    ico.innerHTML = '<i class="ti ti-building-community" style="font-size:20px;color:var(--co-orange)" aria-hidden="true"></i>';
+    ico.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--co-orange)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M3 21h18M3 7l9-4 9 4M4 21V7M20 21V7M9 21v-4a3 3 0 0 1 6 0v4"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>';
     row.appendChild(ico);
 
     var info = document.createElement('div');
@@ -1276,7 +1276,7 @@
     hdr.className = 'com-ficha-hdr';
     var fIco = document.createElement('div');
     fIco.className = 'com-ficha-ico';
-    fIco.innerHTML = '<i class="ti ti-building-community" style="font-size:22px;color:var(--co-orange)" aria-hidden="true"></i>';
+    fIco.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--co-orange)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M3 21h18M3 7l9-4 9 4M4 21V7M20 21V7M9 21v-4a3 3 0 0 1 6 0v4"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>';
     var fInfo = document.createElement('div');
     fInfo.style.flex = '1';
     fInfo.style.minWidth = '0';
@@ -1538,11 +1538,29 @@
 
     var contGrid = document.createElement('div');
     contGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;';
+    // Si _dirData aún no tiene datos de esta comunidad, pedirlos ahora
+    function _actualizarContadores(unidades) {
+      var nd = unidades.filter(function(u){ var t=String(u.tipoUnidad||'').toUpperCase(); return t==='DEPTO'||t==='CASA'; }).length;
+      var ne = unidades.filter(function(u){ var t=String(u.tipoUnidad||'').toUpperCase(); return t==='ESTAC'||t==='ESTACIONAMIENTO'; }).length;
+      var nb = unidades.filter(function(u){ var t=String(u.tipoUnidad||'').toUpperCase(); return t==='BODEGA'; }).length;
+      var sc = {}; unidades.forEach(function(u){ if(u.idCopropietario) sc[u.idCopropietario]=true; });
+      var nc = Object.keys(sc).length;
+      var ids = ['ficha-cnt-deptos-'+c.id,'ficha-cnt-estac-'+c.id,'ficha-cnt-bodegas-'+c.id,'ficha-cnt-coprop-'+c.id];
+      var vals = [nd, ne, nb, nc];
+      ids.forEach(function(id,i){ var el=document.getElementById(id); if(el) el.textContent=vals[i]; });
+    }
+    if (unidades.length === 0 && c.id) {
+      api('/directorio?comunidadId=' + c.id).then(function(resp){
+        var u = [];
+        if(resp.ok){ if(Array.isArray(resp.data)) u=resp.data; else if(resp.data&&Array.isArray(resp.data.data)) u=resp.data.data; }
+        _actualizarContadores(u);
+      }).catch(function(){});
+    }
     var contadores = [
-      { ico: 'ti-building', lbl: 'Deptos / Casas', val: unidades.length > 0 ? nDeptos : totalUnid },
-      { ico: 'ti-car',      lbl: 'Estacionam.',    val: unidades.length > 0 ? nEstac  : '\u2014' },
-      { ico: 'ti-archive',  lbl: 'Bodegas',        val: unidades.length > 0 ? nBodega : '\u2014' },
-      { ico: 'ti-users',    lbl: 'Copropietarios', val: unidades.length > 0 ? nCoprop : '\u2014' }
+      { ico: 'ti-building', lbl: 'Deptos / Casas', val: unidades.length > 0 ? nDeptos : (totalUnid||'\u2014'), id: 'ficha-cnt-deptos-'+c.id },
+      { ico: 'ti-car',      lbl: 'Estacionam.',    val: unidades.length > 0 ? nEstac  : '\u2014', id: 'ficha-cnt-estac-'+c.id },
+      { ico: 'ti-archive',  lbl: 'Bodegas',        val: unidades.length > 0 ? nBodega : '\u2014', id: 'ficha-cnt-bodegas-'+c.id },
+      { ico: 'ti-users',    lbl: 'Copropietarios', val: unidades.length > 0 ? nCoprop : '\u2014', id: 'ficha-cnt-coprop-'+c.id }
     ];
     contadores.forEach(function(ct, i) {
       var cell = document.createElement('div');
@@ -1557,6 +1575,7 @@
       var valEl = document.createElement('div');
       valEl.style.cssText = 'font-size:18px;font-weight:700;color:var(--co-ink);letter-spacing:-0.02em;line-height:1';
       valEl.textContent = ct.val;
+      if (ct.id) valEl.id = ct.id;
       var lblEl = document.createElement('div');
       lblEl.style.cssText = 'font-size:10px;color:var(--co-mute);font-weight:600;margin-top:2px';
       lblEl.textContent = ct.lbl;
