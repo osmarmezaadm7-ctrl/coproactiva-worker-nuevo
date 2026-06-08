@@ -1471,6 +1471,9 @@
 
   // ── TAB CONTRATO ──────────────────────────────────────────────
   function renderTabContrato(tc, c) {
+    // Scroll wrapper con header sticky del tab
+    var scrollWrap = document.createElement('div');
+    scrollWrap.style.cssText = 'overflow-y:auto;max-height:calc(100vh - 280px);padding:4px 2px 20px';
     // ── helpers internos ─────────────────────────────────────
     function seccion(titulo, btnLabel, btnFn) {
       var wrap = document.createElement('div');
@@ -1510,7 +1513,7 @@
     }
 
     // ── Sección 1: Datos generales ────────────────────────────
-    var s1 = seccion('Datos generales', 'Editar', function() { abrirModalEditar(c); });
+    var s1 = seccion('Datos generales', 'Editar', function() { abrirModalEditar(c); }); // único botón editar
     s1.appendChild(datoGrid([
       { lbl: 'RUT',        val: c.rut || '\u2014' },
       { lbl: 'Estado',     val: c.estado === 'activo' ? 'Activo' : 'Inactivo', color: c.estado === 'activo' ? 'var(--co-green)' : 'var(--co-mute)' },
@@ -1585,10 +1588,10 @@
     });
     contWrap.appendChild(contGrid);
     s1.appendChild(contWrap);
-    tc.appendChild(s1);
+    scrollWrap.appendChild(s1);
 
     // ── Sección 2: Contrato ───────────────────────────────────
-    var s2 = seccion('Contrato', 'Editar', function() { abrirModalEditar(c); });
+    var s2 = seccion('Contrato', null, null);
     s2.appendChild(datoGrid([
       { lbl: 'Modalidad',           val: c.modalidad || '\u2014' },
       { lbl: 'Honorario',           val: formatMiles(c.honorario) },
@@ -1597,13 +1600,13 @@
       { lbl: 'Contacto comit\u00E9', val: c.contactoNombre || '\u2014' },
       { lbl: 'Tel\u00E9fono',      val: c.contactoTelefono || '\u2014' }
     ]));
-    tc.appendChild(s2);
+    scrollWrap.appendChild(s2);
 
     // ── Sección 3: Instalaciones ──────────────────────────────
     var inst = _parsearInstalaciones(c.instalaciones) || {};
     var hayInst = Object.keys(inst).length > 0;
 
-    var s3 = seccion('Instalaciones y equipamientos', 'Editar', function() { modalInstalaciones(c); });
+    var s3 = seccion('Instalaciones y equipamientos', null, null);
 
     if (!hayInst) {
       var aviso = document.createElement('div');
@@ -1630,7 +1633,8 @@
       });
       s3.appendChild(instList);
     }
-    tc.appendChild(s3);
+    scrollWrap.appendChild(s3);
+    tc.appendChild(scrollWrap);
   }
 
   // ── CARGA ASYNC ───────────────────────────────────────────────
