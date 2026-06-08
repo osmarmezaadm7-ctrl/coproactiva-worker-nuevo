@@ -1515,10 +1515,12 @@
     // ── Sección 1: Datos generales ────────────────────────────
     var s1 = seccion('Datos generales', null, null);
     s1.appendChild(datoGrid([
-      { lbl: 'RUT',         val: c.rut || '\u2014' },
-      { lbl: 'Estado',      val: c.estado === 'activo' ? 'Activo' : 'Inactivo', color: c.estado === 'activo' ? 'var(--co-green)' : 'var(--co-mute)' },
-      { lbl: 'Direcci\u00F3n', val: c.direccion || '\u2014' },
-      { lbl: 'Comuna',      val: c.comuna || '\u2014' }
+      { lbl: 'RUT',                    val: c.rut || '\u2014' },
+      { lbl: 'Estado',                 val: c.estado === 'activo' ? 'Activo' : 'Inactivo', color: c.estado === 'activo' ? 'var(--co-green)' : 'var(--co-mute)' },
+      { lbl: 'Direcci\u00F3n',        val: c.direccion || '\u2014' },
+      { lbl: 'Comuna',                 val: c.comuna || '\u2014' },
+      { lbl: 'Contacto comit\u00E9', val: c.contactoNombre || '\u2014' },
+      { lbl: 'Tel\u00E9fono',         val: c.contactoTelefono || '\u2014' }
     ]));
 
     // Contadores de unidades — leídos de _dirData si están disponibles
@@ -1592,12 +1594,10 @@
     // ── Sección 2: Contrato ───────────────────────────────────
     var s2 = seccion('Contrato', null, null);
     s2.appendChild(datoGrid([
-      { lbl: 'Modalidad',           val: c.modalidad || '\u2014' },
-      { lbl: 'Honorario',           val: formatMiles(c.honorario) },
-      { lbl: 'Inicio contrato',     val: formatFecha(c.fechaInicioContrato) },
-      { lbl: 'Renovaci\u00F3n',    val: formatFecha(c.fechaRenovacion) },
-      { lbl: 'Contacto comit\u00E9', val: c.contactoNombre || '\u2014' },
-      { lbl: 'Tel\u00E9fono',      val: c.contactoTelefono || '\u2014' }
+      { lbl: 'Modalidad',       val: c.modalidad || '\u2014' },
+      { lbl: 'Honorario',       val: formatMiles(c.honorario) },
+      { lbl: 'Inicio contrato', val: formatFecha(c.fechaInicioContrato) },
+      { lbl: 'Renovaci\u00F3n', val: formatFecha(c.fechaRenovacion) }
     ]));
     scrollWrap.appendChild(s2);
 
@@ -3502,10 +3502,10 @@
       { id:'e-rut',       lbl:'RUT comunidad',         tipo:'text' },
       { id:'e-unidades',  lbl:'Unidades',              tipo:'number' },
       { id:'e-honorario', lbl:'Honorario ($)',         tipo:'number' },
-      { id:'e-modalidad', lbl:'Modalidad',             tipo:'select', opts:['Integral','Nueva','Auditoria'] },
-      { id:'e-estado',    lbl:'Estado',                tipo:'select', opts:['activo','inactivo'] },
       { id:'e-contacto',  lbl:'Contacto comit\u00E9', tipo:'text' },
       { id:'e-telefono',  lbl:'Tel\u00E9fono',        tipo:'tel' },
+      { id:'e-modalidad', lbl:'Modalidad',             tipo:'select', opts:['Integral','Nueva','Auditoria'] },
+      { id:'e-estado',    lbl:'Estado',                tipo:'select', opts:['activo','inactivo'] },
       { id:'e-inicio',    lbl:'Inicio contrato',      tipo:'text' },
       { id:'e-renovacion',lbl:'Renovaci\u00F3n',      tipo:'text' }
     ];
