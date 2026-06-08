@@ -1,0 +1,953 @@
+<!-- modules/recepcion.html — CoproActiva Recepción Documental -->
+<!-- Versión: 1.0 · Junio 2026 -->
+
+<style>
+  #rx-root { font-family: var(--co-font); color: var(--co-ink); }
+
+  /* ── Listado de recepciones ── */
+  .rx-list { display: flex; flex-direction: column; gap: 8px; }
+  .rx-row {
+    background: var(--co-surface);
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-lg);
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .rx-row:hover { border-color: var(--co-orange-line); box-shadow: var(--co-shadow-sm); }
+  .rx-row-ico {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--co-blue-soft);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .rx-row-ico i { font-size: 20px; color: var(--co-blue); }
+  .rx-row-info { flex: 1; min-width: 0; }
+  .rx-row-nombre { font-size: 13px; font-weight: 700; color: var(--co-ink); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rx-row-sub { font-size: 11px; color: var(--co-ink-3); font-weight: 500; }
+
+  /* ── Ficha recepción ── */
+  .rx-back { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--co-mute); font-weight: 600; cursor: pointer; margin-bottom: 14px; background: none; border: none; font-family: var(--co-font); padding: 0; }
+  .rx-back:hover { color: var(--co-ink); }
+
+  .rx-header {
+    background: var(--co-surface);
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-lg);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .rx-header-top {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--co-line);
+  }
+  .rx-plazo {
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--co-line);
+  }
+  .rx-plazo.ok     { background: var(--co-green-soft); }
+  .rx-plazo.warn   { background: var(--co-amber-soft); }
+  .rx-plazo.danger { background: var(--co-red-soft); }
+  .rx-plazo.done   { background: var(--co-cream-deep); }
+
+  .rx-prog-wrap {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--co-line);
+    background: var(--co-cream-deep);
+  }
+  .rx-prog-bar { flex: 1; height: 5px; background: var(--co-line); border-radius: 10px; overflow: hidden; }
+  .rx-prog-fill { height: 100%; border-radius: 10px; background: var(--co-green); transition: width 0.4s ease; }
+
+  .rx-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--co-line);
+  }
+  @media (max-width: 600px) { .rx-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .rx-kpi {
+    padding: 10px 14px;
+    border-right: 1px solid var(--co-line);
+    border-bottom: 1px solid var(--co-line);
+  }
+  .rx-kpi:last-child { border-right: none; }
+  .rx-kpi-val { font-size: 20px; font-weight: 800; color: var(--co-ink); letter-spacing: -0.02em; line-height: 1; }
+  .rx-kpi-lbl { font-size: 10px; color: var(--co-mute); font-weight: 600; margin-top: 3px; }
+
+  /* Leyenda */
+  .rx-leyenda {
+    padding: 8px 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--co-line);
+  }
+  .rx-ley-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--co-mute); }
+
+  /* ── Áreas y checklist ── */
+  .rx-checklist { display: flex; flex-direction: column; gap: 8px; }
+
+  .rx-area-card {
+    background: var(--co-surface);
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-lg);
+    overflow: hidden;
+  }
+  .rx-area-hdr {
+    padding: 9px 16px;
+    background: var(--co-cream-deep);
+    border-bottom: 1px solid var(--co-line);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .rx-area-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--co-ink); flex: 1; }
+  .rx-area-cnt { font-size: 11px; color: var(--co-mute); font-weight: 600; }
+
+  .rx-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--co-line-soft);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .rx-item:last-child { border-bottom: none; }
+  .rx-item-ico {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 12px;
+  }
+  .ico-ok   { background: var(--co-green-soft); color: var(--co-green); }
+  .ico-pend { background: var(--co-cream-deep); color: var(--co-mute); border: 1px solid var(--co-line); }
+  .ico-no   { background: var(--co-red-soft);   color: var(--co-red); }
+
+  .rx-item-body { flex: 1; min-width: 0; }
+  .rx-item-nom { font-size: 12px; font-weight: 600; color: var(--co-ink); line-height: 1.4; }
+  .rx-item-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+  .rx-item-obs { font-size: 11px; color: var(--co-mute); margin-top: 3px; font-style: italic; }
+
+  /* Pills */
+  .co-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+  .pill-ok   { background: var(--co-green-soft); color: var(--co-green); }
+  .pill-pend { background: var(--co-cream-deep); color: var(--co-mute); border: 1px solid var(--co-line); }
+  .pill-no   { background: var(--co-red-soft);   color: var(--co-red); }
+  .pill-doc  { background: var(--co-blue-soft);  color: var(--co-blue); }
+  .pill-dato { background: var(--co-cream-deep); color: var(--co-mute); border: 1px solid var(--co-line); }
+  .pill-fis  { background: var(--co-amber-soft); color: var(--co-amber); }
+  .pill-repo { background: var(--co-green-soft); color: var(--co-green); }
+
+  /* Selector estado inline */
+  .rx-sel {
+    font-size: 11px;
+    padding: 5px 8px;
+    border: 1.5px solid var(--co-line);
+    border-radius: var(--co-r-md);
+    font-family: var(--co-font);
+    color: var(--co-ink);
+    background: var(--co-surface);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .rx-sel:focus { outline: none; border-color: var(--co-orange); }
+
+  /* ── Barra acciones ── */
+  .rx-actions {
+    background: var(--co-surface);
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-lg);
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(26,23,20,0.55); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .modal-box { background: var(--co-surface); border-radius: var(--co-r-lg); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative; box-shadow: var(--co-shadow-lg); }
+  @media (max-width: 600px) { .modal-overlay { padding: 0; align-items: flex-end; } .modal-box { border-radius: var(--co-r-lg) var(--co-r-lg) 0 0; max-height: 92vh; padding: 24px 20px 36px; } }
+  .modal-close { position: absolute; top: 18px; right: 18px; background: var(--co-cream); border: 1px solid var(--co-line); border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--co-ink-2); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: background 0.13s; font-family: var(--co-font); }
+  .modal-close:hover { background: var(--co-orange-soft); color: var(--co-orange); }
+  .modal-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 4px; }
+  .modal-titulo { font-size: 20px; font-weight: 800; color: var(--co-ink); letter-spacing: -0.025em; margin-bottom: 6px; padding-right: 44px; }
+  .modal-subtitulo { font-size: 13px; color: var(--co-ink-3); margin-bottom: 20px; font-weight: 500; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; color: var(--co-ink); background: var(--co-surface); box-sizing: border-box; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--co-orange); }
+  .btn-guardar { background: var(--co-orange); color: #fff; border: none; padding: 14px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 16px; min-height: 50px; }
+  .btn-guardar:hover { background: var(--co-orange-hover); }
+  .btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form-error { color: var(--co-red); font-size: 12px; margin-top: 8px; font-weight: 600; }
+  .com-vacio { text-align: center; padding: 32px 20px; color: var(--co-mute); font-size: 13px; font-weight: 500; }
+</style>
+
+<div id="rx-root">
+  <div class="module-loading">
+    <div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div>
+    <div class="ml-text">
+      <div class="ml-brand"><b>co</b>proactiva</div>
+      <div class="ml-status"><span class="ml-status-dot"></span>Cargando Recepción documental</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+  var TOKEN = sessionStorage.getItem('token') || '';
+
+  var _recepciones = [];
+  var _recepcionActiva = null;
+  var _comunidades = [];
+  var _filtroPendientes = false;
+
+  var MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  // ── API ────────────────────────────────────────────────────
+  function api(path, method, body) {
+    method = method || 'GET';
+    var opts = { method: method, headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    return fetch(WORKER_URL + path, opts).then(function(r) { return r.json(); });
+  }
+
+  function formatFecha(f) {
+    if (!f) return '\u2014';
+    var d = new Date(f);
+    if (isNaN(d)) return f;
+    return d.getDate() + ' ' + MESES[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function diasHabiles(desde, hasta) {
+    var d = new Date(desde); d.setHours(0,0,0,0);
+    var h = new Date(hasta); h.setHours(0,0,0,0);
+    var dias = 0;
+    var inc = d <= h ? 1 : -1;
+    while (d.toDateString() !== h.toDateString()) {
+      d.setDate(d.getDate() + inc);
+      var dow = d.getDay();
+      if (dow !== 0 && dow !== 6) dias += inc;
+    }
+    return dias;
+  }
+
+  // ── INIT ───────────────────────────────────────────────────
+  function init() {
+    var root = document.getElementById('rx-root');
+    root.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
+
+    Promise.all([
+      api('/recepciones'),
+      api('/comunidades')
+    ]).then(function(resps) {
+      var rRec = resps[0]; var rCom = resps[1];
+      if (rRec.ok) {
+        if (Array.isArray(rRec.data)) _recepciones = rRec.data;
+        else if (rRec.data && Array.isArray(rRec.data.data)) _recepciones = rRec.data.data;
+      }
+      if (rCom.ok) {
+        if (Array.isArray(rCom.data)) _comunidades = rCom.data;
+        else if (rCom.data && Array.isArray(rCom.data.data)) _comunidades = rCom.data.data;
+      }
+      renderListado();
+    }).catch(function(e) {
+      var root = document.getElementById('rx-root');
+      root.innerHTML = '<div class="com-vacio">Error de conexi\u00F3n: ' + e.message + '</div>';
+    });
+  }
+
+  // ── LISTADO ────────────────────────────────────────────────
+  function renderListado() {
+    var root = document.getElementById('rx-root');
+    root.innerHTML = '';
+
+    var pageHdr = document.createElement('div');
+    pageHdr.className = 'page-header';
+    var left = document.createElement('div');
+    var ey = document.createElement('div'); ey.className = 'page-eyebrow'; ey.textContent = 'CRM';
+    var tt = document.createElement('h1'); tt.className = 'page-title'; tt.innerHTML = 'Recepci\u00F3n <em>documental</em>';
+    var sb = document.createElement('p'); sb.className = 'page-sub'; sb.textContent = 'Checklist Anexo N\u00B01 — antecedentes entregados al tomar una comunidad.';
+    left.appendChild(ey); left.appendChild(tt); left.appendChild(sb);
+
+    var btnNueva = document.createElement('button');
+    btnNueva.className = 'btn-nuevo';
+    btnNueva.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg> Nueva recepci\u00F3n';
+    btnNueva.addEventListener('click', function() { modalNuevaRecepcion(); });
+    pageHdr.appendChild(left); pageHdr.appendChild(btnNueva);
+    root.appendChild(pageHdr);
+
+    if (_recepciones.length === 0) {
+      var v = document.createElement('div'); v.className = 'com-vacio';
+      v.innerHTML = '<div style="margin-bottom:12px">Sin recepciones registradas.</div><div style="font-size:12px;color:var(--co-mute)">Al marcar un prospecto como \u201CGanado\u201D en el pipeline, se crea la comunidad y su recepci\u00F3n autom\u00E1ticamente.</div>';
+      root.appendChild(v);
+      return;
+    }
+
+    var lista = document.createElement('div'); lista.className = 'rx-list';
+    _recepciones.forEach(function(rec) {
+      var com = _comunidades.find(function(c) { return c.id === rec.comunidadId; }) || {};
+      lista.appendChild(crearRowRecepcion(rec, com));
+    });
+    root.appendChild(lista);
+  }
+
+  function crearRowRecepcion(rec, com) {
+    var items = [];
+    try { items = JSON.parse(rec.items || '[]'); } catch(e) {}
+    var total = items.length;
+    var entregados = items.filter(function(i) { return i.estado === 'entregado'; }).length;
+    var noExisten  = items.filter(function(i) { return i.estado === 'no_existe'; }).length;
+    var pct = total > 0 ? Math.round((entregados + noExisten) / total * 100) : 0;
+    var dias = rec.fechaPlazo ? diasHabiles(new Date(), new Date(rec.fechaPlazo)) : null;
+
+    var row = document.createElement('div'); row.className = 'rx-row';
+    row.addEventListener('click', function() { abrirFicha(rec, com); });
+
+    var ico = document.createElement('div'); ico.className = 'rx-row-ico';
+    ico.innerHTML = '<i class="ti ti-clipboard-list" aria-hidden="true"></i>';
+
+    var info = document.createElement('div'); info.className = 'rx-row-info';
+    var nom = document.createElement('div'); nom.className = 'rx-row-nombre'; nom.textContent = com.nombre || rec.comunidadId;
+    var sub = document.createElement('div'); sub.className = 'rx-row-sub';
+    sub.textContent = 'Iniciada ' + formatFecha(rec.fechaInicio) + ' \u00B7 ' + entregados + '/' + total + ' entregados';
+    info.appendChild(nom); info.appendChild(sub);
+
+    // Barra progreso mini
+    var barWrap = document.createElement('div');
+    barWrap.style.cssText = 'width:60px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0';
+    var pctEl = document.createElement('div');
+    pctEl.style.cssText = 'font-size:11px;font-weight:700;color:var(--co-ink)';
+    pctEl.textContent = pct + '%';
+    var barBg = document.createElement('div');
+    barBg.style.cssText = 'width:100%;height:4px;background:var(--co-line);border-radius:10px;overflow:hidden';
+    var barFill = document.createElement('div');
+    barFill.style.cssText = 'height:100%;border-radius:10px;background:' + (pct === 100 ? 'var(--co-green)' : pct > 50 ? 'var(--co-orange)' : 'var(--co-amber)') + ';width:' + pct + '%';
+    barBg.appendChild(barFill); barWrap.appendChild(pctEl); barWrap.appendChild(barBg);
+
+    // Pill estado + plazo
+    var pillWrap = document.createElement('div');
+    pillWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0';
+    var pill = document.createElement('span'); pill.className = 'co-pill';
+    if (rec.estado === 'completada') { pill.className += ' pill-ok'; pill.textContent = 'Completa'; }
+    else if (dias !== null && dias < 0) { pill.className += ' pill-no'; pill.textContent = 'Vencida'; }
+    else { pill.className += ' pill-pend'; pill.textContent = 'En proceso'; }
+    pillWrap.appendChild(pill);
+    if (dias !== null && rec.estado !== 'completada') {
+      var dEl = document.createElement('span');
+      dEl.style.cssText = 'font-size:10px;font-weight:600;color:' + (dias < 0 ? 'var(--co-red)' : dias <= 2 ? 'var(--co-amber)' : 'var(--co-mute)');
+      dEl.textContent = dias < 0 ? 'Vencida' : dias + ' d\u00EDas';
+      pillWrap.appendChild(dEl);
+    }
+
+    row.appendChild(ico); row.appendChild(info); row.appendChild(barWrap); row.appendChild(pillWrap);
+    return row;
+  }
+
+  // ── FICHA RECEPCIÓN ────────────────────────────────────────
+  function abrirFicha(rec, com) {
+    _recepcionActiva = rec;
+    renderFicha(rec, com);
+  }
+
+  function renderFicha(rec, com) {
+    var root = document.getElementById('rx-root');
+    root.innerHTML = '';
+
+    var back = document.createElement('button'); back.className = 'rx-back';
+    back.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4L6 8l4 4"/></svg> Volver';
+    back.addEventListener('click', function() { init(); });
+    root.appendChild(back);
+
+    // Header
+    root.appendChild(_renderHeader(rec, com));
+
+    // Acciones
+    root.appendChild(_renderAcciones(rec, com));
+
+    // Checklist
+    var cl = document.createElement('div'); cl.className = 'rx-checklist'; cl.id = 'rx-checklist';
+    root.appendChild(cl);
+    _renderChecklist(rec);
+  }
+
+  function _renderHeader(rec, com) {
+    var items = [];
+    try { items = JSON.parse(rec.items || '[]'); } catch(e) {}
+    var total      = items.length;
+    var entregados = items.filter(function(i) { return i.estado === 'entregado'; }).length;
+    var noExisten  = items.filter(function(i) { return i.estado === 'no_existe'; }).length;
+    var pendientes = total - entregados - noExisten;
+    var enRepo     = items.filter(function(i) { return i.enRepositorio; }).length;
+    var pct        = total > 0 ? Math.round((entregados + noExisten) / total * 100) : 0;
+    var dias       = rec.fechaPlazo ? diasHabiles(new Date(), new Date(rec.fechaPlazo)) : null;
+
+    var hdr = document.createElement('div'); hdr.className = 'rx-header'; hdr.id = 'rx-header';
+
+    // Top
+    var top = document.createElement('div'); top.className = 'rx-header-top';
+    var ico = document.createElement('div');
+    ico.style.cssText = 'width:40px;height:40px;border-radius:10px;background:var(--co-blue-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0';
+    ico.innerHTML = '<i class="ti ti-clipboard-list" style="font-size:20px;color:var(--co-blue)" aria-hidden="true"></i>';
+    var info = document.createElement('div'); info.style.flex = '1'; info.style.minWidth = '0';
+    var nom = document.createElement('div'); nom.style.cssText = 'font-size:15px;font-weight:800;color:var(--co-ink);letter-spacing:-0.02em'; nom.textContent = com.nombre || rec.comunidadId;
+    var sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:3px';
+    sub.textContent = 'Iniciada ' + formatFecha(rec.fechaInicio) + ' \u00B7 Plazo: ' + formatFecha(rec.fechaPlazo);
+    info.appendChild(nom); info.appendChild(sub);
+    var pill = document.createElement('span'); pill.className = 'co-pill';
+    if (rec.estado === 'completada') { pill.className += ' pill-ok'; pill.textContent = 'Completa'; }
+    else if (dias !== null && dias < 0) { pill.className += ' pill-no'; pill.textContent = 'Vencida'; }
+    else { pill.className += ' pill-pend'; pill.textContent = 'En proceso'; }
+    top.appendChild(ico); top.appendChild(info); top.appendChild(pill);
+    hdr.appendChild(top);
+
+    // Plazo
+    if (rec.estado !== 'completada') {
+      var plazo = document.createElement('div');
+      var plazoClass = dias === null ? 'done' : dias < 0 ? 'danger' : dias <= 2 ? 'warn' : 'ok';
+      plazo.className = 'rx-plazo ' + plazoClass;
+      var plazoIco = document.createElement('i');
+      plazoIco.className = 'ti ti-clock';
+      plazoIco.style.fontSize = '14px';
+      plazoIco.setAttribute('aria-hidden', 'true');
+      var plazoTxt = document.createElement('span');
+      plazoTxt.style.cssText = 'font-size:12px;font-weight:600;flex:1';
+      if (dias === null) plazoTxt.textContent = 'Sin plazo definido';
+      else if (dias < 0) plazoTxt.textContent = 'Plazo vencido hace ' + Math.abs(dias) + ' d\u00EDas h\u00E1biles';
+      else if (dias === 0) plazoTxt.textContent = 'Plazo vence hoy';
+      else plazoTxt.textContent = 'Plazo vence en ' + dias + ' d\u00EDas h\u00E1biles';
+      var plazoFecha = document.createElement('span'); plazoFecha.style.cssText = 'font-size:11px;font-weight:600';
+      plazoFecha.textContent = formatFecha(rec.fechaPlazo);
+      plazo.appendChild(plazoIco); plazo.appendChild(plazoTxt); plazo.appendChild(plazoFecha);
+      hdr.appendChild(plazo);
+    }
+
+    // Progreso
+    var prog = document.createElement('div'); prog.className = 'rx-prog-wrap';
+    var bar = document.createElement('div'); bar.className = 'rx-prog-bar';
+    var fill = document.createElement('div'); fill.className = 'rx-prog-fill'; fill.id = 'rx-prog-fill';
+    fill.style.width = pct + '%';
+    bar.appendChild(fill); prog.appendChild(bar);
+    var progTxt = document.createElement('span'); progTxt.style.cssText = 'font-size:11px;color:var(--co-mute);white-space:nowrap';
+    progTxt.textContent = (entregados + noExisten) + ' / ' + total + ' cerrados (' + pct + '%)';
+    prog.appendChild(progTxt);
+    hdr.appendChild(prog);
+
+    // KPIs
+    var kpiGrid = document.createElement('div'); kpiGrid.className = 'rx-kpi-grid';
+    var kpis = [
+      { val: entregados, lbl: 'Entregados',        color: 'var(--co-green)' },
+      { val: pendientes, lbl: 'Pendientes',         color: 'var(--co-mute)' },
+      { val: noExisten,  lbl: 'No existen',         color: 'var(--co-red)' },
+      { val: enRepo,     lbl: 'En repositorio',     color: 'var(--co-blue)' }
+    ];
+    kpis.forEach(function(k) {
+      var kpi = document.createElement('div'); kpi.className = 'rx-kpi';
+      var val = document.createElement('div'); val.className = 'rx-kpi-val'; val.style.color = k.color; val.textContent = k.val;
+      var lbl = document.createElement('div'); lbl.className = 'rx-kpi-lbl'; lbl.textContent = k.lbl;
+      kpi.appendChild(val); kpi.appendChild(lbl); kpiGrid.appendChild(kpi);
+    });
+    hdr.appendChild(kpiGrid);
+
+    // Leyenda
+    var ley = document.createElement('div'); ley.className = 'rx-leyenda';
+    var leys = [
+      { ico: 'ti-file-text', col: 'var(--co-blue)',   txt: 'Documento \u2192 repositorio' },
+      { ico: 'ti-forms',     col: 'var(--co-mute)',   txt: 'Dato / informaci\u00F3n' },
+      { ico: 'ti-package',   col: 'var(--co-amber)',  txt: 'F\u00EDsico / inventario' }
+    ];
+    leys.forEach(function(l) {
+      var li = document.createElement('div'); li.className = 'rx-ley-item';
+      li.innerHTML = '<i class="ti ' + l.ico + '" style="font-size:12px;color:' + l.col + '" aria-hidden="true"></i>';
+      li.appendChild(document.createTextNode(' ' + l.txt));
+      ley.appendChild(li);
+    });
+    hdr.appendChild(ley);
+    return hdr;
+  }
+
+  function _renderAcciones(rec, com) {
+    var bar = document.createElement('div'); bar.className = 'rx-actions';
+
+    // Filtro pendientes
+    var btnFiltro = document.createElement('button');
+    btnFiltro.className = 'btn-ghost';
+    btnFiltro.style.fontSize = '12px';
+    btnFiltro.id = 'rx-btn-filtro';
+    btnFiltro.innerHTML = '<i class="ti ti-filter" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ' + (_filtroPendientes ? 'Ver todos' : 'Solo pendientes');
+    btnFiltro.addEventListener('click', function() {
+      _filtroPendientes = !_filtroPendientes;
+      btnFiltro.innerHTML = '<i class="ti ti-filter" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> ' + (_filtroPendientes ? 'Ver todos' : 'Solo pendientes');
+      _renderChecklist(_recepcionActiva);
+    });
+
+    // Generar acta
+    var btnActa = document.createElement('button');
+    btnActa.className = 'btn-nuevo';
+    btnActa.style.fontSize = '12px';
+    btnActa.innerHTML = '<i class="ti ti-file-description" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> Generar acta';
+    btnActa.addEventListener('click', function() { modalGenerarActa(rec, com); });
+
+    bar.appendChild(btnFiltro);
+    bar.appendChild(btnActa);
+    return bar;
+  }
+
+  function _renderChecklist(rec) {
+    var cl = document.getElementById('rx-checklist');
+    if (!cl) return;
+    cl.innerHTML = '';
+
+    var items = [];
+    try { items = JSON.parse(rec.items || '[]'); } catch(e) {}
+
+    // Filtrar si aplica
+    if (_filtroPendientes) {
+      items = items.filter(function(i) { return i.estado === 'pendiente'; });
+    }
+
+    // Agrupar por área
+    var areas = {};
+    items.forEach(function(item) {
+      if (!areas[item.area]) areas[item.area] = [];
+      areas[item.area].push(item);
+    });
+
+    if (Object.keys(areas).length === 0) {
+      var v = document.createElement('div'); v.className = 'com-vacio';
+      v.textContent = _filtroPendientes ? 'No hay \u00EDtems pendientes \u2014 todo cerrado.' : 'Sin \u00EDtems.';
+      cl.appendChild(v); return;
+    }
+
+    Object.keys(areas).forEach(function(area) {
+      var areaItems = areas[area];
+      var entregados = areaItems.filter(function(i) { return i.estado === 'entregado'; }).length;
+      var card = document.createElement('div'); card.className = 'rx-area-card';
+
+      // Header área
+      var areaHdr = document.createElement('div'); areaHdr.className = 'rx-area-hdr';
+      var areaIco = document.createElement('i'); areaIco.setAttribute('aria-hidden', 'true');
+      areaIco.style.fontSize = '14px'; areaIco.style.color = 'var(--co-mute)';
+      var iconMap = { 'Legal':'ti-scale', 'Financiera':'ti-coin', 'Laboral':'ti-users', 'T\u00E9cnica':'ti-tool', 'Seguridad':'ti-shield', 'Documental y Claves':'ti-lock' };
+      areaIco.className = 'ti ' + (iconMap[area] || 'ti-folder');
+      var areaLbl = document.createElement('span'); areaLbl.className = 'rx-area-lbl'; areaLbl.textContent = '\u00C1rea ' + area;
+      var areaCnt = document.createElement('span'); areaCnt.className = 'rx-area-cnt'; areaCnt.textContent = entregados + ' / ' + areaItems.length;
+      areaHdr.appendChild(areaIco); areaHdr.appendChild(areaLbl); areaHdr.appendChild(areaCnt);
+      card.appendChild(areaHdr);
+
+      // Ítems
+      areaItems.forEach(function(item) {
+        card.appendChild(_renderItem(item, rec));
+      });
+
+      cl.appendChild(card);
+    });
+  }
+
+  function _renderItem(item, rec) {
+    var row = document.createElement('div'); row.className = 'rx-item'; row.id = 'rx-item-' + item.id;
+
+    // Ícono estado
+    var ico = document.createElement('div'); ico.className = 'rx-item-ico';
+    if (item.estado === 'entregado')  { ico.classList.add('ico-ok');   ico.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i>'; }
+    else if (item.estado === 'no_existe') { ico.classList.add('ico-no'); ico.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>'; }
+    else                              { ico.classList.add('ico-pend'); ico.innerHTML = '<i class="ti ti-clock" aria-hidden="true"></i>'; }
+
+    var body = document.createElement('div'); body.className = 'rx-item-body';
+    var nom = document.createElement('div'); nom.className = 'rx-item-nom'; nom.textContent = item.nombre;
+
+    var meta = document.createElement('div'); meta.className = 'rx-item-meta';
+
+    // Pill estado
+    var pillEst = document.createElement('span'); pillEst.className = 'co-pill';
+    if (item.estado === 'entregado')      { pillEst.className += ' pill-ok';   pillEst.textContent = 'Entregado'; }
+    else if (item.estado === 'no_existe') { pillEst.className += ' pill-no';   pillEst.textContent = 'No existe'; }
+    else                                  { pillEst.className += ' pill-pend'; pillEst.textContent = 'Pendiente'; }
+    meta.appendChild(pillEst);
+
+    // Pill naturaleza
+    var pillNat = document.createElement('span'); pillNat.className = 'co-pill';
+    if (item.naturaleza === 'D') {
+      pillNat.className += ' pill-doc';
+      pillNat.innerHTML = '<i class="ti ti-file-text" style="font-size:10px" aria-hidden="true"></i> Documento';
+    } else if (item.naturaleza === 'F') {
+      pillNat.className += ' pill-fis';
+      pillNat.innerHTML = '<i class="ti ti-package" style="font-size:10px" aria-hidden="true"></i> F\u00EDsico';
+    } else {
+      pillNat.className += ' pill-dato';
+      pillNat.innerHTML = '<i class="ti ti-forms" style="font-size:10px" aria-hidden="true"></i> Dato';
+    }
+    meta.appendChild(pillNat);
+
+    // Pill en repositorio (si aplica)
+    if (item.enRepositorio) {
+      var pillRepo = document.createElement('span'); pillRepo.className = 'co-pill pill-repo';
+      pillRepo.innerHTML = '<i class="ti ti-folder" style="font-size:10px" aria-hidden="true"></i> En repositorio';
+      meta.appendChild(pillRepo);
+    }
+
+    body.appendChild(nom); body.appendChild(meta);
+
+    // Observación
+    if (item.observacion) {
+      var obs = document.createElement('div'); obs.className = 'rx-item-obs'; obs.textContent = item.observacion;
+      body.appendChild(obs);
+    }
+
+    row.appendChild(ico); row.appendChild(body);
+
+    // Selector estado (solo si no completada)
+    if (rec.estado !== 'completada') {
+      var sel = document.createElement('select'); sel.className = 'rx-sel';
+      [['pendiente','Pendiente'],['entregado','Entregado'],['no_existe','No existe']].forEach(function(op) {
+        var opt = document.createElement('option'); opt.value = op[0]; opt.textContent = op[1];
+        if (item.estado === op[0]) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', function() {
+        var nuevoEstado = sel.value;
+        // Si es documento y se marca entregado, abrir modal de URL
+        if (nuevoEstado === 'entregado' && item.naturaleza === 'D') {
+          modalEntregarDocumento(item, rec, sel);
+        } else {
+          _actualizarItem(rec.id, item.id, { estado: nuevoEstado }, function() {
+            item.estado = nuevoEstado;
+            var nuevoRow = _renderItem(item, rec);
+            row.parentNode.replaceChild(nuevoRow, row);
+            _actualizarHeader(rec);
+          });
+        }
+      });
+      row.appendChild(sel);
+    }
+
+    return row;
+  }
+
+  // ── Actualizar ítem en backend ─────────────────────────────
+  function _actualizarItem(recId, itemId, cambios, cb) {
+    api('/recepciones', 'POST', { action: 'actualizarItemRecepcion', id: recId, itemId: itemId, cambios: cambios })
+      .then(function(r) {
+        if (r.ok && r.data && r.data.ok) {
+          // Actualizar estado en memoria
+          try {
+            var items = JSON.parse(_recepcionActiva.items || '[]');
+            var idx = items.findIndex(function(i) { return i.id === itemId; });
+            if (idx !== -1) Object.assign(items[idx], cambios);
+            _recepcionActiva.items = JSON.stringify(items);
+            _recepcionActiva.estado = r.data.estado;
+          } catch(e) {}
+          if (cb) cb();
+        } else {
+          alert('Error al actualizar: ' + ((r.data && r.data.error) || r.error || 'desconocido'));
+        }
+      }).catch(function(e) { alert('Error de conexi\u00F3n: ' + e.message); });
+  }
+
+  function _actualizarHeader(rec) {
+    var hdr = document.getElementById('rx-header');
+    if (!hdr) return;
+    var com = _comunidades.find(function(c) { return c.id === rec.comunidadId; }) || {};
+    var nuevoHdr = _renderHeader(rec, com);
+    hdr.parentNode.replaceChild(nuevoHdr, hdr);
+  }
+
+  // ── Modal: entregar documento ──────────────────────────────
+  function modalEntregarDocumento(item, rec, sel) {
+    var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    var box = document.createElement('div'); box.className = 'modal-box'; box.style.maxWidth = '480px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7'; box.appendChild(btnX);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Entregar documento'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = item.nombre; box.appendChild(tt);
+
+    var fgUrl = document.createElement('div'); fgUrl.className = 'form-group';
+    var lblUrl = document.createElement('label'); lblUrl.textContent = 'URL en Drive (opcional)';
+    var inpUrl = document.createElement('input'); inpUrl.type = 'text'; inpUrl.placeholder = 'https://drive.google.com/...'; inpUrl.value = item.urlDrive || '';
+    fgUrl.appendChild(lblUrl); fgUrl.appendChild(inpUrl);
+
+    var fgObs = document.createElement('div'); fgObs.className = 'form-group';
+    var lblObs = document.createElement('label'); lblObs.textContent = 'Observaci\u00F3n (opcional)';
+    var inpObs = document.createElement('textarea'); inpObs.rows = 2; inpObs.placeholder = 'Ej: Solo digital, sin original'; inpObs.value = item.observacion || '';
+    fgObs.appendChild(lblObs); fgObs.appendChild(inpObs);
+
+    box.appendChild(fgUrl); box.appendChild(fgObs);
+
+    // Checkbox traspasar al repositorio
+    var chkWrap = document.createElement('label');
+    chkWrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--co-ink);margin-bottom:14px';
+    var chkRepo = document.createElement('input'); chkRepo.type = 'checkbox'; chkRepo.checked = true;
+    chkRepo.style.cssText = 'width:16px;height:16px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0';
+    chkWrap.appendChild(chkRepo);
+    chkWrap.appendChild(document.createTextNode('Traspasar al repositorio de documentos autom\u00E1ticamente'));
+    box.appendChild(chkWrap);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = 'Confirmar entrega'; box.appendChild(btnGuardar);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { sel.value = item.estado; overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    btnGuardar.addEventListener('click', function() {
+      var url     = inpUrl.value.trim();
+      var obs     = inpObs.value.trim();
+      var traspasar = chkRepo.checked;
+      var cambios = { estado: 'entregado', urlDrive: url, observacion: obs };
+
+      btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando\u2026';
+
+      var p = _actualizarItemPromise(rec.id, item.id, cambios);
+      p.then(function(r) {
+        if (!r.ok) { errDiv.textContent = r.error || 'Error'; errDiv.style.display = 'block'; btnGuardar.disabled = false; btnGuardar.textContent = 'Confirmar entrega'; return; }
+
+        Object.assign(item, cambios);
+
+        if (traspasar && url) {
+          return api('/recepciones', 'POST', { action: 'traspasarRepositorio', id: rec.id, itemId: item.id, urlDrive: url })
+            .then(function(r2) {
+              if (r2.ok && r2.data && r2.data.ok) item.enRepositorio = true;
+              overlay.remove();
+              var fila = document.getElementById('rx-item-' + item.id);
+              if (fila) { var nueva = _renderItem(item, rec); fila.parentNode.replaceChild(nueva, fila); }
+              _actualizarHeader(rec);
+            });
+        } else {
+          overlay.remove();
+          var fila = document.getElementById('rx-item-' + item.id);
+          if (fila) { var nueva = _renderItem(item, rec); fila.parentNode.replaceChild(nueva, fila); }
+          _actualizarHeader(rec);
+        }
+      }).catch(function(e) { errDiv.textContent = e.message; errDiv.style.display = 'block'; btnGuardar.disabled = false; btnGuardar.textContent = 'Confirmar entrega'; });
+    });
+  }
+
+  function _actualizarItemPromise(recId, itemId, cambios) {
+    return api('/recepciones', 'POST', { action: 'actualizarItemRecepcion', id: recId, itemId: itemId, cambios: cambios })
+      .then(function(r) {
+        if (r.ok && r.data && r.data.ok) {
+          try {
+            var items = JSON.parse(_recepcionActiva.items || '[]');
+            var idx = items.findIndex(function(i) { return i.id === itemId; });
+            if (idx !== -1) Object.assign(items[idx], cambios);
+            _recepcionActiva.items = JSON.stringify(items);
+            _recepcionActiva.estado = r.data.estado;
+          } catch(e) {}
+          return { ok: true };
+        }
+        return { ok: false, error: (r.data && r.data.error) || r.error || 'Error' };
+      });
+  }
+
+  // ── Modal: generar acta ────────────────────────────────────
+  function modalGenerarActa(rec, com) {
+    var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    var box = document.createElement('div'); box.className = 'modal-box'; box.style.maxWidth = '520px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7'; box.appendChild(btnX);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Acta de recepci\u00F3n'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Generar acta documental'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'El acta registra el estado de cada \u00EDtem. Se requiere la firma de CoproActiva y al menos 2 miembros del comit\u00E9.'; box.appendChild(st);
+
+    // CoproActiva (fijo)
+    var secCopro = document.createElement('div');
+    secCopro.style.cssText = 'padding:12px 14px;background:var(--co-cream-deep);border-radius:var(--co-r-md);margin-bottom:14px';
+    secCopro.innerHTML = '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Por CoproActiva</div><div style="font-size:13px;font-weight:600;color:var(--co-ink)">Osmar Andr\u00E9 Meza Aguilar</div><div style="font-size:11px;color:var(--co-mute)">Administrador · RUT 17.642.367-6</div>';
+    box.appendChild(secCopro);
+
+    // Firmantes comité
+    var secFirm = document.createElement('div');
+    secFirm.innerHTML = '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:10px">Por la Comunidad (m\u00EDnimo 2)</div>';
+
+    function crearFirmante(n) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'border:1px solid var(--co-line);border-radius:var(--co-r-md);padding:12px 14px;margin-bottom:8px';
+      var lbl = document.createElement('div'); lbl.style.cssText = 'font-size:10px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;margin-bottom:8px'; lbl.textContent = 'Firmante ' + n;
+      var g1 = document.createElement('div'); g1.className = 'form-group';
+      var l1 = document.createElement('label'); l1.textContent = 'Nombre completo';
+      var i1 = document.createElement('input'); i1.type = 'text'; i1.id = 'firm-nom-' + n; i1.placeholder = 'Nombre completo';
+      g1.appendChild(l1); g1.appendChild(i1);
+      var g2 = document.createElement('div'); g2.className = 'form-group';
+      var l2 = document.createElement('label'); l2.textContent = 'Cargo';
+      var i2 = document.createElement('input'); i2.type = 'text'; i2.id = 'firm-cargo-' + n; i2.placeholder = 'Ej: Presidente del Comit\u00E9';
+      g2.appendChild(l2); g2.appendChild(i2);
+      var g3 = document.createElement('div'); g3.className = 'form-group';
+      var l3 = document.createElement('label'); l3.textContent = 'RUT';
+      var i3 = document.createElement('input'); i3.type = 'text'; i3.id = 'firm-rut-' + n; i3.placeholder = '12.345.678-9';
+      g3.appendChild(l3); g3.appendChild(i3);
+      wrap.appendChild(lbl); wrap.appendChild(g1); wrap.appendChild(g2); wrap.appendChild(g3);
+      return wrap;
+    }
+    secFirm.appendChild(crearFirmante(1));
+    secFirm.appendChild(crearFirmante(2));
+    var btnAgregarFirm = document.createElement('button'); btnAgregarFirm.className = 'btn-ghost'; btnAgregarFirm.style.fontSize = '12px'; btnAgregarFirm.textContent = '+ Agregar firmante';
+    var nFirm = 2;
+    btnAgregarFirm.addEventListener('click', function() { nFirm++; secFirm.insertBefore(crearFirmante(nFirm), btnAgregarFirm); });
+    secFirm.appendChild(btnAgregarFirm);
+    box.appendChild(secFirm);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnGenerar = document.createElement('button'); btnGenerar.className = 'btn-guardar'; btnGenerar.textContent = 'Generar y descargar acta PDF'; box.appendChild(btnGenerar);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    btnGenerar.addEventListener('click', function() {
+      var firmantes = [];
+      for (var i = 1; i <= nFirm; i++) {
+        var nom = document.getElementById('firm-nom-' + i); var cargo = document.getElementById('firm-cargo-' + i); var rut = document.getElementById('firm-rut-' + i);
+        if (nom && nom.value.trim()) firmantes.push({ nombre: nom.value.trim(), cargo: (cargo && cargo.value.trim()) || '', rut: (rut && rut.value.trim()) || '' });
+      }
+      if (firmantes.length < 2) { errDiv.textContent = 'Se requieren al menos 2 firmantes de la comunidad.'; errDiv.style.display = 'block'; return; }
+
+      btnGenerar.disabled = true; btnGenerar.textContent = 'Generando\u2026';
+
+      api('/recepciones', 'POST', { action: 'guardarFirmantes', id: rec.id, firmantes: firmantes })
+        .then(function() {
+          overlay.remove();
+          _generarActaPDF(rec, com, firmantes);
+        }).catch(function(e) { errDiv.textContent = e.message; errDiv.style.display = 'block'; btnGenerar.disabled = false; btnGenerar.textContent = 'Generar y descargar acta PDF'; });
+    });
+  }
+
+  // ── Generar PDF del Acta ───────────────────────────────────
+  function _generarActaPDF(rec, com, firmantes) {
+    var items = [];
+    try { items = JSON.parse(rec.items || '[]'); } catch(e) {}
+    var fecha  = new Date().toLocaleDateString('es-CL');
+
+    // Agrupar por área
+    var areas = {};
+    items.forEach(function(item) {
+      if (!areas[item.area]) areas[item.area] = [];
+      areas[item.area].push(item);
+    });
+
+    var filasPorArea = '';
+    Object.keys(areas).forEach(function(area) {
+      filasPorArea += '<tr><td colspan="3" style="padding:8px 10px;background:#f9f7f5;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;border-bottom:0.5px solid #e0d8d0">\u00C1rea ' + area + '</td></tr>';
+      areas[area].forEach(function(item) {
+        var estLbl = item.estado === 'entregado' ? 'Entregado' : item.estado === 'no_existe' ? 'No existe' : 'Pendiente';
+        var estCol = item.estado === 'entregado' ? '#3B6D11' : item.estado === 'no_existe' ? '#A32D2D' : '#888';
+        var natLbl = item.naturaleza === 'D' ? 'Documento' : item.naturaleza === 'F' ? 'F\u00EDsico' : 'Dato';
+        filasPorArea += '<tr><td style="padding:6px 10px;font-size:11px;border-bottom:0.5px solid #e0d8d0">' + item.nombre + '</td>'
+          + '<td style="padding:6px 10px;font-size:11px;color:#888;border-bottom:0.5px solid #e0d8d0">' + natLbl + '</td>'
+          + '<td style="padding:6px 10px;font-size:11px;font-weight:700;color:' + estCol + ';border-bottom:0.5px solid #e0d8d0">' + estLbl + '</td></tr>';
+        if (item.observacion) {
+          filasPorArea += '<tr><td colspan="3" style="padding:2px 10px 6px 24px;font-size:10px;color:#888;border-bottom:0.5px solid #e0d8d0;font-style:italic">' + item.observacion + '</td></tr>';
+        }
+      });
+    });
+
+    var firmantesHtml = firmantes.map(function(f) {
+      return '<div style="flex:1;min-width:180px;border-top:1px solid #1A1714;padding-top:8px">'
+        + '<div style="font-size:12px;font-weight:700;color:#1A1714">' + f.nombre + '</div>'
+        + '<div style="font-size:11px;color:#888">' + f.cargo + '</div>'
+        + '<div style="font-size:11px;color:#888">RUT: ' + f.rut + '</div></div>';
+    }).join('');
+
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+      + '<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1A1714}table{width:100%;border-collapse:collapse}@media print{.no-print{display:none}@page{margin:1.5cm}}</style>'
+      + '</head><body>'
+      + '<div style="background:#1A1714;padding:14px 24px;display:flex;justify-content:space-between;align-items:center">'
+      + '<div style="color:#fff;font-size:18px;font-weight:800"><span style="color:#D9853B">co</span>proactiva</div>'
+      + '<div style="color:rgba(255,255,255,0.7);font-size:11px;text-align:right">' + (com.nombre || '') + '<br>Acta de Recepci\u00F3n Documental</div></div>'
+      + '<div style="background:#D9853B;padding:8px 24px"><p style="color:#fff;font-size:10px;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:0.06em">Anexo N\u00B01 \u2014 Antecedentes entregados al inicio del contrato \u2014 ' + fecha + '</p></div>'
+      + '<div style="padding:16px 24px 8px">'
+      + '<p style="font-size:11px;color:#444;line-height:1.6;margin:0 0 12px">En ' + (com.comuna || 'Santiago') + ', a ' + fecha + ', las partes suscriben el presente documento que registra el estado de entrega de los antecedentes requeridos conforme al Anexo N\u00B01 del Contrato de Administraci\u00F3n, Ley N\u00B021.442.</p>'
+      + '<table><thead><tr style="background:#1A1714">'
+      + '<th style="padding:7px 10px;text-align:left;color:#fff;font-size:10px;letter-spacing:0.04em">Documento / Antecedente</th>'
+      + '<th style="padding:7px 10px;text-align:left;color:#fff;font-size:10px;letter-spacing:0.04em">Naturaleza</th>'
+      + '<th style="padding:7px 10px;text-align:left;color:#fff;font-size:10px;letter-spacing:0.04em">Estado</th></tr></thead>'
+      + '<tbody>' + filasPorArea + '</tbody></table></div>'
+      + '<div style="padding:20px 24px;border-top:2px solid #D9853B;margin-top:16px">'
+      + '<p style="font-size:10px;color:#888;margin:0 0 20px">Las partes suscriben el presente Acta en dos ejemplares del mismo tenor y fecha.</p>'
+      + '<div style="display:flex;gap:24px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:180px;border-top:1px solid #1A1714;padding-top:8px">'
+      + '<div style="font-size:12px;font-weight:700;color:#1A1714">Osmar Andr\u00E9 Meza Aguilar</div>'
+      + '<div style="font-size:11px;color:#888">Administrador · CoproActiva</div>'
+      + '<div style="font-size:11px;color:#888">RUT: 17.642.367-6</div></div>'
+      + firmantesHtml + '</div></div>'
+      + '<div class="no-print" style="padding:14px 24px;text-align:center">'
+      + '<button onclick="window.print()" style="background:#D9853B;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Imprimir / Guardar PDF</button></div>'
+      + '</body></html>';
+
+    var win = window.open('', '_blank'); win.document.write(html); win.document.close();
+  }
+
+  // ── Modal: nueva recepción manual ──────────────────────────
+  function modalNuevaRecepcion() {
+    var comunidadesDisponibles = _comunidades.filter(function(c) {
+      return !_recepciones.some(function(r) { return r.comunidadId === c.id; });
+    });
+
+    if (comunidadesDisponibles.length === 0) {
+      alert('Todas las comunidades ya tienen una recepci\u00F3n iniciada.');
+      return;
+    }
+
+    var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    var box = document.createElement('div'); box.className = 'modal-box'; box.style.maxWidth = '420px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7'; box.appendChild(btnX);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Nueva recepci\u00F3n'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Iniciar recepci\u00F3n documental'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Selecciona la comunidad. El checklist se genera autom\u00E1ticamente seg\u00FAn sus instalaciones.'; box.appendChild(st);
+
+    var fg = document.createElement('div'); fg.className = 'form-group';
+    var lbl = document.createElement('label'); lbl.textContent = 'Comunidad';
+    var sel = document.createElement('select'); sel.id = 'nr-com';
+    var optVacia = document.createElement('option'); optVacia.value = ''; optVacia.textContent = 'Seleccionar\u2026'; sel.appendChild(optVacia);
+    comunidadesDisponibles.forEach(function(c) {
+      var opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.nombre; sel.appendChild(opt);
+    });
+    fg.appendChild(lbl); fg.appendChild(sel); box.appendChild(fg);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    var btnCrear = document.createElement('button'); btnCrear.className = 'btn-guardar'; btnCrear.textContent = 'Crear recepci\u00F3n'; box.appendChild(btnCrear);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    btnCrear.addEventListener('click', function() {
+      var comId = sel.value;
+      if (!comId) { errDiv.textContent = 'Selecciona una comunidad.'; errDiv.style.display = 'block'; return; }
+      btnCrear.disabled = true; btnCrear.textContent = 'Creando\u2026'; errDiv.style.display = 'none';
+      api('/recepciones', 'POST', { action: 'crearRecepcion', comunidadId: comId })
+        .then(function(r) {
+          if (r.ok && r.data && r.data.ok) {
+            overlay.remove();
+            init(); // recargar listado
+          } else {
+            errDiv.textContent = (r.data && r.data.error) || r.error || 'Error al crear';
+            errDiv.style.display = 'block'; btnCrear.disabled = false; btnCrear.textContent = 'Crear recepci\u00F3n';
+          }
+        }).catch(function(e) { errDiv.textContent = e.message; errDiv.style.display = 'block'; btnCrear.disabled = false; btnCrear.textContent = 'Crear recepci\u00F3n'; });
+    });
+  }
+
+  init();
+})();
+</script>
