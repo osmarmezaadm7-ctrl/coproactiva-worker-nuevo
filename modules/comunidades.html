@@ -1523,15 +1523,23 @@
       { lbl: 'Tel\u00E9fono',         val: c.contactoTelefono || '\u2014' }
     ]));
 
-    // Contadores de unidades — leídos de _dirData si están disponibles
-    var unidades  = (_dirData && _dirData.comunidadId === c.id) ? _dirData.unidades : [];
-    var nDeptos   = unidades.filter(function(u) { var t = String(u.tipoUnidad||'').toUpperCase(); return t==='DEPTO'||t==='CASA'; }).length;
-    var nEstac    = unidades.filter(function(u) { var t = String(u.tipoUnidad||'').toUpperCase(); return t==='ESTAC'||t==='ESTACIONAMIENTO'; }).length;
-    var nBodega   = unidades.filter(function(u) { var t = String(u.tipoUnidad||'').toUpperCase(); return t==='BODEGA'; }).length;
-    var setCop    = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
-    var nCoprop   = Object.keys(setCop).length;
+    // Contadores dinámicos — solo muestra tipos que existen en el directorio
+    var unidades = (_dirData && _dirData.comunidadId === c.id) ? _dirData.unidades : [];
+
+    // Definición de tipos conocidos con ícono y label
+    var TIPOS_DEF = [
+      { tipos: ['DEPTO'],                            ico: 'ti-building',      lbl: 'Departamentos',    id: 'ficha-cnt-depto' },
+      { tipos: ['CASA'],                             ico: 'ti-home',          lbl: 'Casas',            id: 'ficha-cnt-casa' },
+      { tipos: ['ESTAC','ESTACIONAMIENTO'],          ico: 'ti-car',           lbl: 'Estacionamientos', id: 'ficha-cnt-estac' },
+      { tipos: ['BODEGA'],                           ico: 'ti-archive',       lbl: 'Bodegas',          id: 'ficha-cnt-bodega' },
+      { tipos: ['LOCAL'],                            ico: 'ti-store',         lbl: 'Locales',          id: 'ficha-cnt-local' },
+      { tipos: ['OFICINA'],                          ico: 'ti-briefcase',     lbl: 'Oficinas',         id: 'ficha-cnt-oficina' }
+    ];
+    // Copropietarios siempre al final
+    var setCop = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
 
     var contWrap = document.createElement('div');
+    contWrap.id = 'ficha-cont-wrap-' + c.id;
     contWrap.style.cssText = 'border:1px solid var(--co-line);border-radius:var(--co-r-md);overflow:hidden;margin-top:8px';
     var contHdr = document.createElement('div');
     contHdr.style.cssText = 'padding:8px 12px;border-bottom:1px solid var(--co-line);background:var(--co-cream-deep)';
@@ -1541,53 +1549,70 @@
     contWrap.appendChild(contHdr); contHdr.appendChild(contHdrLbl);
 
     var contGrid = document.createElement('div');
+    contGrid.id = 'ficha-cont-grid-' + c.id;
     contGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;';
-    // Si _dirData aún no tiene datos de esta comunidad, pedirlos ahora
-    function _actualizarContadores(unidades) {
-      var nd = unidades.filter(function(u){ var t=String(u.tipoUnidad||'').toUpperCase(); return t==='DEPTO'||t==='CASA'; }).length;
-      var ne = unidades.filter(function(u){ var t=String(u.tipoUnidad||'').toUpperCase(); return t==='ESTAC'||t==='ESTACIONAMIENTO'; }).length;
-      var nb = unidades.filter(function(u){ var t=String(u.tipoUnidad||'').toUpperCase(); return t==='BODEGA'; }).length;
-      var sc = {}; unidades.forEach(function(u){ if(u.idCopropietario) sc[u.idCopropietario]=true; });
-      var nc = Object.keys(sc).length;
-      var ids = ['ficha-cnt-deptos-'+c.id,'ficha-cnt-estac-'+c.id,'ficha-cnt-bodegas-'+c.id,'ficha-cnt-coprop-'+c.id];
-      var vals = [nd, ne, nb, nc];
-      ids.forEach(function(id,i){ var el=document.getElementById(id); if(el) el.textContent=vals[i]; });
-    }
-    if (unidades.length === 0 && c.id) {
-      api('/directorio?comunidadId=' + c.id).then(function(resp){
-        var u = [];
-        if(resp.ok){ if(Array.isArray(resp.data)) u=resp.data; else if(resp.data&&Array.isArray(resp.data.data)) u=resp.data.data; }
-        _actualizarContadores(u);
-      }).catch(function(){});
-    }
-    var contadores = [
-      { ico: 'ti-building', lbl: 'Deptos / Casas', val: unidades.length > 0 ? nDeptos : '\u2014', id: 'ficha-cnt-deptos-'+c.id },
-      { ico: 'ti-car',      lbl: 'Estacionam.',    val: unidades.length > 0 ? nEstac  : '\u2014', id: 'ficha-cnt-estac-'+c.id },
-      { ico: 'ti-archive',  lbl: 'Bodegas',        val: unidades.length > 0 ? nBodega : '\u2014', id: 'ficha-cnt-bodegas-'+c.id },
-      { ico: 'ti-users',    lbl: 'Copropietarios', val: unidades.length > 0 ? nCoprop : '\u2014', id: 'ficha-cnt-coprop-'+c.id }
-    ];
-    contadores.forEach(function(ct, i) {
-      var cell = document.createElement('div');
-      var borderR = (i % 2 === 0) ? 'border-right:1px solid var(--co-line);' : '';
-      var borderB = (i < 2)       ? 'border-bottom:1px solid var(--co-line);' : '';
-      cell.style.cssText = 'padding:10px 14px;display:flex;align-items:center;gap:10px;' + borderR + borderB;
-      var icoEl = document.createElement('i');
-      icoEl.className = 'ti ' + ct.ico;
-      icoEl.style.cssText = 'font-size:18px;color:var(--co-mute);flex-shrink:0';
-      icoEl.setAttribute('aria-hidden','true');
-      var info = document.createElement('div');
-      var valEl = document.createElement('div');
-      valEl.style.cssText = 'font-size:18px;font-weight:700;color:var(--co-ink);letter-spacing:-0.02em;line-height:1';
-      valEl.textContent = ct.val;
-      if (ct.id) valEl.id = ct.id;
-      var lblEl = document.createElement('div');
-      lblEl.style.cssText = 'font-size:10px;color:var(--co-mute);font-weight:600;margin-top:2px';
-      lblEl.textContent = ct.lbl;
-      info.appendChild(valEl); info.appendChild(lblEl);
-      cell.appendChild(icoEl); cell.appendChild(info);
-      contGrid.appendChild(cell);
-    });
     contWrap.appendChild(contGrid);
+
+    // Función que construye las celdas dinámicamente según los tipos presentes
+    function _renderContadores(uList) {
+      var grid = document.getElementById('ficha-cont-grid-' + c.id);
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      // Calcular conteos por tipo
+      var conteos = [];
+      TIPOS_DEF.forEach(function(def) {
+        var n = uList.filter(function(u) { return def.tipos.indexOf(String(u.tipoUnidad||'').toUpperCase()) !== -1; }).length;
+        if (n > 0) conteos.push({ ico: def.ico, lbl: def.lbl, val: n });
+      });
+      // Copropietarios siempre
+      var sc = {}; uList.forEach(function(u){ if(u.idCopropietario) sc[u.idCopropietario]=true; });
+      conteos.push({ ico: 'ti-users', lbl: 'Copropietarios', val: Object.keys(sc).length });
+
+      conteos.forEach(function(ct, i) {
+        var cell = document.createElement('div');
+        var isLastRow  = i >= conteos.length - 2;
+        var isOdd      = i % 2 === 0;
+        var borderR = isOdd ? 'border-right:1px solid var(--co-line);' : '';
+        var borderB = !isLastRow ? 'border-bottom:1px solid var(--co-line);' : '';
+        // Si número impar de items, último ocupa columna completa
+        if (conteos.length % 2 !== 0 && i === conteos.length - 1) {
+          cell.style.gridColumn = '1 / -1';
+          borderR = '';
+        }
+        cell.style.cssText = 'padding:10px 14px;display:flex;align-items:center;gap:10px;' + borderR + borderB;
+        var icoEl = document.createElement('i');
+        icoEl.className = 'ti ' + ct.ico;
+        icoEl.style.cssText = 'font-size:18px;color:var(--co-mute);flex-shrink:0';
+        icoEl.setAttribute('aria-hidden','true');
+        var info = document.createElement('div');
+        var valEl = document.createElement('div');
+        valEl.style.cssText = 'font-size:18px;font-weight:700;color:var(--co-ink);letter-spacing:-0.02em;line-height:1';
+        valEl.textContent = ct.val;
+        var lblEl = document.createElement('div');
+        lblEl.style.cssText = 'font-size:10px;color:var(--co-mute);font-weight:600;margin-top:2px';
+        lblEl.textContent = ct.lbl;
+        info.appendChild(valEl); info.appendChild(lblEl);
+        cell.appendChild(icoEl); cell.appendChild(info);
+        grid.appendChild(cell);
+      });
+    }
+
+    // Render inicial
+    if (unidades.length > 0) {
+      _renderContadores(unidades);
+    } else {
+      // Mostrar cargando y hacer fetch
+      contGrid.innerHTML = '<div style="grid-column:1/-1;padding:14px;text-align:center;font-size:12px;color:var(--co-mute)">Cargando…</div>';
+      if (c.id) {
+        api('/directorio?comunidadId=' + c.id).then(function(resp){
+          var u = [];
+          if(resp.ok){ if(Array.isArray(resp.data)) u=resp.data; else if(resp.data&&Array.isArray(resp.data.data)) u=resp.data.data; }
+          _renderContadores(u);
+        }).catch(function(){ contGrid.innerHTML = ''; });
+      }
+    }
+
     s1.appendChild(contWrap);
     scrollWrap.appendChild(s1);
 
