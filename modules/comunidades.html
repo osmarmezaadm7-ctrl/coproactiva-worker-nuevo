@@ -1513,12 +1513,12 @@
     }
 
     // ── Sección 1: Datos generales ────────────────────────────
-    var s1 = seccion('Datos generales', 'Editar', function() { abrirModalEditar(c); }); // único botón editar
+    var s1 = seccion('Datos generales', null, null);
     s1.appendChild(datoGrid([
-      { lbl: 'RUT',        val: c.rut || '\u2014' },
-      { lbl: 'Estado',     val: c.estado === 'activo' ? 'Activo' : 'Inactivo', color: c.estado === 'activo' ? 'var(--co-green)' : 'var(--co-mute)' },
+      { lbl: 'RUT',         val: c.rut || '\u2014' },
+      { lbl: 'Estado',      val: c.estado === 'activo' ? 'Activo' : 'Inactivo', color: c.estado === 'activo' ? 'var(--co-green)' : 'var(--co-mute)' },
       { lbl: 'Direcci\u00F3n', val: c.direccion || '\u2014' },
-      { lbl: 'Comuna',     val: c.comuna || '\u2014' }
+      { lbl: 'Comuna',      val: c.comuna || '\u2014' }
     ]));
 
     // Contadores de unidades — leídos de _dirData si están disponibles
@@ -1528,7 +1528,6 @@
     var nBodega   = unidades.filter(function(u) { var t = String(u.tipoUnidad||'').toUpperCase(); return t==='BODEGA'; }).length;
     var setCop    = {}; unidades.forEach(function(u){ if(u.idCopropietario) setCop[u.idCopropietario]=true; });
     var nCoprop   = Object.keys(setCop).length;
-    var totalUnid = parseInt(c.unidades) || 0;
 
     var contWrap = document.createElement('div');
     contWrap.style.cssText = 'border:1px solid var(--co-line);border-radius:var(--co-r-md);overflow:hidden;margin-top:8px';
@@ -1560,7 +1559,7 @@
       }).catch(function(){});
     }
     var contadores = [
-      { ico: 'ti-building', lbl: 'Deptos / Casas', val: unidades.length > 0 ? nDeptos : (totalUnid||'\u2014'), id: 'ficha-cnt-deptos-'+c.id },
+      { ico: 'ti-building', lbl: 'Deptos / Casas', val: unidades.length > 0 ? nDeptos : '\u2014', id: 'ficha-cnt-deptos-'+c.id },
       { ico: 'ti-car',      lbl: 'Estacionam.',    val: unidades.length > 0 ? nEstac  : '\u2014', id: 'ficha-cnt-estac-'+c.id },
       { ico: 'ti-archive',  lbl: 'Bodegas',        val: unidades.length > 0 ? nBodega : '\u2014', id: 'ficha-cnt-bodegas-'+c.id },
       { ico: 'ti-users',    lbl: 'Copropietarios', val: unidades.length > 0 ? nCoprop : '\u2014', id: 'ficha-cnt-coprop-'+c.id }
@@ -3486,52 +3485,127 @@
     overlay.className = 'modal-overlay';
     var box = document.createElement('div');
     box.className = 'modal-box';
+    box.style.maxWidth = '600px';
+
     var btnCerrar = document.createElement('button'); btnCerrar.className = 'modal-close'; btnCerrar.textContent = '\u00D7'; box.appendChild(btnCerrar);
-    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Editar comunidad'; box.appendChild(ey);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Editar ficha'; box.appendChild(ey);
     var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = c.nombre || ''; box.appendChild(tt);
-    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Modifica los datos y guarda los cambios'; box.appendChild(st);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Datos generales, contrato e instalaciones'; box.appendChild(st);
+
+    // ── Sección datos generales + contrato ───────────────────
     var grid = document.createElement('div'); grid.className = 'form-grid';
     var vals = { 'e-nombre':c.nombre||'','e-direccion':c.direccion||'','e-comuna':c.comuna||'','e-rut':c.rut||'','e-unidades':c.unidades||'','e-honorario':c.honorario||'','e-modalidad':c.modalidad||'Integral','e-contacto':c.contactoNombre||'','e-telefono':c.contactoTelefono||'','e-inicio':c.fechaInicioContrato||'','e-renovacion':c.fechaRenovacion||'','e-estado':c.estado||'activo' };
     var camposE = [
-      { id:'e-nombre',    lbl:'Nombre *',           tipo:'text',   full:true },
-      { id:'e-direccion', lbl:'Direcci\u00F3n *',   tipo:'text' },
-      { id:'e-comuna',    lbl:'Comuna *',           tipo:'text' },
-      { id:'e-rut',       lbl:'RUT comunidad',      tipo:'text' },
-      { id:'e-unidades',  lbl:'Unidades',           tipo:'number' },
-      { id:'e-honorario', lbl:'Honorario ($)',      tipo:'number' },
-      { id:'e-modalidad', lbl:'Modalidad',          tipo:'select', opts:['Integral','Nueva','Auditoria'] },
+      { id:'e-nombre',    lbl:'Nombre *',              tipo:'text',   full:true },
+      { id:'e-direccion', lbl:'Direcci\u00F3n *',      tipo:'text' },
+      { id:'e-comuna',    lbl:'Comuna *',              tipo:'text' },
+      { id:'e-rut',       lbl:'RUT comunidad',         tipo:'text' },
+      { id:'e-unidades',  lbl:'Unidades',              tipo:'number' },
+      { id:'e-honorario', lbl:'Honorario ($)',         tipo:'number' },
+      { id:'e-modalidad', lbl:'Modalidad',             tipo:'select', opts:['Integral','Nueva','Auditoria'] },
+      { id:'e-estado',    lbl:'Estado',                tipo:'select', opts:['activo','inactivo'] },
       { id:'e-contacto',  lbl:'Contacto comit\u00E9', tipo:'text' },
-      { id:'e-telefono',  lbl:'Tel\u00E9fono',      tipo:'tel' },
-      { id:'e-inicio',    lbl:'Inicio contrato',   tipo:'text' },
-      { id:'e-renovacion',lbl:'Renovaci\u00F3n',   tipo:'text' },
-      { id:'e-estado',    lbl:'Estado',            tipo:'select', opts:['activo','inactivo'] }
+      { id:'e-telefono',  lbl:'Tel\u00E9fono',        tipo:'tel' },
+      { id:'e-inicio',    lbl:'Inicio contrato',      tipo:'text' },
+      { id:'e-renovacion',lbl:'Renovaci\u00F3n',      tipo:'text' }
     ];
     camposE.forEach(function(campo) {
       var fg = document.createElement('div'); fg.className = 'form-group' + (campo.full?' form-full':'');
       var lbl = document.createElement('label'); lbl.textContent = campo.lbl; fg.appendChild(lbl);
       var inp;
-      if (campo.tipo === 'select') { inp = document.createElement('select'); inp.id = campo.id; campo.opts.forEach(function(o){ var opt=document.createElement('option'); opt.value=o; opt.textContent=o; if(vals[campo.id]===o) opt.selected=true; inp.appendChild(opt); }); }
-      else { inp = document.createElement('input'); inp.type=campo.tipo; inp.id=campo.id; inp.value=vals[campo.id]; }
+      if (campo.tipo === 'select') {
+        inp = document.createElement('select'); inp.id = campo.id;
+        campo.opts.forEach(function(o){ var opt=document.createElement('option'); opt.value=o; opt.textContent=o; if(vals[campo.id]===o) opt.selected=true; inp.appendChild(opt); });
+      } else {
+        inp = document.createElement('input'); inp.type=campo.tipo; inp.id=campo.id; inp.value=vals[campo.id];
+      }
       fg.appendChild(inp); grid.appendChild(fg);
     });
     box.appendChild(grid);
+
+    // ── Sección instalaciones ─────────────────────────────────
+    var instSep = document.createElement('div');
+    instSep.style.cssText = 'border-top:1px solid var(--co-line);margin:20px 0 16px';
+    box.appendChild(instSep);
+    var instTit = document.createElement('div');
+    instTit.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:12px';
+    instTit.textContent = 'Instalaciones y equipamientos';
+    box.appendChild(instTit);
+
+    var instActual = _parsearInstalaciones(c.instalaciones) || {};
+    var instLista = document.createElement('div');
+    instLista.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:4px';
+    INSTALACIONES_OPTS.forEach(function(inst) {
+      var item = document.createElement('label');
+      item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;transition:border-color 0.13s;font-size:13px;font-weight:500;color:var(--co-ink)';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox'; chk.id = 'ei-' + inst.key;
+      chk.checked = !!instActual[inst.key];
+      chk.style.cssText = 'width:16px;height:16px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0';
+      chk.addEventListener('change', function() {
+        item.style.borderColor = chk.checked ? 'var(--co-orange)' : 'var(--co-line)';
+      });
+      if (chk.checked) item.style.borderColor = 'var(--co-orange)';
+      item.appendChild(chk);
+      item.appendChild(document.createTextNode(inst.label));
+      instLista.appendChild(item);
+    });
+    box.appendChild(instLista);
+
     var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
     var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar'; btnGuardar.textContent = 'Guardar cambios'; box.appendChild(btnGuardar);
+
     overlay.appendChild(box); document.body.appendChild(overlay);
     var cerrar = function() { overlay.remove(); };
     btnCerrar.addEventListener('click', cerrar);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
     btnGuardar.addEventListener('click', function() {
       var nombre    = document.getElementById('e-nombre').value.trim();
       var direccion = document.getElementById('e-direccion').value.trim();
       var comuna    = document.getElementById('e-comuna').value.trim();
       if (!nombre || !direccion || !comuna) { errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.'; errDiv.style.display='block'; return; }
+
+      // Recoger instalaciones
+      var nuevaInst = {};
+      INSTALACIONES_OPTS.forEach(function(inst) {
+        var chk = document.getElementById('ei-' + inst.key);
+        if (chk && chk.checked) nuevaInst[inst.key] = true;
+      });
+
       btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
-      var datos = { action:'editarComunidad', id:c.id, nombre:nombre, direccion:direccion, comuna:comuna, rut:document.getElementById('e-rut').value.trim(), unidades:document.getElementById('e-unidades').value||0, honorario:document.getElementById('e-honorario').value||0, modalidad:document.getElementById('e-modalidad').value, contactoNombre:document.getElementById('e-contacto').value.trim(), contactoTelefono:document.getElementById('e-telefono').value.trim(), fechaInicioContrato:document.getElementById('e-inicio').value.trim(), fechaRenovacion:document.getElementById('e-renovacion').value.trim(), estado:document.getElementById('e-estado').value };
+      var datos = {
+        action:'editarComunidad', id:c.id,
+        nombre:nombre, direccion:direccion, comuna:comuna,
+        rut:document.getElementById('e-rut').value.trim(),
+        unidades:document.getElementById('e-unidades').value||0,
+        honorario:document.getElementById('e-honorario').value||0,
+        modalidad:document.getElementById('e-modalidad').value,
+        contactoNombre:document.getElementById('e-contacto').value.trim(),
+        contactoTelefono:document.getElementById('e-telefono').value.trim(),
+        fechaInicioContrato:document.getElementById('e-inicio').value.trim(),
+        fechaRenovacion:document.getElementById('e-renovacion').value.trim(),
+        estado:document.getElementById('e-estado').value,
+        instalaciones:JSON.stringify(nuevaInst)
+      };
       api('/comunidades', 'POST', datos).then(function(resp) {
-        if (resp.ok && resp.data && resp.data.ok) { Object.assign(c, datos); btnGuardar.textContent = '\u2713 Cambios guardados'; btnGuardar.style.background = 'var(--co-green)'; setTimeout(function(){ overlay.remove(); abrirFicha(c); }, 900); }
-        else { errDiv.textContent=(resp.data&&resp.data.error)||resp.error||'Error al guardar'; errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Guardar cambios'; }
-      }).catch(function(err){ errDiv.textContent='Error de conexi\u00F3n: '+err.message; errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Guardar cambios'; });
+        if (resp.ok && resp.data && resp.data.ok) {
+          Object.assign(c, datos);
+          // Actualizar también en _comunidades
+          for (var i=0; i<_comunidades.length; i++) {
+            if (_comunidades[i].id === c.id) { Object.assign(_comunidades[i], datos); break; }
+          }
+          btnGuardar.textContent = '\u2713 Cambios guardados';
+          btnGuardar.style.background = 'var(--co-green)';
+          setTimeout(function(){ overlay.remove(); abrirFicha(c); }, 900);
+        } else {
+          errDiv.textContent=(resp.data&&resp.data.error)||resp.error||'Error al guardar';
+          errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Guardar cambios';
+        }
+      }).catch(function(err){
+        errDiv.textContent='Error de conexi\u00F3n: '+err.message;
+        errDiv.style.display='block'; btnGuardar.disabled=false; btnGuardar.textContent='Guardar cambios';
+      });
     });
   }
 
