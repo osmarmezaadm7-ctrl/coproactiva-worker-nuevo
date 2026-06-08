@@ -128,6 +128,7 @@
           <button class="sub-item" onclick="navSub('crm','diagnostico','Diagnóstico')"><span class="sub-dot"></span><span class="sub-label">Diagnóstico</span></button>
           <button class="sub-item" onclick="navSub('crm','propuesta','Propuesta y contrato')"><span class="sub-dot"></span><span class="sub-label">Propuesta y contrato</span></button>
           <button class="sub-item" onclick="navSub('crm','flujo','Flujo comercial')"><span class="sub-dot"></span><span class="sub-label">Flujo comercial</span></button>
+          <button class="sub-item" onclick="navSub('crm','recepcion','Recepción documental')"><span class="sub-dot"></span><span class="sub-label">Recepción documental</span></button>
         </div>
       </div>
 
@@ -327,56 +328,57 @@ const NAV_STATE = {
 const MOD_PLANOS = ['panel', 'config'];
 
 const TOP_ACTIONS = {
-  'crm':            { label: 'Nuevo prospecto',   show: true  },
-  'comunidades':    { label: 'Nueva comunidad',   show: true  },
-  'finanzas':       { label: 'Emitir GC',         show: true  },
-  'remuneraciones': { label: 'Nueva liquidación', show: true  },
-  'incidencias':    { label: 'Nueva incidencia',  show: true  },
-  'mantenciones':   { label: 'Nueva mantención',  show: true  },
-  'comunicaciones': { label: 'Nuevo comunicado',  show: true  },
-  'documentos':     { label: 'Subir documento',   show: true  },
+  'crm':            { label: 'Nuevo prospecto',      show: true  },
+  'comunidades':    { label: 'Nueva comunidad',      show: true  },
+  'finanzas':       { label: 'Emitir GC',            show: true  },
+  'remuneraciones': { label: 'Nueva liquidación',    show: true  },
+  'incidencias':    { label: 'Nueva incidencia',     show: true  },
+  'mantenciones':   { label: 'Nueva mantención',     show: true  },
+  'comunicaciones': { label: 'Nuevo comunicado',     show: true  },
+  'documentos':     { label: 'Subir documento',      show: true  },
 };
 
 const TOPBAR = {
-  'panel':                   ['Panel maestro',         ''],
-  'comunidades-listado':     ['Listado de comunidades','· General'],
-  'comunidades-ficha':       ['Ficha de comunidad',    '· General'],
-  'comunidades-unidades':    ['Unidades y alícuotas',  '· Comunidades'],
-  'comunidades-residentes':  ['Residentes',            '· Comunidades'],
-  'comunidades-comite':      ['Comité',                '· Comunidades'],
-  'crm-pipeline':            ['Pipeline CRM',          '· Comercial'],
-  'crm-prospectos':          ['Prospectos',            '· Comercial'],
-  'crm-diagnostico':         ['Diagnóstico',           '· Comercial'],
-  'crm-propuesta':           ['Propuesta y contrato',  '· Comercial'],
-  'crm-flujo':               ['Flujo comercial',       '· Comercial'],
-  'finanzas-resumen':        ['Resumen financiero',    '· Finanzas'],
-  'finanzas-gastos':         ['Gastos comunes',        '· Finanzas'],
-  'finanzas-cobranza':       ['Cobranza',              '· Finanzas'],
-  'finanzas-pagos':          ['Ingreso de pagos',      '· Finanzas'],
-  'finanzas-rendicion':      ['Rendición al comité',   '· Finanzas'],
-  'servicios-medidores':     ['Lecturas de medidores', '· Servicios comunes'],
-  'servicios-gas':           ['Gas caldera',           '· Servicios comunes'],
-  'servicios-calculo':       ['Cálculo y prorrateo',   '· Servicios comunes'],
-  'servicios-historial':     ['Historial de lecturas', '· Servicios comunes'],
-  'remuneraciones-personal': ['Personal',              '· Remuneraciones'],
-  'remuneraciones-liquidaciones':['Liquidaciones',     '· Remuneraciones'],
-  'remuneraciones-previred': ['Previred / DT',         '· Remuneraciones'],
-  'remuneraciones-finiquitos':['Finiquitos',           '· Remuneraciones'],
-  'mantenciones-calendario': ['Calendario',            '· Mantenciones'],
-  'mantenciones-proveedores':['Proveedores',           '· Mantenciones'],
-  'mantenciones-alertas':    ['Alertas de vencimiento','· Mantenciones'],
-  'incidencias-activas':     ['Incidencias activas',   '· Operaciones'],
-  'incidencias-historial':   ['Historial incidencias', '· Operaciones'],
-  'comunicaciones-circulares':['Circulares',           '· Comunicación'],
-  'comunicaciones-asambleas':['Asambleas',             '· Comunicación'],
-  'comunicaciones-encuestas':['Encuestas',             '· Comunicación'],
-  'comunicaciones-libro':    ['Libro de novedades',    '· Comunicación'],
-  'documentos-contratos':    ['Contratos y seguros',   '· Documentos'],
-  'documentos-actas':        ['Actas de reunión',      '· Documentos'],
-  'documentos-reglamentos':  ['Reglamentos',           '· Documentos'],
-  'reportes-mensual':        ['Reporte mensual',       '· Empresa'],
-  'reportes-kpis':           ['KPIs generales',        '· Empresa'],
-  'config':                  ['Configuración',         '· Empresa'],
+  'panel':                   ['Panel maestro',            ''],
+  'comunidades-listado':     ['Listado de comunidades',   '· General'],
+  'comunidades-ficha':       ['Ficha de comunidad',       '· General'],
+  'comunidades-unidades':    ['Unidades y alícuotas',     '· Comunidades'],
+  'comunidades-residentes':  ['Residentes',               '· Comunidades'],
+  'comunidades-comite':      ['Comité',                   '· Comunidades'],
+  'crm-pipeline':            ['Pipeline CRM',             '· Comercial'],
+  'crm-prospectos':          ['Prospectos',               '· Comercial'],
+  'crm-diagnostico':         ['Diagnóstico',              '· Comercial'],
+  'crm-propuesta':           ['Propuesta y contrato',     '· Comercial'],
+  'crm-flujo':               ['Flujo comercial',          '· Comercial'],
+  'crm-recepcion':           ['Recepción documental',     '· Comercial'],
+  'finanzas-resumen':        ['Resumen financiero',       '· Finanzas'],
+  'finanzas-gastos':         ['Gastos comunes',           '· Finanzas'],
+  'finanzas-cobranza':       ['Cobranza',                 '· Finanzas'],
+  'finanzas-pagos':          ['Ingreso de pagos',         '· Finanzas'],
+  'finanzas-rendicion':      ['Rendición al comité',      '· Finanzas'],
+  'servicios-medidores':     ['Lecturas de medidores',    '· Servicios comunes'],
+  'servicios-gas':           ['Gas caldera',              '· Servicios comunes'],
+  'servicios-calculo':       ['Cálculo y prorrateo',      '· Servicios comunes'],
+  'servicios-historial':     ['Historial de lecturas',    '· Servicios comunes'],
+  'remuneraciones-personal': ['Personal',                 '· Remuneraciones'],
+  'remuneraciones-liquidaciones':['Liquidaciones',        '· Remuneraciones'],
+  'remuneraciones-previred': ['Previred / DT',            '· Remuneraciones'],
+  'remuneraciones-finiquitos':['Finiquitos',              '· Remuneraciones'],
+  'mantenciones-calendario': ['Calendario',               '· Mantenciones'],
+  'mantenciones-proveedores':['Proveedores',              '· Mantenciones'],
+  'mantenciones-alertas':    ['Alertas de vencimiento',   '· Mantenciones'],
+  'incidencias-activas':     ['Incidencias activas',      '· Operaciones'],
+  'incidencias-historial':   ['Historial incidencias',    '· Operaciones'],
+  'comunicaciones-circulares':['Circulares',              '· Comunicación'],
+  'comunicaciones-asambleas':['Asambleas',                '· Comunicación'],
+  'comunicaciones-encuestas':['Encuestas',                '· Comunicación'],
+  'comunicaciones-libro':    ['Libro de novedades',       '· Comunicación'],
+  'documentos-contratos':    ['Contratos y seguros',      '· Documentos'],
+  'documentos-actas':        ['Actas de reunión',         '· Documentos'],
+  'documentos-reglamentos':  ['Reglamentos',              '· Documentos'],
+  'reportes-mensual':        ['Reporte mensual',          '· Empresa'],
+  'reportes-kpis':           ['KPIs generales',           '· Empresa'],
+  'config':                  ['Configuración',            '· Empresa'],
 };
 
 function navFlat(modId, titulo, seccion) {
@@ -471,8 +473,6 @@ function _actualizarTopbar(key, titulo, trail) {
 }
 
 // ── MAPEO MÓDULOS → cargarModulo() ────────────────────────────
-// Solo los módulos con HTML real en /modules se agregan aquí.
-// El resto cae en _mostrarProximamente().
 function _cargarModulo(modId, subId) {
   const MODULOS_GAS = {
     // CRM
@@ -482,6 +482,7 @@ function _cargarModulo(modId, subId) {
     'crm-diagnostico':        'diagnostico',
     'crm-propuesta':          'flujo',
     'crm-flujo':              'flujo',
+    'crm-recepcion':          'recepcion',
     // Comunidades — todos los sub-items cargan el mismo módulo
     'comunidades':            'comunidades',
     'comunidades-listado':    'comunidades',
@@ -491,13 +492,13 @@ function _cargarModulo(modId, subId) {
     'comunidades-comite':     'comunidades',
   };
 
-  const key      = subId ? `${modId}-${subId}` : modId;
+  const key       = subId ? `${modId}-${subId}` : modId;
   const gasModulo = MODULOS_GAS[key] || MODULOS_GAS[modId];
 
   if (gasModulo && typeof cargarModulo === 'function') {
     const cache = window.moduleElements || {};
     Object.keys(cache).forEach(k => {
-      if (!['crm','diagnostico','flujo','comunidades'].includes(k) && cache[k] && cache[k].style) {
+      if (!['crm','diagnostico','flujo','comunidades','recepcion'].includes(k) && cache[k] && cache[k].style) {
         cache[k].style.display = 'none';
       }
     });
@@ -560,8 +561,8 @@ function _mostrarProximamente(cacheKey, modId, subId) {
 function _topAction(modId) {
   const acciones = {
     'crm':            () => document.getElementById('btn-nuevo')?.click(),
-    // Comunidades: dispara el botón "Nueva comunidad" dentro del módulo
     'comunidades':    () => document.querySelector('#com-root .btn-nuevo')?.click(),
+    'recepcion':      () => document.querySelector('#rx-root .btn-nuevo')?.click(),
     'finanzas':       () => _mostrarProximamente('finanzas-emitir',      'finanzas',    'emitir-gc'),
     'remuneraciones': () => _mostrarProximamente('rem-nueva-liq',        'remuneraciones','nueva-liquidacion'),
     'incidencias':    () => _mostrarProximamente('incidencias-nueva',    'incidencias', 'nueva'),
