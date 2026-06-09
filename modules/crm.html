@@ -389,9 +389,7 @@
     // Usar iframe para aislar completamente el sub-módulo
     // Evita conflictos de estilos, scripts y DOM entre módulos standalone y el CRM
     const iframe = document.createElement('iframe');
-    const fileNames = { diagnostico: 'diagnostico_standalone.html', recepcion: 'recepcion.html' };
-    const fileName = fileNames[nombre] || (nombre + '.html');
-    iframe.src = base + 'modules/' + fileName + '?token=copro2025';
+    iframe.src = base + 'modules/' + nombre + '.html?token=copro2025';
     iframe.style.cssText = 'width:100%;border:none;min-height:600px;display:block;';
     iframe.setAttribute('scrolling', 'no');
     iframe.setAttribute('frameborder', '0');
