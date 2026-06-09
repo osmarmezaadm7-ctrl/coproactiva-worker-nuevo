@@ -1,6 +1,6 @@
 // ============================================================
 // CoproActiva Worker — index.js
-// Versión: 3.2 · Junio 2026
+// Versión: 3.3 · Junio 2026 — agrega rutas /recepciones y /subcarpeta
 // ============================================================
 
 const ACCESS_KEY = 'copro2025';
@@ -125,7 +125,7 @@ export default {
     const APPS_SCRIPT_URL = env.APPS_SCRIPT_URL;
 
     // ════════════════════════════════════════════════════════
-    // RUTA PÚBLICA — formulario web contacto (sin cambios)
+    // RUTA PÚBLICA — formulario web contacto
     // ════════════════════════════════════════════════════════
     if (url.pathname === '/webhook/contacto' && method === 'POST') {
       try {
@@ -192,7 +192,7 @@ export default {
     }
 
     // ════════════════════════════════════════════════════════
-    // RUTAS PÚBLICAS — formulario completar datos (sin cambios)
+    // RUTAS PÚBLICAS — formulario completar datos
     // ════════════════════════════════════════════════════════
     if (url.pathname === '/completar' && method === 'GET') {
       try {
@@ -230,7 +230,7 @@ export default {
 
     try {
 
-      // ── Existentes — sin cambios ──────────────────────────
+      // ── CRM ───────────────────────────────────────────────
 
       if (url.pathname === '/crm' && method === 'GET') {
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getCRM');
@@ -247,6 +247,8 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
+      // ── Diagnósticos ──────────────────────────────────────
+
       if (url.pathname === '/diagnosticos' && method === 'GET') {
         const resp = await callAppsScript(APPS_SCRIPT_URL, 'getDiagnosticos');
         return jsonResponse(resp.data || resp, 200, origin);
@@ -257,6 +259,8 @@ export default {
         const resp = await postAppsScript(APPS_SCRIPT_URL, { ...body, action: 'saveDiagnostico' });
         return jsonResponse(resp, 200, origin);
       }
+
+      // ── IA — factores ─────────────────────────────────────
 
       if (url.pathname === '/factores' && method === 'POST') {
         const body = await request.json();
@@ -297,6 +301,8 @@ export default {
         }, 200, origin);
       }
 
+      // ── Correo ────────────────────────────────────────────
+
       if (url.pathname === '/correo' && method === 'POST') {
         const body = await request.json();
         if (!body.para || !body.asunto || !body.cuerpo) {
@@ -307,7 +313,7 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-      // ── Nuevas — Comunidades ──────────────────────────────
+      // ── Comunidades ───────────────────────────────────────
 
       if (url.pathname === '/comunidades' && method === 'GET') {
         const comunidadId = url.searchParams.get('comunidadId') || '';
@@ -333,8 +339,6 @@ export default {
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getDirectorio', { comunidadId });
         return jsonResponse({ ok: true, data }, 200, origin);
       }
-
-      // ── Importación masiva (3 pasadas en Apps Script) ─────
 
       if (url.pathname === '/directorio/importar' && method === 'POST') {
         const body = await request.json();
@@ -402,7 +406,7 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-      // ── Nuevas — Documentos ───────────────────────────────
+      // ── Documentos ────────────────────────────────────────
 
       if (url.pathname === '/documentos' && method === 'GET') {
         const comunidadId = url.searchParams.get('comunidadId') || '';
@@ -438,6 +442,41 @@ export default {
 
       if (url.pathname === '/documentos/catalogo' && method === 'GET') {
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getCatalogoDocumentos');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Recepciones ───────────────────────────────────────
+
+      if (url.pathname === '/recepciones' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        const id          = url.searchParams.get('id')          || '';
+        if (id) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getRecepcion', { id });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        if (comunidadId) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getRecepcionComunidad', { comunidadId });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getRecepciones');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/recepciones' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Subcarpeta Drive ──────────────────────────────────
+
+      if (url.pathname === '/subcarpeta' && method === 'GET') {
+        const carpetaRaizId = url.searchParams.get('carpetaRaizId') || '';
+        const nombre        = url.searchParams.get('nombre')        || '';
+        if (!carpetaRaizId || !nombre) {
+          return jsonResponse({ ok: false, error: 'carpetaRaizId y nombre requeridos' }, 400, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getSubcarpeta', { carpetaRaizId, nombre });
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
