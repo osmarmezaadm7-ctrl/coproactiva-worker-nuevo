@@ -95,42 +95,26 @@
         <span class="mod-label">Panel maestro</span>
       </button>
 
-      <div class="mod" id="mod-comunidades">
-        <button class="mod-row" onclick="navToggle('comunidades')">
+      <button class="mod-row" data-mod="comunidades" onclick="navFlat('comunidades','Comunidades','')">
           <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
           <span class="mod-label">Comunidades</span>
           <span class="mod-badge mb-orange" id="badge-comunidades">5</span>
-          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
         </button>
-        <div class="sub-list" id="sub-comunidades">
-          <button class="sub-item" onclick="navSub('comunidades','listado','Listado general')"><span class="sub-dot"></span><span class="sub-label">Listado general</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','ficha','Ficha de comunidad')"><span class="sub-dot"></span><span class="sub-label">Ficha de comunidad</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','unidades','Unidades')"><span class="sub-dot"></span><span class="sub-label">Unidades y alícuotas</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','residentes','Residentes')"><span class="sub-dot"></span><span class="sub-label">Residentes</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','comite','Comité')"><span class="sub-dot"></span><span class="sub-label">Comité</span></button>
-        </div>
-      </div>
 
       <div class="sb-sep"></div>
       <!-- COMERCIAL -->
       <div class="sb-section">Comercial</div>
 
-      <div class="mod" id="mod-crm">
-        <button class="mod-row mod-active" onclick="navToggle('crm')">
+      <button class="mod-row mod-active" data-mod="crm" onclick="navFlat('crm','CRM','')">
           <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
           <span class="mod-label">CRM</span>
           <span class="mod-badge mb-orange" id="badge-crm">3</span>
-          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
         </button>
-        <div class="sub-list sub-open" id="sub-crm">
-          <button class="sub-item sub-active" onclick="navSub('crm','pipeline','Pipeline')"><span class="sub-dot"></span><span class="sub-label">Pipeline</span></button>
-          <button class="sub-item" onclick="navSub('crm','prospectos','Prospectos')"><span class="sub-dot"></span><span class="sub-label">Prospectos</span></button>
-          <button class="sub-item" onclick="navSub('crm','diagnostico','Diagnóstico')"><span class="sub-dot"></span><span class="sub-label">Diagnóstico</span></button>
-          <button class="sub-item" onclick="navSub('crm','propuesta','Propuesta y contrato')"><span class="sub-dot"></span><span class="sub-label">Propuesta y contrato</span></button>
-          <button class="sub-item" onclick="navSub('crm','flujo','Flujo comercial')"><span class="sub-dot"></span><span class="sub-label">Flujo comercial</span></button>
-          <button class="sub-item" onclick="navSub('crm','recepcion','Recepción documental')"><span class="sub-dot"></span><span class="sub-label">Recepción documental</span></button>
-        </div>
-      </div>
+
+      <button class="mod-row" data-mod="flujo" onclick="navFlat('flujo','Flujo comercial','· Comercial')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h14M10 4l7 6-7 6"/></svg>
+          <span class="mod-label">Flujo comercial</span>
+        </button>
 
       <div class="sb-sep"></div>
       <!-- OPERACIONES -->
@@ -351,6 +335,7 @@ const TOPBAR = {
   'crm-propuesta':           ['Propuesta y contrato',     '· Comercial'],
   'crm-flujo':               ['Flujo comercial',          '· Comercial'],
   'crm-recepcion':           ['Recepción documental',     '· Comercial'],
+  'flujo':                   ['Flujo comercial',          '· Comercial'],
   'finanzas-resumen':        ['Resumen financiero',       '· Finanzas'],
   'finanzas-gastos':         ['Gastos comunes',           '· Finanzas'],
   'finanzas-cobranza':       ['Cobranza',                 '· Finanzas'],
@@ -476,20 +461,9 @@ function _actualizarTopbar(key, titulo, trail) {
 function _cargarModulo(modId, subId) {
   const MODULOS_GAS = {
     // CRM
-    'crm':                    'crm',
-    'crm-pipeline':           'crm',
-    'crm-prospectos':         'crm',
-    'crm-diagnostico':        'diagnostico',
-    'crm-propuesta':          'flujo',
-    'crm-flujo':              'flujo',
-    'crm-recepcion':          'recepcion',
-    // Comunidades — todos los sub-items cargan el mismo módulo
-    'comunidades':            'comunidades',
-    'comunidades-listado':    'comunidades',
-    'comunidades-ficha':      'comunidades',
-    'comunidades-unidades':   'comunidades',
-    'comunidades-residentes': 'comunidades',
-    'comunidades-comite':     'comunidades',
+    'crm':          'crm',
+    'flujo':        'flujo',
+    'comunidades':  'comunidades',
   };
 
   const key       = subId ? `${modId}-${subId}` : modId;
@@ -498,7 +472,7 @@ function _cargarModulo(modId, subId) {
   if (gasModulo && typeof cargarModulo === 'function') {
     const cache = window.moduleElements || {};
     Object.keys(cache).forEach(k => {
-      if (!['crm','diagnostico','flujo','comunidades','recepcion'].includes(k) && cache[k] && cache[k].style) {
+      if (!['crm','comunidades','flujo'].includes(k) && cache[k] && cache[k].style) {
         cache[k].style.display = 'none';
       }
     });
@@ -609,12 +583,9 @@ function toggleSbNav() {
 
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  const subCrm    = document.getElementById('sub-crm');
-  const modCrmRow = document.querySelector('#mod-crm .mod-row');
-  if (subCrm)    subCrm.classList.add('sub-open');
-  if (modCrmRow) modCrmRow.classList.add('mod-open');
-  const primerSubCrm = subCrm && subCrm.querySelector('.sub-item');
-  if (primerSubCrm)  primerSubCrm.classList.add('sub-active');
+  // CRM y Comunidades son ítems planos — marcar activo el CRM por defecto
+  const modCrmRow = document.querySelector('[data-mod="crm"]');
+  if (modCrmRow) modCrmRow.classList.add('mod-active');
 
   const navArea = document.getElementById('sbNavArea');
   const dynArea = document.getElementById('sidebarDynamic');
