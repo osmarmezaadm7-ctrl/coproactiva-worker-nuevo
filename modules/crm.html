@@ -8,9 +8,12 @@
   .crm-tabs-bar {
     display: flex;
     border-bottom: 1px solid var(--co-line);
-    margin-bottom: 20px;
+    border-top: 1px solid var(--co-line);
+    margin-top: -8px;
+    margin-bottom: 0;
     gap: 0;
     overflow-x: auto;
+    background: var(--co-surface);
   }
   .crm-tab-btn {
     font-size: 12px;
@@ -51,7 +54,7 @@
 
   /* ── Sub-módulo container ── */
   .crm-sub { display: none; }
-  .crm-sub.act { display: block; }
+  .crm-sub.act { display: block; padding-top: 16px; }
 
   /* ── Loading sub-módulo ── */
   .crm-sub-loading {
@@ -228,20 +231,13 @@
       <div class="page-header">
         <div>
           <div class="page-eyebrow">CRM</div>
-          <h1 class="page-title">Gesti\u00F3n <em>comercial</em></h1>
-          <p class="page-sub">Pipeline, diagn\u00F3sticos y recepci\u00F3n documental.</p>
+          <h1 class="page-title" id="crm-header-title">Gesti\u00F3n <em>comercial</em></h1>
+          <p class="page-sub" id="crm-header-sub">Pipeline de prospectos activos.</p>
         </div>
         <button class="btn-nuevo" id="btn-nuevo">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-          Nuevo prospecto
+          <span id="crm-header-btn-lbl">Nuevo prospecto</span>
         </button>
-      </div>
-
-      <div class="crm-kpis">
-        <div class="kpi-card activos"><div class="kpi-num">${activos.length}</div><div class="kpi-label">Activos</div></div>
-        <div class="kpi-card urgente"><div class="kpi-num urgente">${urgentes}</div><div class="kpi-label">Urgentes</div></div>
-        <div class="kpi-card ganado"><div class="kpi-num ganado">${ganados}</div><div class="kpi-label">Ganados</div></div>
-        <div class="kpi-card perdido"><div class="kpi-num perdido">${perdidos}</div><div class="kpi-label">Perdidos</div></div>
       </div>
 
       <div class="crm-tabs-bar" id="crm-tabs-bar">
@@ -257,8 +253,14 @@
         </button>
       </div>
 
+      <div class="crm-kpis" id="crm-kpis" style="margin-top:16px">
+        <div class="kpi-card activos"><div class="kpi-num">${activos.length}</div><div class="kpi-label">Activos</div></div>
+        <div class="kpi-card urgente"><div class="kpi-num urgente">${urgentes}</div><div class="kpi-label">Urgentes</div></div>
+        <div class="kpi-card ganado"><div class="kpi-num ganado">${ganados}</div><div class="kpi-label">Ganados</div></div>
+        <div class="kpi-card perdido"><div class="kpi-num perdido">${perdidos}</div><div class="kpi-label">Perdidos</div></div>
+      </div>
+
       <div class="crm-sub act" id="crm-sub-pipeline">
-        <div class="crm-toolbar"><div class="toolbar-title">Pipeline de ventas</div></div>
         <div class="vista-desktop">
           <div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div>
         </div>
@@ -296,11 +298,33 @@
     });
   }
 
+  // Configuración de header por tab
+  const TAB_HEADERS = {
+    pipeline: {
+      title: 'Gesti\u00F3n <em>comercial</em>',
+      sub:   'Pipeline de prospectos activos.',
+      btn:   'Nuevo prospecto',
+      kpis:  true
+    },
+    diagnostico: {
+      title: 'Diagn\u00F3sticos <em>guardados</em>',
+      sub:   'Crea o contin\u00FAa un diagn\u00F3stico. Se sincronizan con Google Sheets.',
+      btn:   'Nuevo diagn\u00F3stico',
+      kpis:  false
+    },
+    recepcion: {
+      title: 'Recepci\u00F3n <em>documental</em>',
+      sub:   'Checklist Anexo N\u00B01 \u2014 antecedentes entregados al tomar una comunidad.',
+      btn:   'Nueva recepci\u00F3n',
+      kpis:  false
+    }
+  };
+
   // ── Cambiar tab ───────────────────────────────────────────
   function cambiarTab(tab) {
     _tabActiva = tab;
 
-    // Actualizar botones
+    // Actualizar botones tab
     document.querySelectorAll('.crm-tab-btn').forEach(b => {
       b.classList.toggle('act', b.dataset.tab === tab);
     });
@@ -310,6 +334,41 @@
       const sub = document.getElementById('crm-sub-' + t);
       if (sub) sub.classList.toggle('act', t === tab);
     });
+
+    // Actualizar header dinámico
+    const cfg = TAB_HEADERS[tab];
+    if (cfg) {
+      const titleEl = document.getElementById('crm-header-title');
+      const subEl   = document.getElementById('crm-header-sub');
+      const btnLbl  = document.getElementById('crm-header-btn-lbl');
+      const kpisEl  = document.getElementById('crm-kpis');
+      if (titleEl) titleEl.innerHTML = cfg.title;
+      if (subEl)   subEl.textContent = cfg.sub;
+      if (btnLbl)  btnLbl.textContent = cfg.btn;
+      if (kpisEl)  kpisEl.style.display = cfg.kpis ? '' : 'none';
+      // Reasignar acción del botón
+      const btnNuevo = document.getElementById('btn-nuevo');
+      if (btnNuevo) {
+        btnNuevo.onclick = null;
+        if (tab === 'pipeline')    btnNuevo.addEventListener('click', abrirModalNuevo);
+        if (tab === 'diagnostico') btnNuevo.addEventListener('click', function() {
+          // Navegar al formulario dentro del iframe de diagnóstico
+          const iframe = document.querySelector('#diag-content iframe');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'diag_goto', view: 'contexto' }, '*');
+          }
+        });
+        if (tab === 'recepcion') btnNuevo.addEventListener('click', function() {
+          // Disparar el botón de nueva recepción dentro del iframe
+          const iframe = document.querySelector('#rx-content iframe');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'nueva_recepcion' }, '*');
+          } else {
+            modalNuevaRecepcion && modalNuevaRecepcion();
+          }
+        });
+      }
+    }
 
     // Cargar sub-módulo si no está cargado
     if (tab === 'diagnostico' && !_subModulosCargados['diagnostico']) {
@@ -323,34 +382,52 @@
   // ── Cargar sub-módulo dinámicamente ──────────────────────
   function _cargarSubModulo(nombre, contentId, loadingId) {
     const base = window.location.origin + window.location.pathname.replace('index.html', '');
-    fetch(base + 'modules/' + nombre + '.html')
-      .then(function(r) { return r.text(); })
-      .then(function(html) {
-        const loading = document.getElementById(loadingId);
-        const content = document.getElementById(contentId);
-        if (!content) return;
+    const loading = document.getElementById(loadingId);
+    const content = document.getElementById(contentId);
+    if (!content) return;
 
-        // Extraer solo el contenido relevante (sin re-inyectar estilos duplicados)
-        // Inyectar directamente en el contenedor
-        content.innerHTML = html;
+    // Usar iframe para aislar completamente el sub-módulo
+    // Evita conflictos de estilos, scripts y DOM entre módulos standalone y el CRM
+    const iframe = document.createElement('iframe');
+    iframe.src = base + 'modules/' + nombre + '.html?token=copro2025';
+    iframe.style.cssText = 'width:100%;border:none;min-height:600px;display:block;';
+    iframe.setAttribute('scrolling', 'no');
+    iframe.setAttribute('frameborder', '0');
 
-        // Ejecutar scripts del HTML inyectado
-        Array.from(content.querySelectorAll('script')).forEach(function(oldScript) {
-          const newScript = document.createElement('script');
-          newScript.textContent = oldScript.textContent;
-          oldScript.parentNode.replaceChild(newScript, oldScript);
-        });
-
+    // Ajustar altura del iframe al contenido interno
+    iframe.addEventListener('load', function() {
+      if (loading) loading.style.display = 'none';
+      content.style.display = 'block';
+      _subModulosCargados[nombre] = true;
+      try {
+        const resize = function() {
+          const h = iframe.contentDocument && iframe.contentDocument.body
+            ? iframe.contentDocument.body.scrollHeight
+            : 600;
+          iframe.style.height = Math.max(h, 500) + 'px';
+        };
+        resize();
+        // Re-ajustar cuando el contenido interno cambie
+        const observer = new MutationObserver(resize);
+        if (iframe.contentDocument && iframe.contentDocument.body) {
+          observer.observe(iframe.contentDocument.body, { childList: true, subtree: true, attributes: false });
+        }
+        // También ajustar periódicamente por si el contenido crece dinámicamente
+        iframe._resizeInterval = setInterval(resize, 800);
+      } catch(e) {
+        // Cross-origin u otro error — usar altura fija
+        iframe.style.height = '800px';
         if (loading) loading.style.display = 'none';
         content.style.display = 'block';
         _subModulosCargados[nombre] = true;
-      })
-      .catch(function(err) {
-        const loading = document.getElementById(loadingId);
-        if (loading) {
-          loading.innerHTML = '<span style="color:var(--co-red)">Error al cargar ' + nombre + ': ' + err.message + '</span>';
-        }
-      });
+      }
+    });
+
+    iframe.addEventListener('error', function() {
+      if (loading) loading.innerHTML = '<span style="color:var(--co-red)">Error al cargar ' + nombre + '</span>';
+    });
+
+    content.appendChild(iframe);
   }
 
   // ── Pipeline ──────────────────────────────────────────────
