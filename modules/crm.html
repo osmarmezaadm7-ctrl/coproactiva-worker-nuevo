@@ -1,13 +1,69 @@
 <!-- modules/crm.html — CoproActiva CRM -->
-<!-- Versión: 3.0 · Mayo 2026 — rediseño visual integrado con styles.css -->
+<!-- Versión: 4.0 · Junio 2026 — CRM unificado con tabs: Pipeline · Diagnóstico · Recepción -->
 
 <style>
-  /* Estilos específicos del módulo CRM. Los colores y tipografía
-     se heredan de styles.css (variables --co-*).
-     Las clases comunes (.tarjeta, .columna, .kpi-card, .btn-nuevo, etc.)
-     están definidas en styles.css y NO se redefinen aquí. */
-
   #crm-root { font-family: var(--co-font); color: var(--co-ink); }
+
+  /* ── Tabs CRM ── */
+  .crm-tabs-bar {
+    display: flex;
+    border-bottom: 1px solid var(--co-line);
+    margin-bottom: 20px;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .crm-tab-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 16px;
+    color: var(--co-mute);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: var(--co-font);
+    transition: color 0.13s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .crm-tab-btn.act {
+    color: var(--co-orange);
+    border-bottom-color: var(--co-orange);
+  }
+  .crm-tab-btn i { font-size: 14px; }
+  .crm-tab-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 20px;
+    background: var(--co-orange-soft);
+    color: var(--co-orange);
+  }
+  .crm-tab-badge.red {
+    background: var(--co-red-soft);
+    color: var(--co-red);
+  }
+
+  /* ── Sub-módulo container ── */
+  .crm-sub { display: none; }
+  .crm-sub.act { display: block; }
+
+  /* ── Loading sub-módulo ── */
+  .crm-sub-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    gap: 10px;
+    color: var(--co-mute);
+    font-size: 13px;
+    font-weight: 600;
+  }
 
   /* ── Móvil Accordion ── */
   .vista-mobile { display: none; }
@@ -31,412 +87,78 @@
       -webkit-tap-highlight-color: transparent;
     }
     .accordion-header:active { background: var(--co-cream); }
-    .accordion-titulo {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--co-ink);
-      letter-spacing: -0.01em;
-    }
+    .accordion-titulo { font-size: 13px; font-weight: 700; color: var(--co-ink); letter-spacing: -0.01em; }
     .accordion-meta { display: flex; align-items: center; gap: 8px; }
-    .accordion-count {
-      background: var(--co-ink);
-      color: #fff;
-      border-radius: 99px;
-      padding: 2px 8px;
-      font-size: 11px;
-      font-weight: 700;
-    }
+    .accordion-count { background: var(--co-ink); color: #fff; border-radius: 99px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
     .accordion-count.vacio { background: var(--co-mute); opacity: 0.5; }
-    .accordion-chevron {
-      font-size: 11px;
-      color: var(--co-mute);
-      transition: transform 0.2s;
-    }
+    .accordion-chevron { font-size: 11px; color: var(--co-mute); transition: transform 0.2s; }
     .accordion-chevron.abierto { transform: rotate(180deg); }
-    .accordion-body {
-      display: none;
-      padding: 8px 10px 10px;
-      border-top: 1px solid var(--co-line);
-      background: var(--co-cream);
-    }
+    .accordion-body { display: none; padding: 8px 10px 10px; border-top: 1px solid var(--co-line); background: var(--co-cream); }
     .accordion-body.abierto { display: block; }
-    .accordion-vacia {
-      font-size: 12px;
-      color: var(--co-mute);
-      text-align: center;
-      padding: 14px 0;
-    }
+    .accordion-vacia { font-size: 12px; color: var(--co-mute); text-align: center; padding: 14px 0; }
   }
 
   /* ── Modal ── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(26,23,20,0.55);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .modal-box {
-    background: var(--co-surface);
-    border-radius: var(--co-r-lg);
-    width: 100%;
-    max-width: 560px;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 32px;
-    position: relative;
-    box-shadow: var(--co-shadow-lg);
-  }
-  @media (max-width: 767px) {
-    .modal-overlay { padding: 0; align-items: flex-end; }
-    .modal-box {
-      border-radius: var(--co-r-lg) var(--co-r-lg) 0 0;
-      max-height: 92vh;
-      padding: 24px 20px 36px;
-    }
-  }
-  .modal-handle {
-    display: none;
-    width: 44px;
-    height: 4px;
-    background: var(--co-line);
-    border-radius: 99px;
-    margin: 0 auto 18px;
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(26,23,20,0.55); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .modal-box { background: var(--co-surface); border-radius: var(--co-r-lg); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative; box-shadow: var(--co-shadow-lg); }
+  @media (max-width: 767px) { .modal-overlay { padding: 0; align-items: flex-end; } .modal-box { border-radius: var(--co-r-lg) var(--co-r-lg) 0 0; max-height: 92vh; padding: 24px 20px 36px; } }
+  .modal-handle { display: none; width: 44px; height: 4px; background: var(--co-line); border-radius: 99px; margin: 0 auto 18px; }
   @media (max-width: 767px) { .modal-handle { display: block; } }
-  .modal-close {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    background: var(--co-cream);
-    border: 1px solid var(--co-line);
-    border-radius: 50%;
-    font-size: 18px;
-    cursor: pointer;
-    color: var(--co-ink-2);
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.13s, color 0.13s;
-  }
+  .modal-close { position: absolute; top: 18px; right: 18px; background: var(--co-cream); border: 1px solid var(--co-line); border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--co-ink-2); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: background 0.13s, color 0.13s; }
   .modal-close:hover { background: var(--co-orange-soft); color: var(--co-orange); }
-  .modal-eyebrow {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--co-orange);
-    margin-bottom: 4px;
-  }
-  .modal-titulo {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--co-ink);
-    letter-spacing: -0.025em;
-    line-height: 1.15;
-    margin-bottom: 6px;
-    padding-right: 44px;
-  }
-  .modal-subtitulo {
-    font-size: 13px;
-    color: var(--co-ink-3);
-    margin-bottom: 24px;
-    font-weight: 500;
-  }
-  .modal-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 20px;
-  }
+  .modal-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 4px; }
+  .modal-titulo { font-size: 22px; font-weight: 800; color: var(--co-ink); letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 6px; padding-right: 44px; }
+  .modal-subtitulo { font-size: 13px; color: var(--co-ink-3); margin-bottom: 24px; font-weight: 500; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
   @media (max-width: 460px) { .modal-grid { grid-template-columns: 1fr; } }
-  .modal-campo {
-    background: var(--co-cream);
-    border-radius: var(--co-r-sm);
-    padding: 10px 12px;
-  }
-  .modal-campo label {
-    display: block;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 4px;
-  }
-  .modal-campo span {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--co-ink);
-  }
-  .modal-seccion {
-    border-top: 1px solid var(--co-line);
-    padding-top: 20px;
-    margin-top: 8px;
-  }
-  .modal-seccion-titulo {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--co-orange);
-    margin-bottom: 12px;
-  }
-  .accion-box {
-    background: var(--co-orange-soft);
-    border: 1px solid var(--co-orange-line);
-    border-radius: var(--co-r-md);
-    padding: 14px 16px;
-    margin-bottom: 16px;
-  }
-  .accion-texto {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--co-ink);
-    margin-bottom: 4px;
-    letter-spacing: -0.01em;
-  }
-  .accion-fecha {
-    font-size: 11px;
-    color: var(--co-ink-3);
-    font-weight: 500;
-  }
-  .etapa-select {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1.5px solid var(--co-line);
-    border-radius: var(--co-r-md);
-    font-family: var(--co-font);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--co-ink);
-    background: var(--co-surface);
-    margin-bottom: 12px;
-    min-height: 44px;
-  }
+  .modal-campo { background: var(--co-cream); border-radius: var(--co-r-sm); padding: 10px 12px; }
+  .modal-campo label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 4px; }
+  .modal-campo span { font-size: 13px; font-weight: 600; color: var(--co-ink); }
+  .modal-seccion { border-top: 1px solid var(--co-line); padding-top: 20px; margin-top: 8px; }
+  .modal-seccion-titulo { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 12px; }
+  .accion-box { background: var(--co-orange-soft); border: 1px solid var(--co-orange-line); border-radius: var(--co-r-md); padding: 14px 16px; margin-bottom: 16px; }
+  .accion-texto { font-size: 13px; font-weight: 700; color: var(--co-ink); margin-bottom: 4px; letter-spacing: -0.01em; }
+  .accion-fecha { font-size: 11px; color: var(--co-ink-3); font-weight: 500; }
+  .etapa-select { width: 100%; padding: 12px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 600; color: var(--co-ink); background: var(--co-surface); margin-bottom: 12px; min-height: 44px; }
   .etapa-select:focus { outline: none; border-color: var(--co-orange); }
-  .btn-cambiar {
-    background: var(--co-ink);
-    color: #fff;
-    border: none;
-    padding: 13px 20px;
-    border-radius: var(--co-r-md);
-    font-family: var(--co-font);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    min-height: 46px;
-    letter-spacing: -0.01em;
-    transition: background 0.13s;
-  }
+  .btn-cambiar { background: var(--co-ink); color: #fff; border: none; padding: 13px 20px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; min-height: 46px; letter-spacing: -0.01em; transition: background 0.13s; }
   .btn-cambiar:hover { background: var(--co-ink-2); }
   .btn-cambiar:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-diagnostico {
-    background: var(--co-orange);
-    color: #fff;
-    border: none;
-    padding: 13px 20px;
-    border-radius: var(--co-r-md);
-    font-family: var(--co-font);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    min-height: 46px;
-    margin-top: 10px;
-    letter-spacing: -0.01em;
-    transition: background 0.13s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
+  .btn-diagnostico { background: var(--co-orange); color: #fff; border: none; padding: 13px 20px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; min-height: 46px; margin-top: 10px; letter-spacing: -0.01em; transition: background 0.13s; display: flex; align-items: center; justify-content: center; gap: 6px; }
   .btn-diagnostico:hover { background: var(--co-orange-hover); }
-  .msg-ok {
-    font-size: 12px;
-    color: var(--co-green);
-    margin-top: 10px;
-    display: none;
-    font-weight: 600;
-  }
-
-  /* ── Formulario nuevo ── */
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
+  .msg-ok { font-size: 12px; color: var(--co-green); margin-top: 10px; display: none; font-weight: 600; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
-  .form-group label {
-    display: block;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 6px;
-  }
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1.5px solid var(--co-line);
-    border-radius: var(--co-r-md);
-    font-family: var(--co-font);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--co-ink);
-    background: var(--co-surface);
-    box-sizing: border-box;
-    min-height: 44px;
-    transition: border-color 0.13s;
-  }
-  .form-group input:focus, .form-group select:focus {
-    outline: none;
-    border-color: var(--co-orange);
-  }
+  .form-group label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 6px; }
+  .form-group input, .form-group select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 500; color: var(--co-ink); background: var(--co-surface); box-sizing: border-box; min-height: 44px; transition: border-color 0.13s; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--co-orange); }
   .form-group input::placeholder { color: var(--co-mute); }
   .form-full { grid-column: 1 / -1; }
-  .btn-guardar {
-    background: var(--co-orange);
-    color: #fff;
-    border: none;
-    padding: 14px;
-    border-radius: var(--co-r-md);
-    font-family: var(--co-font);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 20px;
-    min-height: 50px;
-    letter-spacing: -0.01em;
-    transition: background 0.13s;
-  }
+  .btn-guardar { background: var(--co-orange); color: #fff; border: none; padding: 14px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; min-height: 50px; letter-spacing: -0.01em; transition: background 0.13s; }
   .btn-guardar:hover { background: var(--co-orange-hover); }
   .btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
-  .form-error {
-    color: var(--co-red);
-    font-size: 12px;
-    margin-top: 10px;
-    display: none;
-    font-weight: 600;
-  }
-
-  .btn-editar-datos {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    width: 100%;
-    background: var(--co-surface);
-    color: var(--co-ink);
-    border: 1.5px solid var(--co-line);
-    padding: 11px 16px;
-    border-radius: var(--co-r-md);
-    font-family: var(--co-font);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.13s, background 0.13s;
-    letter-spacing: -0.01em;
-  }
-  .btn-editar-datos:hover {
-    border-color: var(--co-orange);
-    background: var(--co-cream);
-  }
-
-  /* ── Botones Contactar ── */
-  .contactar-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .btn-contactar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 11px 14px;
-    border-radius: var(--co-r-md);
-    font-family: var(--co-font);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    min-height: 44px;
-    letter-spacing: -0.01em;
-    transition: background 0.13s, opacity 0.13s;
-  }
-  .btn-wsp {
-    background: #25D366;
-    color: #fff;
-  }
+  .form-error { color: var(--co-red); font-size: 12px; margin-top: 10px; display: none; font-weight: 600; }
+  .btn-editar-datos { display: flex; align-items: center; gap: 7px; width: 100%; background: var(--co-surface); color: var(--co-ink); border: 1.5px solid var(--co-line); padding: 11px 16px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color 0.13s, background 0.13s; letter-spacing: -0.01em; }
+  .btn-editar-datos:hover { border-color: var(--co-orange); background: var(--co-cream); }
+  .contactar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-contactar { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 14px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 700; cursor: pointer; border: none; min-height: 44px; letter-spacing: -0.01em; transition: background 0.13s, opacity 0.13s; }
+  .btn-wsp { background: #25D366; color: #fff; }
   .btn-wsp:hover { background: #1ebe5d; }
-  .btn-mail {
-    background: var(--co-blue-soft);
-    color: var(--co-blue);
-    border: 1.5px solid var(--co-blue);
-  }
+  .btn-mail { background: var(--co-blue-soft); color: var(--co-blue); border: 1.5px solid var(--co-blue); }
   .btn-mail:hover { background: var(--co-blue); color: #fff; }
-
-  /* -- Toggle datos prospecto -- */
-  .toggle-datos-btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    background: var(--co-cream);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-md);
-    cursor: pointer;
-    margin-bottom: 4px;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.13s;
-  }
+  .toggle-datos-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--co-cream); border: 1px solid var(--co-line); border-radius: var(--co-r-md); cursor: pointer; margin-bottom: 4px; user-select: none; -webkit-tap-highlight-color: transparent; transition: background 0.13s; }
   .toggle-datos-btn:hover { background: var(--co-cream-deep); }
-  .toggle-datos-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--co-ink-3);
-    letter-spacing: -0.01em;
-  }
-  .toggle-datos-chev {
-    font-size: 10px;
-    color: var(--co-mute);
-    transition: transform 0.2s;
-  }
-
-  /* Estado de carga global manejado por .module-loading en styles.css */
-  .crm-error {
-    background: var(--co-red-soft);
-    border: 1px solid var(--co-red);
-    border-radius: var(--co-r-md);
-    padding: 16px 20px;
-    color: var(--co-red);
-    font-size: 13px;
-    font-weight: 600;
-  }
+  .toggle-datos-label { font-size: 12px; font-weight: 600; color: var(--co-ink-3); letter-spacing: -0.01em; }
+  .toggle-datos-chev { font-size: 10px; color: var(--co-mute); transition: transform 0.2s; }
+  .crm-error { background: var(--co-red-soft); border: 1px solid var(--co-red); border-radius: var(--co-r-md); padding: 16px 20px; color: var(--co-red); font-size: 13px; font-weight: 600; }
 </style>
 
 <div id="crm-root">
   <div class="module-loading">
-    <div class="ml-iso-wrap">
-      <div class="ml-iso" aria-hidden="true"></div>
-    </div>
+    <div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div>
     <div class="ml-text">
       <div class="ml-brand"><b>co</b>proactiva</div>
-      <div class="ml-status">
-        <span class="ml-status-dot"></span>
-        Cargando CRM
-      </div>
+      <div class="ml-status"><span class="ml-status-dot"></span>Cargando CRM</div>
     </div>
   </div>
 </div>
@@ -452,13 +174,12 @@
     'Propuesta', 'Negociaci\u00F3n', 'Ganado', 'Perdido'
   ];
 
-  // Migración de etapas antiguas al cargar prospectos del Sheet
   const MIGRACION_ETAPAS = {
-    'Reuni\u00F3n agendada':   'Reuni\u00F3n Agendada',
-    'Reuni\u00F3n realizada':  'Reuni\u00F3n Agendada',
+    'Reuni\u00F3n agendada':      'Reuni\u00F3n Agendada',
+    'Reuni\u00F3n realizada':     'Reuni\u00F3n Agendada',
     'Diagn\u00F3stico agendado':  'Diagn\u00F3stico',
     'Diagn\u00F3stico realizado': 'Diagn\u00F3stico',
-    'Propuesta enviada':  'Propuesta',
+    'Propuesta enviada':          'Propuesta',
   };
 
   function normalizarEtapa(etapa) {
@@ -466,6 +187,8 @@
   }
 
   let prospectos = [];
+  let _tabActiva = 'pipeline';
+  let _subModulosCargados = {};
 
   async function api(path, method = 'GET', body = null) {
     const opts = {
@@ -498,7 +221,6 @@
     const perdidos = prospectos.filter(p => p.etapa === 'Perdido').length;
     const urgentes = activos.filter(p => p.semaforo === 'rojo').length;
 
-    // Exponer KPIs al sidebar
     window._crmKpis = { activos: activos.length, urgentes, ganados };
     if (typeof actualizarKpisCRM === 'function') actualizarKpisCRM();
 
@@ -506,8 +228,8 @@
       <div class="page-header">
         <div>
           <div class="page-eyebrow">CRM</div>
-          <h1 class="page-title">Pipeline <em>comercial</em></h1>
-          <p class="page-sub">Seguimiento de prospectos desde el primer contacto hasta la firma del contrato.</p>
+          <h1 class="page-title">Gesti\u00F3n <em>comercial</em></h1>
+          <p class="page-sub">Pipeline, diagn\u00F3sticos y recepci\u00F3n documental.</p>
         </div>
         <button class="btn-nuevo" id="btn-nuevo">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
@@ -516,39 +238,122 @@
       </div>
 
       <div class="crm-kpis">
-        <div class="kpi-card activos">
-          <div class="kpi-num">${activos.length}</div>
-          <div class="kpi-label">Activos</div>
-        </div>
-        <div class="kpi-card urgente">
-          <div class="kpi-num urgente">${urgentes}</div>
-          <div class="kpi-label">Urgentes</div>
-        </div>
-        <div class="kpi-card ganado">
-          <div class="kpi-num ganado">${ganados}</div>
-          <div class="kpi-label">Ganados</div>
-        </div>
-        <div class="kpi-card perdido">
-          <div class="kpi-num perdido">${perdidos}</div>
-          <div class="kpi-label">Perdidos</div>
-        </div>
+        <div class="kpi-card activos"><div class="kpi-num">${activos.length}</div><div class="kpi-label">Activos</div></div>
+        <div class="kpi-card urgente"><div class="kpi-num urgente">${urgentes}</div><div class="kpi-label">Urgentes</div></div>
+        <div class="kpi-card ganado"><div class="kpi-num ganado">${ganados}</div><div class="kpi-label">Ganados</div></div>
+        <div class="kpi-card perdido"><div class="kpi-num perdido">${perdidos}</div><div class="kpi-label">Perdidos</div></div>
       </div>
 
-      <div class="crm-toolbar">
-        <div class="toolbar-title">Pipeline de ventas</div>
+      <div class="crm-tabs-bar" id="crm-tabs-bar">
+        <button class="crm-tab-btn act" data-tab="pipeline">
+          <i class="ti ti-layout-kanban" aria-hidden="true"></i> Pipeline
+          <span class="crm-tab-badge">${activos.length}</span>
+        </button>
+        <button class="crm-tab-btn" data-tab="diagnostico">
+          <i class="ti ti-stethoscope" aria-hidden="true"></i> Diagn\u00F3stico
+        </button>
+        <button class="crm-tab-btn" data-tab="recepcion">
+          <i class="ti ti-clipboard-list" aria-hidden="true"></i> Recepci\u00F3n
+        </button>
       </div>
 
-      <div class="vista-desktop">
-        <div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div>
+      <div class="crm-sub act" id="crm-sub-pipeline">
+        <div class="crm-toolbar"><div class="toolbar-title">Pipeline de ventas</div></div>
+        <div class="vista-desktop">
+          <div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div>
+        </div>
+        <div class="vista-mobile" id="accordion-mobile"></div>
       </div>
-      <div class="vista-mobile" id="accordion-mobile"></div>
+
+      <div class="crm-sub" id="crm-sub-diagnostico">
+        <div class="crm-sub-loading" id="diag-loading">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>
+          Cargando diagn\u00F3stico\u2026
+        </div>
+        <div id="diag-content" style="display:none"></div>
+      </div>
+
+      <div class="crm-sub" id="crm-sub-recepcion">
+        <div class="crm-sub-loading" id="rx-loading">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>
+          Cargando recepci\u00F3n\u2026
+        </div>
+        <div id="rx-content" style="display:none"></div>
+      </div>
     `;
 
     renderKanban();
     renderAccordion();
+
     document.getElementById('btn-nuevo').addEventListener('click', abrirModalNuevo);
+
+    // Tabs
+    document.getElementById('crm-tabs-bar').addEventListener('click', function(e) {
+      const btn = e.target.closest('.crm-tab-btn');
+      if (!btn) return;
+      const tab = btn.dataset.tab;
+      cambiarTab(tab);
+    });
   }
 
+  // ── Cambiar tab ───────────────────────────────────────────
+  function cambiarTab(tab) {
+    _tabActiva = tab;
+
+    // Actualizar botones
+    document.querySelectorAll('.crm-tab-btn').forEach(b => {
+      b.classList.toggle('act', b.dataset.tab === tab);
+    });
+
+    // Mostrar/ocultar contenedores
+    ['pipeline','diagnostico','recepcion'].forEach(t => {
+      const sub = document.getElementById('crm-sub-' + t);
+      if (sub) sub.classList.toggle('act', t === tab);
+    });
+
+    // Cargar sub-módulo si no está cargado
+    if (tab === 'diagnostico' && !_subModulosCargados['diagnostico']) {
+      _cargarSubModulo('diagnostico', 'diag-content', 'diag-loading');
+    }
+    if (tab === 'recepcion' && !_subModulosCargados['recepcion']) {
+      _cargarSubModulo('recepcion', 'rx-content', 'rx-loading');
+    }
+  }
+
+  // ── Cargar sub-módulo dinámicamente ──────────────────────
+  function _cargarSubModulo(nombre, contentId, loadingId) {
+    const base = window.location.origin + window.location.pathname.replace('index.html', '');
+    fetch(base + 'modules/' + nombre + '.html')
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        const loading = document.getElementById(loadingId);
+        const content = document.getElementById(contentId);
+        if (!content) return;
+
+        // Extraer solo el contenido relevante (sin re-inyectar estilos duplicados)
+        // Inyectar directamente en el contenedor
+        content.innerHTML = html;
+
+        // Ejecutar scripts del HTML inyectado
+        Array.from(content.querySelectorAll('script')).forEach(function(oldScript) {
+          const newScript = document.createElement('script');
+          newScript.textContent = oldScript.textContent;
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+
+        if (loading) loading.style.display = 'none';
+        content.style.display = 'block';
+        _subModulosCargados[nombre] = true;
+      })
+      .catch(function(err) {
+        const loading = document.getElementById(loadingId);
+        if (loading) {
+          loading.innerHTML = '<span style="color:var(--co-red)">Error al cargar ' + nombre + ': ' + err.message + '</span>';
+        }
+      });
+  }
+
+  // ── Pipeline ──────────────────────────────────────────────
   function renderKanban() {
     const pipeline = document.getElementById('pipeline-desktop');
     if (!pipeline) return;
@@ -578,8 +383,8 @@
     const acc = document.getElementById('accordion-mobile');
     if (!acc) return;
     acc.innerHTML = '';
-    const etapasConDatos = ETAPAS.filter(e => prospectos.some(p => p.etapa === e));
-    const etapasSinDatos = ETAPAS.filter(e => !prospectos.some(p => p.etapa === e));
+    const etapasConDatos    = ETAPAS.filter(e => prospectos.some(p => p.etapa === e));
+    const etapasSinDatos    = ETAPAS.filter(e => !prospectos.some(p => p.etapa === e));
     [...etapasConDatos, ...etapasSinDatos].forEach((etapa, idx) => {
       const enEtapa = prospectos.filter(p => p.etapa === etapa);
       const abierto = idx === 0 && enEtapa.length > 0;
@@ -629,6 +434,7 @@
     `;
   }
 
+  // ── Modal detalle ─────────────────────────────────────────
   function abrirModalDetalle(p) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -667,7 +473,9 @@
         ${p.etapa === 'Diagnóstico' ? `
         <div class="modal-seccion">
           <div class="modal-seccion-titulo">Diagnóstico</div>
-          <button class="btn-diagnostico" id="btn-diag">Iniciar diagnóstico</button>
+          <button class="btn-diagnostico" id="btn-diag">
+            <i class="ti ti-stethoscope" aria-hidden="true"></i> Ir a Diagnóstico
+          </button>
         </div>` : ''}
 
         <div class="modal-seccion">
@@ -703,19 +511,17 @@
     `;
 
     document.body.appendChild(overlay);
-
     const cerrar = () => overlay.remove();
     overlay.querySelector('#mc').addEventListener('click', cerrar);
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
 
-    // Toggle datos del prospecto
     overlay.querySelector('#toggle-datos').addEventListener('click', () => {
       const body  = overlay.querySelector('#toggle-datos-body');
       const label = overlay.querySelector('#toggle-datos-label');
       const chev  = overlay.querySelector('#toggle-datos-chev');
       const open  = body.style.display !== 'none';
-      body.style.display  = open ? 'none' : 'grid';
-      label.textContent   = open ? 'Ver datos del prospecto' : 'Ocultar datos del prospecto';
+      body.style.display   = open ? 'none' : 'grid';
+      label.textContent    = open ? 'Ver datos del prospecto' : 'Ocultar datos del prospecto';
       chev.style.transform = open ? '' : 'rotate(180deg)';
     });
 
@@ -735,22 +541,15 @@
       window.open('https://wa.me/' + num, '_blank');
     });
 
-    overlay.querySelector('#btn-mail').addEventListener('click', () => {
-      abrirModalCorreo(p);
-    });
-
-    overlay.querySelector('#btn-editar').addEventListener('click', () => {
-      cerrar();
-      abrirModalEditar(p);
-    });
+    overlay.querySelector('#btn-mail').addEventListener('click', () => { abrirModalCorreo(p); });
+    overlay.querySelector('#btn-editar').addEventListener('click', () => { cerrar(); abrirModalEditar(p); });
 
     overlay.querySelector('#btn-cambiar').addEventListener('click', async () => {
       const nuevaEtapa = overlay.querySelector('#sel-etapa').value;
       const btn = overlay.querySelector('#btn-cambiar');
       const msg = overlay.querySelector('#msg-ok');
       if (nuevaEtapa === p.etapa) return;
-      btn.disabled = true;
-      btn.textContent = 'Guardando\u2026';
+      btn.disabled = true; btn.textContent = 'Guardando\u2026';
       const resp = await api('/crm', 'POST', { action: 'cambiarEtapa', id: p.id, etapaNueva: nuevaEtapa });
       if (resp.ok && resp.data && resp.data.ok) {
         p.etapa = nuevaEtapa;
@@ -766,6 +565,7 @@
     });
   }
 
+  // ── Modal editar ──────────────────────────────────────────
   function abrirModalEditar(p) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -787,9 +587,7 @@
           <div class="form-group"><label>Email</label><input type="email" id="e-email" value="${p.email || ''}"></div>
           <div class="form-group"><label>Fuente</label>
             <select id="e-fuente">
-              ${['web','referido','Facebook','Instagram','otro'].map(f =>
-                `<option value="${f}" ${p.fuenteLead === f ? 'selected' : ''}>${f}</option>`
-              ).join('')}
+              ${['web','referido','Facebook','Instagram','otro'].map(f => `<option value="${f}" ${p.fuenteLead === f ? 'selected' : ''}>${f}</option>`).join('')}
             </select>
           </div>
           <div class="form-group"><label>Responsable</label><input type="text" id="e-resp" value="${p.responsable || ''}"></div>
@@ -797,9 +595,7 @@
           <div class="form-group"><label>Fecha próxima acción</label><input type="text" id="e-fecha-accion" value="${p.fechaProximaAccion || ''}" placeholder="DD/MM/AAAA"></div>
           <div class="form-group"><label>Semáforo</label>
             <select id="e-semaforo">
-              ${['verde','amarillo','rojo','gris'].map(s =>
-                `<option value="${s}" ${(p.semaforo || 'gris') === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
-              ).join('')}
+              ${['verde','amarillo','rojo','gris'].map(s => `<option value="${s}" ${(p.semaforo||'gris') === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
             </select>
           </div>
           <div class="form-group form-full"><label>Observaciones</label><input type="text" id="e-obs" value="${p.observaciones || ''}"></div>
@@ -808,177 +604,117 @@
         <button class="btn-guardar" id="btn-guardar-edit">Guardar cambios</button>
       </div>
     `;
-
     document.body.appendChild(overlay);
     const cerrar = () => overlay.remove();
     overlay.querySelector('#mc-edit').addEventListener('click', cerrar);
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
-
     overlay.querySelector('#btn-guardar-edit').addEventListener('click', async () => {
       const nombre   = overlay.querySelector('#e-nombre').value.trim();
       const contacto = overlay.querySelector('#e-contacto').value.trim();
       const errDiv   = overlay.querySelector('#e-error');
       const btn      = overlay.querySelector('#btn-guardar-edit');
-      if (!nombre || !contacto) {
-        errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.';
-        errDiv.style.display = 'block';
-        return;
-      }
+      if (!nombre || !contacto) { errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
       btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
       const datos = {
-        action:               'editarProspecto',
-        id:                   p.id,
-        nombreCondominio:     nombre,
-        comuna:               overlay.querySelector('#e-comuna').value.trim(),
-        direccion:            overlay.querySelector('#e-dir').value.trim(),
-        unidades:             overlay.querySelector('#e-unidades').value || 0,
-        nombreContacto:       contacto,
-        cargoContacto:        overlay.querySelector('#e-cargo').value.trim(),
-        telefono:             overlay.querySelector('#e-tel').value.trim(),
-        email:                overlay.querySelector('#e-email').value.trim(),
-        fuenteLead:           overlay.querySelector('#e-fuente').value,
-        responsable:          overlay.querySelector('#e-resp').value.trim(),
-        proximaAccion:        overlay.querySelector('#e-accion').value.trim(),
-        fechaProximaAccion:   overlay.querySelector('#e-fecha-accion').value.trim(),
-        semaforo:             overlay.querySelector('#e-semaforo').value,
-        observaciones:        overlay.querySelector('#e-obs').value.trim(),
+        action: 'editarProspecto', id: p.id,
+        nombreCondominio: nombre, comuna: overlay.querySelector('#e-comuna').value.trim(),
+        direccion: overlay.querySelector('#e-dir').value.trim(), unidades: overlay.querySelector('#e-unidades').value || 0,
+        nombreContacto: contacto, cargoContacto: overlay.querySelector('#e-cargo').value.trim(),
+        telefono: overlay.querySelector('#e-tel').value.trim(), email: overlay.querySelector('#e-email').value.trim(),
+        fuenteLead: overlay.querySelector('#e-fuente').value, responsable: overlay.querySelector('#e-resp').value.trim(),
+        proximaAccion: overlay.querySelector('#e-accion').value.trim(), fechaProximaAccion: overlay.querySelector('#e-fecha-accion').value.trim(),
+        semaforo: overlay.querySelector('#e-semaforo').value, observaciones: overlay.querySelector('#e-obs').value.trim(),
       };
       const resp = await api('/crm', 'POST', datos);
       if (resp.ok && resp.data && resp.data.ok) {
-        // Actualizar prospecto en memoria local
-        Object.assign(p, datos);
-        overlay.remove();
-        renderKanban();
-        renderAccordion();
+        Object.assign(p, datos); overlay.remove(); renderKanban(); renderAccordion();
       } else {
         errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar';
-        errDiv.style.display = 'block';
-        btn.disabled = false; btn.textContent = 'Guardar cambios';
+        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
       }
     });
   }
 
-  // -- Plantillas de correo por etapa -----------------------------
+  // ── Modal correo ──────────────────────────────────────────
   const PLANTILLAS_CORREO = {
-    'Nuevo prospecto':  { eyebrow: 'Primer contacto',     asunto: 'CoproActiva \u2014 Administraci\u00F3n Profesional para {condominio}' },
-    'Reuni\u00F3n Agendada': { eyebrow: 'Confirmaci\u00F3n',        asunto: 'Confirmaci\u00F3n de Reuni\u00F3n \u2014 CoproActiva \u00D7 {condominio}' },
-    'Diagn\u00F3stico':      { eyebrow: 'Siguiente paso',      asunto: 'Diagn\u00F3stico de Administraci\u00F3n \u2014 {condominio}' },
-    'Propuesta':        { eyebrow: 'Propuesta comercial', asunto: 'Propuesta Comercial \u2014 CoproActiva para {condominio}' },
-    'Negociaci\u00F3n':      { eyebrow: 'Seguimiento',         asunto: 'Seguimiento Propuesta \u2014 {condominio}' },
-    'Ganado':           { eyebrow: 'Bienvenida',          asunto: '\u00A1Bienvenidos a CoproActiva! \u2014 {condominio}' },
-    'Perdido':          { eyebrow: 'Cierre',              asunto: 'Hasta pronto \u2014 CoproActiva' },
+    'Nuevo prospecto':   { eyebrow: 'Primer contacto',     asunto: 'CoproActiva \u2014 Administraci\u00F3n Profesional para {condominio}' },
+    'Reuni\u00F3n Agendada': { eyebrow: 'Confirmaci\u00F3n',   asunto: 'Confirmaci\u00F3n de Reuni\u00F3n \u2014 CoproActiva \u00D7 {condominio}' },
+    'Diagn\u00F3stico':      { eyebrow: 'Siguiente paso',   asunto: 'Diagn\u00F3stico de Administraci\u00F3n \u2014 {condominio}' },
+    'Propuesta':         { eyebrow: 'Propuesta comercial', asunto: 'Propuesta Comercial \u2014 CoproActiva para {condominio}' },
+    'Negociaci\u00F3n':      { eyebrow: 'Seguimiento',      asunto: 'Seguimiento Propuesta \u2014 {condominio}' },
+    'Ganado':            { eyebrow: 'Bienvenida',          asunto: '\u00A1Bienvenidos a CoproActiva! \u2014 {condominio}' },
+    'Perdido':           { eyebrow: 'Cierre',              asunto: 'Hasta pronto \u2014 CoproActiva' },
   };
 
   function abrirModalCorreo(p) {
-    var plantilla = PLANTILLAS_CORREO[p.etapa] || { eyebrow: '', asunto: 'CoproActiva - {condominio}' };
+    var plantilla  = PLANTILLAS_CORREO[p.etapa] || { eyebrow: '', asunto: 'CoproActiva - {condominio}' };
     var asuntoBase = plantilla.asunto.replace('{condominio}', p.nombreCondominio || '');
-
-    var overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-
-    var box = document.createElement('div');
-    box.className = 'modal-box';
-
+    var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    var box = document.createElement('div'); box.className = 'modal-box';
     box.innerHTML =
-      '<div class="modal-handle"></div>' +
-      '<button class="modal-close" id="mc-mail">&times;</button>' +
-      '<div class="modal-eyebrow"></div>' +
-      '<div class="modal-titulo">Enviar correo</div>' +
-      '<div class="modal-subtitulo"></div>' +
+      '<div class="modal-handle"></div><button class="modal-close" id="mc-mail">&times;</button>' +
+      '<div class="modal-eyebrow"></div><div class="modal-titulo">Enviar correo</div><div class="modal-subtitulo"></div>' +
       '<div class="form-grid" style="margin-top:18px">' +
-        '<div class="form-group form-full"><label>Para</label>' +
-          '<input type="email" id="mail-para" placeholder="correo@ejemplo.cl"></div>' +
-        '<div class="form-group form-full"><label>Asunto</label>' +
-          '<input type="text" id="mail-asunto"></div>' +
-        '<div class="form-group form-full"><label>Mensaje</label>' +
-          '<textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;font-weight:500;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px"></textarea></div>' +
+        '<div class="form-group form-full"><label>Para</label><input type="email" id="mail-para" placeholder="correo@ejemplo.cl"></div>' +
+        '<div class="form-group form-full"><label>Asunto</label><input type="text" id="mail-asunto"></div>' +
+        '<div class="form-group form-full"><label>Mensaje</label><textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;font-weight:500;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px"></textarea></div>' +
       '</div>' +
       '<div class="form-error" id="mail-error"></div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
         '<button class="btn-guardar" id="btn-enviar-directo" style="background:var(--co-ink);display:flex;align-items:center;justify-content:center;gap:6px">Enviar</button>' +
         '<button class="btn-guardar" id="btn-abrir-gmail" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line);display:flex;align-items:center;justify-content:center;gap:6px">Abrir en Gmail</button>' +
-      '</div>' +
-      '<div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px"></div>';
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    // Rellenar valores con textContent/value para evitar problemas de encoding
+      '</div><div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px"></div>';
+    overlay.appendChild(box); document.body.appendChild(overlay);
     box.querySelector('.modal-eyebrow').textContent  = plantilla.eyebrow || p.etapa;
-    box.querySelector('.modal-subtitulo').textContent = (p.nombreCondominio || '') + ' \u00B7 ' + (p.email || 'Sin email registrado');
+    box.querySelector('.modal-subtitulo').textContent = (p.nombreCondominio||'') + ' \u00B7 ' + (p.email||'Sin email registrado');
     box.querySelector('#mail-para').value   = p.email   || '';
     box.querySelector('#mail-asunto').value = asuntoBase;
     box.querySelector('#mail-ok').textContent = '\u2713 Correo enviado correctamente';
     box.querySelector('#mail-cuerpo').value = obtenerCuerpoCorreo(p);
-
-    var cerrar = function() { overlay.remove(); };
+    var cerrar = () => overlay.remove();
     box.querySelector('#mc-mail').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    box.querySelector('#btn-enviar-directo').addEventListener('click', async function() {
-      var para   = box.querySelector('#mail-para').value.trim();
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+    box.querySelector('#btn-enviar-directo').addEventListener('click', async () => {
+      var para = box.querySelector('#mail-para').value.trim();
       var asunto = box.querySelector('#mail-asunto').value.trim();
       var cuerpo = box.querySelector('#mail-cuerpo').value.trim();
-      var errDiv = box.querySelector('#mail-error');
-      var msgOk  = box.querySelector('#mail-ok');
-      var btn    = box.querySelector('#btn-enviar-directo');
+      var errDiv = box.querySelector('#mail-error'); var msgOk = box.querySelector('#mail-ok');
+      var btn = box.querySelector('#btn-enviar-directo');
       if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
-      errDiv.style.display = 'none';
-      btn.disabled = true; btn.textContent = 'Enviando...';
-      var resp = await api('/correo', 'POST', { prospectoId: p.id, etapa: p.etapa, para: para, asunto: asunto, cuerpo: cuerpo });
-      if (resp.ok && resp.data && resp.data.ok) {
-        msgOk.style.display = 'block';
-        btn.textContent = 'Enviado!';
-        setTimeout(cerrar, 2000);
-      } else {
-        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al enviar';
-        errDiv.style.display = 'block';
-        btn.disabled = false; btn.textContent = 'Enviar';
-      }
+      errDiv.style.display = 'none'; btn.disabled = true; btn.textContent = 'Enviando...';
+      var resp = await api('/correo', 'POST', { prospectoId: p.id, etapa: p.etapa, para, asunto, cuerpo });
+      if (resp.ok && resp.data && resp.data.ok) { msgOk.style.display = 'block'; btn.textContent = 'Enviado!'; setTimeout(cerrar, 2000); }
+      else { errDiv.textContent = (resp.data&&resp.data.error)||resp.error||'Error al enviar'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Enviar'; }
     });
-
-      box.querySelector('#btn-abrir-gmail').addEventListener('click', async function() {
-      var para   = box.querySelector('#mail-para').value.trim();
+    box.querySelector('#btn-abrir-gmail').addEventListener('click', async () => {
+      var para = box.querySelector('#mail-para').value.trim();
       var asunto = box.querySelector('#mail-asunto').value.trim();
       var cuerpo = box.querySelector('#mail-cuerpo').value.trim();
-      var errDiv = box.querySelector('#mail-error');
-      var btn    = box.querySelector('#btn-abrir-gmail');
+      var errDiv = box.querySelector('#mail-error'); var btn = box.querySelector('#btn-abrir-gmail');
       if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
-      errDiv.style.display = 'none';
-      btn.disabled = true; btn.textContent = 'Creando borrador...';
-      var resp = await api('/correo', 'POST', {
-      action:      'crearBorrador',
-      prospectoId: p.id,
-      etapa:       p.etapa,
-      para, asunto, cuerpo
-  });
-  
-    if (resp.ok && resp.data && resp.data.ok) {
-    btn.textContent = '✓ Borrador creado';
-    window.open('https://mail.google.com/mail/#drafts', '_blank');
-  } else {
-    errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al crear borrador';
-    errDiv.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Abrir en Gmail';
+      errDiv.style.display = 'none'; btn.disabled = true; btn.textContent = 'Creando borrador...';
+      var resp = await api('/correo', 'POST', { action: 'crearBorrador', prospectoId: p.id, etapa: p.etapa, para, asunto, cuerpo });
+      if (resp.ok && resp.data && resp.data.ok) { btn.textContent = '\u2713 Borrador creado'; window.open('https://mail.google.com/mail/#drafts', '_blank'); }
+      else { errDiv.textContent = (resp.data&&resp.data.error)||resp.error||'Error al crear borrador'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Abrir en Gmail'; }
+    });
   }
-  });  // cierra btn-abrir-gmail
-
-  }  // cierra abrirModalCorreo
 
   function obtenerCuerpoCorreo(p) {
-    var n = p.nombreContacto    || 'estimado/a';
-    var c = p.nombreCondominio  || '';
+    var n = p.nombreContacto || 'estimado/a';
+    var c = p.nombreCondominio || '';
     var f = 'Atentamente,\nCoproActiva Administraci\u00F3n\ncontacto@coproactiva.cl \u00B7 +56 9 3945 3804';
     var cuerpos = {};
-    cuerpos['Nuevo prospecto']  = 'Estimado/a ' + n + ',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n, empresa especializada en la gesti\u00F3n integral de condominios residenciales bajo la Ley N.\u00b0 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercan\u00EDa con los residentes.\n\nMe gustar\u00EDa coordinar una breve reuni\u00F3n para conocer la situaci\u00F3n actual de ' + c + '. \u00BFTendr\u00EDa disponibilidad esta semana?\n\n' + f;
-    cuerpos['Reuni\u00F3n Agendada'] = 'Estimado/a ' + n + ',\n\nConfirmo nuestra reuni\u00F3n seg\u00FAn lo coordinado. Estar\u00E9 puntual y preparado/a para conocer en detalle la situaci\u00F3n de ' + c + '.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\n' + f;
-    cuerpos['Diagn\u00F3stico']      = 'Estimado/a ' + n + ',\n\nFue un gusto reunirnos y conocer en detalle la situaci\u00F3n de ' + c + '. El paso siguiente es realizar un diagn\u00F3stico integral de la administraci\u00F3n actual.\n\nEl diagn\u00F3stico abarca las \u00E1reas legal, financiera, laboral, t\u00E9cnica, de seguridad y documental, con una duraci\u00F3n estimada de 60 a 90 minutos.\n\n\u00BFTendr\u00EDa disponibilidad en los pr\u00F3ximos d\u00EDas para agendar esta sesi\u00F3n?\n\n' + f;
-    cuerpos['Propuesta']        = 'Estimado/a ' + n + ',\n\nAdjunto nuestra propuesta comercial para la administraci\u00F3n de ' + c + ', elaborada en base al diagn\u00F3stico realizado.\n\nLa propuesta incluye el plan de trabajo, metodolog\u00EDa de gesti\u00F3n y estructura de honorarios.\n\nQuedo disponible para resolver cualquier consulta.\n\n' + f;
-    cuerpos['Negociaci\u00F3n']      = 'Estimado/a ' + n + ',\n\nMe contacto para dar seguimiento a la propuesta enviada para ' + c + '.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda que haya surgido.\n\n' + f;
-    cuerpos['Ganado']           = 'Estimado/a ' + n + ',\n\nEs un placer darles la bienvenida a CoproActiva Administraci\u00F3n.\n\nAdjunto el kit de bienvenida con toda la informaci\u00F3n necesaria para iniciar nuestra gesti\u00F3n en ' + c + '.\n\n' + f;
-    cuerpos['Perdido']          = 'Estimado/a ' + n + ',\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisi\u00F3n y quedamos disponibles para cualquier necesidad futura.\n\n' + f;
+    cuerpos['Nuevo prospecto']       = 'Estimado/a '+n+',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n, empresa especializada en la gesti\u00F3n integral de condominios residenciales bajo la Ley N.\u00b0 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercan\u00EDa con los residentes.\n\nMe gustar\u00EDa coordinar una breve reuni\u00F3n para conocer la situaci\u00F3n actual de '+c+'. \u00BFTendr\u00EDa disponibilidad esta semana?\n\n'+f;
+    cuerpos['Reuni\u00F3n Agendada']  = 'Estimado/a '+n+',\n\nConfirmo nuestra reuni\u00F3n seg\u00FAn lo coordinado. Estar\u00E9 puntual y preparado/a para conocer en detalle la situaci\u00F3n de '+c+'.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\n'+f;
+    cuerpos['Diagn\u00F3stico']       = 'Estimado/a '+n+',\n\nFue un gusto reunirnos y conocer en detalle la situaci\u00F3n de '+c+'. El paso siguiente es realizar un diagn\u00F3stico integral de la administraci\u00F3n actual.\n\nEl diagn\u00F3stico abarca las \u00E1reas legal, financiera, laboral, t\u00E9cnica, de seguridad y documental, con una duraci\u00F3n estimada de 60 a 90 minutos.\n\n\u00BFTendr\u00EDa disponibilidad en los pr\u00F3ximos d\u00EDas para agendar esta sesi\u00F3n?\n\n'+f;
+    cuerpos['Propuesta']             = 'Estimado/a '+n+',\n\nAdjunto nuestra propuesta comercial para la administraci\u00F3n de '+c+', elaborada en base al diagn\u00F3stico realizado.\n\nLa propuesta incluye el plan de trabajo, metodolog\u00EDa de gesti\u00F3n y estructura de honorarios.\n\nQuedo disponible para resolver cualquier consulta.\n\n'+f;
+    cuerpos['Negociaci\u00F3n']       = 'Estimado/a '+n+',\n\nMe contacto para dar seguimiento a la propuesta enviada para '+c+'.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda que haya surgido.\n\n'+f;
+    cuerpos['Ganado']                = 'Estimado/a '+n+',\n\nEs un placer darles la bienvenida a CoproActiva Administraci\u00F3n.\n\nAdjunto el kit de bienvenida con toda la informaci\u00F3n necesaria para iniciar nuestra gesti\u00F3n en '+c+'.\n\n'+f;
+    cuerpos['Perdido']               = 'Estimado/a '+n+',\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisi\u00F3n y quedamos disponibles para cualquier necesidad futura.\n\n'+f;
     return cuerpos[p.etapa] || '';
   }
+
+  // ── Iniciar diagnóstico (navegación a tab Diagnóstico) ────
   function iniciarDiagnostico(prospectoId, nombreCondominio, prospecto) {
     sessionStorage.setItem('prospectoVinculado', JSON.stringify({
       id:             prospectoId,
@@ -988,18 +724,12 @@
       contactoCorreo: prospecto?.email          || '',
       cargoContacto:  prospecto?.cargoContacto  || ''
     }));
-
-    if (typeof cargarModulo === 'function') {
-      cargarModulo('diagnostico');
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.nav-btn[data-modulo="diagnostico"]').forEach(b => b.classList.add('active'));
-    } else {
-      console.error('cargarModulo no est\u00E1 definida');
-    }
+    // Navegar al tab Diagnóstico dentro del CRM
+    cambiarTab('diagnostico');
   }
-
   window.iniciarDiagnostico = iniciarDiagnostico;
 
+  // ── Modal nuevo prospecto ─────────────────────────────────
   function abrirModalNuevo() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -1021,10 +751,8 @@
           <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="correo@cl"></div>
           <div class="form-group"><label>Fuente</label>
             <select id="f-fuente">
-              <option value="web">Web</option>
-              <option value="referido">Referido</option>
-              <option value="Facebook">Facebook</option>
-              <option value="Instagram">Instagram</option>
+              <option value="web">Web</option><option value="referido">Referido</option>
+              <option value="Facebook">Facebook</option><option value="Instagram">Instagram</option>
               <option value="otro">Otro</option>
             </select>
           </div>
@@ -1035,51 +763,33 @@
         <button class="btn-guardar" id="btn-guardar">Guardar prospecto</button>
       </div>
     `;
-
     document.body.appendChild(overlay);
     const cerrar = () => overlay.remove();
     overlay.querySelector('#mc2').addEventListener('click', cerrar);
     overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
-
     overlay.querySelector('#btn-guardar').addEventListener('click', async () => {
       const nombre   = overlay.querySelector('#f-nombre').value.trim();
       const contacto = overlay.querySelector('#f-contacto').value.trim();
       const errDiv   = overlay.querySelector('#f-error');
       const btn      = overlay.querySelector('#btn-guardar');
-      if (!nombre || !contacto) {
-        errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.';
-        errDiv.style.display = 'block';
-        return;
-      }
+      if (!nombre || !contacto) { errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
       btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
       const datos = {
-        nombreCondominio: nombre,
-        comuna:           overlay.querySelector('#f-comuna').value.trim(),
-        direccion:        overlay.querySelector('#f-dir').value.trim(),
-        unidades:         overlay.querySelector('#f-unidades').value || 0,
-        nombreContacto:   contacto,
-        cargoContacto:    overlay.querySelector('#f-cargo').value.trim(),
-        telefono:         overlay.querySelector('#f-tel').value.trim(),
-        email:            overlay.querySelector('#f-email').value.trim(),
-        fuenteLead:       overlay.querySelector('#f-fuente').value,
-        responsable:      overlay.querySelector('#f-resp').value.trim(),
-        observaciones:    overlay.querySelector('#f-obs').value.trim(),
+        nombreCondominio: nombre, comuna: overlay.querySelector('#f-comuna').value.trim(),
+        direccion: overlay.querySelector('#f-dir').value.trim(), unidades: overlay.querySelector('#f-unidades').value || 0,
+        nombreContacto: contacto, cargoContacto: overlay.querySelector('#f-cargo').value.trim(),
+        telefono: overlay.querySelector('#f-tel').value.trim(), email: overlay.querySelector('#f-email').value.trim(),
+        fuenteLead: overlay.querySelector('#f-fuente').value, responsable: overlay.querySelector('#f-resp').value.trim(),
+        observaciones: overlay.querySelector('#f-obs').value.trim(),
       };
       const resp = await api('/crm', 'POST', datos);
-      if (resp.ok && resp.data && resp.data.ok) {
-        overlay.remove();
-        await init();
-      } else {
-        errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar';
-        errDiv.style.display = 'block';
-        btn.disabled = false; btn.textContent = 'Guardar prospecto';
-      }
+      if (resp.ok && resp.data && resp.data.ok) { overlay.remove(); await init(); }
+      else { errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar'; errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar prospecto'; }
     });
   }
 
   function mostrarError(msg) {
-    document.getElementById('crm-root').innerHTML =
-      `<div class="crm-error">Error al cargar el CRM: ${msg}</div>`;
+    document.getElementById('crm-root').innerHTML = `<div class="crm-error">Error al cargar el CRM: ${msg}</div>`;
   }
 
   init();
