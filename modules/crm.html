@@ -4,6 +4,10 @@
 <style>
   #crm-root { font-family: var(--co-font); color: var(--co-ink); }
 
+  /* Sub-módulos dentro del CRM — ocultar su page-header propio */
+  .crm-sub-modulo .page-header { display: none !important; }
+  .crm-sub-modulo #rx-root .module-loading { min-height: 200px; }
+
   /* ── Tabs ── */
   .crm-tabs-bar {
     display: flex;
@@ -216,6 +220,7 @@
 
     const cfg = TAB_CONFIG[_tabActiva];
 
+    // ── Estructura fija: header + tabs (nunca se reemplaza)
     root.innerHTML = `
       <div class="page-header" id="crm-page-header">
         <div>
@@ -228,7 +233,6 @@
           <span id="crm-btn-lbl">${cfg.btnLbl}</span>
         </button>
       </div>
-
       <div class="crm-tabs-bar" id="crm-tabs-bar">
         <button class="crm-tab-btn ${_tabActiva === 'pipeline' ? 'act' : ''}" data-tab="pipeline">
           <i class="ti ti-layout-kanban" aria-hidden="true"></i> Pipeline
@@ -241,29 +245,9 @@
           <i class="ti ti-clipboard-list" aria-hidden="true"></i> Recepci\u00F3n
         </button>
       </div>
-
-      ${_tabActiva === 'pipeline' ? `
-      <div class="crm-kpis">
-        <div class="kpi-card activos"><div class="kpi-num">${activos.length}</div><div class="kpi-label">Activos</div></div>
-        <div class="kpi-card urgente"><div class="kpi-num urgente">${urgentes}</div><div class="kpi-label">Urgentes</div></div>
-        <div class="kpi-card ganado"><div class="kpi-num ganado">${ganados}</div><div class="kpi-label">Ganados</div></div>
-        <div class="kpi-card perdido"><div class="kpi-num perdido">${perdidos}</div><div class="kpi-label">Perdidos</div></div>
-      </div>
-      <div class="vista-desktop">
-        <div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div>
-      </div>
-      <div class="vista-mobile" id="accordion-mobile"></div>
-      ` : `
-      <div style="padding:40px 0;text-align:center;color:var(--co-mute);font-size:13px;font-weight:600">
-        <div style="width:44px;height:44px;border-radius:12px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
-          <i class="ti ${_tabActiva === 'diagnostico' ? 'ti-stethoscope' : 'ti-clipboard-list'}" style="font-size:20px;color:var(--co-orange)" aria-hidden="true"></i>
-        </div>
-        Haz clic en el bot\u00F3n para abrir el m\u00F3dulo de ${_tabActiva === 'diagnostico' ? 'diagn\u00F3stico' : 'recepci\u00F3n documental'}.
-      </div>
-      `}
+      <div id="crm-tab-content"></div>
     `;
 
-    // Eventos
     document.getElementById('crm-tabs-bar').addEventListener('click', function(e) {
       const btn = e.target.closest('.crm-tab-btn');
       if (!btn) return;
@@ -274,28 +258,86 @@
       TAB_CONFIG[_tabActiva].btnAct();
     });
 
-    if (_tabActiva === 'pipeline') {
+    // Renderizar contenido del tab activo
+    _renderTabContent(_tabActiva);
+  }
+
+  // ── Actualiza SOLO el header y botón sin tocar tabs ni contenido ──
+  function _actualizarHeader(tab) {
+    const cfg = TAB_CONFIG[tab];
+    const title = document.getElementById('crm-header-title');
+    const sub   = document.getElementById('crm-header-sub');
+    const lbl   = document.getElementById('crm-btn-lbl');
+    if (title) title.innerHTML = cfg.titulo;
+    if (sub)   sub.textContent = cfg.sub;
+    if (lbl)   lbl.textContent = cfg.btnLbl;
+    // Actualizar botón acción
+    const btnAct = document.getElementById('crm-btn-accion');
+    if (btnAct) {
+      btnAct.onclick = null;
+      btnAct.addEventListener('click', function() { TAB_CONFIG[tab].btnAct(); });
+    }
+  }
+
+  // ── Renderiza el contenido del tab en #crm-tab-content ──
+  function _renderTabContent(tab) {
+    const container = document.getElementById('crm-tab-content');
+    if (!container) return;
+
+    if (tab === 'pipeline') {
+      container.innerHTML = `
+        <div class="crm-kpis">
+          <div class="kpi-card activos"><div class="kpi-num">${prospectos.filter(p=>p.etapa!=='Ganado'&&p.etapa!=='Perdido').length}</div><div class="kpi-label">Activos</div></div>
+          <div class="kpi-card urgente"><div class="kpi-num urgente">${prospectos.filter(p=>p.semaforo==='rojo'&&p.etapa!=='Ganado'&&p.etapa!=='Perdido').length}</div><div class="kpi-label">Urgentes</div></div>
+          <div class="kpi-card ganado"><div class="kpi-num ganado">${prospectos.filter(p=>p.etapa==='Ganado').length}</div><div class="kpi-label">Ganados</div></div>
+          <div class="kpi-card perdido"><div class="kpi-num perdido">${prospectos.filter(p=>p.etapa==='Perdido').length}</div><div class="kpi-label">Perdidos</div></div>
+        </div>
+        <div class="vista-desktop">
+          <div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div>
+        </div>
+        <div class="vista-mobile" id="accordion-mobile"></div>
+      `;
       renderKanban();
       renderAccordion();
+      return;
     }
+
+    // Diagnóstico y Recepción: cargar HTML del módulo dentro del CRM
+    container.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
+
+    const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
+    fetch(base + 'modules/' + tab + '.html')
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(html => {
+        container.innerHTML = html;
+        // Marcar contexto para que el módulo sepa que está dentro del CRM
+        container.classList.add('crm-sub-modulo');
+        // Ejecutar scripts
+        Array.from(container.querySelectorAll('script')).forEach(old => {
+          const s = document.createElement('script');
+          s.textContent = old.textContent;
+          old.parentNode.replaceChild(s, old);
+        });
+      })
+      .catch(err => {
+        container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error al cargar ' + tab + ': ' + err.message + '</div>';
+      });
   }
 
   function cambiarTab(tab) {
     if (tab === _tabActiva) return;
     _tabActiva = tab;
 
-    // Si es diagnóstico o recepción, cargar ese módulo directamente
-    if (tab === 'diagnostico' && typeof cargarModulo === 'function') {
-      cargarModulo('diagnostico');
-      return;
-    }
-    if (tab === 'recepcion' && typeof cargarModulo === 'function') {
-      cargarModulo('recepcion');
-      return;
-    }
+    // Actualizar tabs activos
+    document.querySelectorAll('.crm-tab-btn').forEach(b => {
+      b.classList.toggle('act', b.dataset.tab === tab);
+    });
 
-    // Pipeline: rerenderizar CRM
-    renderCRM();
+    // Actualizar header dinámicamente
+    _actualizarHeader(tab);
+
+    // Renderizar contenido del tab
+    _renderTabContent(tab);
   }
 
   // ── Pipeline ──────────────────────────────────────────────
