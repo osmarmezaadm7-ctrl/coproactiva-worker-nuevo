@@ -316,7 +316,7 @@
       if (!content) return;
 
       const iframe = document.createElement('iframe');
-      iframe.src = base + 'modules/diagnostico.html?token=copro2025';
+      iframe.src = base + 'diagnostico_standalone.html?token=copro2025&t=' + Date.now();
       iframe.style.cssText = 'width:100%;height:calc(100vh - 200px);min-height:600px;border:none;display:block;';
       iframe.title = 'Diagnóstico CoproActiva';
       iframe.addEventListener('load', function() {
