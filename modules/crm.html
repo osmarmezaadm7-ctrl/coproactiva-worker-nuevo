@@ -170,7 +170,7 @@
       titulo:  'Diagn\u00F3sticos <em>guardados</em>',
       sub:     'Crea nuevos diagn\u00F3sticos o contin\u00FAa uno existente.',
       btnLbl:  'Nuevo diagn\u00F3stico',
-      btnAct:  () => { if (typeof nuevoDesdeHomeEnIframe === 'function') nuevoDesdeHomeEnIframe(); else { const ifrm = document.querySelector('#diag-content iframe'); if (ifrm && ifrm.contentWindow) ifrm.contentWindow.postMessage({type:'nuevo_diagnostico'}, '*'); } },
+      btnAct:  () => { if (typeof cargarModulo === 'function') cargarModulo('diagnostico'); },
       kpis:    false,
     },
     recepcion: {
@@ -308,39 +308,35 @@
     container.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
 
     const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
-
-    if (tab === 'diagnostico') {
-      // Diagnóstico: usar iframe para aislar el standalone completamente
-      const loading = document.getElementById('diag-loading');
-      const content = document.getElementById('diag-content');
-      if (!content) return;
-
-      const iframe = document.createElement('iframe');
-      iframe.src = base + 'diagnostico_standalone.html?token=copro2025&t=' + Date.now();
-      iframe.style.cssText = 'width:100%;height:calc(100vh - 200px);min-height:600px;border:none;display:block;';
-      iframe.title = 'Diagnóstico CoproActiva';
-      iframe.addEventListener('load', function() {
-        if (loading) loading.style.display = 'none';
-        content.style.display = 'block';
-      });
-
-      content.innerHTML = '';
-      content.appendChild(iframe);
-      if (loading) loading.style.display = 'flex';
-      return;
-    }
-
-    // Recepción y otros: fetch + innerHTML
     fetch(base + 'modules/' + tab + '.html')
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
       .then(html => {
         container.innerHTML = html;
         container.classList.add('crm-sub-modulo');
+
+        // Ocultar headers propios del sub-módulo via JS (más fiable que CSS)
+        ['.ph', '.page-header', '.home-header', '.topbar', '.progress-bar', '.step-indicator', '.sidebar'].forEach(sel => {
+          container.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; });
+        });
+
+        // Ejecutar scripts
         Array.from(container.querySelectorAll('script')).forEach(old => {
           const s = document.createElement('script');
           s.textContent = old.textContent;
           old.parentNode.replaceChild(s, old);
         });
+
+        // Re-ocultar después de que los scripts rendericen el contenido
+        setTimeout(() => {
+          ['.ph', '.page-header', '.home-header', '.topbar', '.progress-bar', '.step-indicator', '.sidebar'].forEach(sel => {
+            container.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; });
+          });
+        }, 300);
+        setTimeout(() => {
+          ['.ph', '.page-header', '.home-header', '.topbar', '.progress-bar', '.step-indicator', '.sidebar'].forEach(sel => {
+            container.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; });
+          });
+        }, 800);
       })
       .catch(err => {
         container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error al cargar ' + tab + ': ' + err.message + '</div>';
@@ -707,7 +703,7 @@
       contactoCorreo: prospecto?.email          || '',
       cargoContacto:  prospecto?.cargoContacto  || ''
     }));
-    cambiarTab('diagnostico');
+    if (typeof cargarModulo === 'function') cargarModulo('diagnostico');
   }
   window.iniciarDiagnostico = iniciarDiagnostico;
 
