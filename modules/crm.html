@@ -312,14 +312,31 @@
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
       .then(html => {
         container.innerHTML = html;
-        // Marcar contexto para que el módulo sepa que está dentro del CRM
         container.classList.add('crm-sub-modulo');
+
+        // Ocultar headers propios del sub-módulo via JS (más fiable que CSS)
+        ['.ph', '.page-header', '.home-header', '.topbar', '.progress-bar', '.step-indicator', '.sidebar'].forEach(sel => {
+          container.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; });
+        });
+
         // Ejecutar scripts
         Array.from(container.querySelectorAll('script')).forEach(old => {
           const s = document.createElement('script');
           s.textContent = old.textContent;
           old.parentNode.replaceChild(s, old);
         });
+
+        // Re-ocultar después de que los scripts rendericen el contenido
+        setTimeout(() => {
+          ['.ph', '.page-header', '.home-header', '.topbar', '.progress-bar', '.step-indicator', '.sidebar'].forEach(sel => {
+            container.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; });
+          });
+        }, 300);
+        setTimeout(() => {
+          ['.ph', '.page-header', '.home-header', '.topbar', '.progress-bar', '.step-indicator', '.sidebar'].forEach(sel => {
+            container.querySelectorAll(sel).forEach(el => { el.style.display = 'none'; });
+          });
+        }, 800);
       })
       .catch(err => {
         container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error al cargar ' + tab + ': ' + err.message + '</div>';
