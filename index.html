@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Colapso del nav cuando sidebarDynamic tiene contenido */
     .sb-nav-area { transition: max-height 0.3s ease, opacity 0.25s ease; }
     .sb-nav-area.sb-collapsed { max-height: 0 !important; overflow: hidden; opacity: 0; padding: 0; }
     .sb-nav-area.sb-pinned { max-height: none !important; opacity: 1 !important; overflow-y: auto !important; }
@@ -20,9 +19,6 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════
-     LOGIN
-═══════════════════════════════════════════════════════════ -->
 <div id="loginScreen" class="login-screen">
   <div class="login-brand">
     <img src="assets/coproactiva-iso.png" alt="" class="login-iso" aria-hidden="true">
@@ -62,12 +58,8 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     APP SHELL
-═══════════════════════════════════════════════════════════ -->
 <div id="app" class="app" style="display:none;">
 
-  <!-- ── Sidebar desktop ──────────────────────────────────── -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -95,42 +87,29 @@
         <span class="mod-label">Panel maestro</span>
       </button>
 
-      <div class="mod" id="mod-comunidades">
-        <button class="mod-row" onclick="navToggle('comunidades')">
-          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
-          <span class="mod-label">Comunidades</span>
-          <span class="mod-badge mb-orange" id="badge-comunidades">5</span>
-          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
-        </button>
-        <div class="sub-list" id="sub-comunidades">
-          <button class="sub-item" onclick="navSub('comunidades','listado','Listado general')"><span class="sub-dot"></span><span class="sub-label">Listado general</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','ficha','Ficha de comunidad')"><span class="sub-dot"></span><span class="sub-label">Ficha de comunidad</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','unidades','Unidades')"><span class="sub-dot"></span><span class="sub-label">Unidades y alícuotas</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','residentes','Residentes')"><span class="sub-dot"></span><span class="sub-label">Residentes</span></button>
-          <button class="sub-item" onclick="navSub('comunidades','comite','Comité')"><span class="sub-dot"></span><span class="sub-label">Comité</span></button>
-        </div>
-      </div>
+      <!-- Comunidades — ítem plano, navegación interna por tabs -->
+      <button class="mod-row" data-mod="comunidades" onclick="navFlat('comunidades','Comunidades','· General')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
+        <span class="mod-label">Comunidades</span>
+        <span class="mod-badge mb-orange" id="badge-comunidades">5</span>
+      </button>
 
       <div class="sb-sep"></div>
       <!-- COMERCIAL -->
       <div class="sb-section">Comercial</div>
 
-      <div class="mod" id="mod-crm">
-        <button class="mod-row mod-active" onclick="navToggle('crm')">
-          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
-          <span class="mod-label">CRM</span>
-          <span class="mod-badge mb-orange" id="badge-crm">3</span>
-          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
-        </button>
-        <div class="sub-list sub-open" id="sub-crm">
-          <button class="sub-item sub-active" onclick="navSub('crm','pipeline','Pipeline')"><span class="sub-dot"></span><span class="sub-label">Pipeline</span></button>
-          <button class="sub-item" onclick="navSub('crm','prospectos','Prospectos')"><span class="sub-dot"></span><span class="sub-label">Prospectos</span></button>
-          <button class="sub-item" onclick="navSub('crm','diagnostico','Diagnóstico')"><span class="sub-dot"></span><span class="sub-label">Diagnóstico</span></button>
-          <button class="sub-item" onclick="navSub('crm','propuesta','Propuesta y contrato')"><span class="sub-dot"></span><span class="sub-label">Propuesta y contrato</span></button>
-          <button class="sub-item" onclick="navSub('crm','flujo','Flujo comercial')"><span class="sub-dot"></span><span class="sub-label">Flujo comercial</span></button>
-          <button class="sub-item" onclick="navSub('crm','recepcion','Recepción documental')"><span class="sub-dot"></span><span class="sub-label">Recepción documental</span></button>
-        </div>
-      </div>
+      <!-- CRM — ítem plano, navegación interna por tabs -->
+      <button class="mod-row" data-mod="crm" onclick="navFlat('crm','CRM','· Comercial')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+        <span class="mod-label">CRM</span>
+        <span class="mod-badge mb-orange" id="badge-crm">3</span>
+      </button>
+
+      <!-- Flujo comercial — ítem plano -->
+      <button class="mod-row" data-mod="flujo" onclick="navFlat('flujo','Flujo comercial','· Comercial')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4" cy="10" r="2"/><circle cx="16" cy="4" r="2"/><circle cx="16" cy="16" r="2"/><path d="M6 10h4l4-4.5M10 10l6 4.5"/></svg>
+        <span class="mod-label">Flujo comercial</span>
+      </button>
 
       <div class="sb-sep"></div>
       <!-- OPERACIONES -->
@@ -255,14 +234,13 @@
         </div>
       </div>
 
-      <button class="mod-row" data-mod="config" onclick="navFlat('config','Configuración','Empresa')">
+      <button class="mod-row" data-mod="config" onclick="navFlat('config','Configuración','· Empresa')">
         <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v1.5M10 15.5V17M3 10h1.5M15.5 10H17M5.05 5.05l1.06 1.06M13.89 13.89l1.06 1.06M5.05 14.95l1.06-1.06M13.89 6.11l1.06-1.06"/></svg>
         <span class="mod-label">Configuración</span>
       </button>
 
-    </div><!-- /sb-nav-area -->
+    </div>
 
-    <!-- Área dinámica por módulo — app.js la puebla según CRM/diagnóstico/flujo -->
     <div id="sidebarDynamic"></div>
 
     <div class="sidebar-foot">
@@ -274,12 +252,10 @@
     </div>
   </aside>
 
-  <!-- ── Contenido principal ───────────────────────────────── -->
   <main class="main-content" id="mainContent">
     <div id="contentArea"></div>
   </main>
 
-  <!-- ── Barra inferior móvil ──────────────────────────────── -->
   <nav class="bottom-nav" aria-label="Navegación principal">
     <button class="nav-btn" data-nav="panel" onclick="navFlat('panel','Panel maestro','');bnav(this)">
       <span class="bottom-icon">
@@ -287,13 +263,13 @@
       </span>
       <span class="bottom-label">Panel</span>
     </button>
-    <button class="nav-btn" data-nav="comunidades" onclick="navToggle('comunidades');bnav(this)">
+    <button class="nav-btn" data-nav="comunidades" onclick="navFlat('comunidades','Comunidades','· General');bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
       </span>
       <span class="bottom-label">Comunidades</span>
     </button>
-    <button class="nav-btn active" data-nav="crm" onclick="navToggle('crm');bnav(this)">
+    <button class="nav-btn active" data-nav="crm" onclick="navFlat('crm','CRM','· Comercial');bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
       </span>
@@ -313,81 +289,68 @@
     </button>
   </nav>
 
-</div><!-- /#app -->
+</div>
 
 <script src="app.js"></script>
 <script>
-// ── Navegación sidebar dinámico ───────────────────────────────
-
-const NAV_STATE = {
-  modActivo: 'crm',
-  subActivo: 'pipeline',
-  modAbierto: 'crm',
-};
-
-const MOD_PLANOS = ['panel', 'config'];
+const NAV_STATE = { modActivo: 'crm', subActivo: null, modAbierto: null };
+const MOD_PLANOS = ['panel', 'config', 'crm', 'comunidades', 'flujo'];
 
 const TOP_ACTIONS = {
-  'crm':            { label: 'Nuevo prospecto',      show: true  },
-  'comunidades':    { label: 'Nueva comunidad',      show: true  },
-  'finanzas':       { label: 'Emitir GC',            show: true  },
-  'remuneraciones': { label: 'Nueva liquidación',    show: true  },
-  'incidencias':    { label: 'Nueva incidencia',     show: true  },
-  'mantenciones':   { label: 'Nueva mantención',     show: true  },
-  'comunicaciones': { label: 'Nuevo comunicado',     show: true  },
-  'documentos':     { label: 'Subir documento',      show: true  },
+  'crm':            { label: 'Nuevo prospecto',   show: true  },
+  'comunidades':    { label: 'Nueva comunidad',   show: true  },
+  'finanzas':       { label: 'Emitir GC',         show: true  },
+  'remuneraciones': { label: 'Nueva liquidación', show: true  },
+  'incidencias':    { label: 'Nueva incidencia',  show: true  },
+  'mantenciones':   { label: 'Nueva mantención',  show: true  },
+  'comunicaciones': { label: 'Nuevo comunicado',  show: true  },
+  'documentos':     { label: 'Subir documento',   show: true  },
 };
 
 const TOPBAR = {
-  'panel':                   ['Panel maestro',            ''],
-  'comunidades-listado':     ['Listado de comunidades',   '· General'],
-  'comunidades-ficha':       ['Ficha de comunidad',       '· General'],
-  'comunidades-unidades':    ['Unidades y alícuotas',     '· Comunidades'],
-  'comunidades-residentes':  ['Residentes',               '· Comunidades'],
-  'comunidades-comite':      ['Comité',                   '· Comunidades'],
-  'crm-pipeline':            ['Pipeline CRM',             '· Comercial'],
-  'crm-prospectos':          ['Prospectos',               '· Comercial'],
-  'crm-diagnostico':         ['Diagnóstico',              '· Comercial'],
-  'crm-propuesta':           ['Propuesta y contrato',     '· Comercial'],
-  'crm-flujo':               ['Flujo comercial',          '· Comercial'],
-  'crm-recepcion':           ['Recepción documental',     '· Comercial'],
-  'finanzas-resumen':        ['Resumen financiero',       '· Finanzas'],
-  'finanzas-gastos':         ['Gastos comunes',           '· Finanzas'],
-  'finanzas-cobranza':       ['Cobranza',                 '· Finanzas'],
-  'finanzas-pagos':          ['Ingreso de pagos',         '· Finanzas'],
-  'finanzas-rendicion':      ['Rendición al comité',      '· Finanzas'],
-  'servicios-medidores':     ['Lecturas de medidores',    '· Servicios comunes'],
-  'servicios-gas':           ['Gas caldera',              '· Servicios comunes'],
-  'servicios-calculo':       ['Cálculo y prorrateo',      '· Servicios comunes'],
-  'servicios-historial':     ['Historial de lecturas',    '· Servicios comunes'],
-  'remuneraciones-personal': ['Personal',                 '· Remuneraciones'],
-  'remuneraciones-liquidaciones':['Liquidaciones',        '· Remuneraciones'],
-  'remuneraciones-previred': ['Previred / DT',            '· Remuneraciones'],
-  'remuneraciones-finiquitos':['Finiquitos',              '· Remuneraciones'],
-  'mantenciones-calendario': ['Calendario',               '· Mantenciones'],
-  'mantenciones-proveedores':['Proveedores',              '· Mantenciones'],
-  'mantenciones-alertas':    ['Alertas de vencimiento',   '· Mantenciones'],
-  'incidencias-activas':     ['Incidencias activas',      '· Operaciones'],
-  'incidencias-historial':   ['Historial incidencias',    '· Operaciones'],
-  'comunicaciones-circulares':['Circulares',              '· Comunicación'],
-  'comunicaciones-asambleas':['Asambleas',                '· Comunicación'],
-  'comunicaciones-encuestas':['Encuestas',                '· Comunicación'],
-  'comunicaciones-libro':    ['Libro de novedades',       '· Comunicación'],
-  'documentos-contratos':    ['Contratos y seguros',      '· Documentos'],
-  'documentos-actas':        ['Actas de reunión',         '· Documentos'],
-  'documentos-reglamentos':  ['Reglamentos',              '· Documentos'],
-  'reportes-mensual':        ['Reporte mensual',          '· Empresa'],
-  'reportes-kpis':           ['KPIs generales',           '· Empresa'],
-  'config':                  ['Configuración',            '· Empresa'],
+  'panel':                   ['Panel maestro',         ''],
+  'crm':                     ['CRM',                   '· Comercial'],
+  'comunidades':             ['Comunidades',           '· General'],
+  'flujo':                   ['Flujo comercial',       '· Comercial'],
+  'finanzas-resumen':        ['Resumen financiero',    '· Finanzas'],
+  'finanzas-gastos':         ['Gastos comunes',        '· Finanzas'],
+  'finanzas-cobranza':       ['Cobranza',              '· Finanzas'],
+  'finanzas-pagos':          ['Ingreso de pagos',      '· Finanzas'],
+  'finanzas-rendicion':      ['Rendición al comité',   '· Finanzas'],
+  'servicios-medidores':     ['Lecturas de medidores', '· Servicios comunes'],
+  'servicios-gas':           ['Gas caldera',           '· Servicios comunes'],
+  'servicios-calculo':       ['Cálculo y prorrateo',   '· Servicios comunes'],
+  'servicios-historial':     ['Historial de lecturas', '· Servicios comunes'],
+  'remuneraciones-personal': ['Personal',              '· Remuneraciones'],
+  'remuneraciones-liquidaciones':['Liquidaciones',     '· Remuneraciones'],
+  'remuneraciones-previred': ['Previred / DT',         '· Remuneraciones'],
+  'remuneraciones-finiquitos':['Finiquitos',           '· Remuneraciones'],
+  'mantenciones-calendario': ['Calendario',            '· Mantenciones'],
+  'mantenciones-proveedores':['Proveedores',           '· Mantenciones'],
+  'mantenciones-alertas':    ['Alertas de vencimiento','· Mantenciones'],
+  'incidencias-activas':     ['Incidencias activas',   '· Operaciones'],
+  'incidencias-historial':   ['Historial incidencias', '· Operaciones'],
+  'comunicaciones-circulares':['Circulares',           '· Comunicación'],
+  'comunicaciones-asambleas':['Asambleas',             '· Comunicación'],
+  'comunicaciones-encuestas':['Encuestas',             '· Comunicación'],
+  'comunicaciones-libro':    ['Libro de novedades',    '· Comunicación'],
+  'documentos-contratos':    ['Contratos y seguros',   '· Documentos'],
+  'documentos-actas':        ['Actas de reunión',      '· Documentos'],
+  'documentos-reglamentos':  ['Reglamentos',           '· Documentos'],
+  'reportes-mensual':        ['Reporte mensual',       '· Empresa'],
+  'reportes-kpis':           ['KPIs generales',        '· Empresa'],
+  'config':                  ['Configuración',         '· Empresa'],
 };
 
+// ── navFlat: para ítems planos (panel, crm, comunidades, flujo, config)
 function navFlat(modId, titulo, seccion) {
-  if (NAV_STATE.modAbierto && NAV_STATE.modAbierto !== modId) {
+  if (NAV_STATE.modAbierto) {
     _cerrarSub(NAV_STATE.modAbierto);
+    const prevRow = document.querySelector(`#mod-${NAV_STATE.modAbierto} .mod-row`);
+    if (prevRow) prevRow.classList.remove('mod-open', 'mod-active');
   }
   _limpiarActivos();
-  const btn = document.querySelector(`[data-mod="${modId}"]`) ||
-              document.querySelector(`.mod-row[onclick*="navFlat('${modId}'"]`);
+  const btn = document.querySelector(`[data-mod="${modId}"]`);
   if (btn) btn.classList.add('mod-active');
   NAV_STATE.modActivo = modId;
   NAV_STATE.subActivo = null;
@@ -396,6 +359,7 @@ function navFlat(modId, titulo, seccion) {
   _cargarModulo(modId);
 }
 
+// ── navToggle: para módulos con sub-ítems
 function navToggle(modId) {
   const sub    = document.getElementById('sub-' + modId);
   const modRow = document.querySelector(`#mod-${modId} .mod-row`);
@@ -472,61 +436,35 @@ function _actualizarTopbar(key, titulo, trail) {
   }
 }
 
-// ── MAPEO MÓDULOS → cargarModulo() ────────────────────────────
+// ── Mapeo módulos → cargarModulo() de app.js
 function _cargarModulo(modId, subId) {
-  const MODULOS_GAS = {
-    // CRM
-    'crm':                    'crm',
-    'crm-pipeline':           'crm',
-    'crm-prospectos':         'crm',
-    'crm-diagnostico':        'diagnostico',
-    'crm-propuesta':          'flujo',
-    'crm-flujo':              'flujo',
-    'crm-recepcion':          'recepcion',
-    // Comunidades — todos los sub-items cargan el mismo módulo
-    'comunidades':            'comunidades',
-    'comunidades-listado':    'comunidades',
-    'comunidades-ficha':      'comunidades',
-    'comunidades-unidades':   'comunidades',
-    'comunidades-residentes': 'comunidades',
-    'comunidades-comite':     'comunidades',
+  const MODULOS = {
+    'crm':        'crm',
+    'comunidades':'comunidades',
+    'flujo':      'flujo',
+    'diagnostico':'diagnostico',
+    'recepcion':  'recepcion',
   };
 
-  const key       = subId ? `${modId}-${subId}` : modId;
-  const gasModulo = MODULOS_GAS[key] || MODULOS_GAS[modId];
+  const gasModulo = subId ? (MODULOS[`${modId}-${subId}`] || MODULOS[modId]) : MODULOS[modId];
 
   if (gasModulo && typeof cargarModulo === 'function') {
-    const cache = window.moduleElements || {};
-    Object.keys(cache).forEach(k => {
-      if (!['crm','diagnostico','flujo','comunidades','recepcion'].includes(k) && cache[k] && cache[k].style) {
-        cache[k].style.display = 'none';
-      }
-    });
     cargarModulo(gasModulo);
     return;
   }
-
-  _mostrarProximamente(key, modId, subId);
+  _mostrarProximamente(subId ? `${modId}-${subId}` : modId, modId, subId);
 }
 
 function _mostrarProximamente(cacheKey, modId, subId) {
   const cache = window.moduleElements || {};
   const ca    = document.getElementById('contentArea');
   if (!ca) return;
-
   Object.values(cache).forEach(el => { if (el && el.style) el.style.display = 'none'; });
-
   const sd = document.getElementById('sidebarDynamic');
   if (sd) sd.innerHTML = '';
-
-  if (cache[cacheKey]) {
-    cache[cacheKey].style.display = 'block';
-    return;
-  }
-
+  if (cache[cacheKey]) { cache[cacheKey].style.display = 'block'; return; }
   const tb     = TOPBAR[cacheKey];
   const titulo = tb ? tb[0] : (subId || modId);
-
   const wrapper = document.createElement('div');
   wrapper.setAttribute('data-modulo', cacheKey);
   wrapper.style.width = '100%';
@@ -542,33 +480,23 @@ function _mostrarProximamente(cacheKey, modId, subId) {
       </div>
       <div style="font-size:17px;font-weight:800;color:var(--co-ink);letter-spacing:-0.025em">${titulo}</div>
       <div style="font-size:13px;color:var(--co-mute);max-width:300px;line-height:1.65">
-        Este módulo está en desarrollo. La arquitectura y el flujo están definidos — el código viene pronto.
-      </div>
-      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;justify-content:center">
-        <span style="background:var(--co-orange-soft);color:var(--co-orange);font-size:11px;
-                     font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:0.02em">
-          ${modId.toUpperCase()}
-        </span>
-        ${subId ? `<span style="background:var(--co-cream-deep);color:var(--co-mute);font-size:11px;
-                                font-weight:600;padding:4px 12px;border-radius:20px">${subId}</span>` : ''}
+        Este módulo está en desarrollo.
       </div>
     </div>`;
-
   ca.appendChild(wrapper);
   cache[cacheKey] = wrapper;
 }
 
 function _topAction(modId) {
   const acciones = {
-    'crm':            () => document.getElementById('btn-nuevo')?.click(),
+    'crm':            () => { if(window._crmAccionNuevo) window._crmAccionNuevo(); else document.getElementById('btn-nuevo')?.click(); },
     'comunidades':    () => document.querySelector('#com-root .btn-nuevo')?.click(),
-    'recepcion':      () => document.querySelector('#rx-root .btn-nuevo')?.click(),
-    'finanzas':       () => _mostrarProximamente('finanzas-emitir',      'finanzas',    'emitir-gc'),
-    'remuneraciones': () => _mostrarProximamente('rem-nueva-liq',        'remuneraciones','nueva-liquidacion'),
-    'incidencias':    () => _mostrarProximamente('incidencias-nueva',    'incidencias', 'nueva'),
-    'mantenciones':   () => _mostrarProximamente('mantenciones-nueva',   'mantenciones','nueva'),
-    'comunicaciones': () => _mostrarProximamente('comunicaciones-nueva', 'comunicaciones','nueva-circular'),
-    'documentos':     () => _mostrarProximamente('documentos-subir',     'documentos',  'subir'),
+    'finanzas':       () => _mostrarProximamente('finanzas-emitir','finanzas','emitir-gc'),
+    'remuneraciones': () => _mostrarProximamente('rem-nueva-liq','remuneraciones','nueva-liquidacion'),
+    'incidencias':    () => _mostrarProximamente('incidencias-nueva','incidencias','nueva'),
+    'mantenciones':   () => _mostrarProximamente('mantenciones-nueva','mantenciones','nueva'),
+    'comunicaciones': () => _mostrarProximamente('comunicaciones-nueva','comunicaciones','nueva-circular'),
+    'documentos':     () => _mostrarProximamente('documentos-subir','documentos','subir'),
   };
   if (acciones[modId]) acciones[modId]();
 }
@@ -607,14 +535,10 @@ function toggleSbNav() {
   }
 }
 
-// ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  const subCrm    = document.getElementById('sub-crm');
-  const modCrmRow = document.querySelector('#mod-crm .mod-row');
-  if (subCrm)    subCrm.classList.add('sub-open');
-  if (modCrmRow) modCrmRow.classList.add('mod-open');
-  const primerSubCrm = subCrm && subCrm.querySelector('.sub-item');
-  if (primerSubCrm)  primerSubCrm.classList.add('sub-active');
+  // Marcar CRM activo al inicio
+  const btnCrm = document.querySelector('[data-mod="crm"]');
+  if (btnCrm) btnCrm.classList.add('mod-active');
 
   const navArea = document.getElementById('sbNavArea');
   const dynArea = document.getElementById('sidebarDynamic');
