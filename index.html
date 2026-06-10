@@ -296,6 +296,13 @@
 
 <script src="app.js"></script>
 <script>
+// Sidebar dinámico desactivado — sidebar limpio solo con módulos
+window.cargarMenuLateral = function() {
+  var sd = document.getElementById('sidebarDynamic');
+  if (sd) sd.innerHTML = '';
+};
+</script>
+<script>
 const NAV_STATE = { modActivo: 'crm', subActivo: null, modAbierto: null };
 const MOD_PLANOS = ['panel', 'config', 'crm', 'comunidades', 'flujo'];
 
