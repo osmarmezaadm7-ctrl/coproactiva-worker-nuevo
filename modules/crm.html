@@ -310,23 +310,21 @@
     const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
 
     if (tab === 'diagnostico') {
-      // Diagnóstico: usar iframe para aislar el standalone completamente
-      const loading = document.getElementById('diag-loading');
-      const content = document.getElementById('diag-content');
-      if (!content) return;
-
-      const iframe = document.createElement('iframe');
-      iframe.src = base + 'diagnostico_standalone.html?token=copro2025&t=' + Date.now();
-      iframe.style.cssText = 'width:100%;height:calc(100vh - 200px);min-height:600px;border:none;display:block;';
-      iframe.title = 'Diagnóstico CoproActiva';
-      iframe.addEventListener('load', function() {
-        if (loading) loading.style.display = 'none';
-        content.style.display = 'block';
-      });
-
-      content.innerHTML = '';
-      content.appendChild(iframe);
-      if (loading) loading.style.display = 'flex';
+      // Diagnóstico: fetch + innerHTML del módulo integrado
+      fetch(base + 'modules/diagnostico.html')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + r.url); return r.text(); })
+        .then(html => {
+          container.innerHTML = html;
+          container.classList.add('crm-sub-modulo');
+          Array.from(container.querySelectorAll('script')).forEach(old => {
+            const s = document.createElement('script');
+            s.textContent = old.textContent;
+            old.parentNode.replaceChild(s, old);
+          });
+        })
+        .catch(err => {
+          container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error: ' + err.message + '</div>';
+        });
       return;
     }
 
