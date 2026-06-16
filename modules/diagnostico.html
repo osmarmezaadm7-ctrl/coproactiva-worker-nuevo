@@ -288,6 +288,13 @@
 </style>
 
 <script>
+// ── Módulo Diagnóstico CoproActiva — scope aislado ──────────────────────────
+(function() {
+// Limpiar instancia previa si existe
+if (window._diagInstance) {
+  try { window._diagInstance.destroy(); } catch(e) {}
+}
+
 const AREAS=[
   {id:'legal',label:'Legal',emoji:'⚖️',items:[
     {t:'Reglamento de copropiedad inscrito en el CBR (Registro de Hipotecas y Gravámenes) y actualizado post Ley 21.442',w:'c'},
@@ -1619,4 +1626,12 @@ window._diagNuevo = function() { nuevoDesdeHome(); };
   if(checkAuth()) initApp();
   else initApp(); // Sin login — el sistema principal ya autenticó
 })();
+
+// Exponer destroy para limpieza
+window._diagInstance = { destroy: function() {
+  window._diagNuevo = null;
+  window._diagInstance = null;
+}};
+
+})(); // fin IIFE módulo diagnóstico
 </script>
