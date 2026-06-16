@@ -1,7 +1,7 @@
 <!-- modules/diagnostico.html — CoproActiva Diagnóstico -->
 <!-- Versión: 4.0 · Junio 2026 — módulo integrado (sin login, sin iframe) -->
 <style>
-:root {
+#diag-root {
   --na: #D9853B; --na-lt: #FDF3E7; --na-dk: #C2722C;
   --az: #1A1714; --az-md: #6B6359; --az-lt: #F5EFE4;
   --vd: #5D9C7E; --vd-lt: #E8F2EC; --vd-dk: #3F7158; --vd-md: #BFDDC8;
@@ -13,10 +13,10 @@
   --r:8px; --r-lg:12px; --r-xl:16px;
   --shadow: 0 1px 3px rgba(31,31,31,0.05), 0 1px 2px rgba(31,31,31,0.03);
   --shadow-md: 0 4px 12px rgba(31,31,31,0.07), 0 2px 4px rgba(31,31,31,0.04);
+  --font: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-html{-webkit-text-size-adjust:100%;}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;}
+/* Reseteos solo dentro del módulo */
+#diag-root *{box-sizing:border-box;}
 
 
 /* ── LAYOUT INTEGRADO ──────────────────────────────────────────────── */
@@ -223,7 +223,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
 </div>
 
 <!-- Modales del diagnóstico (fuera del layout para z-index correcto) -->
-<div class="modal-bg" id="modalBg" onclick="closeModal()">
+<div class="modal-bg" id="modalBg" onclick="closeModal()" style="display:none">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-ttl">Diagnósticos guardados</div>
     <div class="modal-list" id="modalList"></div>
@@ -238,7 +238,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
   <span id="toastMsg">Guardando...</span>
 </div>
 
-<div class="area-modal-bg" id="areaModalBg" onclick="closeAreaModal()">
+<div class="area-modal-bg" id="areaModalBg" onclick="closeAreaModal()" style="display:none">
   <div class="area-modal" onclick="event.stopPropagation()">
     <div class="area-modal-hdr">
       <div class="area-modal-ttl">
@@ -252,7 +252,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
   </div>
 </div>
 
-<div class="modal-bg" id="exitModalBg" onclick="closeExitModal()">
+<div class="modal-bg" id="exitModalBg" onclick="closeExitModal()" style="display:none">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-ttl">¿Qué deseas hacer?</div>
     <div class="modal-sub" id="exitModalSub">Tienes cambios sin guardar.</div>
