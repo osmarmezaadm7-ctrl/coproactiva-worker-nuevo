@@ -535,7 +535,7 @@ async function syncWithSheets() {
     // Si estamos en home, actualizar la vista silenciosamente
     if(S.view==='home') {
       _homeData = merged;
-      document.getElementById('mainContent').innerHTML = renderHome();
+      document.getElementById('diag-main').innerHTML = renderHome();
       // Quitar indicador de sincronización
       const syncEl = document.getElementById('syncIndicator');
       if(syncEl) { syncEl.textContent = '✓ Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
@@ -1334,7 +1334,7 @@ async function loadHomeData() {
   _homeData = getSavedLocal();
   _homeLoading = false;
   if(S.view==='home') {
-    document.getElementById('mainContent').innerHTML = renderHome();
+    document.getElementById('diag-main').innerHTML = renderHome();
   }
   // 2. Sincronizar con Sheets en background
   syncWithSheets();
@@ -1573,7 +1573,7 @@ setTimeout(() => {
         _cacheTime = Date.now();
         if(S.view==='home') {
           _homeData = remote;
-          document.getElementById('mainContent').innerHTML = renderHome();
+          document.getElementById('diag-main').innerHTML = renderHome();
           const si = document.getElementById('syncIndicator');
           if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
         }
