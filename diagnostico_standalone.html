@@ -273,18 +273,31 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 /* Cuando está cargado dentro del CRM como sub-módulo */
 .in-iframe .ph            { display: none !important; }
 .in-iframe .home-header   { display: none !important; }
-/* En iframe: sidebar lateral fijo al lado del contenido */
-.in-iframe .app { display: flex !important; flex-direction: row !important; min-height: 100vh; }
-.in-iframe .sidebar {
-  position: relative !important;
-  top: auto !important; left: auto !important;
-  height: auto !important;
+/* En iframe: layout con sidebar a la DERECHA */
+.in-iframe .app {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
   min-height: 100vh;
-  width: 200px !important;
-  flex-shrink: 0;
-  z-index: 1 !important;
 }
-.in-iframe .main-scroll { margin-left: 0 !important; flex: 1; min-width: 0; }
+.in-iframe .main-scroll {
+  flex: 1 !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+  order: 1;
+}
+.in-iframe .sidebar {
+  order: 2;
+  position: sticky !important;
+  top: 0 !important;
+  left: auto !important;
+  width: 180px !important;
+  height: 100vh !important;
+  min-height: 0 !important;
+  flex-shrink: 0 !important;
+  z-index: 1 !important;
+  overflow-y: auto !important;
+}
 .in-iframe .sb-hd { display: none !important; }
 
 /* Mobile en iframe: sidebar como barra horizontal arriba */
@@ -1518,7 +1531,7 @@ async function loadHomeData() {
     }
   } catch(e) {
     // Solo si falla la conexión, usar local como fallback
-    _homeData = getSavedLocal();
+    _homeData = [];
   }
   _homeLoading = false;
   if(S.view==='home') {
@@ -1771,14 +1784,15 @@ setTimeout(() => {
         const remote = data.diagnosticos.map(d => ({
           ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
         }));
-        localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
+        // Solo memoria — Sheet es fuente única, no escribir localStorage
         _cache = remote;
         _cacheTime = Date.now();
         if(S.view==='home') {
           _homeData = remote;
-          document.getElementById('mainContent').innerHTML = renderHome();
+          const _m = document.getElementById('mainContent');
+          if(_m) _m.innerHTML = renderHome();
           const si = document.getElementById('syncIndicator');
-          if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
+          if(si){ si.textContent='\u2713 Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
         }
       }
     })
