@@ -273,11 +273,11 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 /* Cuando está cargado dentro del CRM como sub-módulo */
 .in-iframe .ph            { display: none !important; }
 .in-iframe .home-header   { display: none !important; }
-.in-iframe .sidebar       { display: none !important; }
+/* sidebar visible en iframe para navegación por pasos */
 .in-iframe .topbar        { display: none !important; }
 .in-iframe .progress-bar  { display: none !important; }
 .in-iframe .step-indicator{ display: none !important; }
-.in-iframe .main-scroll   { margin-left: 0 !important; }
+/* .in-iframe main-scroll usa el sidebar del standalone */
 .in-iframe #mainContent   { max-width: 100% !important; }
 </style>
 </head>
@@ -1453,14 +1453,38 @@ let _homeLoading = false;
 
 async function loadHomeData() {
   _homeLoading = true;
-  // 1. Cargar local inmediatamente — sin espera
-  _homeData = getSavedLocal();
+  // Mostrar spinner mientras carga del Sheet
+  _homeData = [];
+  const m = document.getElementById('mainContent');
+  if(m && S.view==='home') m.innerHTML = renderHome();
+  // Cargar desde Sheet primero
+  try {
+    const res = await fetch(WORKER_BASE + '/diagnosticos', {
+      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+    });
+    const data = await res.json();
+    if(data.diagnosticos) {
+      const remote = data.diagnosticos.map(d => ({
+        ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
+      }));
+      localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
+      _cache = remote;
+      _cacheTime = Date.now();
+      _homeData = remote;
+    } else {
+      _homeData = getSavedLocal();
+    }
+  } catch(e) {
+    // Si falla el Sheet, usar local como fallback
+    _homeData = getSavedLocal();
+  }
   _homeLoading = false;
   if(S.view==='home') {
-    document.getElementById('mainContent').innerHTML = renderHome();
+    const m2 = document.getElementById('mainContent');
+    if(m2) m2.innerHTML = renderHome();
+    const si = document.getElementById('syncIndicator');
+    if(si) si.remove();
   }
-  // 2. Sincronizar con Sheets en background
-  syncWithSheets();
 }
 
 function renderHome(){
@@ -1474,7 +1498,9 @@ function renderHome(){
         <div class="home-tag">Comunidades que funcionan.</div>
       </div>
     </div>
-    <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagn\u00F3stico</button>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="font-size:15px;font-weight:700;color:var(--az)">Diagnósticos guardados</div>
