@@ -274,6 +274,37 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .in-iframe .ph            { display: none !important; }
 .in-iframe .home-header   { display: none !important; }
 /* sidebar visible en iframe para navegación por pasos */
+@media (max-width: 767px) {
+  .in-iframe .sidebar {
+    display: flex !important;
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    padding: 8px 12px !important;
+    background: var(--az) !important;
+  }
+  .in-iframe .sb-hd { display: none !important; }
+  .in-iframe .sb-foot { display: none !important; }
+  .in-iframe .sb-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    padding: 0 !important;
+    flex: 1 !important;
+    overflow-x: auto !important;
+  }
+  .in-iframe .sb-step {
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 6px 8px !important;
+    min-width: 60px !important;
+    white-space: nowrap !important;
+  }
+  .in-iframe .sb-sl { font-size: 9px !important; }
+  .in-iframe .main-scroll { margin-left: 0 !important; }
+}
 .in-iframe .topbar        { display: none !important; }
 .in-iframe .progress-bar  { display: none !important; }
 .in-iframe .step-indicator{ display: none !important; }
@@ -1459,37 +1490,37 @@ let _homeLoading = false;
 
 async function loadHomeData() {
   _homeLoading = true;
-  // Mostrar spinner mientras carga del Sheet
   _homeData = [];
   const m = document.getElementById('mainContent');
   if(m && S.view==='home') m.innerHTML = renderHome();
-  // Cargar desde Sheet primero
   try {
     const res = await fetch(WORKER_BASE + '/diagnosticos', {
       headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
     });
     const data = await res.json();
-    if(data.diagnosticos) {
+    if(data.diagnosticos && data.diagnosticos.length > 0) {
       const remote = data.diagnosticos.map(d => ({
         ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
       }));
+      // Reemplazar localStorage con datos del Sheet
       localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
       _cache = remote;
       _cacheTime = Date.now();
       _homeData = remote;
     } else {
-      _homeData = getSavedLocal();
+      // Sheet vacío — limpiar localStorage para no mostrar datos viejos
+      localStorage.removeItem('ca_diag');
+      _cache = [];
+      _homeData = [];
     }
   } catch(e) {
-    // Si falla el Sheet, usar local como fallback
+    // Solo si falla la conexión, usar local como fallback
     _homeData = getSavedLocal();
   }
   _homeLoading = false;
   if(S.view==='home') {
     const m2 = document.getElementById('mainContent');
     if(m2) m2.innerHTML = renderHome();
-    const si = document.getElementById('syncIndicator');
-    if(si) si.remove();
   }
 }
 
