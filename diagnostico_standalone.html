@@ -273,19 +273,31 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 /* Cuando está cargado dentro del CRM como sub-módulo */
 .in-iframe .ph            { display: none !important; }
 .in-iframe .home-header   { display: none !important; }
-/* sidebar visible en iframe para navegación por pasos */
+/* En iframe: sidebar lateral fijo al lado del contenido */
+.in-iframe .app { display: flex !important; flex-direction: row !important; min-height: 100vh; }
+.in-iframe .sidebar {
+  position: relative !important;
+  top: auto !important; left: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+  width: 200px !important;
+  flex-shrink: 0;
+  z-index: 1 !important;
+}
+.in-iframe .main-scroll { margin-left: 0 !important; flex: 1; min-width: 0; }
+.in-iframe .sb-hd { display: none !important; }
+
+/* Mobile en iframe: sidebar como barra horizontal arriba */
 @media (max-width: 767px) {
+  .in-iframe .app { flex-direction: column !important; }
   .in-iframe .sidebar {
-    display: flex !important;
-    position: relative !important;
     width: 100% !important;
+    min-height: auto !important;
     height: auto !important;
     flex-direction: row !important;
     overflow-x: auto !important;
-    padding: 8px 12px !important;
-    background: var(--az) !important;
+    padding: 6px 10px !important;
   }
-  .in-iframe .sb-hd { display: none !important; }
   .in-iframe .sb-foot { display: none !important; }
   .in-iframe .sb-nav {
     display: flex !important;
@@ -298,12 +310,10 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
   .in-iframe .sb-step {
     flex-direction: column !important;
     align-items: center !important;
-    padding: 6px 8px !important;
-    min-width: 60px !important;
-    white-space: nowrap !important;
+    padding: 5px 8px !important;
+    min-width: 54px !important;
   }
   .in-iframe .sb-sl { font-size: 9px !important; }
-  .in-iframe .main-scroll { margin-left: 0 !important; }
 }
 .in-iframe .topbar        { display: none !important; }
 .in-iframe .progress-bar  { display: none !important; }
@@ -665,32 +675,28 @@ async function syncWithSheets() {
   if(_syncInProgress) return;
   _syncInProgress = true;
   try {
-    const res = await fetch(`${WORKER_BASE}/diagnosticos`);
+    const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
+      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+    });
     const data = await res.json();
     if(!data.diagnosticos) return;
+    // Sheet es la fuente única — no mezclar con localStorage
     const remote = data.diagnosticos.map(d => ({
       ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
     }));
-    // Merge: remote tiene prioridad, completar con local si hay algo que no está en remote
-    const remoteNames = new Set(remote.map(d=>d.nombre));
-    const localOnly = getSavedLocal().filter(d=>!remoteNames.has(d.nombre));
-    const merged = [...remote, ...localOnly];
-    // Actualizar localStorage con datos de Sheets
-    localStorage.setItem('ca_diag', JSON.stringify(merged.slice(0,50)));
-    _cache = merged;
+    localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
+    _cache = remote;
     _cacheTime = Date.now();
-    // Si estamos en home, actualizar la vista silenciosamente
     if(S.view==='home') {
-      _homeData = merged;
-      document.getElementById('mainContent').innerHTML = renderHome();
-      // Quitar indicador de sincronización
+      _homeData = remote;
+      const m = document.getElementById('mainContent');
+      if(m) m.innerHTML = renderHome();
       const syncEl = document.getElementById('syncIndicator');
-      if(syncEl) { syncEl.textContent = '✓ Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
+      if(syncEl) { syncEl.textContent = '\u2713 Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
     }
   } catch(e) {
-    console.log('Sheets no disponible, usando datos locales');
     const syncEl = document.getElementById('syncIndicator');
-    if(syncEl) { syncEl.textContent = '⚠ Sin conexión'; syncEl.style.color='var(--sa-fg)'; setTimeout(()=>syncEl.remove(),3000); }
+    if(syncEl) { syncEl.textContent = '\u26A0 Sin conexión'; syncEl.style.color='var(--sa-fg)'; setTimeout(()=>syncEl.remove(),3000); }
   } finally {
     _syncInProgress = false;
   }
@@ -845,9 +851,6 @@ function render(){
   // En iframe: ocultar sidebar en home, mostrar al navegar por pasos
   const sb=document.getElementById('sidebar');
   if(sb && isInIframe){sb.style.display=isHome?'none':'flex';}
-  // Ajustar margen del main-scroll
-  const ms=document.getElementById('mainContent');
-  if(ms && isInIframe){ms.style.marginLeft=isHome?'0':'260px';}
 
   if(!isHome) renderNav();
   const m=document.getElementById('mainContent');
