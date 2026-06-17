@@ -801,16 +801,22 @@ function goPrev(){const i=VIEWS.indexOf(S.view);if(i>0)goTo(VIEWS[i-1]);}
 
 function render(){
   const isHome=S.view==='home';
-  // Show/hide exit button and score in topbar (mobile)
+  const isInIframe=document.body.classList.contains('in-iframe');
+  // Show/hide topbar elements
   const tbScore=document.getElementById('tbScore');
   const tbExit=document.getElementById('tbExitBtn');
-  const topbarEl=document.getElementById('topbar');
   const stepInd=document.querySelector('.step-indicator');
   const progBar=document.querySelector('.progress-bar');
   if(tbScore){tbScore.style.display=isHome?'none':'block';}
   if(tbExit){tbExit.style.display=isHome?'none':'block';}
   if(stepInd){stepInd.style.display=isHome?'none':'';}
   if(progBar){progBar.style.display=isHome?'none':'';}
+  // En iframe: ocultar sidebar en home, mostrar al navegar por pasos
+  const sb=document.getElementById('sidebar');
+  if(sb && isInIframe){sb.style.display=isHome?'none':'flex';}
+  // Ajustar margen del main-scroll
+  const ms=document.getElementById('mainContent');
+  if(ms && isInIframe){ms.style.marginLeft=isHome?'0':'260px';}
 
   if(!isHome) renderNav();
   const m=document.getElementById('mainContent');
@@ -1766,14 +1772,19 @@ setTimeout(() => {
   }
 })();
 
+// ── Escuchar mensajes del CRM ─────────────────────────────────────────────────
+window.addEventListener('message', function(event) {
+  const data = event.data;
+  if (!data || !data.type) return;
+  if (data.type === 'nuevo_diagnostico') { nuevoDesdeHome(); }
+  if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
+});
+
 if(checkAuth()){
   document.getElementById('loginScreen').style.display = 'none';
   initApp();
 } else {
-  // Mostrar pantalla de login
-  setTimeout(()=>{
-    document.getElementById('loginInput').focus();
-  }, 300);
+  setTimeout(()=>{ document.getElementById('loginInput').focus(); }, 300);
 }
 </script>
 
