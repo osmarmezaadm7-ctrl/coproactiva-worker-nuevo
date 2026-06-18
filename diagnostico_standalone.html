@@ -220,7 +220,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .modal-item-score{font-size:13px;font-weight:700;padding:3px 9px;border-radius:10px;}
 .modal-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px;}
 /* Pantalla de acceso */
-#loginScreen{display:flex;position:fixed;inset:0;background:var(--az);z-index:999;align-items:center;justify-content:center;flex-direction:column;padding:24px;}
+/* loginScreen eliminado */
 .login-box{background:white;border-radius:var(--r-xl);padding:32px 28px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
 .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px;justify-content:center;}
 .login-mark{width:40px;height:40px;background:var(--na);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;}
@@ -1632,13 +1632,13 @@ function limpiarFactores(){
 // ─── ACCESO ──────────────────────────────────────────────────────────────────
 const ACCESS_KEY = 'copro2025'; // Cambiar por su clave preferida
 
-function checkLogin(){
-  const input = document.getElementById('loginInput');
+function checkLogin(){ /* función desactivada — login eliminado */
+  const input = null; // document.getElementById('loginInput') eliminado
   const val = input.value.trim();
   if(val === ACCESS_KEY){
     // Guardar sesión por 8 horas
     sessionStorage.setItem('ca_auth', Date.now().toString());
-    document.getElementById('loginScreen').style.display = 'none';
+    /* loginScreen eliminado — nada que ocultar */
     initApp();
   } else {
     document.getElementById('loginError').textContent = 'Clave incorrecta. Intenta nuevamente.';
@@ -1691,15 +1691,11 @@ setTimeout(() => {
   render();
 }
 
-// Verificar si ya está autenticado al cargar
+// Verificar autenticación al cargar — login screen eliminado, solo token via URL
 if(checkAuth()){
-  document.getElementById('loginScreen').style.display = 'none';
   initApp();
 } else {
-  // Mostrar pantalla de login
-  setTimeout(()=>{
-    document.getElementById('loginInput').focus();
-  }, 300);
+  document.getElementById('mainContent').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px;text-align:center;gap:12px"><div style="font-size:32px">&#128274;</div><div style="font-size:16px;font-weight:700;color:var(--az)">Acceso no autorizado</div><div style="font-size:13px;color:var(--muted)">Abre esta herramienta desde el m&#243;dulo CRM de CoproActiva.</div></div>';
 }
 </script>
 
