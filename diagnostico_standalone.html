@@ -58,28 +58,31 @@ body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;backgroun
   .progress-bar{display:none;}
   .main-scroll{flex:1;padding:28px 32px;min-height:100vh;order:1;}
   #mainContent{max-width:660px;margin:0 auto;}
-  .sidebar{display:flex !important;order:2;}
+  .sidebar.visible{display:flex;order:2;}
 }
 
-/* Sidebar derecha — solo desktop */
-.sidebar{display:none;flex-direction:column;background:var(--az);width:200px;min-height:100vh;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;} /* display:none por defecto — JS lo controla */
+/* Sidebar derecha — clara, solo desktop. JS controla .visible; sin !important para que se pueda ocultar en home */
+.sidebar{display:none;flex-direction:column;background:var(--bg);border-left:1px solid var(--border);width:190px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow:hidden;}
 .sb-hd{display:none;}
-.sb-nav{padding:8px 8px;flex:1;}
-.sb-step{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background 0.12s;}
-.sb-step:hover{background:rgba(255,255,255,0.05);}
-.sb-step.active{background:rgba(217,133,59,0.16);}
-.sb-n{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:rgba(255,255,255,0.3);flex-shrink:0;transition:all 0.2s;}
-.sb-step.done .sb-n{background:var(--vd);border-color:var(--vd);color:white;font-size:8px;}
-.sb-step.active .sb-n{background:var(--na);border-color:var(--na);color:white;}
-.sb-sl{font-size:11.5px;color:rgba(255,255,255,0.4);transition:color 0.12s;}
-.sb-step.active .sb-sl{color:white;font-weight:700;}
-.sb-step.done .sb-sl{color:rgba(255,255,255,0.6);}
-.sb-foot{padding:12px 10px;border-top:1px solid rgba(255,255,255,0.07);}
-.sb-s-lbl{font-size:8px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
-.sb-s-val{font-size:22px;font-weight:800;color:white;line-height:1;letter-spacing:-0.02em;}
-.sb-s-sub{font-size:9.5px;color:rgba(255,255,255,0.35);margin-top:2px;}
-.sb-bar{height:2px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:6px;overflow:hidden;}
-.sb-bar-f{height:100%;border-radius:2px;background:var(--na);transition:width 0.4s;}
+.sb-nav{padding:16px 10px 8px;flex:1;overflow-y:auto;min-height:0;}
+.sb-nav-track{position:relative;padding-left:16px;}
+.sb-nav-line{position:absolute;left:5px;top:4px;bottom:4px;width:1.5px;background:var(--border);}
+.sb-nav-line-fill{position:absolute;left:5px;top:4px;width:1.5px;background:var(--na);transition:height 0.3s;}
+.sb-step{display:flex;align-items:center;gap:10px;padding:7px 0 7px 0;border-radius:7px;cursor:pointer;transition:background 0.12s;position:relative;}
+.sb-step:hover{background:rgba(217,133,59,0.06);}
+.sb-step.active{background:var(--na-lt);margin-left:-8px;padding-left:8px;}
+.sb-dot{position:absolute;left:-16px;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);flex-shrink:0;transition:all 0.2s;}
+.sb-step.active .sb-dot{left:-12px;width:8px;height:8px;background:var(--na);border-color:var(--na);}
+.sb-step.done .sb-dot{background:var(--vd);border-color:var(--vd);}
+.sb-sl{font-size:11.5px;color:var(--muted);transition:color 0.12s;}
+.sb-step.active .sb-sl{color:var(--text);font-weight:600;}
+.sb-step.done .sb-sl{color:var(--az-md);}
+.sb-foot{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+.sb-s-lbl{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;}
+.sb-s-val{font-size:22px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-0.02em;}
+.sb-s-sub{font-size:10px;color:var(--sa-fg);margin-top:2px;font-weight:600;}
+.sb-bar{height:3px;background:var(--surf);border-radius:99px;margin-top:7px;overflow:hidden;}
+.sb-bar-f{height:100%;border-radius:99px;background:var(--na);transition:width 0.4s;}
 
 /* Ocultar topbar/step-indicator originales — ya no se usan */
 .topbar{display:none !important;}
@@ -289,7 +292,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
       <div class="sb-s-val" id="sbVal">0%</div>
       <div class="sb-s-sub" id="sbSub">Sin datos aún</div>
       <div class="sb-bar"><div class="sb-bar-f" id="sbFill" style="width:0%"></div></div>
-      <button onclick="openExitModal()" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;transition:background 0.13s">← Salir del diagnóstico</button>
+      <button onclick="openExitModal()" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--az-md);padding:7px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;transition:background 0.13s">← Salir del diagnóstico</button>
     </div>
   </aside>
 
@@ -619,6 +622,17 @@ async function getSaved() {
   return local;
 }
 
+// ─── TRACKING DE CAMBIOS SIN GUARDAR ──────────────────────────────────────────
+let _lastSavedSnapshot = '';
+function formSnapshot(){
+  return JSON.stringify({
+    ctx:S.ctx, checks:S.checks, notes:S.notes,
+    factores:S.factores, conclusion:S.conclusion||'',
+    valorMin:S.valorMin, valorMax:S.valorMax, lineaOverride:S.lineaOverride,
+  });
+}
+function hayCambiosSinGuardar(){ return formSnapshot() !== _lastSavedSnapshot; }
+
 async function saveDiag() {
   const nombre = S.ctx.nombre?.trim() || 'Sin nombre';
   // ID estable basado en el nombre — siempre el mismo para el mismo condominio
@@ -658,6 +672,7 @@ async function saveDiag() {
     localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
 
     showToast('Guardado correctamente', '✅', 2500);
+    _lastSavedSnapshot = formSnapshot();
     // Forzar resync con Sheets en background
     setTimeout(syncWithSheets, 500);
   } catch(e) {
@@ -666,6 +681,7 @@ async function saveDiag() {
     local.unshift(record);
     localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
     showToast('Guardado localmente (sin conexión)', '⚠️', 3000);
+    _lastSavedSnapshot = formSnapshot();
   }
   return record;
 }
@@ -682,6 +698,7 @@ async function loadDiag(nombre) {
   S.valorMin=d.valorMin||'';
   S.valorMax=d.valorMax||'';
   S.lineaOverride=d.lineaOverride||null;
+  _lastSavedSnapshot = formSnapshot();
   closeModal(); render();
 }
 
@@ -730,14 +747,19 @@ function renderNav(){
     },50);
   }
 
-  // Sidebar derecha (desktop)
+  // Sidebar derecha (desktop) — línea de progreso vertical con dots
   const sbNav=document.getElementById('sbNav');
   if(sbNav){
-    sbNav.innerHTML=steps.map((s,i)=>`
-      <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
-        <div class="sb-n">${i<ai?'✓':i+1}</div>
-        <div class="sb-sl">${s.emoji?s.emoji+' ':''}${s.label}</div>
-      </div>`).join('');
+    const pctLine=steps.length>1?Math.round((ai/(steps.length-1))*100):0;
+    sbNav.innerHTML=`<div class="sb-nav-track">
+      <div class="sb-nav-line"></div>
+      <div class="sb-nav-line-fill" style="height:${pctLine}%"></div>
+      ${steps.map((s,i)=>`
+        <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
+          <div class="sb-dot"></div>
+          <div class="sb-sl">${s.emoji?s.emoji+' ':''}${s.label}</div>
+        </div>`).join('')}
+    </div>`;
   }
   const sbVal=document.getElementById('sbVal');
   const sbSub=document.getElementById('sbSub');
@@ -766,7 +788,7 @@ function render(){
   if(progBar)progBar.style.display=isHome?'none':'';
   // Sidebar — oculta en home
   const sb=document.getElementById('sidebar');
-  if(sb)sb.style.display=isHome?'none':'';
+  if(sb)sb.classList.toggle('visible',!isHome);
 
   if(!isHome)renderNav();
   const m=document.getElementById('mainContent');
@@ -1083,6 +1105,7 @@ function limpiarFormulario(){
   const nuevo=defaultState();
   S.ctx={...nuevo.ctx};S.checks=nuevo.checks;S.notes=nuevo.notes;
   S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
+  _lastSavedSnapshot = formSnapshot();
   S.view='contexto';render();
 }
 
@@ -1520,6 +1543,7 @@ function nuevoDesdeHome(){
   const def=defaultState();
   S.ctx=def.ctx;S.checks=def.checks;S.notes=def.notes;
   S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
+  _lastSavedSnapshot = formSnapshot();
   goTo('contexto');
 }
 
@@ -1555,6 +1579,10 @@ async function generarPDFDesdeHistorial(nombre){
 
 // ─── EXIT MODAL ───────────────────────────────────────────────────────────────
 function openExitModal(){
+  if(!hayCambiosSinGuardar()){
+    goTo('home');
+    return;
+  }
   const nombre=S.ctx.nombre?.trim();
   const sub=document.getElementById('exitModalSub');
   sub.textContent=nombre
