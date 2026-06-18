@@ -17,7 +17,9 @@
     #sidebarDynamic:empty { display: none; }
     /* Sidebar fijo — no se mueve con el scroll del contenido */
     .sidebar { position: fixed !important; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100; }
-    .main-content { margin-left: var(--co-sidebar-w, 240px); }
+    @media (min-width: 768px) {
+      .main-content { margin-left: var(--co-sidebar-w, 240px); }
+    }
   </style>
 </head>
 <body>
