@@ -1691,7 +1691,27 @@ setTimeout(() => {
   render();
 }
 
-// Verificar autenticación al cargar — login screen eliminado, solo token via URL
+// Procesar token URL e inicializar — debe ejecutarse ANTES de checkAuth()
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  if (urlToken && urlToken === ACCESS_KEY) {
+    sessionStorage.setItem('ca_auth', Date.now().toString());
+  }
+  if (window.self !== window.top) {
+    document.body.classList.add('in-iframe');
+  }
+})();
+
+// Escuchar mensajes del CRM (nuevo diagnóstico desde botón del header)
+window.addEventListener('message', function(event) {
+  const data = event.data;
+  if (!data || !data.type) return;
+  if (data.type === 'nuevo_diagnostico') { nuevoDesdeHome(); }
+  if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
+});
+
+// Verificar autenticación al cargar
 if(checkAuth()){
   initApp();
 } else {
