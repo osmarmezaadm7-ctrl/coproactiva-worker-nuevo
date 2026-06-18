@@ -563,7 +563,7 @@ function critData(score){
 }
 
 // ─── STORAGE — Google Sheets via Worker ───────────────────────────────────────
-const WORKER_BASE = 'https://coproactiva.osmarmeza-adm7.workers.dev';
+const WORKER_BASE = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
 const _DIAG_TOKEN = 'copro2025'; // token auth Worker
 
 // ─── ESTRATEGIA: carga instantánea desde localStorage, sincroniza Sheets en background
@@ -1275,6 +1275,66 @@ Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica
     }];
   }
   S.loadingFactores=false;render();
+}
+
+// ─── CONCLUSIÓN IA ───────────────────────────────────────────────────────────────
+async function generarConclusion(){
+  S.loadingConclusion=true;render();
+  const diag2=getDiagnostico();
+  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
+  const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
+  const areasLowCtx=diag2.areasLow.length>0
+    ?`Áreas con cumplimiento bajo 60%: ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
+    :'Todas las áreas con cumplimiento ≥ 60%.';
+  const obsCtx = AREAS.map(a=>{
+    const s=scoreArea(a);
+    if(!s) return null;
+    const fallidos = a.items.filter((it,i) => itemApplies(it) && !S.checks[a.id][i]).map(it => {
+      const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
+      return `${peso} NO CUENTA CON: "${it.t}"`;
+    });
+    const cumplidos = a.items.filter((it,i) => itemApplies(it) && S.checks[a.id][i]).map(it => `SÍ CUENTA CON: "${it.t}"`);
+    let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
+    if(fallidos.length){ ctx += `\n  INCUMPLIMIENTOS (${fallidos.length}):`; fallidos.forEach(f => { ctx += `\n    • ${f}`; }); }
+    else { ctx += `\n  Sin incumplimientos.`; }
+    if(cumplidos.length){ ctx += `\n  ÍTEMS EN REGLA (${cumplidos.length}):`; cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; }); }
+    return ctx;
+  }).filter(Boolean).join('\n\n');
+
+  const prompt=`Eres un experto en administración de condominios en Chile con conocimiento de la Ley 21.442.
+Elabora UNA conclusión diagnóstica en prosa con 4 párrafos (180-260 palabras):
+P1: Estado general y puntaje. P2: Brechas críticas detectadas. P3: Lo que funciona bien. P4: Recomendación de línea.
+Prohibido citar artículos. Solo "según la Ley 21.442" o "conforme a la normativa de copropiedad".
+No mencionar a CoproActiva. Dirigido al comité.
+
+Condominio: ${c.nombre||'Sin nombre'} · Tipo ${c.tipo} · ${c.unidades||'?'} unidades
+Puntaje: ${score}% (${diag2.nivel}) · Línea: ${LINEAS[lid]?.label||lid}
+${obsCtx}
+Ítems críticos: ${diag2.crits.length>0?diag2.crits.map(x=>`[${x.area}] ${x.text}`).join('; '):'Ninguno'}
+${intervencionCtx} ${areasLowCtx}
+
+RESPONDE SOLO con JSON válido: {"conclusion":"..."}
+Párrafos separados por \\n\\n.`;
+
+  const variation = S.conclusion ? `\n\nNueva generación #${Date.now()}. Redacta distinta sin repetir oraciones.` : '';
+
+  try{
+    const res=await fetch(`${WORKER_BASE}/factores`,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({prompt: prompt+variation})
+    });
+    if(!res.ok) throw new Error(`Error del servidor: ${res.status}`);
+    const data=await res.json();
+    if(!data.text) throw new Error('Respuesta vacía');
+    const cleaned = data.text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(cleaned);
+    if(!parsed.conclusion) throw new Error('Formato inválido');
+    S.conclusion = parsed.conclusion;
+  }catch(e){
+    S.conclusion=`Error al generar: ${e.message}. Puedes redactarla manualmente.`;
+  }
+  S.loadingConclusion=false;render();
 }
 
 // ─── PDF ────────────────────────────────────────────────────────────────────── 
