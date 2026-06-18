@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CoproActiva — Diagnóstico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
+  /* Aliases al sistema --co- de CoproActiva */
   --na: #D9853B; --na-lt: #FDF3E7; --na-dk: #C2722C;
   --az: #1A1714; --az-md: #6B6359; --az-lt: #F5EFE4;
   --vd: #5D9C7E; --vd-lt: #E8F2EC; --vd-dk: #3F7158; --vd-md: #BFDDC8;
@@ -15,72 +19,71 @@
   --sa-fg:#8B5028; --sa-bg:#FDF3E7; --sa-ac:#D9853B;
   --sr-fg:#7A1F1F; --sr-bg:#FBE9E9; --sr-ac:#C44545;
   --r:8px; --r-lg:12px; --r-xl:16px;
-  --shadow: 0 1px 3px rgba(31,31,31,0.05), 0 1px 2px rgba(31,31,31,0.03);
-  --shadow-md: 0 4px 12px rgba(31,31,31,0.07), 0 2px 4px rgba(31,31,31,0.04);
+  --shadow: 0 1px 3px rgba(31,31,31,0.05),0 1px 2px rgba(31,31,31,0.03);
+  --shadow-md: 0 4px 12px rgba(31,31,31,0.07),0 2px 4px rgba(31,31,31,0.04);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{-webkit-text-size-adjust:100%;}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;}
+body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 
-/* ── MOBILE LAYOUT ─────────────────────────────────────────────────── */
-.app{display:flex;flex-direction:column;min-height:100vh;}
+/* ── LAYOUT BASE — siempre dentro de iframe ───────────────────────── */
+.app{display:flex;flex-direction:column;min-height:100vh;background:var(--bg);}
 
-/* Top bar mobile */
-.topbar{background:var(--az);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.tb-logo{display:flex;align-items:center;gap:9px;}
-.tb-mark{width:28px;height:28px;background:var(--na);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;}
-.tb-brand{font-size:13px;color:white;} .tb-brand b{color:var(--na);}
-.tb-score{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.1);color:white;}
+/* Stepper horizontal de pasos — visible siempre excepto en home */
+.steps-strip{background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+.steps-strip::-webkit-scrollbar{display:none;}
+.steps-strip.hidden{display:none;}
+.steps-inner{display:flex;align-items:stretch;min-width:max-content;}
+.step-pill{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 11px 7px;cursor:pointer;min-width:60px;border-bottom:2.5px solid transparent;transition:border-color 0.15s;}
+.step-pill.done{border-bottom-color:var(--vd);}
+.step-pill.active{border-bottom-color:var(--na);}
+.step-pill-n{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);background:#fff;flex-shrink:0;transition:all 0.15s;}
+.step-pill.done .step-pill-n{background:var(--vd);border-color:var(--vd);color:#fff;font-size:8px;}
+.step-pill.active .step-pill-n{background:var(--na);border-color:var(--na);color:#fff;}
+.step-pill-l{font-size:9.5px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.step-pill.active .step-pill-l{color:var(--na);font-weight:700;}
+.step-pill.done .step-pill-l{color:var(--vd);}
 
-/* Progress bar */
-.progress-bar{height:3px;background:rgba(255,255,255,0.15);}
+/* Barra de progreso */
+.progress-bar{height:2px;background:var(--surf);flex-shrink:0;}
 .progress-fill{height:100%;background:var(--na);transition:width 0.4s;}
 
-/* Step indicator */
-.step-indicator{padding:12px 16px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.step-info{display:flex;align-items:center;gap:8px;}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--na);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.step-name{font-size:13px;font-weight:700;color:var(--az);}
-.step-of{font-size:12px;color:var(--muted);}
+/* Área scrollable del contenido */
+.main-scroll{flex:1;overflow-y:auto;padding:20px 20px 28px;}
 
-/* Main scroll area */
-.main-scroll{flex:1;overflow-y:auto;padding:16px;}
-
-/* ── DESKTOP OVERRIDE ─────────────────────────────────────────────── */
+/* Desktop — sidebar derecha con pasos */
 @media(min-width:768px){
-  .app{display:block;}
-  .topbar{display:none;}
+  .app{flex-direction:row;align-items:flex-start;}
+  .steps-strip{display:none !important;}
   .progress-bar{display:none;}
-  .step-indicator{display:none;}
-  .sidebar{display:flex !important;width:240px;position:fixed;top:0;left:0;height:100vh;z-index:50;}
-  .main-scroll{margin-left:240px;padding:28px 40px;min-height:100vh;}
-  #mainContent{max-width:680px;margin:0 auto;}
+  .main-scroll{flex:1;padding:28px 32px;min-height:100vh;order:1;}
+  #mainContent{max-width:660px;margin:0 auto;}
+  .sidebar{display:flex !important;order:2;}
 }
 
-/* ── SIDEBAR (desktop only) ───────────────────────────────────────── */
-.sidebar{display:none;flex-direction:column;background:var(--az);height:100vh;overflow-y:auto;}
-.sb-hd{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.07);}
-.sb-logo{display:flex;align-items:center;gap:9px;}
-.sb-mark{width:30px;height:30px;background:var(--na);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;}
-.sb-brand{font-size:13px;color:white;} .sb-brand b{color:var(--na);}
-.sb-tag{font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px;}
-.sb-nav{padding:10px 10px;flex:1;}
-.sb-lbl{font-size:9px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin:12px 0 5px;}
-.sb-step{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;transition:background 0.12s;}
+/* Sidebar derecha — solo desktop */
+.sidebar{display:none;flex-direction:column;background:var(--az);width:200px;min-height:100vh;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-hd{display:none;}
+.sb-nav{padding:8px 8px;flex:1;}
+.sb-step{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background 0.12s;}
 .sb-step:hover{background:rgba(255,255,255,0.05);}
-.sb-step.active{background:rgba(209,133,73,0.15);}
+.sb-step.active{background:rgba(217,133,59,0.16);}
 .sb-n{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:rgba(255,255,255,0.3);flex-shrink:0;transition:all 0.2s;}
 .sb-step.done .sb-n{background:var(--vd);border-color:var(--vd);color:white;font-size:8px;}
 .sb-step.active .sb-n{background:var(--na);border-color:var(--na);color:white;}
-.sb-sl{font-size:12px;color:rgba(255,255,255,0.4);transition:color 0.12s;}
-.sb-step.active .sb-sl{color:white;font-weight:600;}
+.sb-sl{font-size:11.5px;color:rgba(255,255,255,0.4);transition:color 0.12s;}
+.sb-step.active .sb-sl{color:white;font-weight:700;}
 .sb-step.done .sb-sl{color:rgba(255,255,255,0.6);}
-.sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07);}
-.sb-s-lbl{font-size:9px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
-.sb-s-val{font-size:24px;font-weight:700;color:white;line-height:1;}
-.sb-s-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;}
-.sb-bar{height:2px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:7px;overflow:hidden;}
+.sb-foot{padding:12px 10px;border-top:1px solid rgba(255,255,255,0.07);}
+.sb-s-lbl{font-size:8px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.sb-s-val{font-size:22px;font-weight:800;color:white;line-height:1;letter-spacing:-0.02em;}
+.sb-s-sub{font-size:9.5px;color:rgba(255,255,255,0.35);margin-top:2px;}
+.sb-bar{height:2px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:6px;overflow:hidden;}
 .sb-bar-f{height:100%;border-radius:2px;background:var(--na);transition:width 0.4s;}
+
+/* Ocultar topbar/step-indicator originales — ya no se usan */
+.topbar{display:none !important;}
+.step-indicator{display:none !important;}
 
 /* ── COMPONENTS ───────────────────────────────────────────────────── */
 .ph{margin-bottom:18px;}
@@ -99,7 +102,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--tex
 .f.full3{grid-column:1/-1;}
 @media(min-width:480px){.f.full3{grid-column:1/-1;}}
 label.fl{font-size:11.5px;color:var(--az-md);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
-input,select,textarea{font-family:Arial,sans-serif;font-size:14px;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--bg);width:100%;transition:border-color 0.13s;-webkit-appearance:none;appearance:none;}
+input,select,textarea{font-family:'Manrope',-apple-system,sans-serif;font-size:14px;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--bg);width:100%;transition:border-color 0.13s;-webkit-appearance:none;appearance:none;}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--na);background:white;}
 textarea{resize:vertical;min-height:56px;}
 .hint{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -147,7 +150,7 @@ textarea{resize:vertical;min-height:56px;}
 /* ── BUTTONS ───────────────────────────────────────────────────────── */
 .nav-row{display:flex;gap:9px;justify-content:space-between;margin-top:6px;flex-wrap:wrap;}
 .nav-row-end{justify-content:flex-end;}
-button{font-family:Arial,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;border-radius:var(--r);padding:10px 18px;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all 0.13s;-webkit-tap-highlight-color:transparent;}
+button{font-family:'Manrope',-apple-system,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;border-radius:var(--r);padding:10px 18px;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all 0.13s;-webkit-tap-highlight-color:transparent;}
 button:active{opacity:0.8;}
 button.pri{background:var(--na);color:white;border-color:var(--na);}
 button.vd{background:var(--vd);color:white;border-color:var(--vd);}
@@ -270,126 +273,21 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .empty-icon{font-size:36px;margin-bottom:10px;}
 .empty-ttl{font-size:15px;font-weight:700;color:var(--az-md);margin-bottom:6px;}
 .empty-desc{font-size:13px;line-height:1.6;}
-/* Cuando está cargado dentro del CRM como sub-módulo */
-.in-iframe .ph            { display: none !important; }
-.in-iframe .home-header   { display: none !important; }
-/* En iframe: layout con sidebar a la DERECHA */
-.in-iframe .app {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start !important;
-  min-height: 100vh;
-}
-.in-iframe .main-scroll {
-  flex: 1 !important;
-  min-width: 0 !important;
-  margin-left: 0 !important;
-  order: 1;
-}
-.in-iframe .sidebar {
-  order: 2;
-  position: sticky !important;
-  top: 0 !important;
-  left: auto !important;
-  width: 180px !important;
-  height: 100vh !important;
-  min-height: 0 !important;
-  flex-shrink: 0 !important;
-  z-index: 1 !important;
-  overflow-y: auto !important;
-}
-.in-iframe .sb-hd { display: none !important; }
-
-/* Mobile en iframe: sidebar como barra horizontal arriba */
-@media (max-width: 767px) {
-  .in-iframe .app { flex-direction: column !important; }
-  .in-iframe .sidebar {
-    width: 100% !important;
-    min-height: auto !important;
-    height: auto !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    padding: 6px 10px !important;
-  }
-  .in-iframe .sb-foot { display: none !important; }
-  .in-iframe .sb-nav {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 4px !important;
-    padding: 0 !important;
-    flex: 1 !important;
-    overflow-x: auto !important;
-  }
-  .in-iframe .sb-step {
-    flex-direction: column !important;
-    align-items: center !important;
-    padding: 5px 8px !important;
-    min-width: 54px !important;
-  }
-  .in-iframe .sb-sl { font-size: 9px !important; }
-}
-.in-iframe .topbar        { display: none !important; }
-.in-iframe .progress-bar  { display: none !important; }
-.in-iframe .step-indicator{ display: none !important; }
-/* .in-iframe main-scroll usa el sidebar del standalone */
-.in-iframe #mainContent   { max-width: 100% !important; }
 </style>
 </head>
 <body>
-<!-- PANTALLA DE ACCESO -->
-<div id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="login-mark">C</div>
-      <div class="login-brand"><b>co</b>proactiva</div>
-    </div>
-    <div class="login-title">Herramienta de Diagnóstico</div>
-    <div class="login-sub">Ingresa la clave de acceso para continuar</div>
-    <div class="f">
-      <label class="fl">Clave de acceso</label>
-      <input type="password" id="loginInput" placeholder="••••••••"
-        onkeydown="if(event.key==='Enter') checkLogin()"
-        style="font-size:16px;padding:12px 14px;text-align:center;letter-spacing:4px">
-    </div>
-    <div class="login-error" id="loginError"></div>
-    <button class="pri" onclick="checkLogin()" style="width:100%;margin-top:14px;padding:12px;font-size:14px">
-      Ingresar
-    </button>
-  </div>
-</div>
+<!-- Login eliminado: acceso solo via token desde iframe -->
 
 <div class="app">
-  <!-- TOPBAR mobile -->
-  <div class="topbar" id="topbar">
-    <div class="tb-logo">
-      <div class="tb-mark">C</div>
-      <div class="tb-brand"><b>co</b>proactiva</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="tb-score" id="tbScore" style="display:none">0%</div>
-      <button id="tbExitBtn" onclick="openExitModal()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif">Salir</button>
-    </div>
+  <!-- Stepper horizontal — visible en móvil, oculto en desktop (usa sidebar) -->
+  <div class="steps-strip hidden" id="stepsStrip">
+    <div class="steps-inner" id="stepsInner"></div>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
-  <div class="step-indicator">
-    <div class="step-info">
-      <div class="step-num" id="stepNum">1</div>
-      <div class="step-name" id="stepName">Datos</div>
-    </div>
-    <div class="step-of" id="stepOf">Paso 1 de 9</div>
-  </div>
 
   <!-- SIDEBAR desktop -->
   <aside class="sidebar" id="sidebar">
-    <div class="sb-hd">
-      <div class="sb-logo">
-        <div class="sb-mark">C</div>
-        <div>
-          <div class="sb-brand"><b>co</b>proactiva</div>
-          <div class="sb-tag">Comunidades que funcionan.</div>
-        </div>
-      </div>
-    </div>
+    <!-- sb-hd eliminado: branding lo provee la app contenedora -->
     <div class="sb-nav" id="sbNav"></div>
     <div class="sb-foot">
       <div class="sb-s-lbl">Puntaje actual</div>
@@ -671,6 +569,7 @@ function critData(score){
 
 // ─── STORAGE — Google Sheets via Worker ───────────────────────────────────────
 const WORKER_BASE = 'https://coproactiva.osmarmeza-adm7.workers.dev';
+const _DIAG_TOKEN = 'copro2025'; // token auth Worker
 
 // ─── ESTRATEGIA: carga instantánea desde localStorage, sincroniza Sheets en background
 let _cache = null;
@@ -693,22 +592,29 @@ async function syncWithSheets() {
     });
     const data = await res.json();
     if(!data.diagnosticos) return;
-    // Sheet es la fuente única de verdad
     const remote = data.diagnosticos.map(d => ({
       ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
     }));
-    localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
-    _cache = remote;
+    // Merge: remote tiene prioridad, completar con local si hay algo que no está en remote
+    const remoteNames = new Set(remote.map(d=>d.nombre));
+    const localOnly = getSavedLocal().filter(d=>!remoteNames.has(d.nombre));
+    const merged = [...remote, ...localOnly];
+    // Actualizar localStorage con datos de Sheets
+    localStorage.setItem('ca_diag', JSON.stringify(merged.slice(0,50)));
+    _cache = merged;
     _cacheTime = Date.now();
+    // Si estamos en home, actualizar la vista silenciosamente
     if(S.view==='home') {
-      _homeData = remote;
+      _homeData = merged;
       document.getElementById('mainContent').innerHTML = renderHome();
+      // Quitar indicador de sincronización
       const syncEl = document.getElementById('syncIndicator');
-      if(syncEl) { syncEl.textContent = '\u2713 Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
+      if(syncEl) { syncEl.textContent = '✓ Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
     }
   } catch(e) {
+    console.log('Sheets no disponible, usando datos locales');
     const syncEl = document.getElementById('syncIndicator');
-    if(syncEl) { syncEl.textContent = '\u26A0 Sin conexi\u00F3n'; syncEl.style.color='var(--sa-fg)'; setTimeout(()=>syncEl.remove(),3000); }
+    if(syncEl) { syncEl.textContent = '⚠ Sin conexión'; syncEl.style.color='var(--sa-fg)'; setTimeout(()=>syncEl.remove(),3000); }
   } finally {
     _syncInProgress = false;
   }
@@ -748,7 +654,7 @@ async function saveDiag() {
   try {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + _DIAG_TOKEN},
       body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, payload:record })
     });
     const data = await res.json();
@@ -795,7 +701,7 @@ async function deleteSaved(nombre) {
     if(d && d.id) {
       await fetch(`${WORKER_BASE}/diagnosticos`, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json', 'Authorization': 'Bearer ' + _DIAG_TOKEN},
         body: JSON.stringify({ action:'eliminar', id:d.id })
       });
     }
@@ -810,37 +716,48 @@ async function deleteSaved(nombre) {
   renderModal();
 }
 
-// ─── SIDEBAR + TOPBAR ─────────────────────────────────────────────────────────
+// ─── STEPPER + SIDEBAR ───────────────────────────────────────────────────────
 function renderNav(){
-  const steps=[{id:'contexto',label:'Datos de la comunidad'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión y PDF'}];
+  const steps=[{id:'contexto',label:'Datos',emoji:'📋'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión',emoji:'📊'}];
   const ai=steps.findIndex(s=>s.id===S.view);
   const score=globalScore();const crit=critData(score);
 
-  // Sidebar
-  document.getElementById('sbNav').innerHTML=steps.map((s,i)=>`
-    <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
-      <div class="sb-n">${i<ai?'✓':i+1}</div>
-      <div class="sb-sl">${s.emoji?s.emoji+' ':''  }${s.label}</div>
-    </div>`).join('');
-  document.getElementById('sbVal').textContent=score+'%';
-  document.getElementById('sbVal').style.color=crit.ac;
-  document.getElementById('sbSub').textContent=crit.lbl;
-  document.getElementById('sbFill').style.width=score+'%';
-  document.getElementById('sbFill').style.background=crit.ac;
+  // Stepper horizontal (móvil)
+  const strip=document.getElementById('stepsStrip');
+  const inner=document.getElementById('stepsInner');
+  if(strip && inner){
+    inner.innerHTML=steps.map((s,i)=>`
+      <div class="step-pill ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
+        <div class="step-pill-n">${i<ai?'✓':i+1}</div>
+        <div class="step-pill-l">${s.emoji} ${s.label}</div>
+      </div>`).join('');
+    // Scroll al paso activo
+    setTimeout(()=>{
+      const active=inner.querySelector('.step-pill.active');
+      if(active)active.scrollIntoView({inline:'center',behavior:'smooth',block:'nearest'});
+    },50);
+  }
 
-  // Topbar
-  document.getElementById('tbScore').textContent=score+'%';
-  document.getElementById('tbScore').style.background=score>0?crit.ac+'33':'rgba(255,255,255,0.1)';
+  // Sidebar derecha (desktop)
+  const sbNav=document.getElementById('sbNav');
+  if(sbNav){
+    sbNav.innerHTML=steps.map((s,i)=>`
+      <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
+        <div class="sb-n">${i<ai?'✓':i+1}</div>
+        <div class="sb-sl">${s.emoji?s.emoji+' ':''}${s.label}</div>
+      </div>`).join('');
+  }
+  const sbVal=document.getElementById('sbVal');
+  const sbSub=document.getElementById('sbSub');
+  const sbFill=document.getElementById('sbFill');
+  if(sbVal){sbVal.textContent=score+'%';sbVal.style.color=crit.ac;}
+  if(sbSub)sbSub.textContent=crit.lbl;
+  if(sbFill){sbFill.style.width=score+'%';sbFill.style.background=crit.ac;}
 
-  // Progress
-  const pct=Math.round((ai/( steps.length-1))*100);
-  document.getElementById('progFill').style.width=pct+'%';
-
-  // Step indicator
-  const current=steps[ai];
-  document.getElementById('stepNum').textContent=ai+1;
-  document.getElementById('stepName').textContent=current?current.label:'';
-  document.getElementById('stepOf').textContent=`Paso ${ai+1} de ${steps.length}`;
+  // Barra de progreso
+  const pct=Math.round((ai/(steps.length-1))*100);
+  const pf=document.getElementById('progFill');
+  if(pf)pf.style.width=pct+'%';
 }
 
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
@@ -850,24 +767,19 @@ function goPrev(){const i=VIEWS.indexOf(S.view);if(i>0)goTo(VIEWS[i-1]);}
 
 function render(){
   const isHome=S.view==='home';
-  const isInIframe=document.body.classList.contains('in-iframe');
-  // Show/hide topbar elements
-  const tbScore=document.getElementById('tbScore');
-  const tbExit=document.getElementById('tbExitBtn');
-  const stepInd=document.querySelector('.step-indicator');
+  // Stepper y progress — ocultos en home
+  const strip=document.getElementById('stepsStrip');
   const progBar=document.querySelector('.progress-bar');
-  if(tbScore){tbScore.style.display=isHome?'none':'block';}
-  if(tbExit){tbExit.style.display=isHome?'none':'block';}
-  if(stepInd){stepInd.style.display=isHome?'none':'';}
-  if(progBar){progBar.style.display=isHome?'none':'';}
-  // En iframe: ocultar sidebar en home, mostrar al navegar por pasos
+  if(strip)strip.classList.toggle('hidden',isHome);
+  if(progBar)progBar.style.display=isHome?'none':'';
+  // Sidebar — oculta en home
   const sb=document.getElementById('sidebar');
-  if(sb && isInIframe){sb.style.display=isHome?'none':'flex';}
+  if(sb)sb.style.display=isHome?'none':'';
 
-  if(!isHome) renderNav();
+  if(!isHome)renderNav();
   const m=document.getElementById('mainContent');
-  if(S.view==='home') {
-    if(_homeData !== null) m.innerHTML=renderHome();
+  if(S.view==='home'){
+    if(_homeData!==null)m.innerHTML=renderHome();
     else loadHomeData();
   }
   else if(S.view==='contexto')m.innerHTML=renderCtx();
@@ -1376,67 +1288,6 @@ Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica
   S.loadingFactores=false;render();
 }
 
-
-// ─── CONCLUSIÓN IA ───────────────────────────────────────────────────────────────
-async function generarConclusion(){
-  S.loadingConclusion=true;render();
-  const diag2=getDiagnostico();
-  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
-  const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagn\u00F3stico nivel "${diag2.nivel}" — requiere intervenci\u00F3n prioritaria.`:'';
-  const areasLowCtx=diag2.areasLow.length>0
-    ?`\u00C1reas con cumplimiento bajo 60%: ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
-    :'Todas las \u00E1reas con cumplimiento \u2265 60%.';
-  const obsCtx = AREAS.map(a=>{
-    const s=scoreArea(a);
-    if(!s) return null;
-    const fallidos = a.items.filter((it,i) => itemApplies(it) && !S.checks[a.id][i]).map(it => {
-      const peso = {c:'[CR\u00CDTICO]', i:'[IMPORTANTE]', b:'[B\u00C1SICO]'}[it.w];
-      return `${peso} NO CUENTA CON: "${it.t}"`;
-    });
-    const cumplidos = a.items.filter((it,i) => itemApplies(it) && S.checks[a.id][i]).map(it => `S\u00CD CUENTA CON: "${it.t}"`);
-    let ctx = `\u00C1REA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
-    if(fallidos.length){ ctx += `\n  INCUMPLIMIENTOS (${fallidos.length}):`; fallidos.forEach(f => { ctx += `\n    • ${f}`; }); }
-    else { ctx += `\n  Sin incumplimientos.`; }
-    if(cumplidos.length){ ctx += `\n  \u00CDTEMS EN REGLA (${cumplidos.length}):`; cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; }); }
-    return ctx;
-  }).filter(Boolean).join('\n\n');
-
-  const prompt=`Eres un experto en administraci\u00F3n de condominios en Chile con conocimiento de la Ley 21.442.
-Elabora UNA conclusi\u00F3n diagn\u00F3stica en prosa con 4 p\u00E1rrafos (180-260 palabras):
-P1: Estado general y puntaje. P2: Brechas cr\u00EDticas detectadas. P3: Lo que funciona bien. P4: Recomendaci\u00F3n de l\u00EDnea.
-Prohibido citar art\u00EDculos. Solo "seg\u00FAn la Ley 21.442" o "conforme a la normativa de copropiedad".
-No mencionar a CoproActiva. Dirigido al comit\u00E9.
-
-Condominio: ${c.nombre||'Sin nombre'} · Tipo ${c.tipo} · ${c.unidades||'?'} unidades
-Puntaje: ${score}% (${diag2.nivel}) · L\u00EDnea: ${LINEAS[lid]?.label||lid}
-${obsCtx}
-It\u00EAms cr\u00EDticos: ${diag2.crits.length>0?diag2.crits.map(x=>`[${x.area}] ${x.text}`).join('; '):'Ninguno'}
-${intervencionCtx} ${areasLowCtx}
-
-RESPONDE SOLO con JSON v\u00E1lido: {"conclusion":"..."}
-P\u00E1rrafos separados por \\n\\n.`;
-
-  const variation = S.conclusion ? `\n\nNueva generaci\u00F3n #${Date.now()}. Redacta distinta sin repetir oraciones.` : '';
-
-  try{
-    const res=await fetch(`${WORKER_BASE}/factores`,{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
-      body:JSON.stringify({prompt: prompt+variation})
-    });
-    if(!res.ok) throw new Error(`Error del servidor: ${res.status}`);
-    const data=await res.json();
-    if(!data.text) throw new Error('Respuesta vac\u00EDa');
-    const cleaned = data.text.replace(/\`\`\`json|\`\`\`/g,'').trim();
-    const parsed = JSON.parse(cleaned);
-    if(!parsed.conclusion) throw new Error('Formato inv\u00E1lido');
-    S.conclusion = parsed.conclusion;
-  }catch(e){
-    S.conclusion=`Error al generar: ${e.message}. Puedes redactarla manualmente.`;
-  }
-  S.loadingConclusion=false;render();
-}
-
 // ─── PDF ────────────────────────────────────────────────────────────────────── 
 function generarPDF(){
   const score=globalScore();const lid=lineaActual();const lm=LINEAS[lid];
@@ -1566,11 +1417,13 @@ let _homeLoading = false;
 
 async function loadHomeData() {
   _homeLoading = true;
+  // 1. Cargar local inmediatamente — sin espera
   _homeData = getSavedLocal();
   _homeLoading = false;
   if(S.view==='home') {
     document.getElementById('mainContent').innerHTML = renderHome();
   }
+  // 2. Sincronizar con Sheets en background
   syncWithSheets();
 }
 
@@ -1585,9 +1438,7 @@ function renderHome(){
         <div class="home-tag">Comunidades que funcionan.</div>
       </div>
     </div>
-  </div>
-  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-    <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagn\u00F3stico</button>
+    <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="font-size:15px;font-weight:700;color:var(--az)">Diagnósticos guardados</div>
@@ -1800,14 +1651,10 @@ function checkLogin(){
 }
 
 function checkAuth(){
-  // Verificar token en URL (para uso dentro de iframe)
-  const params = new URLSearchParams(window.location.search);
-  if(params.get('token') === ACCESS_KEY) return true;
-  // Verificar sesión guardada
   const auth = sessionStorage.getItem('ca_auth');
   if(auth){
     const elapsed = Date.now() - parseInt(auth);
-    if(elapsed < 8 * 60 * 60 * 1000) return true;
+    if(elapsed < 8 * 60 * 60 * 1000) return true; // 8 horas
   }
   return false;
 }
@@ -1815,22 +1662,23 @@ function checkAuth(){
 function initApp(){
   // Precalentar Apps Script en background para reducir demora en primera carga real
 setTimeout(() => {
-  fetch(`${WORKER_BASE}/diagnosticos`)
+  fetch(`${WORKER_BASE}/diagnosticos`, {
+    headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+  })
     .then(r => r.json())
     .then(data => {
       if(data.diagnosticos) {
         const remote = data.diagnosticos.map(d => ({
           ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
         }));
-        // Solo memoria — Sheet es fuente única, no escribir localStorage
+        localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
         _cache = remote;
         _cacheTime = Date.now();
         if(S.view==='home') {
           _homeData = remote;
-          const _m = document.getElementById('mainContent');
-          if(_m) _m.innerHTML = renderHome();
+          document.getElementById('mainContent').innerHTML = renderHome();
           const si = document.getElementById('syncIndicator');
-          if(si){ si.textContent='\u2713 Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
+          if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
         }
       }
     })
@@ -1843,32 +1691,15 @@ setTimeout(() => {
   render();
 }
 
-// Procesar token en URL — debe ejecutarse ANTES de checkAuth()
-(function() {
-  const params = new URLSearchParams(window.location.search);
-  const urlToken = params.get('token');
-  if (urlToken && urlToken === ACCESS_KEY) {
-    sessionStorage.setItem('ca_auth', Date.now().toString());
-  }
-  // Marcar como in-iframe
-  if (window.self !== window.top) {
-    document.body.classList.add('in-iframe');
-  }
-})();
-
-// ── Escuchar mensajes del CRM ─────────────────────────────────────────────────
-window.addEventListener('message', function(event) {
-  const data = event.data;
-  if (!data || !data.type) return;
-  if (data.type === 'nuevo_diagnostico') { nuevoDesdeHome(); }
-  if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
-});
-
+// Verificar si ya está autenticado al cargar
 if(checkAuth()){
   document.getElementById('loginScreen').style.display = 'none';
   initApp();
 } else {
-  setTimeout(()=>{ document.getElementById('loginInput').focus(); }, 300);
+  // Mostrar pantalla de login
+  setTimeout(()=>{
+    document.getElementById('loginInput').focus();
+  }, 300);
 }
 </script>
 
