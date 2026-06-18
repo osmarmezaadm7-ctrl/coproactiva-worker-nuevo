@@ -444,6 +444,7 @@ function defaultState(){return{
   checks:Object.fromEntries(AREAS.map(a=>[a.id,new Array(a.items.length).fill(false)])),
   notes:Object.fromEntries(AREAS.map(a=>[a.id,''])),
   factores:[],valorMin:'',valorMax:'',lineaOverride:null,loadingFactores:false,
+  conclusion:'',loadingConclusion:false,
 };}
 let S={...defaultState(),view:'home'};
 
@@ -634,6 +635,7 @@ async function saveDiag() {
     checks: JSON.parse(JSON.stringify(S.checks)),
     notes: {...S.notes},
     factores: [...S.factores],
+    conclusion: S.conclusion||'',
     valorMin: S.valorMin, valorMax: S.valorMax,
     lineaOverride: S.lineaOverride,
   };
@@ -676,6 +678,7 @@ async function loadDiag(nombre) {
   S.checks=JSON.parse(JSON.stringify(d.checks));
   S.notes={...d.notes};
   S.factores=d.factores||[];
+  S.conclusion=d.conclusion||'';
   S.valorMin=d.valorMin||'';
   S.valorMax=d.valorMax||'';
   S.lineaOverride=d.lineaOverride||null;
@@ -1001,27 +1004,25 @@ function renderRevision(){
     </div>`).join('')}</div>
   </div>`:''}
 
-  <!-- Factores IA -->
+  <!-- Conclusión IA -->
   <div class="card">
-    <div class="card-ttl"><div class="cdot"></div>Factores destacados — generados por IA</div>
-    ${S.loadingFactores?`<div class="load-row"><div class="spin"></div>Analizando el diagnóstico...</div>`:''}
-    ${!S.loadingFactores&&S.factores.length?S.factores.map((f,i)=>`
-      <div class="fac-card" style="position:relative">
-        <button onclick="eliminarFactor(${i})" title="Eliminar factor" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:white;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-weight:700;line-height:1">×</button>
-        <div class="fac-ttl" style="padding-right:24px">${f.titulo}</div>
-        <div class="fac-body">${f.cuerpo}</div>
+    <div class="card-ttl"><div class="cdot"></div>Conclusión del diagnóstico — generada por IA</div>
+    ${S.loadingConclusion?`<div class="load-row"><div class="spin"></div>Redactando la conclusión...</div>`:''}
+    ${!S.loadingConclusion&&S.conclusion?`
+      <div class="fac-card">
+        <div class="fac-body" style="white-space:pre-line">${S.conclusion}</div>
         <div class="fac-edit">
-          <input type="text" value="${f.titulo}" oninput="S.factores[${i}].titulo=this.value">
-          <textarea oninput="S.factores[${i}].cuerpo=this.value">${f.cuerpo}</textarea>
+          <textarea oninput="S.conclusion=this.value" style="min-height:140px">${S.conclusion}</textarea>
         </div>
-      </div>`).join(''):''}
-    ${!S.loadingFactores?`<div style="display:flex;gap:8px;margin-top:${S.factores.length?'8px':'0'};flex-wrap:wrap">
-      <button class="btn-sm ${!S.factores.length?'pri':''}" onclick="generarFactores()">
-        ${S.factores.length?'↺ Regenerar':'✨ Generar factores con IA'}
+      </div>`:''}
+    ${!S.loadingConclusion?`<div style="display:flex;gap:8px;margin-top:${S.conclusion?'8px':'0'};flex-wrap:wrap">
+      <button class="btn-sm ${!S.conclusion?'pri':''}" onclick="generarConclusion()">
+        ${S.conclusion?'↺ Regenerar':'✨ Generar conclusión con IA'}
       </button>
-      ${S.factores.length?`<button class="btn-sm" onclick="limpiarFactores()" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)">🗑 Limpiar todos</button>`:''}
+      ${S.conclusion?`<button class="btn-sm" onclick="limpiarConclusion()" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)">🗑 Limpiar</button>`:''}
     </div>`:''}
   </div>
+
 
   <!-- Línea de servicio -->
   <div class="card">
@@ -1061,7 +1062,7 @@ function renderRevision(){
     <button class="ghost" onclick="openExitModal()">← Salir</button>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="ghost" onclick="guardarFormulario()">💾 Guardar</button>
-      <button class="vd" onclick="generarPDF()" ${S.loadingFactores?'disabled':''}>📄 Descargar PDF</button>
+      <button class="vd" onclick="generarPDF()" ${S.loadingConclusion?'disabled':''}>📄 Descargar PDF</button>
     </div>
   </div>`;
 }
@@ -1081,7 +1082,7 @@ function limpiarFormulario(){
   if(!confirm('¿Limpiar todo el formulario? Los datos no guardados se perderán.'))return;
   const nuevo=defaultState();
   S.ctx={...nuevo.ctx};S.checks=nuevo.checks;S.notes=nuevo.notes;
-  S.factores=[];S.valorMin='';S.valorMax='';S.lineaOverride=null;
+  S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
   S.view='contexto';render();
 }
 
@@ -1423,11 +1424,10 @@ function generarPDF(){
             <div style="font-size:7.5pt;color:#1a2a38;line-height:1.4">${txt}</div>
           </div>`).join('')}
           <div style="height:3mm"></div>`).join('')}`:''}
-      ${S.factores.length?`${sec('Factores destacados')}
-        ${S.factores.map(f=>`<div style="background:#f2f0ed;border-radius:2mm;padding:2.5mm 3mm;border-left:2mm solid #d18549;margin-bottom:2mm">
-          <div style="font-size:8.5pt;font-weight:700;color:#304660;margin-bottom:1mm">${f.titulo}</div>
-          <div style="font-size:7.5pt;color:#516576;line-height:1.5">${f.cuerpo}</div>
-        </div>`).join('')}`:''}
+      ${S.conclusion?`${sec('Conclusión del diagnóstico')}
+        <div style="background:#f2f0ed;border-radius:2mm;padding:3mm 4mm;border-left:2mm solid #d18549;margin-bottom:2mm">
+          <div style="font-size:7.5pt;color:#1a2a38;line-height:1.6;white-space:pre-line">${S.conclusion}</div>
+        </div>`:''}
       ${sec('Propuesta de servicio')}
       <div style="background:#eaf4ee;border:1mm solid #c2e0cc;border-radius:3mm;overflow:hidden;margin-bottom:3mm">
         <div style="background:#1d5c38;padding:3mm 5mm"><div style="font-size:9.5pt;font-weight:700;color:white">${lm.label}</div></div>
@@ -1519,7 +1519,7 @@ function renderHome(){
 function nuevoDesdeHome(){
   const def=defaultState();
   S.ctx=def.ctx;S.checks=def.checks;S.notes=def.notes;
-  S.factores=[];S.valorMin='';S.valorMax='';S.lineaOverride=null;
+  S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
   goTo('contexto');
 }
 
@@ -1541,14 +1541,14 @@ async function generarPDFDesdeHistorial(nombre){
   if(!d)return;
   // Temporarily load data for PDF generation
   const prevCtx={...S.ctx};const prevChecks=JSON.parse(JSON.stringify(S.checks));
-  const prevNotes={...S.notes};const prevFac=[...S.factores];
+  const prevNotes={...S.notes};const prevFac=[...S.factores];const prevConc=S.conclusion;
   const prevVMin=S.valorMin;const prevVMax=S.valorMax;const prevLO=S.lineaOverride;
   S.ctx={...d.ctx};S.checks=JSON.parse(JSON.stringify(d.checks));
-  S.notes={...d.notes};S.factores=d.factores||[];
+  S.notes={...d.notes};S.factores=d.factores||[];S.conclusion=d.conclusion||'';
   S.valorMin=d.valorMin||'';S.valorMax=d.valorMax||'';S.lineaOverride=d.lineaOverride||null;
   generarPDF();
   setTimeout(()=>{
-    S.ctx=prevCtx;S.checks=prevChecks;S.notes=prevNotes;S.factores=prevFac;
+    S.ctx=prevCtx;S.checks=prevChecks;S.notes=prevNotes;S.factores=prevFac;S.conclusion=prevConc;
     S.valorMin=prevVMin;S.valorMax=prevVMax;S.lineaOverride=prevLO;
   },500);
 }
@@ -1666,6 +1666,12 @@ function eliminarFactor(i){
 function limpiarFactores(){
   if(!confirm('¿Eliminar todos los factores generados?')) return;
   S.factores=[];
+  render();
+}
+
+function limpiarConclusion(){
+  if(!confirm('¿Eliminar la conclusión generada?')) return;
+  S.conclusion='';
   render();
 }
 
