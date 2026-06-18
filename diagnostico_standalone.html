@@ -62,7 +62,7 @@ body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;backgroun
 }
 
 /* Sidebar derecha — solo desktop */
-.sidebar{display:none;flex-direction:column;background:var(--az);width:200px;min-height:100vh;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar{display:none;flex-direction:column;background:var(--az);width:200px;min-height:100vh;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;} /* display:none por defecto — JS lo controla */
 .sb-hd{display:none;}
 .sb-nav{padding:8px 8px;flex:1;}
 .sb-step{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background 0.12s;}
@@ -255,12 +255,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 .exit-opt-ttl{font-size:14px;font-weight:700;color:var(--az);}
 .exit-opt-desc{font-size:12px;color:var(--muted);}
 /* Home view */
-.home-header{background:var(--az);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
-.home-logo{display:flex;align-items:center;gap:10px;}
-.home-mark{width:36px;height:36px;background:var(--na);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;}
-.home-brand{font-size:15px;font-weight:700;color:white;}
-.home-brand b{color:var(--na);}
-.home-tag{font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;}
+/* home-header eliminado — branding lo provee la app contenedora */
 .hist-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.13s;box-shadow:var(--shadow);}
 .hist-card:hover{border-color:var(--na);box-shadow:var(--shadow-md);}
 .hist-score{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
@@ -592,20 +587,14 @@ async function syncWithSheets() {
     });
     const data = await res.json();
     if(!data.diagnosticos) return;
+    // Sheet es la fuente única de verdad — no mezclar con localStorage
     const remote = data.diagnosticos.map(d => ({
       ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
     }));
-    // Merge: remote tiene prioridad, completar con local si hay algo que no está en remote
-    const remoteNames = new Set(remote.map(d=>d.nombre));
-    const localOnly = getSavedLocal().filter(d=>!remoteNames.has(d.nombre));
-    const merged = [...remote, ...localOnly];
-    // Actualizar localStorage con datos de Sheets
-    localStorage.setItem('ca_diag', JSON.stringify(merged.slice(0,50)));
-    _cache = merged;
+    _cache = remote;
     _cacheTime = Date.now();
-    // Si estamos en home, actualizar la vista silenciosamente
     if(S.view==='home') {
-      _homeData = merged;
+      _homeData = remote;
       document.getElementById('mainContent').innerHTML = renderHome();
       // Quitar indicador de sincronización
       const syncEl = document.getElementById('syncIndicator');
@@ -1417,29 +1406,20 @@ let _homeLoading = false;
 
 async function loadHomeData() {
   _homeLoading = true;
-  // 1. Cargar local inmediatamente — sin espera
-  _homeData = getSavedLocal();
+  // Sheet es la fuente única — no mostrar localStorage
+  // Mostrar estado de carga mientras llega el Sheet
+  _homeData = [];
   _homeLoading = false;
   if(S.view==='home') {
     document.getElementById('mainContent').innerHTML = renderHome();
   }
-  // 2. Sincronizar con Sheets en background
+  // Sincronizar con Sheet (reemplaza _homeData con datos reales)
   syncWithSheets();
 }
 
 function renderHome(){
   const hist=_homeData||[];
   return`
-  <div class="home-header">
-    <div class="home-logo">
-      <div class="home-mark">C</div>
-      <div>
-        <div class="home-brand"><b>co</b>proactiva</div>
-        <div class="home-tag">Comunidades que funcionan.</div>
-      </div>
-    </div>
-    <button class="pri" onclick="nuevoDesdeHome()" style="white-space:nowrap">+ Nuevo diagnóstico</button>
-  </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="font-size:15px;font-weight:700;color:var(--az)">Diagnósticos guardados</div>
     <div style="display:flex;align-items:center;gap:10px">
