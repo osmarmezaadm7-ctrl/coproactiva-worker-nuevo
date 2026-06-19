@@ -254,7 +254,8 @@ export default {
 
       if (url.pathname === '/diagnosticos' && method === 'POST') {
         const body = await request.json();
-        const resp = await postAppsScript(APPS_SCRIPT_URL, { ...body, action: 'saveDiagnostico' });
+        const action = body.action || 'saveDiagnostico';
+        const resp = await postAppsScript(APPS_SCRIPT_URL, { ...body, action });
         return jsonResponse(resp, 200, origin);
       }
 
