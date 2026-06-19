@@ -793,7 +793,9 @@ function render(){
 
   if(!isHome)renderNav();
   const m=document.getElementById('mainContent');
+  m.classList.toggle('wide', S.view==='home' || S.view==='revision');
   if(S.view==='home'){
+    
     if(_homeData!==null)m.innerHTML=renderHome();
     else loadHomeData();
   }
