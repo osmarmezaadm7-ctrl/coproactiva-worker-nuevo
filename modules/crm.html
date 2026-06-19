@@ -177,7 +177,7 @@
       titulo:  'Recepci\u00F3n <em>documental</em>',
       sub:     'Checklist Anexo N\u00B01 \u2014 antecedentes al tomar una comunidad.',
       btnLbl:  'Nueva recepci\u00F3n',
-      btnAct:  () => { if (typeof cargarModulo === 'function') cargarModulo('recepcion'); },
+      btnAct:  () => { if (typeof window._rxNuevo === 'function') window._rxNuevo(); },
       kpis:    false,
     },
   };
@@ -273,12 +273,6 @@
     if (title) title.innerHTML = cfg.titulo;
     if (sub)   sub.textContent = cfg.sub;
     if (lbl)   lbl.textContent = cfg.btnLbl;
-    // Actualizar botón acción
-    const btnAct = document.getElementById('crm-btn-accion');
-    if (btnAct) {
-      btnAct.onclick = null;
-      btnAct.addEventListener('click', function() { TAB_CONFIG[tab].btnAct(); });
-    }
   }
 
   // ── Renderiza el contenido del tab en #crm-tab-content ──
