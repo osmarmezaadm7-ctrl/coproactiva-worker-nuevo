@@ -846,7 +846,14 @@
       'Acta constitución comité',
       'Libro de actas',
       'Planos de la comunidad',
-      'Certificados de dominio vigente'
+      'Certificados de dominio vigente',
+      'Certificado de acogimiento al régimen de copropiedad',
+      'Reglamento interno',
+      'Permiso de edificación',
+      'Certificado de recepción definitiva de obras',
+      'Certificado Condominio de Interés Público o Viviendas Sociales',
+      'e-RUT',
+      'Certificado de avalúo fiscal del edificio o predio'
     ],
     Seguridad: [
       'Póliza seguro incendio bienes comunes',
@@ -857,15 +864,22 @@
       'Credenciales OS-10 vigentes',
       'Seguro de vida personal de seguridad',
       'Comprobante envío Plan de Emergencia a Bomberos y Carabineros',
-      'Fichas MINVU ascensores',
-      'Certificado red seca y húmeda'
+      'Certificado red seca y húmeda',
+      'Registro de simulacros',
+      'Certificación de extintores'
     ],
     Tecnico: [
       'Certificación gas — Sello Verde SEC',
       'Certificación ascensores y montacargas MINVU',
       'Certificación climatización y calderas',
       'Libros de mantención',
-      'Planos de instalaciones técnicas'
+      'Planos de instalaciones técnicas',
+      'Fichas MINVU ascensores',
+      'Manual de Uso, Operación y Mantenimiento del Edificio',
+      'Programa y plan de mantenimiento',
+      'Carpeta cero de ascensores',
+      'Manuales técnicos y fichas de equipamiento',
+      'Contratos de mantención con proveedores'
     ],
     Residentes: [
       'Registro de arrendatarios',
@@ -877,7 +891,10 @@
       'Respaldos de gastos',
       'Informes de gastos comunes',
       'Rendición de cuentas',
-      'Conciliaciones bancarias'
+      'Conciliaciones bancarias',
+      'Informe de morosidad e historial de pagos',
+      'Convenios de pago con morosos',
+      'Cuentas por pagar a proveedores o contratistas'
     ],
     Laboral: [
       'Contratos de trabajo',
@@ -891,7 +908,12 @@
       'Programa de trabajo preventivo',
       'Certificado de adhesión a la mutualidad',
       'Registro de entrega de EPP',
-      'CPHS o Delegado de Seguridad'
+      'Certificado F30 sin deuda previsional',
+      'F30-1 de subcontratistas',
+      'Registro de vacaciones',
+      'Protocolo Ley Karin',
+      'IRL — Informe de Riesgos Laborales',
+      'Registro de capacitaciones'
     ]
   };
 
@@ -906,7 +928,9 @@
     'Certificación gas — Sello Verde SEC',
     'Certificación ascensores y montacargas MINVU',
     'Certificación climatización y calderas',
-    'Certificado de adhesión a la mutualidad'
+    'Certificado de adhesión a la mutualidad',
+    'Certificación de extintores',
+    'Certificado F30 sin deuda previsional'
   ];
 
   var DOCS_MENSUALES = [
@@ -923,7 +947,7 @@
 
   // Tipos condicionados por instalación
   var DOCS_POR_INSTALACION = {
-    ascensores:    ['Fichas MINVU ascensores','Certificación ascensores y montacargas MINVU'],
+    ascensores:    ['Fichas MINVU ascensores','Certificación ascensores y montacargas MINVU','Carpeta cero de ascensores'],
     calderas:      ['Certificación climatización y calderas'],
     gas:           ['Certificación gas — Sello Verde SEC'],
     redHumedaSeca: ['Certificado red seca y húmeda'],
@@ -932,7 +956,10 @@
                     'Control de asistencia','Finiquitos y cartas de despido','RIHS','RIOHS',
                     'Matriz IPER','Programa de trabajo preventivo',
                     'Certificado de adhesión a la mutualidad',
-                    'Registro de entrega de EPP','CPHS o Delegado de Seguridad']
+                    'Registro de entrega de EPP',
+                    'Certificado F30 sin deuda previsional','F30-1 de subcontratistas',
+                    'Registro de vacaciones','Protocolo Ley Karin',
+                    'IRL — Informe de Riesgos Laborales','Registro de capacitaciones']
   };
 
   var INSTALACIONES_OPTS = [
