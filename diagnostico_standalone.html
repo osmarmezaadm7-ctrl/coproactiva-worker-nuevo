@@ -451,6 +451,7 @@ function defaultState(){return{
   conclusion:'',loadingConclusion:false,
 };}
 let S={...defaultState(),view:'home'};
+let _prospectoVinculadoId = null; // id del prospecto (pipeline CRM) si el diagnóstico se abrió desde "Ir a Diagnóstico"
 
 // ─── SCORING REFINADO ────────────────────────────────────────────────────────
 function itemApplies(it){
@@ -646,6 +647,7 @@ async function saveDiag() {
     fecha: new Date().toLocaleDateString('es-CL'),
     score: globalScore(),
     linea: lineaActual(),
+    prospectoId: _prospectoVinculadoId || '',
     ctx: {...S.ctx},
     checks: JSON.parse(JSON.stringify(S.checks)),
     notes: {...S.notes},
@@ -661,7 +663,7 @@ async function saveDiag() {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
       method: 'POST',
       headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + _DIAG_TOKEN},
-      body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, payload:record })
+      body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, prospectoId:record.prospectoId, payload:record })
     });
     const data = await res.json();
     if(!data.ok) throw new Error(data.error||'Error desconocido');
@@ -1589,7 +1591,7 @@ function openExitModal(){
   const nombre=S.ctx.nombre?.trim();
   const sub=document.getElementById('exitModalSub');
   sub.textContent=nombre
-    ? `Estás trabajando en "\${nombre}". ¿Qué deseas hacer?`
+    ? `Estás trabajando en "${nombre}". ¿Qué deseas hacer?`
     : 'Tienes datos sin guardar en este diagnóstico.';
   document.getElementById('exitModalBg').classList.add('show');
 }
@@ -1764,6 +1766,25 @@ setTimeout(() => {
       if(si){ si.textContent='Sin conexión con servidor'; si.style.color='var(--sa-fg)'; setTimeout(()=>si.remove(),3000); }
     });
 }, 100);
+
+  // ── Prellenado desde el pipeline (CRM) — si viene de "Ir a Diagnóstico" ──
+  try {
+    const raw = sessionStorage.getItem('prospectoVinculado');
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && p.nombre) {
+        S.ctx.nombre         = p.nombre         || '';
+        S.ctx.unidades        = p.unidades       || '';
+        S.ctx.contactoNombre  = p.contactoNombre || '';
+        S.ctx.contactoCorreo  = p.contactoCorreo || '';
+        S.ctx.contactoCargo   = p.cargoContacto  || ''; // nombre interno difiere del que usa crm.html
+        _prospectoVinculadoId = p.id || null;
+        _lastSavedSnapshot = formSnapshot(); // evita "cambios sin guardar" solo por el prellenado
+        S.view = 'contexto';
+      }
+      sessionStorage.removeItem('prospectoVinculado'); // no debe contaminar el próximo diagnóstico
+    }
+  } catch(e) { console.warn('No se pudo leer prospectoVinculado:', e); }
 
   render();
 }
