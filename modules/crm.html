@@ -144,6 +144,19 @@
     'Propuesta', 'Negociaci\u00F3n', 'Ganado', 'Perdido'
   ];
 
+  const INSTALACIONES_OPTS = [
+    { key: 'ascensores',       label: 'Ascensores / montacargas' },
+    { key: 'calderas',         label: 'Calderas' },
+    { key: 'gas',              label: 'Gas centralizado (Sello Verde SEC)' },
+    { key: 'grupoElectrogeno', label: 'Grupo electr\u00F3geno' },
+    { key: 'redHumedaSeca',    label: 'Red h\u00FAmeda y/o red seca' },
+    { key: 'piscina',          label: 'Piscina / SPA' },
+    { key: 'personalOS10',     label: 'Personal de seguridad OS-10' },
+    { key: 'trabajadores',     label: 'Trabajadores dependientes (conserjes, limpieza, etc.)' },
+    { key: 'cercoElectrico',   label: 'Cerco el\u00E9ctrico' },
+    { key: 'panelesSolares',   label: 'Paneles solares' }
+  ];
+
   const MIGRACION_ETAPAS = {
     'Reuni\u00F3n agendada':      'Reuni\u00F3n Agendada',
     'Reuni\u00F3n realizada':     'Reuni\u00F3n Agendada',
@@ -533,7 +546,8 @@
     overlay.querySelector('#btn-mail').addEventListener('click', () => abrirModalCorreo(p));
     overlay.querySelector('#btn-editar').addEventListener('click', () => { cerrar(); abrirModalEditar(p); });
     overlay.querySelector('#btn-cambiar').addEventListener('click', async () => {
-      const nuevaEtapa = overlay.querySelector('#sel-etapa').value;
+      const nuevaEtapa   = overlay.querySelector('#sel-etapa').value;
+      const etapaAnterior = p.etapa;
       const btn = overlay.querySelector('#btn-cambiar');
       const msg = overlay.querySelector('#msg-ok');
       if (nuevaEtapa === p.etapa) return;
@@ -543,6 +557,10 @@
         p.etapa = nuevaEtapa; msg.style.display = 'block';
         btn.textContent = 'Guardar cambio'; btn.disabled = false;
         renderKanban(); renderAccordion();
+        if (nuevaEtapa === 'Ganado' && etapaAnterior !== 'Ganado') {
+          cerrar();
+          abrirModalCrearComunidad(p);
+        }
       } else { btn.textContent = 'Error \u2014 reintentar'; btn.disabled = false; }
     });
   }
@@ -614,7 +632,95 @@
     });
   }
 
-  // ── Modal correo ──────────────────────────────────────────
+  // ── Modal crear comunidad (desde "Ganado") ────────────────
+  function abrirModalCrearComunidad(p) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-handle"></div>
+        <button class="modal-close" id="mc-com">×</button>
+        <div class="modal-eyebrow">Prospecto ganado</div>
+        <div class="modal-titulo">Crear comunidad</div>
+        <div class="modal-subtitulo">Confirma los datos y configura las instalaciones antes de continuar</div>
+        <div class="form-grid">
+          <div class="form-group form-full"><label>Nombre *</label><input type="text" id="nc-nombre" value="${p.nombreCondominio || ''}"></div>
+          <div class="form-group"><label>Direcci\u00F3n *</label><input type="text" id="nc-direccion" value="${p.direccion || ''}"></div>
+          <div class="form-group"><label>Comuna *</label><input type="text" id="nc-comuna" value="${p.comuna || ''}"></div>
+          <div class="form-group"><label>RUT comunidad</label><input type="text" id="nc-rut" placeholder="76.XXX.XXX-X"></div>
+          <div class="form-group"><label>Unidades</label><input type="number" id="nc-unidades" value="${p.unidades || ''}" min="0"></div>
+          <div class="form-group"><label>Honorario ($)</label><input type="number" id="nc-honorario" placeholder="0"></div>
+          <div class="form-group"><label>Modalidad</label>
+            <select id="nc-modalidad">${['Integral','Nueva','Auditoria'].map(m=>`<option value="${m}">${m}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><label>Contacto comit\u00E9</label><input type="text" id="nc-contacto" value="${p.nombreContacto || ''}"></div>
+          <div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="nc-telefono" value="${p.telefono || ''}"></div>
+          <div class="form-group"><label>Inicio contrato</label><input type="text" id="nc-inicio" placeholder="DD/MM/AAAA"></div>
+          <div class="form-group"><label>Renovaci\u00F3n</label><input type="text" id="nc-renovacion" placeholder="DD/MM/AAAA"></div>
+        </div>
+        <div style="border-top:1px solid var(--co-line);margin:20px 0 16px"></div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Instalaciones y equipamientos *</div>
+        <div style="font-size:11px;color:var(--co-mute);margin-bottom:10px">Marca lo que aplique. Si no tiene ninguna, deja todo sin marcar y continúa — este paso es obligatorio para poder crear la Recepción documental después.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px" id="nc-inst-lista">
+          ${INSTALACIONES_OPTS.map(inst => `
+            <label style="display:flex;align-items:center;gap:12px;padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--co-ink)" data-inst-item>
+              <input type="checkbox" id="nci-${inst.key}" style="width:16px;height:16px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0">
+              ${inst.label}
+            </label>`).join('')}
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:9px;margin-top:12px;font-size:11.5px;color:var(--co-mute);cursor:pointer">
+          <input type="checkbox" id="nc-inst-confirmado" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0;margin-top:1px">
+          Confirmo que revis\u00E9 las instalaciones de esta comunidad (aunque no tenga ninguna marcada).
+        </label>
+        <div class="form-error" id="nc-error"></div>
+        <button class="btn-guardar" id="btn-crear-comunidad">Crear comunidad</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const cerrar = () => overlay.remove();
+    overlay.querySelector('#mc-com').addEventListener('click', cerrar);
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+    overlay.querySelectorAll('[data-inst-item]').forEach(item => {
+      const chk = item.querySelector('input[type=checkbox]');
+      chk.addEventListener('change', () => { item.style.borderColor = chk.checked ? 'var(--co-orange)' : 'var(--co-line)'; });
+    });
+    overlay.querySelector('#btn-crear-comunidad').addEventListener('click', async () => {
+      const nombre    = overlay.querySelector('#nc-nombre').value.trim();
+      const direccion = overlay.querySelector('#nc-direccion').value.trim();
+      const comuna    = overlay.querySelector('#nc-comuna').value.trim();
+      const errDiv    = overlay.querySelector('#nc-error');
+      const btn       = overlay.querySelector('#btn-crear-comunidad');
+      if (!nombre || !direccion || !comuna) { errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.'; errDiv.style.display = 'block'; return; }
+      if (!overlay.querySelector('#nc-inst-confirmado').checked) { errDiv.textContent = 'Debes revisar y confirmar las instalaciones antes de crear la comunidad.'; errDiv.style.display = 'block'; return; }
+      const nuevaInst = {};
+      INSTALACIONES_OPTS.forEach(inst => {
+        const c = overlay.querySelector('#nci-' + inst.key);
+        if (c && c.checked) nuevaInst[inst.key] = true;
+      });
+      btn.disabled = true; btn.textContent = 'Creando\u2026'; errDiv.style.display = 'none';
+      const datos = {
+        action: 'crearComunidad', nombre, direccion, comuna,
+        rut: overlay.querySelector('#nc-rut').value.trim(),
+        unidades: overlay.querySelector('#nc-unidades').value || 0,
+        honorario: overlay.querySelector('#nc-honorario').value || 0,
+        modalidad: overlay.querySelector('#nc-modalidad').value,
+        contactoNombre: overlay.querySelector('#nc-contacto').value.trim(),
+        contactoTelefono: overlay.querySelector('#nc-telefono').value.trim(),
+        fechaInicioContrato: overlay.querySelector('#nc-inicio').value.trim(),
+        fechaRenovacion: overlay.querySelector('#nc-renovacion').value.trim(),
+        instalaciones: JSON.stringify(nuevaInst),
+        prospectoId: p.id
+      };
+      const resp = await api('/comunidades', 'POST', datos);
+      if (resp.ok && resp.data && resp.data.ok) {
+        btn.textContent = '\u2713 Comunidad creada'; btn.style.background = 'var(--co-green)';
+        setTimeout(cerrar, 1200);
+      } else {
+        errDiv.textContent = resp.data?.error || resp.error || 'Error al crear la comunidad';
+        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Crear comunidad';
+      }
+    });
+  }
   const PLANTILLAS = {
     'Nuevo prospecto':       { eyebrow:'Primer contacto',     asunto:'CoproActiva \u2014 Administraci\u00F3n Profesional para {c}' },
     'Reuni\u00F3n Agendada': { eyebrow:'Confirmaci\u00F3n',   asunto:'Confirmaci\u00F3n de Reuni\u00F3n \u2014 CoproActiva \u00D7 {c}' },
