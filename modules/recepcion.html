@@ -709,6 +709,20 @@
 
     box.appendChild(fgUrl); box.appendChild(fgObs);
 
+    // Selector condicional RIHS/RIOHS — solo para el ítem LB11 (depende del N° de trabajadores)
+    var selTipoLaboral = null;
+    if (item.id === 'LB11') {
+      var fgTipoLab = document.createElement('div'); fgTipoLab.className = 'form-group';
+      var lblTipoLab = document.createElement('label'); lblTipoLab.textContent = '\u00BF10 o m\u00E1s trabajadores?';
+      selTipoLaboral = document.createElement('select');
+      [['NO','No \u2014 RIHS'],['SI','S\u00ED \u2014 RIOHS']].forEach(function(op) {
+        var opt = document.createElement('option'); opt.value = op[0]; opt.textContent = op[1];
+        selTipoLaboral.appendChild(opt);
+      });
+      fgTipoLab.appendChild(lblTipoLab); fgTipoLab.appendChild(selTipoLaboral);
+      box.appendChild(fgTipoLab);
+    }
+
     // Checkbox traspasar al repositorio
     var chkWrap = document.createElement('label');
     chkWrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--co-ink);margin-bottom:14px';
@@ -731,6 +745,12 @@
       var obs     = inpObs.value.trim();
       var traspasar = chkRepo.checked;
       var cambios = { estado: 'entregado', urlDrive: url, observacion: obs };
+
+      // Si es el ítem RIHS/RIOHS, fijar el nombre definitivo según la respuesta antes de guardar
+      if (selTipoLaboral) {
+        var tipoElegido = selTipoLaboral.value === 'SI' ? 'RIOHS' : 'RIHS';
+        cambios.nombre = tipoElegido;
+      }
 
       btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando\u2026';
 
