@@ -1,6 +1,7 @@
 // ============================================================
 // CoproActiva Worker — index.js
-// Versión: 3.3 · Junio 2026
+// Versión: 3.4 · Junio 2026
+// Cambio v3.4: agrega rutas /leads y /leads/metricas
 // Cambio v3.3: agrega ruta GET /documentos/catalogo-comunidad
 // ============================================================
 
@@ -426,6 +427,30 @@ export default {
         const params = { comunidadId };
         if (categoria) params.categoria = categoria;
         const data = await callAppsScript(APPS_SCRIPT_URL, 'catalogoComunidadDocumentos', params);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+
+      // ── v3.4 — Leads ──────────────────────────────────────
+      if (url.pathname === '/leads' && method === 'GET') {
+        const id                = url.searchParams.get('id')                || '';
+        const incluirArchivados = url.searchParams.get('incluirArchivados') || 'false';
+        if (id) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getLead', { id });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getLeads', { incluirArchivados });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/leads/metricas' && method === 'GET') {
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getMetricasLeads');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/leads' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
