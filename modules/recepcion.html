@@ -1,5 +1,5 @@
 <!-- modules/recepcion.html — CoproActiva Recepción Documental -->
-<!-- Versión: 1.0 · Junio 2026 -->
+<!-- Versión: 1.1 · Junio 2026 — integración fuzzy con Documentos -->
 
 <style>
   /* Ocultar page-header cuando está dentro de iframe */
@@ -290,7 +290,6 @@
   }
 
   // ── LISTADO ────────────────────────────────────────────────
-  // Detectar si está cargado como sub-módulo dentro del CRM
   var _enSubModulo = window.self !== window.top;
   if (_enSubModulo) document.body.classList.add('in-iframe');
 
@@ -299,7 +298,6 @@
     root.innerHTML = '';
 
     if (!_enSubModulo) {
-      // Standalone: mostrar page-header completo
       var pageHdr = document.createElement('div');
       pageHdr.className = 'page-header';
       var left = document.createElement('div');
@@ -314,7 +312,6 @@
       pageHdr.appendChild(left); pageHdr.appendChild(btnNueva);
       root.appendChild(pageHdr);
     } else {
-      // Sub-módulo: solo botón compacto
       var barTop = document.createElement('div');
       barTop.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:14px';
       var btnNueva = document.createElement('button');
@@ -362,7 +359,6 @@
     sub.textContent = 'Iniciada ' + formatFecha(rec.fechaInicio) + ' \u00B7 ' + entregados + '/' + total + ' entregados';
     info.appendChild(nom); info.appendChild(sub);
 
-    // Barra progreso mini
     var barWrap = document.createElement('div');
     barWrap.style.cssText = 'width:60px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0';
     var pctEl = document.createElement('div');
@@ -374,7 +370,6 @@
     barFill.style.cssText = 'height:100%;border-radius:10px;background:' + (pct === 100 ? 'var(--co-green)' : pct > 50 ? 'var(--co-orange)' : 'var(--co-amber)') + ';width:' + pct + '%';
     barBg.appendChild(barFill); barWrap.appendChild(pctEl); barWrap.appendChild(barBg);
 
-    // Pill estado + plazo
     var pillWrap = document.createElement('div');
     pillWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0';
     var pill = document.createElement('span'); pill.className = 'co-pill';
@@ -408,13 +403,9 @@
     back.addEventListener('click', function() { init(); });
     root.appendChild(back);
 
-    // Header
     root.appendChild(_renderHeader(rec, com));
-
-    // Acciones
     root.appendChild(_renderAcciones(rec, com));
 
-    // Checklist
     var cl = document.createElement('div'); cl.className = 'rx-checklist'; cl.id = 'rx-checklist';
     root.appendChild(cl);
     _renderChecklist(rec);
@@ -433,7 +424,6 @@
 
     var hdr = document.createElement('div'); hdr.className = 'rx-header'; hdr.id = 'rx-header';
 
-    // Top
     var top = document.createElement('div'); top.className = 'rx-header-top';
     var ico = document.createElement('div');
     ico.style.cssText = 'width:40px;height:40px;border-radius:10px;background:var(--co-blue-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0';
@@ -450,7 +440,6 @@
     top.appendChild(ico); top.appendChild(info); top.appendChild(pill);
     hdr.appendChild(top);
 
-    // Plazo
     if (rec.estado !== 'completada') {
       var plazo = document.createElement('div');
       var plazoClass = dias === null ? 'done' : dias < 0 ? 'danger' : dias <= 2 ? 'warn' : 'ok';
@@ -471,7 +460,6 @@
       hdr.appendChild(plazo);
     }
 
-    // Progreso
     var prog = document.createElement('div'); prog.className = 'rx-prog-wrap';
     var bar = document.createElement('div'); bar.className = 'rx-prog-bar';
     var fill = document.createElement('div'); fill.className = 'rx-prog-fill'; fill.id = 'rx-prog-fill';
@@ -482,13 +470,12 @@
     prog.appendChild(progTxt);
     hdr.appendChild(prog);
 
-    // KPIs
     var kpiGrid = document.createElement('div'); kpiGrid.className = 'rx-kpi-grid';
     var kpis = [
-      { val: entregados, lbl: 'Entregados',        color: 'var(--co-green)' },
-      { val: pendientes, lbl: 'Pendientes',         color: 'var(--co-mute)' },
-      { val: noExisten,  lbl: 'No existen',         color: 'var(--co-red)' },
-      { val: enRepo,     lbl: 'En repositorio',     color: 'var(--co-blue)' }
+      { val: entregados, lbl: 'Entregados',    color: 'var(--co-green)' },
+      { val: pendientes, lbl: 'Pendientes',    color: 'var(--co-mute)' },
+      { val: noExisten,  lbl: 'No existen',    color: 'var(--co-red)' },
+      { val: enRepo,     lbl: 'En repositorio',color: 'var(--co-blue)' }
     ];
     kpis.forEach(function(k) {
       var kpi = document.createElement('div'); kpi.className = 'rx-kpi';
@@ -498,7 +485,6 @@
     });
     hdr.appendChild(kpiGrid);
 
-    // Leyenda
     var ley = document.createElement('div'); ley.className = 'rx-leyenda';
     var leys = [
       { ico: 'ti-file-text', col: 'var(--co-blue)',   txt: 'Documento \u2192 repositorio' },
@@ -518,7 +504,6 @@
   function _renderAcciones(rec, com) {
     var bar = document.createElement('div'); bar.className = 'rx-actions';
 
-    // Filtro pendientes
     var btnFiltro = document.createElement('button');
     btnFiltro.className = 'btn-ghost';
     btnFiltro.style.fontSize = '12px';
@@ -530,7 +515,6 @@
       _renderChecklist(_recepcionActiva);
     });
 
-    // Generar acta
     var btnActa = document.createElement('button');
     btnActa.className = 'btn-nuevo';
     btnActa.style.fontSize = '12px';
@@ -550,12 +534,10 @@
     var items = [];
     try { items = JSON.parse(rec.items || '[]'); } catch(e) {}
 
-    // Filtrar si aplica
     if (_filtroPendientes) {
       items = items.filter(function(i) { return i.estado === 'pendiente'; });
     }
 
-    // Agrupar por área
     var areas = {};
     items.forEach(function(item) {
       if (!areas[item.area]) areas[item.area] = [];
@@ -573,7 +555,6 @@
       var entregados = areaItems.filter(function(i) { return i.estado === 'entregado'; }).length;
       var card = document.createElement('div'); card.className = 'rx-area-card';
 
-      // Header área
       var areaHdr = document.createElement('div'); areaHdr.className = 'rx-area-hdr';
       var areaIco = document.createElement('i'); areaIco.setAttribute('aria-hidden', 'true');
       areaIco.style.fontSize = '14px'; areaIco.style.color = 'var(--co-mute)';
@@ -584,7 +565,6 @@
       areaHdr.appendChild(areaIco); areaHdr.appendChild(areaLbl); areaHdr.appendChild(areaCnt);
       card.appendChild(areaHdr);
 
-      // Ítems
       areaItems.forEach(function(item) {
         card.appendChild(_renderItem(item, rec));
       });
@@ -596,25 +576,22 @@
   function _renderItem(item, rec) {
     var row = document.createElement('div'); row.className = 'rx-item'; row.id = 'rx-item-' + item.id;
 
-    // Ícono estado
     var ico = document.createElement('div'); ico.className = 'rx-item-ico';
-    if (item.estado === 'entregado')  { ico.classList.add('ico-ok');   ico.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i>'; }
-    else if (item.estado === 'no_existe') { ico.classList.add('ico-no'); ico.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>'; }
-    else                              { ico.classList.add('ico-pend'); ico.innerHTML = '<i class="ti ti-clock" aria-hidden="true"></i>'; }
+    if (item.estado === 'entregado')      { ico.classList.add('ico-ok');   ico.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i>'; }
+    else if (item.estado === 'no_existe') { ico.classList.add('ico-no');   ico.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>'; }
+    else                                  { ico.classList.add('ico-pend'); ico.innerHTML = '<i class="ti ti-clock" aria-hidden="true"></i>'; }
 
     var body = document.createElement('div'); body.className = 'rx-item-body';
     var nom = document.createElement('div'); nom.className = 'rx-item-nom'; nom.textContent = item.nombre;
 
     var meta = document.createElement('div'); meta.className = 'rx-item-meta';
 
-    // Pill estado
     var pillEst = document.createElement('span'); pillEst.className = 'co-pill';
     if (item.estado === 'entregado')      { pillEst.className += ' pill-ok';   pillEst.textContent = 'Entregado'; }
     else if (item.estado === 'no_existe') { pillEst.className += ' pill-no';   pillEst.textContent = 'No existe'; }
     else                                  { pillEst.className += ' pill-pend'; pillEst.textContent = 'Pendiente'; }
     meta.appendChild(pillEst);
 
-    // Pill naturaleza
     var pillNat = document.createElement('span'); pillNat.className = 'co-pill';
     if (item.naturaleza === 'D') {
       pillNat.className += ' pill-doc';
@@ -628,7 +605,6 @@
     }
     meta.appendChild(pillNat);
 
-    // Pill en repositorio (si aplica)
     if (item.enRepositorio) {
       var pillRepo = document.createElement('span'); pillRepo.className = 'co-pill pill-repo';
       pillRepo.innerHTML = '<i class="ti ti-folder" style="font-size:10px" aria-hidden="true"></i> En repositorio';
@@ -637,7 +613,6 @@
 
     body.appendChild(nom); body.appendChild(meta);
 
-    // Observación
     if (item.observacion) {
       var obs = document.createElement('div'); obs.className = 'rx-item-obs'; obs.textContent = item.observacion;
       body.appendChild(obs);
@@ -645,7 +620,6 @@
 
     row.appendChild(ico); row.appendChild(body);
 
-    // Selector estado (solo si no completada)
     if (rec.estado !== 'completada') {
       var sel = document.createElement('select'); sel.className = 'rx-sel';
       [['pendiente','Pendiente'],['entregado','Entregado'],['no_existe','No existe']].forEach(function(op) {
@@ -653,20 +627,34 @@
         if (item.estado === op[0]) opt.selected = true;
         sel.appendChild(opt);
       });
+
       sel.addEventListener('change', function() {
         var nuevoEstado = sel.value;
-        // Si es documento y se marca entregado, abrir modal de URL
+        var estadoAnterior = item.estado;
+
+        // Documento → entregado: abrir modal URL + fuzzy
         if (nuevoEstado === 'entregado' && item.naturaleza === 'D') {
           modalEntregarDocumento(item, rec, sel);
-        } else {
-          _actualizarItem(rec.id, item.id, { estado: nuevoEstado }, function() {
-            item.estado = nuevoEstado;
-            var nuevoRow = _renderItem(item, rec);
-            row.parentNode.replaceChild(nuevoRow, row);
-            _actualizarHeader(rec);
-          });
+          return;
         }
+
+        // Desde entregado → otro estado: preguntar si eliminar del repositorio
+        if (estadoAnterior === 'entregado' &&
+            (nuevoEstado === 'pendiente' || nuevoEstado === 'no_existe') &&
+            item.enRepositorio) {
+          modalEliminarDeRepositorio(item, rec, sel, nuevoEstado);
+          return;
+        }
+
+        // Caso simple
+        _actualizarItem(rec.id, item.id, { estado: nuevoEstado }, function() {
+          item.estado = nuevoEstado;
+          var nuevoRow = _renderItem(item, rec);
+          row.parentNode.replaceChild(nuevoRow, row);
+          _actualizarHeader(rec);
+        });
       });
+
       row.appendChild(sel);
     }
 
@@ -678,7 +666,6 @@
     api('/recepciones', 'POST', { action: 'actualizarItemRecepcion', id: recId, itemId: itemId, cambios: cambios })
       .then(function(r) {
         if (r.ok && r.data && r.data.ok) {
-          // Actualizar estado en memoria
           try {
             var items = JSON.parse(_recepcionActiva.items || '[]');
             var idx = items.findIndex(function(i) { return i.id === itemId; });
@@ -699,6 +686,103 @@
     var com = _comunidades.find(function(c) { return c.id === rec.comunidadId; }) || {};
     var nuevoHdr = _renderHeader(rec, com);
     hdr.parentNode.replaceChild(nuevoHdr, hdr);
+  }
+
+  function _actualizarItemPromise(recId, itemId, cambios) {
+    return api('/recepciones', 'POST', { action: 'actualizarItemRecepcion', id: recId, itemId: itemId, cambios: cambios })
+      .then(function(r) {
+        if (r.ok && r.data && r.data.ok) {
+          try {
+            var items = JSON.parse(_recepcionActiva.items || '[]');
+            var idx = items.findIndex(function(i) { return i.id === itemId; });
+            if (idx !== -1) Object.assign(items[idx], cambios);
+            _recepcionActiva.items = JSON.stringify(items);
+            _recepcionActiva.estado = r.data.estado;
+          } catch(e) {}
+          return { ok: true };
+        }
+        return { ok: false, error: (r.data && r.data.error) || r.error || 'Error' };
+      });
+  }
+
+  // ── Helpers fuzzy match ────────────────────────────────────
+  function _simScore(a, b) {
+    var wa = a.toLowerCase().split(/\W+/).filter(function(w) { return w.length > 2; });
+    var wb = b.toLowerCase().split(/\W+/).filter(function(w) { return w.length > 2; });
+    if (!wa.length || !wb.length) return 0;
+    var comunes = wa.filter(function(w) { return wb.indexOf(w) !== -1; });
+    return comunes.length / Math.max(wa.length, wb.length);
+  }
+
+  function _topMatches(nombre, tipos, n) {
+    return tipos
+      .map(function(t) { return { tipo: t, score: _simScore(nombre, t) }; })
+      .sort(function(a, b) { return b.score - a.score; })
+      .slice(0, n || 3);
+  }
+
+  // Muestra segundo paso en el modal con selector de tipo del catálogo
+  function _mostrarSelectorTipo(box, matches, nombreEfectivo, onConfirmar, onCancelar) {
+    var btnAnterior = box.querySelector('.btn-guardar');
+    if (btnAnterior) btnAnterior.style.display = 'none';
+
+    var sep = document.createElement('div');
+    sep.style.cssText = 'border-top:1.5px solid var(--co-line);margin:16px 0 14px';
+    box.appendChild(sep);
+
+    var ey2 = document.createElement('div');
+    ey2.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--co-orange);margin-bottom:8px';
+    ey2.textContent = 'Confirmar tipo en repositorio';
+    box.appendChild(ey2);
+
+    var hint = document.createElement('div');
+    hint.style.cssText = 'font-size:12px;color:var(--co-ink-3);margin-bottom:12px';
+    hint.textContent = 'Selecciona el tipo que corresponde a \u201C' + nombreEfectivo + '\u201D en el repositorio:';
+    box.appendChild(hint);
+
+    var fg = document.createElement('div'); fg.className = 'form-group';
+    var selTipo = document.createElement('select');
+    matches.forEach(function(m) {
+      var opt = document.createElement('option'); opt.value = m.tipo; opt.textContent = m.tipo;
+      selTipo.appendChild(opt);
+    });
+    fg.appendChild(selTipo);
+    box.appendChild(fg);
+
+    var btnConf = document.createElement('button'); btnConf.className = 'btn-guardar';
+    btnConf.textContent = 'Traspasar al repositorio';
+    box.appendChild(btnConf);
+
+    var btnCanc = document.createElement('button'); btnCanc.className = 'btn-guardar';
+    btnCanc.style.cssText = 'background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line);margin-top:8px';
+    btnCanc.textContent = 'No traspasar';
+    box.appendChild(btnCanc);
+
+    btnConf.addEventListener('click', function() {
+      btnConf.disabled = true; btnCanc.disabled = true;
+      btnConf.textContent = 'Traspasando\u2026';
+      onConfirmar(selTipo.value);
+    });
+    btnCanc.addEventListener('click', function() { onCancelar(); });
+  }
+
+  function _ejecutarTraspaso(rec, item, url, tipoCatalogo, overlay) {
+    return api('/recepciones', 'POST', {
+      action:       'traspasarRepositorio',
+      id:           rec.id,
+      itemId:       item.id,
+      urlDrive:     url,
+      tipoCatalogo: tipoCatalogo
+    }).then(function(r2) {
+      if (r2.ok && r2.data && r2.data.ok) {
+        item.enRepositorio = true;
+        item.docId         = r2.data.docId || null;
+      }
+      overlay.remove();
+      var fila = document.getElementById('rx-item-' + item.id);
+      if (fila) { var nueva = _renderItem(item, rec); fila.parentNode.replaceChild(nueva, fila); }
+      _actualizarHeader(rec);
+    });
   }
 
   // ── Modal: entregar documento ──────────────────────────────
@@ -722,7 +806,7 @@
 
     box.appendChild(fgUrl); box.appendChild(fgObs);
 
-    // Selector condicional RIHS/RIOHS — solo para el ítem LB11 (depende del N° de trabajadores)
+    // Selector condicional RIHS/RIOHS
     var selTipoLaboral = null;
     if (item.id === 'LB11') {
       var fgTipoLab = document.createElement('div'); fgTipoLab.className = 'form-group';
@@ -736,7 +820,6 @@
       box.appendChild(fgTipoLab);
     }
 
-    // Checkbox traspasar al repositorio
     var chkWrap = document.createElement('label');
     chkWrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--co-ink);margin-bottom:14px';
     var chkRepo = document.createElement('input'); chkRepo.type = 'checkbox'; chkRepo.checked = true;
@@ -759,10 +842,8 @@
       var traspasar = chkRepo.checked;
       var cambios = { estado: 'entregado', urlDrive: url, observacion: obs };
 
-      // Si es el ítem RIHS/RIOHS, fijar el nombre definitivo según la respuesta antes de guardar
       if (selTipoLaboral) {
-        var tipoElegido = selTipoLaboral.value === 'SI' ? 'RIOHS' : 'RIHS';
-        cambios.nombre = tipoElegido;
+        cambios.nombre = selTipoLaboral.value === 'SI' ? 'RIOHS' : 'RIHS';
       }
 
       btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando\u2026';
@@ -774,13 +855,26 @@
         Object.assign(item, cambios);
 
         if (traspasar && url) {
-          return api('/recepciones', 'POST', { action: 'traspasarRepositorio', id: rec.id, itemId: item.id, urlDrive: url })
-            .then(function(r2) {
-              if (r2.ok && r2.data && r2.data.ok) item.enRepositorio = true;
-              overlay.remove();
-              var fila = document.getElementById('rx-item-' + item.id);
-              if (fila) { var nueva = _renderItem(item, rec); fila.parentNode.replaceChild(nueva, fila); }
-              _actualizarHeader(rec);
+          var nombreEfectivo = cambios.nombre || item.nombre;
+          var categoria = item.categoria;
+
+          return api('/documentos/catalogo-comunidad?comunidadId=' + encodeURIComponent(rec.comunidadId) + '&categoria=' + encodeURIComponent(categoria || ''))
+            .then(function(rc) {
+              var tipos = (rc.ok && rc.data && rc.data.data) ? rc.data.data : [];
+              if (!tipos.length) {
+                return _ejecutarTraspaso(rec, item, url, nombreEfectivo, overlay);
+              }
+              var matches = _topMatches(nombreEfectivo, tipos, 3);
+              _mostrarSelectorTipo(box, matches, nombreEfectivo, function(tipoElegido) {
+                _ejecutarTraspaso(rec, item, url, tipoElegido, overlay);
+              }, function() {
+                overlay.remove();
+                var fila = document.getElementById('rx-item-' + item.id);
+                if (fila) { var nueva = _renderItem(item, rec); fila.parentNode.replaceChild(nueva, fila); }
+                _actualizarHeader(rec);
+              });
+            }).catch(function() {
+              return _ejecutarTraspaso(rec, item, url, nombreEfectivo, overlay);
             });
         } else {
           overlay.remove();
@@ -792,21 +886,87 @@
     });
   }
 
-  function _actualizarItemPromise(recId, itemId, cambios) {
-    return api('/recepciones', 'POST', { action: 'actualizarItemRecepcion', id: recId, itemId: itemId, cambios: cambios })
-      .then(function(r) {
-        if (r.ok && r.data && r.data.ok) {
-          try {
-            var items = JSON.parse(_recepcionActiva.items || '[]');
-            var idx = items.findIndex(function(i) { return i.id === itemId; });
-            if (idx !== -1) Object.assign(items[idx], cambios);
-            _recepcionActiva.items = JSON.stringify(items);
-            _recepcionActiva.estado = r.data.estado;
-          } catch(e) {}
-          return { ok: true };
+  // ── Modal: confirmar eliminación del repositorio ───────────
+  function modalEliminarDeRepositorio(item, rec, sel, nuevoEstado) {
+    var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    var box = document.createElement('div'); box.className = 'modal-box'; box.style.maxWidth = '420px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7'; box.appendChild(btnX);
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Cambio de estado'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Documento en repositorio'; box.appendChild(tt);
+
+    var st = document.createElement('div'); st.className = 'modal-subtitulo';
+    st.textContent = '\u00BFDeseas eliminar \u201C' + item.nombre + '\u201D del repositorio de documentos? El archivo en Drive no se elimina.';
+    box.appendChild(st);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+
+    var btnEliminar = document.createElement('button'); btnEliminar.className = 'btn-guardar';
+    btnEliminar.style.background = 'var(--co-red)';
+    btnEliminar.textContent = 'Eliminar del repositorio y cambiar estado';
+    box.appendChild(btnEliminar);
+
+    var btnSolo = document.createElement('button'); btnSolo.className = 'btn-guardar';
+    btnSolo.style.cssText = 'background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line);margin-top:8px';
+    btnSolo.textContent = 'Solo cambiar estado';
+    box.appendChild(btnSolo);
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { sel.value = item.estado; overlay.remove(); };
+    btnX.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    btnEliminar.addEventListener('click', function() {
+      btnEliminar.disabled = true; btnSolo.disabled = true;
+      btnEliminar.textContent = 'Eliminando\u2026';
+
+      var eliminarRepo = function() {
+        if (item.docId) {
+          return api('/documentos', 'POST', { action: 'eliminarDocumento', id: item.docId });
         }
-        return { ok: false, error: (r.data && r.data.error) || r.error || 'Error' };
+        errDiv.textContent = 'No se encontr\u00F3 el ID del documento. Elim\u00EDnalo manualmente desde el m\u00F3dulo Documentos.';
+        errDiv.style.display = 'block';
+        return Promise.resolve({ ok: true, sinDocId: true });
+      };
+
+      eliminarRepo().then(function(r) {
+        if (!r.ok) {
+          errDiv.textContent = r.error || 'Error al eliminar del repositorio';
+          errDiv.style.display = 'block';
+          btnEliminar.disabled = false; btnSolo.disabled = false;
+          btnEliminar.textContent = 'Eliminar del repositorio y cambiar estado';
+          return;
+        }
+        if (!r.sinDocId) {
+          item.enRepositorio = false;
+          item.docId         = null;
+          item.urlDrive      = '';
+        }
+        var cambios = { estado: nuevoEstado, enRepositorio: item.enRepositorio, docId: item.docId || '', urlDrive: item.urlDrive };
+        _actualizarItem(rec.id, item.id, cambios, function() {
+          item.estado = nuevoEstado;
+          overlay.remove();
+          var fila = document.getElementById('rx-item-' + item.id);
+          if (fila) { var nueva = _renderItem(item, rec); fila.parentNode.replaceChild(nueva, fila); }
+          _actualizarHeader(rec);
+        });
+      }).catch(function(e) {
+        errDiv.textContent = e.message; errDiv.style.display = 'block';
+        btnEliminar.disabled = false; btnSolo.disabled = false;
+        btnEliminar.textContent = 'Eliminar del repositorio y cambiar estado';
       });
+    });
+
+    btnSolo.addEventListener('click', function() {
+      btnEliminar.disabled = true; btnSolo.disabled = true;
+      _actualizarItem(rec.id, item.id, { estado: nuevoEstado }, function() {
+        item.estado = nuevoEstado;
+        overlay.remove();
+        var fila = document.getElementById('rx-item-' + item.id);
+        if (fila) { var nueva = _renderItem(item, rec); fila.parentNode.replaceChild(nueva, fila); }
+        _actualizarHeader(rec);
+      });
+    });
   }
 
   // ── Modal: generar acta ────────────────────────────────────
@@ -819,13 +979,11 @@
     var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Generar acta documental'; box.appendChild(tt);
     var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'El acta registra el estado de cada \u00EDtem. Se requiere la firma de CoproActiva y al menos 2 miembros del comit\u00E9.'; box.appendChild(st);
 
-    // CoproActiva (fijo)
     var secCopro = document.createElement('div');
     secCopro.style.cssText = 'padding:12px 14px;background:var(--co-cream-deep);border-radius:var(--co-r-md);margin-bottom:14px';
-    secCopro.innerHTML = '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Por CoproActiva</div><div style="font-size:13px;font-weight:600;color:var(--co-ink)">Osmar Andr\u00E9 Meza Aguilar</div><div style="font-size:11px;color:var(--co-mute)">Administrador · RUT 17.642.367-6</div>';
+    secCopro.innerHTML = '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Por CoproActiva</div><div style="font-size:13px;font-weight:600;color:var(--co-ink)">Osmar Andr\u00E9 Meza Aguilar</div><div style="font-size:11px;color:var(--co-mute)">Administrador \u00B7 RUT 17.642.367-6</div>';
     box.appendChild(secCopro);
 
-    // Firmantes comité
     var secFirm = document.createElement('div');
     secFirm.innerHTML = '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:10px">Por la Comunidad (m\u00EDnimo 2)</div>';
 
@@ -888,7 +1046,6 @@
     try { items = JSON.parse(rec.items || '[]'); } catch(e) {}
     var fecha  = new Date().toLocaleDateString('es-CL');
 
-    // Agrupar por área
     var areas = {};
     items.forEach(function(item) {
       if (!areas[item.area]) areas[item.area] = [];
@@ -937,7 +1094,7 @@
       + '<div style="display:flex;gap:24px;flex-wrap:wrap">'
       + '<div style="flex:1;min-width:180px;border-top:1px solid #1A1714;padding-top:8px">'
       + '<div style="font-size:12px;font-weight:700;color:#1A1714">Osmar Andr\u00E9 Meza Aguilar</div>'
-      + '<div style="font-size:11px;color:#888">Administrador · CoproActiva</div>'
+      + '<div style="font-size:11px;color:#888">Administrador \u00B7 CoproActiva</div>'
       + '<div style="font-size:11px;color:#888">RUT: 17.642.367-6</div></div>'
       + firmantesHtml + '</div></div>'
       + '<div class="no-print" style="padding:14px 24px;text-align:center">'
@@ -996,12 +1153,11 @@
       .then(function(r) {
         if (r.ok && r.data && r.data.ok) {
           overlay.remove();
-          init(); // recargar listado
+          init();
         } else if (r.data && r.data.requiereInstalaciones) {
           var com = _comunidades.find(function(c) { return c.id === comId; });
           overlay.remove();
           modalInstalacionesRecepcion(comId, com ? com.nombre : '', function() {
-            // Reintentar la creación apenas se guardan las instalaciones
             api('/recepciones', 'POST', { action: 'crearRecepcion', comunidadId: comId })
               .then(function(r2) {
                 if (r2.ok && r2.data && r2.data.ok) { init(); }
@@ -1015,7 +1171,7 @@
       }).catch(function(e) { errDiv.textContent = e.message; errDiv.style.display = 'block'; btnCrear.disabled = false; btnCrear.textContent = 'Crear recepci\u00F3n'; });
   }
 
-  // ── Modal instalaciones (cuando falta configurarlas para crear la Recepción) ──
+  // ── Modal instalaciones ────────────────────────────────────
   function modalInstalacionesRecepcion(comunidadId, comunidadNombre, onGuardado) {
     var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
     var box = document.createElement('div'); box.className = 'modal-box';
