@@ -3,53 +3,15 @@
 
 <style>
   #crm-root { font-family: var(--co-font); color: var(--co-ink); }
-
-  /* Sub-módulos dentro del CRM — ocultar sus headers propios */
   .crm-sub-modulo .page-header { display: none !important; }
   .crm-sub-modulo .ph           { display: none !important; }
   .crm-sub-modulo .home-header  { display: none !important; }
   .crm-sub-modulo #rx-root .module-loading { min-height: 200px; }
-
-  /* ── Tabs ── */
-  .crm-tabs-bar {
-    display: flex;
-    border-bottom: 1px solid var(--co-line);
-    gap: 0;
-    overflow-x: auto;
-    margin-bottom: 20px;
-  }
-  .crm-tab-btn {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 10px 16px;
-    color: var(--co-mute);
-    cursor: pointer;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    white-space: nowrap;
-    background: none;
-    font-family: var(--co-font);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: color 0.13s;
-  }
-  .crm-tab-btn.act {
-    color: var(--co-orange);
-    border-bottom-color: var(--co-orange);
-  }
+  .crm-tabs-bar { display: flex; border-bottom: 1px solid var(--co-line); gap: 0; overflow-x: auto; margin-bottom: 20px; }
+  .crm-tab-btn { font-size: 12px; font-weight: 600; padding: 10px 16px; color: var(--co-mute); cursor: pointer; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; background: none; font-family: var(--co-font); display: flex; align-items: center; gap: 6px; transition: color 0.13s; }
+  .crm-tab-btn.act { color: var(--co-orange); border-bottom-color: var(--co-orange); }
   .crm-tab-btn i { font-size: 14px; }
-  .crm-tab-badge {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 20px;
-    background: var(--co-orange-soft);
-    color: var(--co-orange);
-  }
-
-  /* ── Modal ── */
+  .crm-tab-badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px; background: var(--co-orange-soft); color: var(--co-orange); }
   .modal-overlay { position: fixed; inset: 0; background: rgba(26,23,20,0.55); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
   .modal-box { background: var(--co-surface); border-radius: var(--co-r-lg); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative; box-shadow: var(--co-shadow-lg); }
   @media (max-width: 767px) { .modal-overlay { padding: 0; align-items: flex-end; } .modal-box { border-radius: var(--co-r-lg) var(--co-r-lg) 0 0; max-height: 92vh; padding: 24px 20px 36px; } }
@@ -81,8 +43,8 @@
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
   .form-group label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 6px; }
-  .form-group input, .form-group select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 500; color: var(--co-ink); background: var(--co-surface); box-sizing: border-box; min-height: 44px; transition: border-color 0.13s; }
-  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--co-orange); }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 500; color: var(--co-ink); background: var(--co-surface); box-sizing: border-box; min-height: 44px; transition: border-color 0.13s; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--co-orange); }
   .form-group input::placeholder { color: var(--co-mute); }
   .form-full { grid-column: 1 / -1; }
   .btn-guardar { background: var(--co-orange); color: #fff; border: none; padding: 14px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; min-height: 50px; letter-spacing: -0.01em; transition: background 0.13s; }
@@ -102,8 +64,6 @@
   .toggle-datos-label { font-size: 12px; font-weight: 600; color: var(--co-ink-3); letter-spacing: -0.01em; }
   .toggle-datos-chev { font-size: 10px; color: var(--co-mute); transition: transform 0.2s; }
   .crm-error { background: var(--co-red-soft); border: 1px solid var(--co-red); border-radius: var(--co-r-md); padding: 16px 20px; color: var(--co-red); font-size: 13px; font-weight: 600; }
-
-  /* ── Móvil Accordion ── */
   .vista-mobile { display: none; }
   @media (max-width: 767px) {
     .vista-desktop { display: none !important; }
@@ -121,6 +81,66 @@
     .accordion-body.abierto { display: block; }
     .accordion-vacia { font-size: 12px; color: var(--co-mute); text-align: center; padding: 14px 0; }
   }
+
+  /* ── Leads ── */
+  .leads-kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+  @media (max-width: 900px) { .leads-kpis { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 500px) { .leads-kpis { grid-template-columns: repeat(2, 1fr); } }
+  .lead-kpi { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); padding: 14px 16px; }
+  .lead-kpi-num { font-size: 26px; font-weight: 800; color: var(--co-ink); letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px; }
+  .lead-kpi-num.conv { color: var(--co-green); }
+  .lead-kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-mute); }
+  .lead-kpi-bar { margin-top: 8px; height: 3px; background: var(--co-line); border-radius: 99px; overflow: hidden; }
+  .lead-kpi-bar-fill { height: 100%; background: var(--co-green); border-radius: 99px; transition: width 0.4s; }
+  .leads-toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .leads-search { flex: 1; min-width: 160px; padding: 9px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; color: var(--co-ink); background: var(--co-surface); min-height: 40px; }
+  .leads-search:focus { outline: none; border-color: var(--co-orange); }
+  .leads-filter { padding: 9px 12px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 12px; font-weight: 600; color: var(--co-ink); background: var(--co-surface); min-height: 40px; cursor: pointer; }
+  .leads-filter:focus { outline: none; border-color: var(--co-orange); }
+  .leads-btn-sec { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 12px; font-weight: 700; color: var(--co-ink); background: var(--co-surface); cursor: pointer; min-height: 40px; white-space: nowrap; transition: border-color 0.13s, background 0.13s; }
+  .leads-btn-sec:hover { border-color: var(--co-orange); background: var(--co-cream); }
+  .leads-table { width: 100%; border-collapse: collapse; }
+  .leads-table th { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--co-mute); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--co-line); white-space: nowrap; }
+  .leads-table td { padding: 12px 12px; border-bottom: 1px solid var(--co-line); vertical-align: middle; }
+  .leads-table tr:last-child td { border-bottom: none; }
+  .leads-table tr:hover td { background: var(--co-cream); cursor: pointer; }
+  .lead-nombre-cell { font-size: 13px; font-weight: 700; color: var(--co-ink); }
+  .lead-sub-cell { font-size: 11px; color: var(--co-mute); margin-top: 2px; }
+  .lead-contacto-cell { font-size: 12px; color: var(--co-ink-2); font-weight: 500; }
+  .lead-fecha-cell { font-size: 11px; color: var(--co-mute); white-space: nowrap; }
+  .lead-acciones { display: flex; gap: 6px; }
+  .lead-acc-btn { width: 32px; height: 32px; border-radius: var(--co-r-sm); border: 1px solid var(--co-line); background: var(--co-surface); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--co-mute); font-size: 14px; transition: background 0.13s, color 0.13s; }
+  .lead-acc-btn:hover { background: var(--co-orange-soft); color: var(--co-orange); border-color: var(--co-orange); }
+  .pill { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+  .pill-nuevo      { background: #e8f4ff; color: #2563eb; }
+  .pill-contactado { background: #fff7e6; color: #d97706; }
+  .pill-convertido { background: #ecfdf5; color: #059669; }
+  .pill-descartado { background: #f5f5f5; color: #6b7280; }
+  .pill-comunidad  { background: #f3e8ff; color: #7c3aed; }
+  .pill-proyecto   { background: #e0f2fe; color: #0369a1; }
+  .leads-empty { text-align: center; padding: 48px 20px; color: var(--co-mute); font-size: 13px; font-weight: 500; }
+  .leads-cards { display: none; }
+  @media (max-width: 767px) {
+    .leads-table-wrap { display: none; }
+    .leads-cards { display: flex; flex-direction: column; gap: 10px; }
+    .lead-card { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); padding: 14px 16px; box-shadow: var(--co-shadow-sm); cursor: pointer; }
+    .lead-card:active { background: var(--co-cream); }
+    .lead-card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+    .lead-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .lead-avatar.comunidad { background: #7c3aed; }
+    .lead-avatar.proyecto  { background: #0369a1; }
+    .lead-card-info { flex: 1; min-width: 0; }
+    .lead-card-nombre { font-size: 14px; font-weight: 700; color: var(--co-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lead-card-meta { font-size: 11px; color: var(--co-mute); margin-top: 2px; }
+    .lead-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .lead-card-fecha { font-size: 11px; color: var(--co-mute); }
+    .lead-card-btns { display: flex; gap: 6px; }
+  }
+  .lead-hist-item { padding: 8px 0; border-bottom: 1px solid var(--co-line); font-size: 12px; }
+  .lead-hist-item:last-child { border-bottom: none; }
+  .lead-hist-tipo { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 2px; }
+  .lead-hist-texto { color: var(--co-ink-2); font-weight: 500; }
+  .lead-hist-fecha { font-size: 10px; color: var(--co-mute); margin-top: 2px; }
 </style>
 
 <div id="crm-root">
@@ -167,11 +187,53 @@
 
   function normalizarEtapa(e) { return MIGRACION_ETAPAS[e] || e; }
 
-  let prospectos = [];
-  let _tabActiva = 'pipeline';
+  function _esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
-  // Configuración de cada tab
+  function _fechaCorta(iso) {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'2-digit' });
+    } catch(e) { return iso; }
+  }
+
+  function _histLabel(tipo) {
+    const map = {
+      creacion: 'Creación', edicion: 'Edición', cambio_estado: 'Cambio de estado',
+      observacion: 'Observación', correo: 'Correo enviado', archivado: 'Archivado',
+      reactivado: 'Reactivado', convertido: 'Convertido a prospecto'
+    };
+    return map[tipo] || tipo;
+  }
+
+  function _histTexto(ev) {
+    const d = ev.datos || {};
+    if (ev.tipo === 'cambio_estado') return 'De ' + (d.de||'?') + ' → ' + (d.a||'?') + (d.notas ? ' · ' + d.notas : '');
+    if (ev.tipo === 'observacion')   return d.texto || '';
+    if (ev.tipo === 'correo')        return 'Para: ' + (d.para||'') + (d.asunto ? ' · ' + d.asunto : '');
+    if (ev.tipo === 'convertido')    return 'Prospecto: ' + (d.prospectoId||'');
+    if (ev.tipo === 'creacion')      return 'Fuente: ' + (d.fuente||'manual');
+    return d.notas || d.motivo || '';
+  }
+
+  let prospectos = [];
+  let leads = [];
+  let _tabActiva = 'leads';
+  let _leadBusqueda = '';
+  let _leadFiltroEstado = '';
+  let _leadFiltroTipo = '';
+  let _leadArchivados = false;
+
   const TAB_CONFIG = {
+    leads: {
+      titulo:  'Leads <em>comerciales</em>',
+      sub:     'Prospectos iniciales antes de ingresar al pipeline.',
+      btnLbl:  'Nuevo lead',
+      btnAct:  () => abrirModalNuevoLead(),
+      kpis:    false,
+    },
     pipeline: {
       titulo:  'Pipeline <em>comercial</em>',
       sub:     'Seguimiento de prospectos desde el primer contacto hasta la firma del contrato.',
@@ -188,15 +250,16 @@
     },
     recepcion: {
       titulo:  'Recepci\u00F3n <em>documental</em>',
-      sub:     'Checklist Anexo N\u00B01 \u2014 antecedentes al tomar una comunidad.',
+      sub:     'Checklist Anexo N\u00BA1 \u2014 antecedentes al tomar una comunidad.',
       btnLbl:  'Nueva recepci\u00F3n',
       btnAct:  () => { if (typeof window._rxNuevo === 'function') window._rxNuevo(); },
       kpis:    false,
     },
   };
 
-  async function api(path, method = 'GET', body = null) {
-    const opts = { method, headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' } };
+  async function api(path, method, body) {
+    method = method || 'GET';
+    const opts = { method, headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(WORKER_URL + path, opts);
     return res.json();
@@ -204,12 +267,16 @@
 
   async function init() {
     try {
-      const resp = await api('/crm');
-      if (!resp.ok || !resp.data || !resp.data.ok) {
-        mostrarError(resp.data?.error || resp.error || 'Error desconocido');
+      const [respCRM, respLeads] = await Promise.all([
+        api('/crm'),
+        api('/leads')
+      ]);
+      if (!respCRM.ok || !respCRM.data || !respCRM.data.ok) {
+        mostrarError(respCRM.data && respCRM.data.error ? respCRM.data.error : (respCRM.error || 'Error desconocido'));
         return;
       }
-      prospectos = (resp.data.data || []).map(p => ({ ...p, etapa: normalizarEtapa(p.etapa) }));
+      prospectos = (respCRM.data.data || []).map(function(p) { return Object.assign({}, p, { etapa: normalizarEtapa(p.etapa) }); });
+      leads = (respLeads.ok && respLeads.data && respLeads.data.ok) ? (respLeads.data.data || []) : [];
       renderCRM();
     } catch (err) {
       mostrarError('Error de conexi\u00F3n: ' + err.message);
@@ -218,66 +285,65 @@
 
   function renderCRM() {
     const root = document.getElementById('crm-root');
-    const activos  = prospectos.filter(p => p.etapa !== 'Ganado' && p.etapa !== 'Perdido');
-    const ganados  = prospectos.filter(p => p.etapa === 'Ganado').length;
-    const perdidos = prospectos.filter(p => p.etapa === 'Perdido').length;
-    const urgentes = activos.filter(p => p.semaforo === 'rojo').length;
+    const activos  = prospectos.filter(function(p) { return p.etapa !== 'Ganado' && p.etapa !== 'Perdido'; });
+    const ganados  = prospectos.filter(function(p) { return p.etapa === 'Ganado'; }).length;
+    const urgentes = activos.filter(function(p) { return p.semaforo === 'rojo'; }).length;
+    const leadsActivos = leads.filter(function(l) { return !l.archivado && l.archivado !== 'TRUE'; }).length;
 
-    window._crmKpis = { activos: activos.length, urgentes, ganados };
+    window._crmKpis = { activos: activos.length, urgentes: urgentes, ganados: ganados };
     if (typeof actualizarKpisCRM === 'function') actualizarKpisCRM();
 
-    // Exponer acción "Nuevo" al topbar del index.html
-    window._crmAccionNuevo = () => {
-      if (_tabActiva === 'pipeline') abrirModalNuevo();
+    window._crmAccionNuevo = function() {
+      if (_tabActiva === 'leads')       abrirModalNuevoLead();
+      else if (_tabActiva === 'pipeline')    abrirModalNuevo();
       else if (_tabActiva === 'diagnostico' && typeof cargarModulo === 'function') cargarModulo('diagnostico');
-      else if (_tabActiva === 'recepcion' && typeof cargarModulo === 'function') cargarModulo('recepcion');
+      else if (_tabActiva === 'recepcion'   && typeof cargarModulo === 'function') cargarModulo('recepcion');
     };
 
     const cfg = TAB_CONFIG[_tabActiva];
 
-    // ── Estructura fija: header + tabs (nunca se reemplaza)
-    root.innerHTML = `
-      <div class="page-header" id="crm-page-header">
-        <div>
-          <div class="page-eyebrow">CRM</div>
-          <h1 class="page-title" id="crm-header-title">${cfg.titulo}</h1>
-          <p class="page-sub" id="crm-header-sub">${cfg.sub}</p>
-        </div>
-        <button class="btn-nuevo" id="crm-btn-accion">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-          <span id="crm-btn-lbl">${cfg.btnLbl}</span>
-        </button>
-      </div>
-      <div class="crm-tabs-bar" id="crm-tabs-bar">
-        <button class="crm-tab-btn ${_tabActiva === 'pipeline' ? 'act' : ''}" data-tab="pipeline">
-          <i class="ti ti-layout-kanban" aria-hidden="true"></i> Pipeline
-          <span class="crm-tab-badge">${activos.length}</span>
-        </button>
-        <button class="crm-tab-btn ${_tabActiva === 'diagnostico' ? 'act' : ''}" data-tab="diagnostico">
-          <i class="ti ti-stethoscope" aria-hidden="true"></i> Diagn\u00F3stico
-        </button>
-        <button class="crm-tab-btn ${_tabActiva === 'recepcion' ? 'act' : ''}" data-tab="recepcion">
-          <i class="ti ti-clipboard-list" aria-hidden="true"></i> Recepci\u00F3n
-        </button>
-      </div>
-      <div id="crm-tab-content"></div>
-    `;
+    root.innerHTML =
+      '<div class="page-header" id="crm-page-header">' +
+        '<div>' +
+          '<div class="page-eyebrow">CRM</div>' +
+          '<h1 class="page-title" id="crm-header-title">' + cfg.titulo + '</h1>' +
+          '<p class="page-sub" id="crm-header-sub">' + cfg.sub + '</p>' +
+        '</div>' +
+        '<button class="btn-nuevo" id="crm-btn-accion">' +
+          '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>' +
+          '<span id="crm-btn-lbl">' + cfg.btnLbl + '</span>' +
+        '</button>' +
+      '</div>' +
+      '<div class="crm-tabs-bar" id="crm-tabs-bar">' +
+        '<button class="crm-tab-btn ' + (_tabActiva === 'leads' ? 'act' : '') + '" data-tab="leads">' +
+          '<i class="ti ti-user-search" aria-hidden="true"></i> Leads' +
+          '<span class="crm-tab-badge">' + leadsActivos + '</span>' +
+        '</button>' +
+        '<button class="crm-tab-btn ' + (_tabActiva === 'pipeline' ? 'act' : '') + '" data-tab="pipeline">' +
+          '<i class="ti ti-layout-kanban" aria-hidden="true"></i> Pipeline' +
+          '<span class="crm-tab-badge">' + activos.length + '</span>' +
+        '</button>' +
+        '<button class="crm-tab-btn ' + (_tabActiva === 'diagnostico' ? 'act' : '') + '" data-tab="diagnostico">' +
+          '<i class="ti ti-stethoscope" aria-hidden="true"></i> Diagn\u00F3stico' +
+        '</button>' +
+        '<button class="crm-tab-btn ' + (_tabActiva === 'recepcion' ? 'act' : '') + '" data-tab="recepcion">' +
+          '<i class="ti ti-clipboard-list" aria-hidden="true"></i> Recepci\u00F3n' +
+        '</button>' +
+      '</div>' +
+      '<div id="crm-tab-content"></div>';
 
     document.getElementById('crm-tabs-bar').addEventListener('click', function(e) {
       const btn = e.target.closest('.crm-tab-btn');
       if (!btn) return;
       cambiarTab(btn.dataset.tab);
     });
-
     document.getElementById('crm-btn-accion').addEventListener('click', function() {
       TAB_CONFIG[_tabActiva].btnAct();
     });
 
-    // Renderizar contenido del tab activo
     _renderTabContent(_tabActiva);
   }
 
-  // ── Actualiza SOLO el header y botón sin tocar tabs ni contenido ──
   function _actualizarHeader(tab) {
     const cfg = TAB_CONFIG[tab];
     const title = document.getElementById('crm-header-title');
@@ -288,66 +354,63 @@
     if (lbl)   lbl.textContent = cfg.btnLbl;
   }
 
-  // ── Renderiza el contenido del tab en #crm-tab-content ──
   function _renderTabContent(tab) {
     const container = document.getElementById('crm-tab-content');
     if (!container) return;
 
+    if (tab === 'leads') {
+      renderLeads(container);
+      return;
+    }
+
     if (tab === 'pipeline') {
-      container.innerHTML = `
-        <div class="crm-kpis">
-          <div class="kpi-card activos"><div class="kpi-num">${prospectos.filter(p=>p.etapa!=='Ganado'&&p.etapa!=='Perdido').length}</div><div class="kpi-label">Activos</div></div>
-          <div class="kpi-card urgente"><div class="kpi-num urgente">${prospectos.filter(p=>p.semaforo==='rojo'&&p.etapa!=='Ganado'&&p.etapa!=='Perdido').length}</div><div class="kpi-label">Urgentes</div></div>
-          <div class="kpi-card ganado"><div class="kpi-num ganado">${prospectos.filter(p=>p.etapa==='Ganado').length}</div><div class="kpi-label">Ganados</div></div>
-          <div class="kpi-card perdido"><div class="kpi-num perdido">${prospectos.filter(p=>p.etapa==='Perdido').length}</div><div class="kpi-label">Perdidos</div></div>
-        </div>
-        <div class="vista-desktop">
-          <div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div>
-        </div>
-        <div class="vista-mobile" id="accordion-mobile"></div>
-      `;
+      container.innerHTML =
+        '<div class="crm-kpis">' +
+          '<div class="kpi-card activos"><div class="kpi-num">' + prospectos.filter(function(p){return p.etapa!=='Ganado'&&p.etapa!=='Perdido';}).length + '</div><div class="kpi-label">Activos</div></div>' +
+          '<div class="kpi-card urgente"><div class="kpi-num urgente">' + prospectos.filter(function(p){return p.semaforo==='rojo'&&p.etapa!=='Ganado'&&p.etapa!=='Perdido';}).length + '</div><div class="kpi-label">Urgentes</div></div>' +
+          '<div class="kpi-card ganado"><div class="kpi-num ganado">' + prospectos.filter(function(p){return p.etapa==='Ganado';}).length + '</div><div class="kpi-label">Ganados</div></div>' +
+          '<div class="kpi-card perdido"><div class="kpi-num perdido">' + prospectos.filter(function(p){return p.etapa==='Perdido';}).length + '</div><div class="kpi-label">Perdidos</div></div>' +
+        '</div>' +
+        '<div class="vista-desktop"><div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div></div>' +
+        '<div class="vista-mobile" id="accordion-mobile"></div>';
       renderKanban();
       renderAccordion();
       return;
     }
 
-    // Diagnóstico y Recepción: cargar HTML del módulo dentro del CRM
     container.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
-
     const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
 
     if (tab === 'diagnostico') {
-      // Diagnóstico: fetch + innerHTML del módulo integrado
       fetch(base + 'modules/diagnostico.html')
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + r.url); return r.text(); })
-        .then(html => {
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + r.url); return r.text(); })
+        .then(function(html) {
           container.innerHTML = html;
           container.classList.add('crm-sub-modulo');
-          Array.from(container.querySelectorAll('script')).forEach(old => {
+          Array.from(container.querySelectorAll('script')).forEach(function(old) {
             const s = document.createElement('script');
             s.textContent = old.textContent;
             old.parentNode.replaceChild(s, old);
           });
         })
-        .catch(err => {
+        .catch(function(err) {
           container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error: ' + err.message + '</div>';
         });
       return;
     }
 
-    // Recepción y otros: fetch + innerHTML
     fetch(base + 'modules/' + tab + '.html')
-      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-      .then(html => {
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function(html) {
         container.innerHTML = html;
         container.classList.add('crm-sub-modulo');
-        Array.from(container.querySelectorAll('script')).forEach(old => {
+        Array.from(container.querySelectorAll('script')).forEach(function(old) {
           const s = document.createElement('script');
           s.textContent = old.textContent;
           old.parentNode.replaceChild(s, old);
         });
       })
-      .catch(err => {
+      .catch(function(err) {
         container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error al cargar ' + tab + ': ' + err.message + '</div>';
       });
   }
@@ -355,17 +418,585 @@
   function cambiarTab(tab) {
     if (tab === _tabActiva) return;
     _tabActiva = tab;
-
-    // Actualizar tabs activos
-    document.querySelectorAll('.crm-tab-btn').forEach(b => {
+    document.querySelectorAll('.crm-tab-btn').forEach(function(b) {
       b.classList.toggle('act', b.dataset.tab === tab);
     });
-
-    // Actualizar header dinámicamente
     _actualizarHeader(tab);
-
-    // Renderizar contenido del tab
     _renderTabContent(tab);
+  }
+
+  // ── LEADS: render principal ───────────────────────────────
+  function renderLeads(container) {
+    const activos = leads.filter(function(l) {
+      return !l.archivado && l.archivado !== 'TRUE' && l.archivado !== 'true';
+    });
+    const contar = function(est) { return activos.filter(function(l){ return (l.estado||'nuevo') === est; }).length; };
+    const total = activos.length;
+    const convertidos = contar('convertido');
+    const tasa = total > 0 ? Math.round((convertidos/total)*100) : 0;
+
+    container.innerHTML =
+      '<div class="leads-kpis">' +
+        '<div class="lead-kpi"><div class="lead-kpi-num">' + total + '</div><div class="lead-kpi-label">Total leads</div></div>' +
+        '<div class="lead-kpi"><div class="lead-kpi-num">' + contar('nuevo') + '</div><div class="lead-kpi-label">Nuevos</div></div>' +
+        '<div class="lead-kpi"><div class="lead-kpi-num">' + contar('contactado') + '</div><div class="lead-kpi-label">Contactados</div></div>' +
+        '<div class="lead-kpi"><div class="lead-kpi-num conv">' + convertidos + '</div><div class="lead-kpi-label">Convertidos ' + tasa + '%</div>' +
+          '<div class="lead-kpi-bar"><div class="lead-kpi-bar-fill" style="width:' + tasa + '%"></div></div>' +
+        '</div>' +
+        '<div class="lead-kpi"><div class="lead-kpi-num">' + (leads.length - total) + '</div><div class="lead-kpi-label">Archivados</div></div>' +
+      '</div>' +
+      '<div class="leads-toolbar">' +
+        '<input class="leads-search" id="lead-search" placeholder="Buscar condominio, contacto\u2026" value="' + _esc(_leadBusqueda) + '">' +
+        '<select class="leads-filter" id="lead-fil-estado">' +
+          '<option value="">Todos los estados</option>' +
+          '<option value="nuevo"' + (_leadFiltroEstado==='nuevo'?' selected':'') + '>Nuevo</option>' +
+          '<option value="contactado"' + (_leadFiltroEstado==='contactado'?' selected':'') + '>Contactado</option>' +
+          '<option value="convertido"' + (_leadFiltroEstado==='convertido'?' selected':'') + '>Convertido</option>' +
+          '<option value="descartado"' + (_leadFiltroEstado==='descartado'?' selected':'') + '>Descartado</option>' +
+        '</select>' +
+        '<select class="leads-filter" id="lead-fil-tipo">' +
+          '<option value="">Todos los tipos</option>' +
+          '<option value="comunidad_existente"' + (_leadFiltroTipo==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
+          '<option value="proyecto_nuevo"' + (_leadFiltroTipo==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
+        '</select>' +
+        '<button class="leads-btn-sec" id="lead-btn-archivados">' +
+          (_leadArchivados ? '\u25A0 Ocultar archivados' : '\u25A1 Ver archivados') +
+        '</button>' +
+      '</div>' +
+      '<div class="leads-table-wrap"><table class="leads-table"><thead><tr>' +
+        '<th>Condominio</th><th>Tipo</th><th>Contacto</th><th>Estado</th><th>\u00DAltimo contacto</th><th></th>' +
+      '</tr></thead><tbody id="leads-tbody"></tbody></table></div>' +
+      '<div class="leads-cards" id="leads-cards"></div>';
+
+    // eventos toolbar
+    container.querySelector('#lead-search').addEventListener('input', function(e) {
+      _leadBusqueda = e.target.value;
+      _renderLeadsFiltered();
+    });
+    container.querySelector('#lead-fil-estado').addEventListener('change', function(e) {
+      _leadFiltroEstado = e.target.value;
+      _renderLeadsFiltered();
+    });
+    container.querySelector('#lead-fil-tipo').addEventListener('change', function(e) {
+      _leadFiltroTipo = e.target.value;
+      _renderLeadsFiltered();
+    });
+    container.querySelector('#lead-btn-archivados').addEventListener('click', function() {
+      _leadArchivados = !_leadArchivados;
+      renderLeads(container);
+    });
+
+    _renderLeadsFiltered();
+  }
+
+  function _leadsFiltrados() {
+    let lista = _leadArchivados ? leads : leads.filter(function(l) {
+      return !l.archivado && l.archivado !== 'TRUE' && l.archivado !== 'true';
+    });
+    if (_leadFiltroEstado) lista = lista.filter(function(l){ return (l.estado||'nuevo') === _leadFiltroEstado; });
+    if (_leadFiltroTipo)   lista = lista.filter(function(l){ return l.tipoLead === _leadFiltroTipo; });
+    if (_leadBusqueda) {
+      const q = _leadBusqueda.toLowerCase();
+      lista = lista.filter(function(l) {
+        return (l.nombreCondominio||'').toLowerCase().includes(q) ||
+               (l.nombreContacto||'').toLowerCase().includes(q) ||
+               (l.email||'').toLowerCase().includes(q) ||
+               (l.comuna||'').toLowerCase().includes(q);
+      });
+    }
+    return lista;
+  }
+
+  function _pillEstado(est) {
+    const map = { nuevo:'pill-nuevo', contactado:'pill-contactado', convertido:'pill-convertido', descartado:'pill-descartado' };
+    return '<span class="pill ' + (map[est]||'pill-nuevo') + '">' + _esc(est||'nuevo') + '</span>';
+  }
+
+  function _pillTipo(tipo) {
+    if (tipo === 'comunidad_existente') return '<span class="pill pill-comunidad">Existente</span>';
+    return '<span class="pill pill-proyecto">Nuevo</span>';
+  }
+
+  function _renderLeadsFiltered() {
+    const lista = _leadsFiltrados();
+    const tbody = document.getElementById('leads-tbody');
+    const cards = document.getElementById('leads-cards');
+    if (!tbody) return;
+
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="leads-empty">No hay leads que mostrar.</div></td></tr>';
+      if (cards) cards.innerHTML = '<div class="leads-empty">No hay leads que mostrar.</div>';
+      return;
+    }
+
+    tbody.innerHTML = lista.map(function(l) {
+      return '<tr data-id="' + _esc(l.id) + '">' +
+        '<td><div class="lead-nombre-cell">' + _esc(l.nombreCondominio) + '</div>' +
+             '<div class="lead-sub-cell">' + _esc(l.comuna||'') + '</div></td>' +
+        '<td>' + _pillTipo(l.tipoLead) + '</td>' +
+        '<td class="lead-contacto-cell">' + _esc(l.nombreContacto||'—') + '</td>' +
+        '<td>' + _pillEstado(l.estado) + '</td>' +
+        '<td class="lead-fecha-cell">' + _fechaCorta(l.fechaUltimoContacto) + '</td>' +
+        '<td><div class="lead-acciones">' +
+          '<button class="lead-acc-btn" data-accion="correo" data-id="' + _esc(l.id) + '" title="Enviar correo"><i class="ti ti-mail"></i></button>' +
+          '<button class="lead-acc-btn" data-accion="llamar" data-id="' + _esc(l.id) + '" title="Llamar"><i class="ti ti-phone"></i></button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+
+    if (cards) {
+      cards.innerHTML = lista.map(function(l) {
+        const ini = ((l.nombreCondominio||'?').charAt(0)).toUpperCase();
+        const cls = l.tipoLead === 'comunidad_existente' ? 'comunidad' : 'proyecto';
+        return '<div class="lead-card" data-id="' + _esc(l.id) + '">' +
+          '<div class="lead-card-top">' +
+            '<div class="lead-avatar ' + cls + '">' + ini + '</div>' +
+            '<div class="lead-card-info">' +
+              '<div class="lead-card-nombre">' + _esc(l.nombreCondominio) + '</div>' +
+              '<div class="lead-card-meta">' + _esc(l.nombreContacto||'') + (l.comuna ? ' · ' + _esc(l.comuna) : '') + '</div>' +
+            '</div>' +
+            _pillEstado(l.estado) +
+          '</div>' +
+          '<div class="lead-card-footer">' +
+            '<div class="lead-card-fecha">' + _fechaCorta(l.fechaUltimoContacto) + '</div>' +
+            '<div class="lead-card-btns">' +
+              '<button class="lead-acc-btn" data-accion="correo" data-id="' + _esc(l.id) + '"><i class="ti ti-mail"></i></button>' +
+              '<button class="lead-acc-btn" data-accion="llamar" data-id="' + _esc(l.id) + '"><i class="ti ti-phone"></i></button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // Eventos filas tabla
+    tbody.querySelectorAll('tr[data-id]').forEach(function(tr) {
+      tr.addEventListener('click', function(e) {
+        if (e.target.closest('.lead-acc-btn')) return;
+        const l = leads.find(function(x){ return x.id === tr.dataset.id; });
+        if (l) abrirModalDetalleLead(l);
+      });
+    });
+    // Eventos cards móvil
+    if (cards) {
+      cards.querySelectorAll('.lead-card').forEach(function(card) {
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.lead-acc-btn')) return;
+          const l = leads.find(function(x){ return x.id === card.dataset.id; });
+          if (l) abrirModalDetalleLead(l);
+        });
+      });
+    }
+    // Botones acción
+    document.querySelectorAll('.lead-acc-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const l = leads.find(function(x){ return x.id === btn.dataset.id; });
+        if (!l) return;
+        if (btn.dataset.accion === 'correo') abrirModalCorreoLead(l);
+        if (btn.dataset.accion === 'llamar') {
+          const tel = String(l.telefono||'').replace(/[^0-9]/g,'');
+          if (tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56'+tel));
+          else alert('Sin teléfono registrado.');
+        }
+      });
+    });
+  }
+
+  // ── Modal detalle lead ────────────────────────────────────
+  function abrirModalDetalleLead(l) {
+    var hist = [];
+    try { hist = JSON.parse(l.historial || '[]'); } catch(e) { hist = []; }
+    const ultimos = hist.slice(-8).reverse();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    const histHTML = ultimos.length ? ultimos.map(function(ev) {
+      return '<div class="lead-hist-item">' +
+        '<div class="lead-hist-tipo">' + _histLabel(ev.tipo) + '</div>' +
+        '<div class="lead-hist-texto">' + _esc(_histTexto(ev)) + '</div>' +
+        '<div class="lead-hist-fecha">' + _fechaCorta(ev.fecha) + '</div>' +
+      '</div>';
+    }).join('') : '<div style="font-size:12px;color:var(--co-mute);padding:8px 0">Sin historial.</div>';
+
+    overlay.innerHTML =
+      '<div class="modal-box" style="max-width:620px">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc-lead">\u00D7</button>' +
+        '<div style="background:var(--co-ink);margin:-32px -32px 24px;padding:24px 32px;border-radius:var(--co-r-lg) var(--co-r-lg) 0 0">' +
+          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
+            _pillTipo(l.tipoLead) +
+            _pillEstado(l.estado) +
+          '</div>' +
+          '<div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.025em">' + _esc(l.nombreCondominio) + '</div>' +
+          '<div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:4px">' + _esc(l.nombreContacto||'') + (l.comuna ? ' · ' + _esc(l.comuna) : '') + '</div>' +
+        '</div>' +
+        '<div class="modal-grid">' +
+          '<div class="modal-campo"><label>Contacto</label><span>' + _esc(l.nombreContacto||'—') + '</span></div>' +
+          '<div class="modal-campo"><label>Cargo</label><span>' + _esc(l.cargoContacto||'—') + '</span></div>' +
+          '<div class="modal-campo"><label>Tel\u00E9fono</label><span>' + _esc(l.telefono||'—') + '</span></div>' +
+          '<div class="modal-campo"><label>Email</label><span>' + _esc(l.email||'—') + '</span></div>' +
+          '<div class="modal-campo"><label>Fuente</label><span>' + _esc(l.fuenteLead||'—') + '</span></div>' +
+          '<div class="modal-campo"><label>Ingreso</label><span>' + _fechaCorta(l.fechaIngreso) + '</span></div>' +
+          (l.constructora ? '<div class="modal-campo"><label>Constructora</label><span>' + _esc(l.constructora) + '</span></div>' : '') +
+          (l.etapaObra    ? '<div class="modal-campo"><label>Etapa obra</label><span>' + _esc(l.etapaObra) + '</span></div>' : '') +
+          (l.observaciones ? '<div class="modal-campo" style="grid-column:1/-1"><label>Observaciones</label><span>' + _esc(l.observaciones) + '</span></div>' : '') +
+        '</div>' +
+        '<div class="modal-seccion">' +
+          '<div class="modal-seccion-titulo">Historial reciente</div>' +
+          '<div style="max-height:200px;overflow-y:auto">' + histHTML + '</div>' +
+        '</div>' +
+        '<div class="modal-seccion">' +
+          '<div class="modal-seccion-titulo">Agregar observaci\u00F3n</div>' +
+          '<textarea id="lead-obs-txt" rows="3" placeholder="Escribe una nota\u2026" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical"></textarea>' +
+          '<button class="btn-cambiar" id="btn-obs-guardar" style="margin-top:10px">Guardar observaci\u00F3n</button>' +
+        '</div>' +
+        '<div class="modal-seccion">' +
+          '<div class="modal-seccion-titulo">Cambiar estado</div>' +
+          '<select class="etapa-select" id="lead-sel-estado">' +
+            ['nuevo','contactado','convertido','descartado'].map(function(est) {
+              return '<option value="' + est + '"' + ((l.estado||'nuevo')===est?' selected':'') + '>' + est.charAt(0).toUpperCase()+est.slice(1) + '</option>';
+            }).join('') +
+          '</select>' +
+          '<button class="btn-cambiar" id="btn-lead-estado">Guardar estado</button>' +
+          '<div class="msg-ok" id="lead-msg-ok">\u2713 Actualizado</div>' +
+        '</div>' +
+        '<div class="modal-seccion" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+          '<button class="btn-contactar btn-mail" id="btn-lead-correo" style="font-size:12px;padding:11px 14px">' +
+            '<i class="ti ti-mail"></i> Correo' +
+          '</button>' +
+          '<button class="btn-contactar btn-wsp" id="btn-lead-wsp" style="font-size:12px;padding:11px 14px">' +
+            '<i class="ti ti-phone"></i> Llamar' +
+          '</button>' +
+          (l.convertidoAProspectoId ? '' :
+            '<button class="btn-guardar" id="btn-lead-convertir" style="grid-column:1/-1;margin-top:0;background:var(--co-green)">Convertir a prospecto</button>'
+          ) +
+          '<button class="btn-editar-datos" id="btn-lead-editar" style="grid-column:1/-1">' +
+            '<i class="ti ti-pencil"></i> Editar datos' +
+          '</button>' +
+          (l.archivado ?
+            '<button class="btn-editar-datos" id="btn-lead-reactivar" style="grid-column:1/-1">Reactivar lead</button>' :
+            '<button class="btn-editar-datos" id="btn-lead-archivar" style="grid-column:1/-1;color:var(--co-red)">Archivar lead</button>'
+          ) +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    const cerrar = function() { overlay.remove(); };
+    overlay.querySelector('#mc-lead').addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    // Guardar observación
+    overlay.querySelector('#btn-obs-guardar').addEventListener('click', async function() {
+      const txt = overlay.querySelector('#lead-obs-txt').value.trim();
+      if (!txt) return;
+      const btn = overlay.querySelector('#btn-obs-guardar');
+      btn.disabled = true; btn.textContent = 'Guardando\u2026';
+      const resp = await api('/leads', 'POST', { action: 'agregarObservacionLead', id: l.id, texto: txt });
+      if (resp.ok && resp.data && resp.data.ok) {
+        // actualizar local
+        var ev = { tipo:'observacion', fecha: new Date().toISOString(), datos:{ texto: txt } };
+        var h = []; try { h = JSON.parse(l.historial||'[]'); } catch(e2){h=[];}
+        h.push(ev); l.historial = JSON.stringify(h);
+        cerrar(); abrirModalDetalleLead(l);
+      } else { btn.disabled = false; btn.textContent = 'Guardar observaci\u00F3n'; alert('Error al guardar.'); }
+    });
+
+    // Cambiar estado
+    overlay.querySelector('#btn-lead-estado').addEventListener('click', async function() {
+      const est = overlay.querySelector('#lead-sel-estado').value;
+      if (est === (l.estado||'nuevo')) return;
+      const btn = overlay.querySelector('#btn-lead-estado');
+      btn.disabled = true; btn.textContent = 'Guardando\u2026';
+      const resp = await api('/leads', 'POST', { action: 'cambiarEstadoLead', id: l.id, estadoNuevo: est });
+      if (resp.ok && resp.data && resp.data.ok) {
+        l.estado = est;
+        overlay.querySelector('#lead-msg-ok').style.display = 'block';
+        btn.textContent = 'Guardar estado'; btn.disabled = false;
+        _renderLeadsFiltered();
+      } else { btn.disabled = false; btn.textContent = 'Guardar estado'; alert('Error.'); }
+    });
+
+    // Correo
+    overlay.querySelector('#btn-lead-correo').addEventListener('click', function() { cerrar(); abrirModalCorreoLead(l); });
+
+    // Llamar
+    overlay.querySelector('#btn-lead-wsp').addEventListener('click', function() {
+      const tel = String(l.telefono||'').replace(/[^0-9]/g,'');
+      if (tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56'+tel));
+      else alert('Sin teléfono registrado.');
+    });
+
+    // Convertir
+    const btnConv = overlay.querySelector('#btn-lead-convertir');
+    if (btnConv) {
+      btnConv.addEventListener('click', async function() {
+        if (!confirm('¿Convertir este lead a prospecto en el Pipeline?')) return;
+        btnConv.disabled = true; btnConv.textContent = 'Convirtiendo\u2026';
+        const resp = await api('/leads', 'POST', { action: 'convertirLead', id: l.id });
+        if (resp.ok && resp.data && resp.data.ok) {
+          l.estado = 'convertido';
+          l.convertidoAProspectoId = resp.data.prospectoId;
+          // recargar prospectos
+          api('/crm').then(function(r) {
+            if (r.ok && r.data && r.data.ok) prospectos = (r.data.data||[]).map(function(p){ return Object.assign({},p,{etapa:normalizarEtapa(p.etapa)}); });
+          });
+          cerrar();
+          alert('\u2713 Convertido. Ya aparece en el Pipeline como "Nuevo prospecto".');
+          _renderLeadsFiltered();
+        } else { btnConv.disabled = false; btnConv.textContent = 'Convertir a prospecto'; alert('Error al convertir.'); }
+      });
+    }
+
+    // Editar
+    overlay.querySelector('#btn-lead-editar').addEventListener('click', function() { cerrar(); abrirModalEditarLead(l); });
+
+    // Archivar
+    const btnArch = overlay.querySelector('#btn-lead-archivar');
+    if (btnArch) {
+      btnArch.addEventListener('click', async function() {
+        if (!confirm('¿Archivar este lead?')) return;
+        await api('/leads', 'POST', { action: 'archivarLead', id: l.id });
+        l.archivado = true; l.estado = 'descartado';
+        cerrar(); _renderLeadsFiltered();
+      });
+    }
+
+    // Reactivar
+    const btnReact = overlay.querySelector('#btn-lead-reactivar');
+    if (btnReact) {
+      btnReact.addEventListener('click', async function() {
+        await api('/leads', 'POST', { action: 'reactivarLead', id: l.id });
+        l.archivado = false; l.estado = 'nuevo';
+        cerrar(); _renderLeadsFiltered();
+      });
+    }
+  }
+
+  // ── Modal nuevo lead ──────────────────────────────────────
+  function abrirModalNuevoLead() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc-nlead">\u00D7</button>' +
+        '<div class="modal-eyebrow">Nuevo registro</div>' +
+        '<div class="modal-titulo">Nuevo lead</div>' +
+        '<div class="modal-subtitulo">Datos b\u00E1sicos del condominio o proyecto</div>' +
+        '<div class="form-grid">' +
+          '<div class="form-group form-full"><label>Tipo *</label>' +
+            '<select id="nl-tipo">' +
+              '<option value="proyecto_nuevo">Proyecto nuevo</option>' +
+              '<option value="comunidad_existente">Comunidad existente</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="form-group form-full"><label>Nombre del condominio / proyecto *</label>' +
+            '<input type="text" id="nl-nombre" placeholder="Ej: Edificio Las Rosas"></div>' +
+          '<div class="form-group"><label>Comuna</label><input type="text" id="nl-comuna" placeholder="Ej: San Bernardo"></div>' +
+          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="nl-dir" placeholder="Calle y n\u00FAmero"></div>' +
+          '<div class="form-group"><label>Contacto *</label><input type="text" id="nl-contacto" placeholder="Nombre completo"></div>' +
+          '<div class="form-group"><label>Cargo</label><input type="text" id="nl-cargo" placeholder="Ej: Presidente comit\u00E9"></div>' +
+          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="nl-tel" placeholder="+569..."></div>' +
+          '<div class="form-group"><label>Email</label><input type="email" id="nl-email" placeholder="correo@cl"></div>' +
+          '<div class="form-group"><label>Fuente</label>' +
+            '<select id="nl-fuente">' +
+              '<option value="manual">Manual</option>' +
+              '<option value="web">Web</option>' +
+              '<option value="referido">Referido</option>' +
+              '<option value="Facebook">Facebook</option>' +
+              '<option value="Instagram">Instagram</option>' +
+              '<option value="otro">Otro</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="form-group"><label>Constructora</label><input type="text" id="nl-constructora" placeholder="Solo proyectos nuevos"></div>' +
+          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="nl-obs" placeholder="Notas adicionales"></div>' +
+        '</div>' +
+        '<div class="form-error" id="nl-error"></div>' +
+        '<button class="btn-guardar" id="btn-guardar-nlead">Guardar lead</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    const cerrar = function() { overlay.remove(); };
+    overlay.querySelector('#mc-nlead').addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    overlay.querySelector('#btn-guardar-nlead').addEventListener('click', async function() {
+      const nombre = overlay.querySelector('#nl-nombre').value.trim();
+      const contacto = overlay.querySelector('#nl-contacto').value.trim();
+      const errDiv = overlay.querySelector('#nl-error');
+      const btn = overlay.querySelector('#btn-guardar-nlead');
+      if (!nombre || !contacto) { errDiv.textContent = 'Nombre y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
+      const datos = {
+        action: 'crearLead',
+        tipoLead: overlay.querySelector('#nl-tipo').value,
+        nombreCondominio: nombre,
+        comuna: overlay.querySelector('#nl-comuna').value.trim(),
+        direccion: overlay.querySelector('#nl-dir').value.trim(),
+        nombreContacto: contacto,
+        cargoContacto: overlay.querySelector('#nl-cargo').value.trim(),
+        telefono: overlay.querySelector('#nl-tel').value.trim(),
+        email: overlay.querySelector('#nl-email').value.trim(),
+        fuenteLead: overlay.querySelector('#nl-fuente').value,
+        constructora: overlay.querySelector('#nl-constructora').value.trim(),
+        observaciones: overlay.querySelector('#nl-obs').value.trim(),
+      };
+      const resp = await api('/leads', 'POST', datos);
+      if (resp.ok && resp.data && resp.data.ok) {
+        leads.unshift(resp.data.data);
+        cerrar();
+        const cont = document.getElementById('crm-tab-content');
+        if (cont) renderLeads(cont);
+      } else {
+        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
+        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar lead';
+      }
+    });
+  }
+
+  // ── Modal editar lead ─────────────────────────────────────
+  function abrirModalEditarLead(l) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc-elead">\u00D7</button>' +
+        '<div class="modal-eyebrow">Editar lead</div>' +
+        '<div class="modal-titulo">' + _esc(l.nombreCondominio) + '</div>' +
+        '<div class="modal-subtitulo">Modifica los datos y guarda</div>' +
+        '<div class="form-grid">' +
+          '<div class="form-group form-full"><label>Tipo</label>' +
+            '<select id="el-tipo">' +
+              '<option value="proyecto_nuevo"' + (l.tipoLead==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
+              '<option value="comunidad_existente"' + (l.tipoLead==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="form-group form-full"><label>Nombre *</label><input type="text" id="el-nombre" value="' + _esc(l.nombreCondominio) + '"></div>' +
+          '<div class="form-group"><label>Comuna</label><input type="text" id="el-comuna" value="' + _esc(l.comuna||'') + '"></div>' +
+          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="el-dir" value="' + _esc(l.direccion||'') + '"></div>' +
+          '<div class="form-group"><label>Contacto *</label><input type="text" id="el-contacto" value="' + _esc(l.nombreContacto||'') + '"></div>' +
+          '<div class="form-group"><label>Cargo</label><input type="text" id="el-cargo" value="' + _esc(l.cargoContacto||'') + '"></div>' +
+          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="el-tel" value="' + _esc(l.telefono||'') + '"></div>' +
+          '<div class="form-group"><label>Email</label><input type="email" id="el-email" value="' + _esc(l.email||'') + '"></div>' +
+          '<div class="form-group"><label>Fuente</label>' +
+            '<select id="el-fuente">' +
+              ['manual','web','referido','Facebook','Instagram','otro'].map(function(f){ return '<option value="'+f+'"'+(l.fuenteLead===f?' selected':'')+'>'+f+'</option>'; }).join('') +
+            '</select>' +
+          '</div>' +
+          '<div class="form-group"><label>Constructora</label><input type="text" id="el-constructora" value="' + _esc(l.constructora||'') + '"></div>' +
+          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="el-obs" value="' + _esc(l.observaciones||'') + '"></div>' +
+        '</div>' +
+        '<div class="form-error" id="el-error"></div>' +
+        '<button class="btn-guardar" id="btn-guardar-elead">Guardar cambios</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    const cerrar = function() { overlay.remove(); };
+    overlay.querySelector('#mc-elead').addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    overlay.querySelector('#btn-guardar-elead').addEventListener('click', async function() {
+      const nombre = overlay.querySelector('#el-nombre').value.trim();
+      const contacto = overlay.querySelector('#el-contacto').value.trim();
+      const errDiv = overlay.querySelector('#el-error');
+      const btn = overlay.querySelector('#btn-guardar-elead');
+      if (!nombre || !contacto) { errDiv.textContent = 'Nombre y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
+      const cambios = {
+        action: 'editarLead', id: l.id,
+        tipoLead: overlay.querySelector('#el-tipo').value,
+        nombreCondominio: nombre,
+        comuna: overlay.querySelector('#el-comuna').value.trim(),
+        direccion: overlay.querySelector('#el-dir').value.trim(),
+        nombreContacto: contacto,
+        cargoContacto: overlay.querySelector('#el-cargo').value.trim(),
+        telefono: overlay.querySelector('#el-tel').value.trim(),
+        email: overlay.querySelector('#el-email').value.trim(),
+        fuenteLead: overlay.querySelector('#el-fuente').value,
+        constructora: overlay.querySelector('#el-constructora').value.trim(),
+        observaciones: overlay.querySelector('#el-obs').value.trim(),
+      };
+      const resp = await api('/leads', 'POST', cambios);
+      if (resp.ok && resp.data && resp.data.ok) {
+        Object.assign(l, cambios);
+        cerrar();
+        const cont = document.getElementById('crm-tab-content');
+        if (cont) renderLeads(cont);
+      } else {
+        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error';
+        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
+      }
+    });
+  }
+
+  // ── Modal correo lead ─────────────────────────────────────
+  function abrirModalCorreoLead(l) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+    box.innerHTML =
+      '<div class="modal-handle"></div>' +
+      '<button class="modal-close" id="mc-mail-lead">\u00D7</button>' +
+      '<div class="modal-eyebrow">Lead · ' + _esc(l.tipoLead === 'comunidad_existente' ? 'Comunidad existente' : 'Proyecto nuevo') + '</div>' +
+      '<div class="modal-titulo">Enviar correo</div>' +
+      '<div class="modal-subtitulo">' + _esc(l.nombreCondominio) + ' \u00B7 ' + _esc(l.email||'Sin email') + '</div>' +
+      '<div class="form-grid" style="margin-top:18px">' +
+        '<div class="form-group form-full"><label>Para</label><input type="email" id="lmail-para" value="' + _esc(l.email||'') + '"></div>' +
+        '<div class="form-group form-full"><label>Asunto</label><input type="text" id="lmail-asunto" value="CoproActiva \u2014 ' + _esc(l.nombreCondominio) + '"></div>' +
+        '<div class="form-group form-full"><label>Mensaje</label>' +
+          '<textarea id="lmail-cuerpo" rows="8" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:160px">' +
+          'Estimado/a ' + _esc(l.nombreContacto||'') + ',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n.\n\n\u00BFTendr\u00EDa disponibilidad para conversar esta semana?\n\nAtentamente,\nCoproActiva Administraci\u00F3n' +
+          '</textarea>' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-error" id="lmail-error"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
+        '<button class="btn-guardar" id="btn-lmail-enviar" style="background:var(--co-ink)">Enviar</button>' +
+        '<button class="btn-guardar" id="btn-lmail-borrador" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line)">Borrador Gmail</button>' +
+      '</div>' +
+      '<div class="msg-ok" id="lmail-ok">\u2713 Enviado correctamente</div>';
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    const cerrar = function() { overlay.remove(); };
+    box.querySelector('#mc-mail-lead').addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    async function _enviar(accion) {
+      const para   = box.querySelector('#lmail-para').value.trim();
+      const asunto = box.querySelector('#lmail-asunto').value.trim();
+      const cuerpo = box.querySelector('#lmail-cuerpo').value.trim();
+      const errDiv = box.querySelector('#lmail-error');
+      if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
+      errDiv.style.display = 'none';
+      const btn = accion === 'enviar' ? box.querySelector('#btn-lmail-enviar') : box.querySelector('#btn-lmail-borrador');
+      btn.disabled = true; btn.textContent = accion === 'enviar' ? 'Enviando\u2026' : 'Creando borrador\u2026';
+
+      // Registrar correo en historial del lead
+      const respLead = await api('/leads', 'POST', { action: 'registrarCorreoLead', id: l.id, para: para, asunto: asunto });
+      if (respLead.ok && respLead.data && respLead.data.ok && respLead.data.estadoNuevo) {
+        l.estado = respLead.data.estadoNuevo;
+      }
+
+      // Enviar / borrador via CRM correos
+      const resp = await api('/correo', 'POST', {
+        action: accion === 'borrador' ? 'crearBorrador' : undefined,
+        prospectoId: l.id, etapa: 'lead', para: para, asunto: asunto, cuerpo: cuerpo
+      });
+      if (accion === 'enviar') {
+        box.querySelector('#lmail-ok').style.display = 'block';
+        btn.textContent = '\u2713 Enviado'; setTimeout(cerrar, 1800);
+      } else {
+        btn.textContent = '\u2713 Borrador creado';
+        window.open('https://mail.google.com/mail/#drafts', '_blank');
+      }
+      _renderLeadsFiltered();
+    }
+
+    box.querySelector('#btn-lmail-enviar').addEventListener('click', function() { _enviar('enviar'); });
+    box.querySelector('#btn-lmail-borrador').addEventListener('click', function() { _enviar('borrador'); });
   }
 
   // ── Pipeline ──────────────────────────────────────────────
@@ -373,22 +1004,21 @@
     const pipeline = document.getElementById('pipeline-desktop');
     if (!pipeline) return;
     pipeline.innerHTML = '';
-    ETAPAS.forEach(etapa => {
-      const enEtapa = prospectos.filter(p => p.etapa === etapa);
+    ETAPAS.forEach(function(etapa) {
+      const enEtapa = prospectos.filter(function(p) { return p.etapa === etapa; });
       const col = document.createElement('div');
       col.className = 'columna';
-      col.innerHTML = `
-        <div class="columna-header">
-          <span class="columna-title">${etapa}</span>
-          <span class="columna-count ${enEtapa.length === 0 ? 'empty' : ''}">${enEtapa.length}</span>
-        </div>
-        ${enEtapa.length === 0 ? '<div class="columna-vacia">Sin prospectos</div>' : enEtapa.map(tarjetaHTML).join('')}
-      `;
+      col.innerHTML =
+        '<div class="columna-header">' +
+          '<span class="columna-title">' + etapa + '</span>' +
+          '<span class="columna-count ' + (enEtapa.length === 0 ? 'empty' : '') + '">' + enEtapa.length + '</span>' +
+        '</div>' +
+        (enEtapa.length === 0 ? '<div class="columna-vacia">Sin prospectos</div>' : enEtapa.map(tarjetaHTML).join(''));
       pipeline.appendChild(col);
     });
-    pipeline.querySelectorAll('.tarjeta').forEach(t => {
-      t.addEventListener('click', () => {
-        const p = prospectos.find(x => x.id === t.getAttribute('data-id'));
+    pipeline.querySelectorAll('.tarjeta').forEach(function(t) {
+      t.addEventListener('click', function() {
+        const p = prospectos.find(function(x) { return x.id === t.getAttribute('data-id'); });
         if (p) abrirModalDetalle(p);
       });
     });
@@ -398,26 +1028,25 @@
     const acc = document.getElementById('accordion-mobile');
     if (!acc) return;
     acc.innerHTML = '';
-    const etapasConDatos = ETAPAS.filter(e => prospectos.some(p => p.etapa === e));
-    const etapasSinDatos = ETAPAS.filter(e => !prospectos.some(p => p.etapa === e));
-    [...etapasConDatos, ...etapasSinDatos].forEach((etapa, idx) => {
-      const enEtapa = prospectos.filter(p => p.etapa === etapa);
+    const etapasConDatos = ETAPAS.filter(function(e) { return prospectos.some(function(p){ return p.etapa === e; }); });
+    const etapasSinDatos = ETAPAS.filter(function(e) { return !prospectos.some(function(p){ return p.etapa === e; }); });
+    etapasConDatos.concat(etapasSinDatos).forEach(function(etapa, idx) {
+      const enEtapa = prospectos.filter(function(p) { return p.etapa === etapa; });
       const abierto = idx === 0 && enEtapa.length > 0;
       const bloque = document.createElement('div');
       bloque.className = 'accordion-etapa';
-      bloque.innerHTML = `
-        <div class="accordion-header">
-          <span class="accordion-titulo">${etapa}</span>
-          <div class="accordion-meta">
-            <span class="accordion-count ${enEtapa.length === 0 ? 'vacio' : ''}">${enEtapa.length}</span>
-            <span class="accordion-chevron ${abierto ? 'abierto' : ''}">▼</span>
-          </div>
-        </div>
-        <div class="accordion-body ${abierto ? 'abierto' : ''}">
-          ${enEtapa.length === 0 ? '<div class="accordion-vacia">Sin prospectos</div>' : enEtapa.map(tarjetaHTML).join('')}
-        </div>
-      `;
-      bloque.querySelector('.accordion-header').addEventListener('click', () => {
+      bloque.innerHTML =
+        '<div class="accordion-header">' +
+          '<span class="accordion-titulo">' + etapa + '</span>' +
+          '<div class="accordion-meta">' +
+            '<span class="accordion-count ' + (enEtapa.length === 0 ? 'vacio' : '') + '">' + enEtapa.length + '</span>' +
+            '<span class="accordion-chevron ' + (abierto ? 'abierto' : '') + '">\u25BC</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="accordion-body ' + (abierto ? 'abierto' : '') + '">' +
+          (enEtapa.length === 0 ? '<div class="accordion-vacia">Sin prospectos</div>' : enEtapa.map(tarjetaHTML).join('')) +
+        '</div>';
+      bloque.querySelector('.accordion-header').addEventListener('click', function() {
         const body    = bloque.querySelector('.accordion-body');
         const chevron = bloque.querySelector('.accordion-chevron');
         const esta    = body.classList.contains('abierto');
@@ -426,9 +1055,9 @@
       });
       acc.appendChild(bloque);
     });
-    acc.querySelectorAll('.tarjeta').forEach(t => {
-      t.addEventListener('click', () => {
-        const p = prospectos.find(x => x.id === t.getAttribute('data-id'));
+    acc.querySelectorAll('.tarjeta').forEach(function(t) {
+      t.addEventListener('click', function() {
+        const p = prospectos.find(function(x) { return x.id === t.getAttribute('data-id'); });
         if (p) abrirModalDetalle(p);
       });
     });
@@ -436,93 +1065,88 @@
 
   function tarjetaHTML(p) {
     const sem = p.semaforo || 'gris';
-    return `
-      <div class="tarjeta sem-${sem}" data-id="${p.id}">
-        <div class="tarjeta-nombre">${p.nombreCondominio}</div>
-        <div class="tarjeta-contacto">${p.nombreContacto}${p.comuna ? ' · ' + p.comuna : ''}</div>
-        <div class="tarjeta-footer">
-          <span class="tarjeta-unidades"><strong>${p.unidades || 0}</strong> unid.</span>
-          <span class="semaforo-dot dot-${sem}"></span>
-        </div>
-        ${p.proximaAccion ? `<div class="tarjeta-accion">${p.proximaAccion}</div>` : ''}
-      </div>
-    `;
+    return '<div class="tarjeta sem-' + sem + '" data-id="' + p.id + '">' +
+      '<div class="tarjeta-nombre">' + _esc(p.nombreCondominio) + '</div>' +
+      '<div class="tarjeta-contacto">' + _esc(p.nombreContacto) + (p.comuna ? ' \u00B7 ' + _esc(p.comuna) : '') + '</div>' +
+      '<div class="tarjeta-footer">' +
+        '<span class="tarjeta-unidades"><strong>' + (p.unidades || 0) + '</strong> unid.</span>' +
+        '<span class="semaforo-dot dot-' + sem + '"></span>' +
+      '</div>' +
+      (p.proximaAccion ? '<div class="tarjeta-accion">' + _esc(p.proximaAccion) + '</div>' : '') +
+    '</div>';
   }
 
-  // ── Modal detalle ─────────────────────────────────────────
+  // ── Modal detalle prospecto ───────────────────────────────
   function abrirModalDetalle(p) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal-box">
-        <div class="modal-handle"></div>
-        <button class="modal-close" id="mc">×</button>
-        <div class="modal-eyebrow">${p.etapa}</div>
-        <div class="modal-titulo">${p.nombreCondominio}</div>
-        <div class="modal-subtitulo">${p.comuna || '—'} · ${p.unidades || 0} unidades</div>
-        <div class="toggle-datos-btn" id="toggle-datos">
-          <span class="toggle-datos-label" id="toggle-datos-label">Ver datos del prospecto</span>
-          <span class="toggle-datos-chev" id="toggle-datos-chev">&#9660;</span>
-        </div>
-        <div class="modal-grid toggle-datos-body" id="toggle-datos-body" style="display:none;margin-top:10px">
-          <div class="modal-campo"><label>Contacto</label><span>${p.nombreContacto}</span></div>
-          <div class="modal-campo"><label>Cargo</label><span>${p.cargoContacto || '—'}</span></div>
-          <div class="modal-campo"><label>Teléfono</label><span>${p.telefono || '—'}</span></div>
-          <div class="modal-campo"><label>Email</label><span>${p.email || '—'}</span></div>
-          <div class="modal-campo"><label>Fuente</label><span>${p.fuenteLead || '—'}</span></div>
-          <div class="modal-campo"><label>Responsable</label><span>${p.responsable || '—'}</span></div>
-          <div class="modal-campo"><label>Primer contacto</label><span>${p.fechaPrimerContacto || '—'}</span></div>
-          <div class="modal-campo"><label>Última interacción</label><span>${p.fechaUltimaInteraccion || '—'}</span></div>
-          ${p.observaciones ? `<div class="modal-campo" style="grid-column:1/-1"><label>Observaciones</label><span>${p.observaciones}</span></div>` : ''}
-        </div>
-        <div class="modal-seccion">
-          <div class="modal-seccion-titulo">Próxima acción</div>
-          <div class="accion-box">
-            <div class="accion-texto">${p.proximaAccion || 'Sin acción definida'}</div>
-            ${p.fechaProximaAccion ? `<div class="accion-fecha">${p.fechaProximaAccion}</div>` : ''}
-          </div>
-        </div>
-        ${p.etapa === 'Diagnóstico' ? `
-        <div class="modal-seccion">
-          <div class="modal-seccion-titulo">Diagnóstico</div>
-          <button class="btn-diagnostico" id="btn-diag">
-            <i class="ti ti-stethoscope" aria-hidden="true"></i> Ir a Diagnóstico
-          </button>
-        </div>` : ''}
-        <div class="modal-seccion">
-          <div class="modal-seccion-titulo">Contactar</div>
-          <div class="contactar-btns">
-            <button class="btn-contactar btn-wsp" id="btn-wsp">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L.057 23.428a.5.5 0 0 0 .609.61l5.627-1.474A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.9 9.9 0 0 1-5.031-1.371l-.36-.214-3.733.978.997-3.645-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.465 0 9.9 4.434 9.9 9.9 0 5.465-4.435 9.9-9.9 9.9z"/></svg>
-              WhatsApp
-            </button>
-            <button class="btn-contactar btn-mail" id="btn-mail">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-              Correo
-            </button>
-          </div>
-        </div>
-        <div class="modal-seccion">
-          <div class="modal-seccion-titulo">Cambiar etapa</div>
-          <select class="etapa-select" id="sel-etapa">
-            ${ETAPAS.map(e => `<option value="${e}" ${e === p.etapa ? 'selected' : ''}>${e}</option>`).join('')}
-          </select>
-          <button class="btn-cambiar" id="btn-cambiar">Guardar cambio</button>
-          <div class="msg-ok" id="msg-ok">✓ Etapa actualizada</div>
-        </div>
-        <div class="modal-seccion">
-          <button class="btn-editar-datos" id="btn-editar">
-            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>
-            Editar datos del prospecto
-          </button>
-        </div>
-      </div>
-    `;
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc">\u00D7</button>' +
+        '<div class="modal-eyebrow">' + p.etapa + '</div>' +
+        '<div class="modal-titulo">' + _esc(p.nombreCondominio) + '</div>' +
+        '<div class="modal-subtitulo">' + _esc(p.comuna || '\u2014') + ' \u00B7 ' + (p.unidades || 0) + ' unidades</div>' +
+        '<div class="toggle-datos-btn" id="toggle-datos">' +
+          '<span class="toggle-datos-label" id="toggle-datos-label">Ver datos del prospecto</span>' +
+          '<span class="toggle-datos-chev" id="toggle-datos-chev">&#9660;</span>' +
+        '</div>' +
+        '<div class="modal-grid toggle-datos-body" id="toggle-datos-body" style="display:none;margin-top:10px">' +
+          '<div class="modal-campo"><label>Contacto</label><span>' + _esc(p.nombreContacto) + '</span></div>' +
+          '<div class="modal-campo"><label>Cargo</label><span>' + _esc(p.cargoContacto || '\u2014') + '</span></div>' +
+          '<div class="modal-campo"><label>Tel\u00E9fono</label><span>' + _esc(p.telefono || '\u2014') + '</span></div>' +
+          '<div class="modal-campo"><label>Email</label><span>' + _esc(p.email || '\u2014') + '</span></div>' +
+          '<div class="modal-campo"><label>Fuente</label><span>' + _esc(p.fuenteLead || '\u2014') + '</span></div>' +
+          '<div class="modal-campo"><label>Responsable</label><span>' + _esc(p.responsable || '\u2014') + '</span></div>' +
+          '<div class="modal-campo"><label>Primer contacto</label><span>' + _esc(p.fechaPrimerContacto || '\u2014') + '</span></div>' +
+          '<div class="modal-campo"><label>\u00DAltima interacci\u00F3n</label><span>' + _esc(p.fechaUltimaInteraccion || '\u2014') + '</span></div>' +
+          (p.observaciones ? '<div class="modal-campo" style="grid-column:1/-1"><label>Observaciones</label><span>' + _esc(p.observaciones) + '</span></div>' : '') +
+        '</div>' +
+        '<div class="modal-seccion">' +
+          '<div class="modal-seccion-titulo">Pr\u00F3xima acci\u00F3n</div>' +
+          '<div class="accion-box">' +
+            '<div class="accion-texto">' + _esc(p.proximaAccion || 'Sin acci\u00F3n definida') + '</div>' +
+            (p.fechaProximaAccion ? '<div class="accion-fecha">' + _esc(p.fechaProximaAccion) + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        (p.etapa === 'Diagn\u00F3stico' ?
+          '<div class="modal-seccion"><div class="modal-seccion-titulo">Diagn\u00F3stico</div>' +
+          '<button class="btn-diagnostico" id="btn-diag"><i class="ti ti-stethoscope" aria-hidden="true"></i> Ir a Diagn\u00F3stico</button></div>' : '') +
+        '<div class="modal-seccion">' +
+          '<div class="modal-seccion-titulo">Contactar</div>' +
+          '<div class="contactar-btns">' +
+            '<button class="btn-contactar btn-wsp" id="btn-wsp">' +
+              '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L.057 23.428a.5.5 0 0 0 .609.61l5.627-1.474A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.9 9.9 0 0 1-5.031-1.371l-.36-.214-3.733.978.997-3.645-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.465 0 9.9 4.434 9.9 9.9 0 5.465-4.435 9.9-9.9 9.9z"/></svg>' +
+              ' WhatsApp' +
+            '</button>' +
+            '<button class="btn-contactar btn-mail" id="btn-mail">' +
+              '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>' +
+              ' Correo' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="modal-seccion">' +
+          '<div class="modal-seccion-titulo">Cambiar etapa</div>' +
+          '<select class="etapa-select" id="sel-etapa">' +
+            ETAPAS.map(function(e) { return '<option value="' + e + '"' + (e === p.etapa ? ' selected' : '') + '>' + e + '</option>'; }).join('') +
+          '</select>' +
+          '<button class="btn-cambiar" id="btn-cambiar">Guardar cambio</button>' +
+          '<div class="msg-ok" id="msg-ok">\u2713 Etapa actualizada</div>' +
+        '</div>' +
+        '<div class="modal-seccion">' +
+          '<button class="btn-editar-datos" id="btn-editar">' +
+            '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>' +
+            ' Editar datos del prospecto' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+
     document.body.appendChild(overlay);
-    const cerrar = () => overlay.remove();
+    const cerrar = function() { overlay.remove(); };
     overlay.querySelector('#mc').addEventListener('click', cerrar);
-    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
-    overlay.querySelector('#toggle-datos').addEventListener('click', () => {
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    overlay.querySelector('#toggle-datos').addEventListener('click', function() {
       const body  = overlay.querySelector('#toggle-datos-body');
       const label = overlay.querySelector('#toggle-datos-label');
       const chev  = overlay.querySelector('#toggle-datos-chev');
@@ -531,22 +1155,23 @@
       label.textContent    = open ? 'Ver datos del prospecto' : 'Ocultar datos del prospecto';
       chev.style.transform = open ? '' : 'rotate(180deg)';
     });
+
     const btnDiag = overlay.querySelector('#btn-diag');
     if (btnDiag) {
-      btnDiag.addEventListener('click', () => {
-        cerrar();
-        iniciarDiagnostico(p.id, p.nombreCondominio, p);
-      });
+      btnDiag.addEventListener('click', function() { cerrar(); iniciarDiagnostico(p.id, p.nombreCondominio, p); });
     }
-    overlay.querySelector('#btn-wsp').addEventListener('click', () => {
+
+    overlay.querySelector('#btn-wsp').addEventListener('click', function() {
       const tel = String(p.telefono || '').trim().replace(/[^0-9]/g, '');
-      if (!tel) { alert('Sin teléfono registrado.'); return; }
+      if (!tel) { alert('Sin tel\u00E9fono registrado.'); return; }
       window.open('https://wa.me/' + (tel.startsWith('56') ? tel : '56' + tel), '_blank');
     });
-    overlay.querySelector('#btn-mail').addEventListener('click', () => abrirModalCorreo(p));
-    overlay.querySelector('#btn-editar').addEventListener('click', () => { cerrar(); abrirModalEditar(p); });
-    overlay.querySelector('#btn-cambiar').addEventListener('click', async () => {
-      const nuevaEtapa   = overlay.querySelector('#sel-etapa').value;
+
+    overlay.querySelector('#btn-mail').addEventListener('click', function() { abrirModalCorreo(p); });
+    overlay.querySelector('#btn-editar').addEventListener('click', function() { cerrar(); abrirModalEditar(p); });
+
+    overlay.querySelector('#btn-cambiar').addEventListener('click', async function() {
+      const nuevaEtapa    = overlay.querySelector('#sel-etapa').value;
       const etapaAnterior = p.etapa;
       const btn = overlay.querySelector('#btn-cambiar');
       const msg = overlay.querySelector('#msg-ok');
@@ -558,53 +1183,53 @@
         btn.textContent = 'Guardar cambio'; btn.disabled = false;
         renderKanban(); renderAccordion();
         if (nuevaEtapa === 'Ganado' && etapaAnterior !== 'Ganado') {
-          cerrar();
-          abrirModalCrearComunidad(p);
+          cerrar(); abrirModalCrearComunidad(p);
         }
       } else { btn.textContent = 'Error \u2014 reintentar'; btn.disabled = false; }
     });
   }
 
-  // ── Modal editar ──────────────────────────────────────────
+  // ── Modal editar prospecto ────────────────────────────────
   function abrirModalEditar(p) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal-box">
-        <div class="modal-handle"></div>
-        <button class="modal-close" id="mc-edit">×</button>
-        <div class="modal-eyebrow">Editar prospecto</div>
-        <div class="modal-titulo">${p.nombreCondominio}</div>
-        <div class="modal-subtitulo">Modifica los datos y guarda los cambios</div>
-        <div class="form-grid">
-          <div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="e-nombre" value="${p.nombreCondominio || ''}"></div>
-          <div class="form-group"><label>Comuna</label><input type="text" id="e-comuna" value="${p.comuna || ''}"></div>
-          <div class="form-group"><label>Dirección</label><input type="text" id="e-dir" value="${p.direccion || ''}"></div>
-          <div class="form-group"><label>Unidades</label><input type="number" id="e-unidades" value="${p.unidades || ''}" min="0"></div>
-          <div class="form-group"><label>Nombre contacto *</label><input type="text" id="e-contacto" value="${p.nombreContacto || ''}"></div>
-          <div class="form-group"><label>Cargo</label><input type="text" id="e-cargo" value="${p.cargoContacto || ''}"></div>
-          <div class="form-group"><label>Teléfono</label><input type="tel" id="e-tel" value="${p.telefono || ''}"></div>
-          <div class="form-group"><label>Email</label><input type="email" id="e-email" value="${p.email || ''}"></div>
-          <div class="form-group"><label>Fuente</label>
-            <select id="e-fuente">${['web','referido','Facebook','Instagram','otro'].map(f=>`<option value="${f}" ${p.fuenteLead===f?'selected':''}>${f}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>Responsable</label><input type="text" id="e-resp" value="${p.responsable || ''}"></div>
-          <div class="form-group form-full"><label>Próxima acción</label><input type="text" id="e-accion" value="${p.proximaAccion || ''}"></div>
-          <div class="form-group"><label>Fecha próxima acción</label><input type="text" id="e-fecha-accion" value="${p.fechaProximaAccion || ''}" placeholder="DD/MM/AAAA"></div>
-          <div class="form-group"><label>Semáforo</label>
-            <select id="e-semaforo">${['verde','amarillo','rojo','gris'].map(s=>`<option value="${s}" ${(p.semaforo||'gris')===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}</select>
-          </div>
-          <div class="form-group form-full"><label>Observaciones</label><input type="text" id="e-obs" value="${p.observaciones || ''}"></div>
-        </div>
-        <div class="form-error" id="e-error"></div>
-        <button class="btn-guardar" id="btn-guardar-edit">Guardar cambios</button>
-      </div>
-    `;
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc-edit">\u00D7</button>' +
+        '<div class="modal-eyebrow">Editar prospecto</div>' +
+        '<div class="modal-titulo">' + _esc(p.nombreCondominio) + '</div>' +
+        '<div class="modal-subtitulo">Modifica los datos y guarda los cambios</div>' +
+        '<div class="form-grid">' +
+          '<div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="e-nombre" value="' + _esc(p.nombreCondominio || '') + '"></div>' +
+          '<div class="form-group"><label>Comuna</label><input type="text" id="e-comuna" value="' + _esc(p.comuna || '') + '"></div>' +
+          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="e-dir" value="' + _esc(p.direccion || '') + '"></div>' +
+          '<div class="form-group"><label>Unidades</label><input type="number" id="e-unidades" value="' + (p.unidades || '') + '" min="0"></div>' +
+          '<div class="form-group"><label>Nombre contacto *</label><input type="text" id="e-contacto" value="' + _esc(p.nombreContacto || '') + '"></div>' +
+          '<div class="form-group"><label>Cargo</label><input type="text" id="e-cargo" value="' + _esc(p.cargoContacto || '') + '"></div>' +
+          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="e-tel" value="' + _esc(p.telefono || '') + '"></div>' +
+          '<div class="form-group"><label>Email</label><input type="email" id="e-email" value="' + _esc(p.email || '') + '"></div>' +
+          '<div class="form-group"><label>Fuente</label>' +
+            '<select id="e-fuente">' + ['web','referido','Facebook','Instagram','otro'].map(function(f){ return '<option value="'+f+'"'+(p.fuenteLead===f?' selected':'')+'>'+f+'</option>'; }).join('') + '</select>' +
+          '</div>' +
+          '<div class="form-group"><label>Responsable</label><input type="text" id="e-resp" value="' + _esc(p.responsable || '') + '"></div>' +
+          '<div class="form-group form-full"><label>Pr\u00F3xima acci\u00F3n</label><input type="text" id="e-accion" value="' + _esc(p.proximaAccion || '') + '"></div>' +
+          '<div class="form-group"><label>Fecha pr\u00F3xima acci\u00F3n</label><input type="text" id="e-fecha-accion" value="' + _esc(p.fechaProximaAccion || '') + '" placeholder="DD/MM/AAAA"></div>' +
+          '<div class="form-group"><label>Sem\u00E1foro</label>' +
+            '<select id="e-semaforo">' + ['verde','amarillo','rojo','gris'].map(function(s){ return '<option value="'+s+'"'+((p.semaforo||'gris')===s?' selected':'')+'>'+ s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select>' +
+          '</div>' +
+          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="e-obs" value="' + _esc(p.observaciones || '') + '"></div>' +
+        '</div>' +
+        '<div class="form-error" id="e-error"></div>' +
+        '<button class="btn-guardar" id="btn-guardar-edit">Guardar cambios</button>' +
+      '</div>';
+
     document.body.appendChild(overlay);
-    const cerrar = () => overlay.remove();
+    const cerrar = function() { overlay.remove(); };
     overlay.querySelector('#mc-edit').addEventListener('click', cerrar);
-    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
-    overlay.querySelector('#btn-guardar-edit').addEventListener('click', async () => {
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    overlay.querySelector('#btn-guardar-edit').addEventListener('click', async function() {
       const nombre = overlay.querySelector('#e-nombre').value.trim();
       const contacto = overlay.querySelector('#e-contacto').value.trim();
       const errDiv = overlay.querySelector('#e-error');
@@ -626,7 +1251,7 @@
       if (resp.ok && resp.data && resp.data.ok) {
         Object.assign(p, datos); overlay.remove(); renderKanban(); renderAccordion();
       } else {
-        errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar';
+        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
         errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
       }
     });
@@ -636,55 +1261,58 @@
   function abrirModalCrearComunidad(p) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal-box">
-        <div class="modal-handle"></div>
-        <button class="modal-close" id="mc-com">×</button>
-        <div class="modal-eyebrow">Prospecto ganado</div>
-        <div class="modal-titulo">Crear comunidad</div>
-        <div class="modal-subtitulo">Confirma los datos y configura las instalaciones antes de continuar</div>
-        <div class="form-grid">
-          <div class="form-group form-full"><label>Nombre *</label><input type="text" id="nc-nombre" value="${p.nombreCondominio || ''}"></div>
-          <div class="form-group"><label>Direcci\u00F3n *</label><input type="text" id="nc-direccion" value="${p.direccion || ''}"></div>
-          <div class="form-group"><label>Comuna *</label><input type="text" id="nc-comuna" value="${p.comuna || ''}"></div>
-          <div class="form-group"><label>RUT comunidad</label><input type="text" id="nc-rut" placeholder="76.XXX.XXX-X"></div>
-          <div class="form-group"><label>Unidades</label><input type="number" id="nc-unidades" value="${p.unidades || ''}" min="0"></div>
-          <div class="form-group"><label>Honorario ($)</label><input type="number" id="nc-honorario" placeholder="0"></div>
-          <div class="form-group"><label>Modalidad</label>
-            <select id="nc-modalidad">${['Integral','Nueva','Auditoria'].map(m=>`<option value="${m}">${m}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>Contacto comit\u00E9</label><input type="text" id="nc-contacto" value="${p.nombreContacto || ''}"></div>
-          <div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="nc-telefono" value="${p.telefono || ''}"></div>
-          <div class="form-group"><label>Inicio contrato</label><input type="text" id="nc-inicio" placeholder="DD/MM/AAAA"></div>
-          <div class="form-group"><label>Renovaci\u00F3n</label><input type="text" id="nc-renovacion" placeholder="DD/MM/AAAA"></div>
-        </div>
-        <div style="border-top:1px solid var(--co-line);margin:20px 0 16px"></div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Instalaciones y equipamientos *</div>
-        <div style="font-size:11px;color:var(--co-mute);margin-bottom:10px">Marca lo que aplique. Si no tiene ninguna, deja todo sin marcar y continúa — este paso es obligatorio para poder crear la Recepción documental después.</div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px" id="nc-inst-lista">
-          ${INSTALACIONES_OPTS.map(inst => `
-            <label style="display:flex;align-items:center;gap:12px;padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--co-ink)" data-inst-item>
-              <input type="checkbox" id="nci-${inst.key}" style="width:16px;height:16px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0">
-              ${inst.label}
-            </label>`).join('')}
-        </div>
-        <label style="display:flex;align-items:flex-start;gap:9px;margin-top:12px;font-size:11.5px;color:var(--co-mute);cursor:pointer">
-          <input type="checkbox" id="nc-inst-confirmado" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0;margin-top:1px">
-          Confirmo que revis\u00E9 las instalaciones de esta comunidad (aunque no tenga ninguna marcada).
-        </label>
-        <div class="form-error" id="nc-error"></div>
-        <button class="btn-guardar" id="btn-crear-comunidad">Crear comunidad</button>
-      </div>
-    `;
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc-com">\u00D7</button>' +
+        '<div class="modal-eyebrow">Prospecto ganado</div>' +
+        '<div class="modal-titulo">Crear comunidad</div>' +
+        '<div class="modal-subtitulo">Confirma los datos y configura las instalaciones antes de continuar</div>' +
+        '<div class="form-grid">' +
+          '<div class="form-group form-full"><label>Nombre *</label><input type="text" id="nc-nombre" value="' + _esc(p.nombreCondominio || '') + '"></div>' +
+          '<div class="form-group"><label>Direcci\u00F3n *</label><input type="text" id="nc-direccion" value="' + _esc(p.direccion || '') + '"></div>' +
+          '<div class="form-group"><label>Comuna *</label><input type="text" id="nc-comuna" value="' + _esc(p.comuna || '') + '"></div>' +
+          '<div class="form-group"><label>RUT comunidad</label><input type="text" id="nc-rut" placeholder="76.XXX.XXX-X"></div>' +
+          '<div class="form-group"><label>Unidades</label><input type="number" id="nc-unidades" value="' + (p.unidades || '') + '" min="0"></div>' +
+          '<div class="form-group"><label>Honorario ($)</label><input type="number" id="nc-honorario" placeholder="0"></div>' +
+          '<div class="form-group"><label>Modalidad</label>' +
+            '<select id="nc-modalidad">' + ['Integral','Nueva','Auditoria'].map(function(m){ return '<option value="'+m+'">'+m+'</option>'; }).join('') + '</select>' +
+          '</div>' +
+          '<div class="form-group"><label>Contacto comit\u00E9</label><input type="text" id="nc-contacto" value="' + _esc(p.nombreContacto || '') + '"></div>' +
+          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="nc-telefono" value="' + _esc(p.telefono || '') + '"></div>' +
+          '<div class="form-group"><label>Inicio contrato</label><input type="text" id="nc-inicio" placeholder="DD/MM/AAAA"></div>' +
+          '<div class="form-group"><label>Renovaci\u00F3n</label><input type="text" id="nc-renovacion" placeholder="DD/MM/AAAA"></div>' +
+        '</div>' +
+        '<div style="border-top:1px solid var(--co-line);margin:20px 0 16px"></div>' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Instalaciones y equipamientos *</div>' +
+        '<div style="font-size:11px;color:var(--co-mute);margin-bottom:10px">Marca lo que aplique. Si no tiene ninguna, deja todo sin marcar y contin\u00FAa \u2014 este paso es obligatorio para poder crear la Recepci\u00F3n documental despu\u00E9s.</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px" id="nc-inst-lista">' +
+          INSTALACIONES_OPTS.map(function(inst) {
+            return '<label style="display:flex;align-items:center;gap:12px;padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--co-ink)" data-inst-item>' +
+              '<input type="checkbox" id="nci-' + inst.key + '" style="width:16px;height:16px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0">' +
+              inst.label +
+            '</label>';
+          }).join('') +
+        '</div>' +
+        '<label style="display:flex;align-items:flex-start;gap:9px;margin-top:12px;font-size:11.5px;color:var(--co-mute);cursor:pointer">' +
+          '<input type="checkbox" id="nc-inst-confirmado" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0;margin-top:1px">' +
+          'Confirmo que revis\u00E9 las instalaciones de esta comunidad (aunque no tenga ninguna marcada).' +
+        '</label>' +
+        '<div class="form-error" id="nc-error"></div>' +
+        '<button class="btn-guardar" id="btn-crear-comunidad">Crear comunidad</button>' +
+      '</div>';
+
     document.body.appendChild(overlay);
-    const cerrar = () => overlay.remove();
+    const cerrar = function() { overlay.remove(); };
     overlay.querySelector('#mc-com').addEventListener('click', cerrar);
-    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
-    overlay.querySelectorAll('[data-inst-item]').forEach(item => {
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    overlay.querySelectorAll('[data-inst-item]').forEach(function(item) {
       const chk = item.querySelector('input[type=checkbox]');
-      chk.addEventListener('change', () => { item.style.borderColor = chk.checked ? 'var(--co-orange)' : 'var(--co-line)'; });
+      chk.addEventListener('change', function() { item.style.borderColor = chk.checked ? 'var(--co-orange)' : 'var(--co-line)'; });
     });
-    overlay.querySelector('#btn-crear-comunidad').addEventListener('click', async () => {
+
+    overlay.querySelector('#btn-crear-comunidad').addEventListener('click', async function() {
       const nombre    = overlay.querySelector('#nc-nombre').value.trim();
       const direccion = overlay.querySelector('#nc-direccion').value.trim();
       const comuna    = overlay.querySelector('#nc-comuna').value.trim();
@@ -693,13 +1321,13 @@
       if (!nombre || !direccion || !comuna) { errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.'; errDiv.style.display = 'block'; return; }
       if (!overlay.querySelector('#nc-inst-confirmado').checked) { errDiv.textContent = 'Debes revisar y confirmar las instalaciones antes de crear la comunidad.'; errDiv.style.display = 'block'; return; }
       const nuevaInst = {};
-      INSTALACIONES_OPTS.forEach(inst => {
+      INSTALACIONES_OPTS.forEach(function(inst) {
         const c = overlay.querySelector('#nci-' + inst.key);
         if (c && c.checked) nuevaInst[inst.key] = true;
       });
       btn.disabled = true; btn.textContent = 'Creando\u2026'; errDiv.style.display = 'none';
       const datos = {
-        action: 'crearComunidad', nombre, direccion, comuna,
+        action: 'crearComunidad', nombre: nombre, direccion: direccion, comuna: comuna,
         rut: overlay.querySelector('#nc-rut').value.trim(),
         unidades: overlay.querySelector('#nc-unidades').value || 0,
         honorario: overlay.querySelector('#nc-honorario').value || 0,
@@ -716,11 +1344,13 @@
         btn.textContent = '\u2713 Comunidad creada'; btn.style.background = 'var(--co-green)';
         setTimeout(cerrar, 1200);
       } else {
-        errDiv.textContent = resp.data?.error || resp.error || 'Error al crear la comunidad';
+        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al crear la comunidad';
         errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Crear comunidad';
       }
     });
   }
+
+  // ── Correo prospecto ──────────────────────────────────────
   const PLANTILLAS = {
     'Nuevo prospecto':       { eyebrow:'Primer contacto',     asunto:'CoproActiva \u2014 Administraci\u00F3n Profesional para {c}' },
     'Reuni\u00F3n Agendada': { eyebrow:'Confirmaci\u00F3n',   asunto:'Confirmaci\u00F3n de Reuni\u00F3n \u2014 CoproActiva \u00D7 {c}' },
@@ -735,47 +1365,53 @@
     const pl = PLANTILLAS[p.etapa] || { eyebrow:'', asunto:'CoproActiva - {c}' };
     const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
     const box = document.createElement('div'); box.className = 'modal-box';
-    box.innerHTML = '<div class="modal-handle"></div><button class="modal-close" id="mc-mail">&times;</button>'
-      + '<div class="modal-eyebrow"></div><div class="modal-titulo">Enviar correo</div><div class="modal-subtitulo"></div>'
-      + '<div class="form-grid" style="margin-top:18px">'
-      + '<div class="form-group form-full"><label>Para</label><input type="email" id="mail-para"></div>'
-      + '<div class="form-group form-full"><label>Asunto</label><input type="text" id="mail-asunto"></div>'
-      + '<div class="form-group form-full"><label>Mensaje</label><textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px"></textarea></div>'
-      + '</div><div class="form-error" id="mail-error"></div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">'
-      + '<button class="btn-guardar" id="btn-enviar" style="background:var(--co-ink)">Enviar</button>'
-      + '<button class="btn-guardar" id="btn-gmail" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line)">Abrir en Gmail</button>'
-      + '</div><div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px">\u2713 Enviado correctamente</div>';
+    box.innerHTML =
+      '<div class="modal-handle"></div><button class="modal-close" id="mc-mail">&times;</button>' +
+      '<div class="modal-eyebrow"></div><div class="modal-titulo">Enviar correo</div><div class="modal-subtitulo"></div>' +
+      '<div class="form-grid" style="margin-top:18px">' +
+        '<div class="form-group form-full"><label>Para</label><input type="email" id="mail-para"></div>' +
+        '<div class="form-group form-full"><label>Asunto</label><input type="text" id="mail-asunto"></div>' +
+        '<div class="form-group form-full"><label>Mensaje</label><textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px"></textarea></div>' +
+      '</div>' +
+      '<div class="form-error" id="mail-error"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
+        '<button class="btn-guardar" id="btn-enviar" style="background:var(--co-ink)">Enviar</button>' +
+        '<button class="btn-guardar" id="btn-gmail" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line)">Abrir en Gmail</button>' +
+      '</div>' +
+      '<div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px">\u2713 Enviado correctamente</div>';
+
     overlay.appendChild(box); document.body.appendChild(overlay);
     box.querySelector('.modal-eyebrow').textContent = pl.eyebrow || p.etapa;
     box.querySelector('.modal-subtitulo').textContent = (p.nombreCondominio||'') + ' \u00B7 ' + (p.email||'Sin email');
     box.querySelector('#mail-para').value = p.email || '';
     box.querySelector('#mail-asunto').value = (pl.asunto||'').replace('{c}', p.nombreCondominio||'');
     box.querySelector('#mail-cuerpo').value = obtenerCuerpo(p);
-    const cerrar = () => overlay.remove();
+    const cerrar = function() { overlay.remove(); };
     box.querySelector('#mc-mail').addEventListener('click', cerrar);
-    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
-    box.querySelector('#btn-enviar').addEventListener('click', async () => {
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    box.querySelector('#btn-enviar').addEventListener('click', async function() {
       const para = box.querySelector('#mail-para').value.trim();
       const asunto = box.querySelector('#mail-asunto').value.trim();
       const cuerpo = box.querySelector('#mail-cuerpo').value.trim();
       const errDiv = box.querySelector('#mail-error'); const btn = box.querySelector('#btn-enviar');
       if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
       errDiv.style.display = 'none'; btn.disabled = true; btn.textContent = 'Enviando...';
-      const resp = await api('/correo', 'POST', { prospectoId: p.id, etapa: p.etapa, para, asunto, cuerpo });
+      const resp = await api('/correo', 'POST', { prospectoId: p.id, etapa: p.etapa, para: para, asunto: asunto, cuerpo: cuerpo });
       if (resp.ok && resp.data && resp.data.ok) { box.querySelector('#mail-ok').style.display = 'block'; btn.textContent = 'Enviado!'; setTimeout(cerrar, 2000); }
-      else { errDiv.textContent = (resp.data&&resp.data.error)||resp.error||'Error'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Enviar'; }
+      else { errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Enviar'; }
     });
-    box.querySelector('#btn-gmail').addEventListener('click', async () => {
+
+    box.querySelector('#btn-gmail').addEventListener('click', async function() {
       const para = box.querySelector('#mail-para').value.trim();
       const asunto = box.querySelector('#mail-asunto').value.trim();
       const cuerpo = box.querySelector('#mail-cuerpo').value.trim();
       const errDiv = box.querySelector('#mail-error'); const btn = box.querySelector('#btn-gmail');
       if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
       errDiv.style.display = 'none'; btn.disabled = true; btn.textContent = 'Creando borrador...';
-      const resp = await api('/correo', 'POST', { action:'crearBorrador', prospectoId: p.id, etapa: p.etapa, para, asunto, cuerpo });
+      const resp = await api('/correo', 'POST', { action:'crearBorrador', prospectoId: p.id, etapa: p.etapa, para: para, asunto: asunto, cuerpo: cuerpo });
       if (resp.ok && resp.data && resp.data.ok) { btn.textContent = '\u2713 Borrador creado'; window.open('https://mail.google.com/mail/#drafts', '_blank'); }
-      else { errDiv.textContent = (resp.data&&resp.data.error)||resp.error||'Error'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Abrir en Gmail'; }
+      else { errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Abrir en Gmail'; }
     });
   }
 
@@ -784,26 +1420,26 @@
     const c = p.nombreCondominio || '';
     const f = 'Atentamente,\nCoproActiva Administraci\u00F3n\ncontacto@coproactiva.cl \u00B7 +56 9 3945 3804';
     const map = {
-      'Nuevo prospecto': `Estimado/a ${n},\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n, empresa especializada en la gesti\u00F3n integral de condominios residenciales bajo la Ley N.\u00b0 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercan\u00EDa con los residentes.\n\nMe gustar\u00EDa coordinar una breve reuni\u00F3n para conocer la situaci\u00F3n actual de ${c}. \u00BFTendr\u00EDa disponibilidad esta semana?\n\n${f}`,
-      'Reuni\u00F3n Agendada': `Estimado/a ${n},\n\nConfirmo nuestra reuni\u00F3n seg\u00FAn lo coordinado. Estar\u00E9 puntual y preparado/a para conocer en detalle la situaci\u00F3n de ${c}.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\n${f}`,
-      'Diagn\u00F3stico': `Estimado/a ${n},\n\nFue un gusto reunirnos y conocer en detalle la situaci\u00F3n de ${c}. El paso siguiente es realizar un diagn\u00F3stico integral de la administraci\u00F3n actual.\n\n\u00BFTendr\u00EDa disponibilidad en los pr\u00F3ximos d\u00EDas para agendar esta sesi\u00F3n?\n\n${f}`,
-      'Propuesta': `Estimado/a ${n},\n\nAdjunto nuestra propuesta comercial para la administraci\u00F3n de ${c}, elaborada en base al diagn\u00F3stico realizado.\n\nQuedo disponible para resolver cualquier consulta.\n\n${f}`,
-      'Negociaci\u00F3n': `Estimado/a ${n},\n\nMe contacto para dar seguimiento a la propuesta enviada para ${c}.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda.\n\n${f}`,
-      'Ganado': `Estimado/a ${n},\n\nEs un placer darles la bienvenida a CoproActiva Administraci\u00F3n.\n\nAdjunto el kit de bienvenida para iniciar nuestra gesti\u00F3n en ${c}.\n\n${f}`,
-      'Perdido': `Estimado/a ${n},\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisi\u00F3n y quedamos disponibles para cualquier necesidad futura.\n\n${f}`,
+      'Nuevo prospecto': 'Estimado/a ' + n + ',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n, empresa especializada en la gesti\u00F3n integral de condominios residenciales bajo la Ley N.\u00b0 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercan\u00EDa con los residentes.\n\nMe gustar\u00EDa coordinar una breve reuni\u00F3n para conocer la situaci\u00F3n actual de ' + c + '. \u00BFTendr\u00EDa disponibilidad esta semana?\n\n' + f,
+      'Reuni\u00F3n Agendada': 'Estimado/a ' + n + ',\n\nConfirmo nuestra reuni\u00F3n seg\u00FAn lo coordinado. Estar\u00E9 puntual y preparado/a para conocer en detalle la situaci\u00F3n de ' + c + '.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\n' + f,
+      'Diagn\u00F3stico': 'Estimado/a ' + n + ',\n\nFue un gusto reunirnos y conocer en detalle la situaci\u00F3n de ' + c + '. El paso siguiente es realizar un diagn\u00F3stico integral de la administraci\u00F3n actual.\n\n\u00BFTendr\u00EDa disponibilidad en los pr\u00F3ximos d\u00EDas para agendar esta sesi\u00F3n?\n\n' + f,
+      'Propuesta': 'Estimado/a ' + n + ',\n\nAdjunto nuestra propuesta comercial para la administraci\u00F3n de ' + c + ', elaborada en base al diagn\u00F3stico realizado.\n\nQuedo disponible para resolver cualquier consulta.\n\n' + f,
+      'Negociaci\u00F3n': 'Estimado/a ' + n + ',\n\nMe contacto para dar seguimiento a la propuesta enviada para ' + c + '.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda.\n\n' + f,
+      'Ganado': 'Estimado/a ' + n + ',\n\nEs un placer darles la bienvenida a CoproActiva Administraci\u00F3n.\n\nAdjunto el kit de bienvenida para iniciar nuestra gesti\u00F3n en ' + c + '.\n\n' + f,
+      'Perdido': 'Estimado/a ' + n + ',\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisi\u00F3n y quedamos disponibles para cualquier necesidad futura.\n\n' + f,
     };
     return map[p.etapa] || '';
   }
 
-  // ── Iniciar diagnóstico desde modal ──────────────────────
+  // ── Iniciar diagnóstico ───────────────────────────────────
   function iniciarDiagnostico(prospectoId, nombreCondominio, prospecto) {
     sessionStorage.setItem('prospectoVinculado', JSON.stringify({
       id:             prospectoId,
       nombre:         nombreCondominio,
-      unidades:       prospecto?.unidades       || '',
-      contactoNombre: prospecto?.nombreContacto || '',
-      contactoCorreo: prospecto?.email          || '',
-      cargoContacto:  prospecto?.cargoContacto  || ''
+      unidades:       prospecto && prospecto.unidades       ? prospecto.unidades       : '',
+      contactoNombre: prospecto && prospecto.nombreContacto ? prospecto.nombreContacto : '',
+      contactoCorreo: prospecto && prospecto.email          ? prospecto.email          : '',
+      cargoContacto:  prospecto && prospecto.cargoContacto  ? prospecto.cargoContacto  : ''
     }));
     cambiarTab('diagnostico');
   }
@@ -813,41 +1449,37 @@
   function abrirModalNuevo() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal-box">
-        <div class="modal-handle"></div>
-        <button class="modal-close" id="mc2">×</button>
-        <div class="modal-eyebrow">Nuevo registro</div>
-        <div class="modal-titulo">Nuevo prospecto</div>
-        <div class="modal-subtitulo">Datos del condominio y contacto</div>
-        <div class="form-grid">
-          <div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="f-nombre" placeholder="Ej: Edificio Las Rosas"></div>
-          <div class="form-group"><label>Comuna</label><input type="text" id="f-comuna" placeholder="Ej: San Bernardo"></div>
-          <div class="form-group"><label>Dirección</label><input type="text" id="f-dir" placeholder="Calle y número"></div>
-          <div class="form-group"><label>Unidades</label><input type="number" id="f-unidades" placeholder="0" min="0"></div>
-          <div class="form-group"><label>Nombre contacto *</label><input type="text" id="f-contacto" placeholder="Nombre completo"></div>
-          <div class="form-group"><label>Cargo</label><input type="text" id="f-cargo" placeholder="Ej: Presidenta"></div>
-          <div class="form-group"><label>Teléfono</label><input type="tel" id="f-tel" placeholder="+569..."></div>
-          <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="correo@cl"></div>
-          <div class="form-group"><label>Fuente</label>
-            <select id="f-fuente">
-              <option value="web">Web</option><option value="referido">Referido</option>
-              <option value="Facebook">Facebook</option><option value="Instagram">Instagram</option>
-              <option value="otro">Otro</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Responsable</label><input type="text" id="f-resp" placeholder="Nombre"></div>
-          <div class="form-group form-full"><label>Observaciones</label><input type="text" id="f-obs" placeholder="Notas adicionales"></div>
-        </div>
-        <div class="form-error" id="f-error"></div>
-        <button class="btn-guardar" id="btn-guardar">Guardar prospecto</button>
-      </div>
-    `;
+    overlay.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc2">\u00D7</button>' +
+        '<div class="modal-eyebrow">Nuevo registro</div>' +
+        '<div class="modal-titulo">Nuevo prospecto</div>' +
+        '<div class="modal-subtitulo">Datos del condominio y contacto</div>' +
+        '<div class="form-grid">' +
+          '<div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="f-nombre" placeholder="Ej: Edificio Las Rosas"></div>' +
+          '<div class="form-group"><label>Comuna</label><input type="text" id="f-comuna" placeholder="Ej: San Bernardo"></div>' +
+          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="f-dir" placeholder="Calle y n\u00FAmero"></div>' +
+          '<div class="form-group"><label>Unidades</label><input type="number" id="f-unidades" placeholder="0" min="0"></div>' +
+          '<div class="form-group"><label>Nombre contacto *</label><input type="text" id="f-contacto" placeholder="Nombre completo"></div>' +
+          '<div class="form-group"><label>Cargo</label><input type="text" id="f-cargo" placeholder="Ej: Presidenta"></div>' +
+          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="f-tel" placeholder="+569..."></div>' +
+          '<div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="correo@cl"></div>' +
+          '<div class="form-group"><label>Fuente</label>' +
+            '<select id="f-fuente"><option value="web">Web</option><option value="referido">Referido</option><option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="otro">Otro</option></select>' +
+          '</div>' +
+          '<div class="form-group"><label>Responsable</label><input type="text" id="f-resp" placeholder="Nombre"></div>' +
+          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="f-obs" placeholder="Notas adicionales"></div>' +
+        '</div>' +
+        '<div class="form-error" id="f-error"></div>' +
+        '<button class="btn-guardar" id="btn-guardar">Guardar prospecto</button>' +
+      '</div>';
+
     document.body.appendChild(overlay);
-    const cerrar = () => overlay.remove();
+    const cerrar = function() { overlay.remove(); };
     overlay.querySelector('#mc2').addEventListener('click', cerrar);
-    overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
-    overlay.querySelector('#btn-guardar').addEventListener('click', async () => {
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+    overlay.querySelector('#btn-guardar').addEventListener('click', async function() {
       const nombre = overlay.querySelector('#f-nombre').value.trim();
       const contacto = overlay.querySelector('#f-contacto').value.trim();
       const errDiv = overlay.querySelector('#f-error'); const btn = overlay.querySelector('#btn-guardar');
@@ -863,14 +1495,12 @@
       };
       const resp = await api('/crm', 'POST', datos);
       if (resp.ok && resp.data && resp.data.ok) { overlay.remove(); await init(); }
-      else { errDiv.textContent = resp.data?.error || resp.error || 'Error al guardar'; errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar prospecto'; }
+      else { errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar'; errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar prospecto'; }
     });
   }
-  // Exponer para que el sidebar dinámico pueda llamarlo
-  document.getElementById('btn-nuevo') && document.getElementById('btn-nuevo').addEventListener('click', abrirModalNuevo);
 
   function mostrarError(msg) {
-    document.getElementById('crm-root').innerHTML = `<div class="crm-error">Error al cargar el CRM: ${msg}</div>`;
+    document.getElementById('crm-root').innerHTML = '<div class="crm-error">Error al cargar el CRM: ' + msg + '</div>';
   }
 
   init();
