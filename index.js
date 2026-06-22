@@ -1,6 +1,7 @@
 // ============================================================
 // CoproActiva Worker — index.js
-// Versión: 3.2 · Junio 2026
+// Versión: 3.3 · Junio 2026
+// Cambio v3.3: agrega ruta GET /documentos/catalogo-comunidad
 // ============================================================
 
 const ACCESS_KEY = 'copro2025';
@@ -414,6 +415,17 @@ export default {
 
       if (url.pathname === '/documentos/catalogo' && method === 'GET') {
         const data = await callAppsScript(APPS_SCRIPT_URL, 'getCatalogoDocumentos');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── v3.3 — Catálogo por comunidad ─────────────────────
+      if (url.pathname === '/documentos/catalogo-comunidad' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        const categoria   = url.searchParams.get('categoria')   || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const params = { comunidadId };
+        if (categoria) params.categoria = categoria;
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'catalogoComunidadDocumentos', params);
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
