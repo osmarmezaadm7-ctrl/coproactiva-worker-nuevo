@@ -700,12 +700,31 @@
           '<button class="btn-masiva-mob" id="mob-btn-correo"><i class="ti ti-mail"></i> Correo</button>' +
           '<button class="btn-masiva-mob" id="mob-btn-estado"><i class="ti ti-tag"></i> Estado</button>' +
           '<button class="btn-masiva-mob" id="mob-btn-archivar"><i class="ti ti-archive"></i></button>' +
+          '<button class="btn-masiva-mob" id="mob-btn-todos" style="width:100%"><i class="ti ti-checkbox"></i> Seleccionar todos</button>' +
           '<button class="btn-masiva-mob cancel" id="mob-btn-cancelar">Cancelar</button>';
         cards.parentElement.insertBefore(barraMob, cards);
         // Listeners solo al crear por primera vez
         barraMob.querySelector('#mob-btn-correo').addEventListener('click', function() { abrirModalCorreoMasivo(); });
         barraMob.querySelector('#mob-btn-estado').addEventListener('click', function() { abrirModalEstadoMasivo(); });
         barraMob.querySelector('#mob-btn-archivar').addEventListener('click', function() { _archivarMasivo(); });
+        barraMob.querySelector('#mob-btn-todos').addEventListener('click', function() {
+          var todos = _leadsFiltrados();
+          _leadSelIds = todos.map(function(l){ return l.id; });
+          var cardsActual = document.getElementById('leads-cards');
+          if (cardsActual) {
+            cardsActual.querySelectorAll('.lead-card').forEach(function(c){
+              c.classList.toggle('selected', _leadSelIds.indexOf(c.dataset.id) !== -1);
+            });
+          }
+          var barActual = document.getElementById('lead-masiva-mob');
+          if (barActual) {
+            barActual.classList.add('visible');
+            var lbl = barActual.querySelector('#lead-masiva-mob-lbl');
+            if (lbl) lbl.textContent = _leadSelIds.length + ' seleccionado' + (_leadSelIds.length !== 1 ? 's' : '');
+          }
+          _actualizarBarraMasiva();
+        });
+
         barraMob.querySelector('#mob-btn-cancelar').addEventListener('click', function() {
           _leadSelIds = [];
           var barActual = document.getElementById('lead-masiva-mob');
