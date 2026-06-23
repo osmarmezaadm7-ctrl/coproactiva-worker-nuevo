@@ -527,8 +527,8 @@
           '</select>' +
           '<select class="leads-filter" id="lead-fil-tipo">' +
             '<option value="">Todos los tipos</option>' +
-            '<option value="comunidad_existente"' + (_leadFiltroTipo==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
-            '<option value="proyecto_nuevo"' + (_leadFiltroTipo==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
+            '<option value="comunidad"' + (_leadFiltroTipo==='comunidad'?' selected':'') + '>Comunidad</option>' +
+            '<option value="inmobiliaria"' + (_leadFiltroTipo==='inmobiliaria'?' selected':'') + '>Inmobiliaria</option>' +
           '</select>' +
           '<button class="leads-btn-sec leads-btn-desktop" id="lead-btn-archivados">' +
             (_leadArchivados ? '\u25A0 Ocultar archivados' : '\u25A1 Ver archivados') +
@@ -655,7 +655,7 @@
   }
 
   function _pillTipo(tipo) {
-    if (tipo === 'comunidad_existente') return '<span class="pill pill-comunidad">Existente</span>';
+    if (tipo === 'comunidad') return '<span class="pill pill-comunidad">Comunidad</span>';
     return '<span class="pill pill-proyecto">Nuevo</span>';
   }
 
@@ -748,7 +748,7 @@
     if (cards) {
       cards.innerHTML = lista.map(function(l) {
         const ini = ((l.nombreCondominio||'?').charAt(0)).toUpperCase();
-        const cls = l.tipoLead === 'comunidad_existente' ? 'comunidad' : 'proyecto';
+        const cls = l.tipoLead === 'comunidad' ? 'comunidad' : 'proyecto';
         var selMob = _leadSelIds.indexOf(l.id) !== -1;
         return '<div class="lead-card' + (selMob ? ' selected' : '') + '" data-id="' + _esc(l.id) + '">' +
           '<div class="lead-card-top">' +
@@ -1039,8 +1039,8 @@
         '<div class="form-grid">' +
           '<div class="form-group form-full"><label>Tipo *</label>' +
             '<select id="nl-tipo">' +
-              '<option value="proyecto_nuevo">Proyecto nuevo</option>' +
-              '<option value="comunidad_existente">Comunidad existente</option>' +
+              '<option value="inmobiliaria">Inmobiliaria</option>' +
+              '<option value="comunidad">Comunidad</option>' +
             '</select>' +
           '</div>' +
           '<div class="form-group form-full"><label>Nombre del condominio / proyecto *</label>' +
@@ -1121,8 +1121,8 @@
         '<div class="form-grid">' +
           '<div class="form-group form-full"><label>Tipo</label>' +
             '<select id="el-tipo">' +
-              '<option value="proyecto_nuevo"' + (l.tipoLead==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
-              '<option value="comunidad_existente"' + (l.tipoLead==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
+              '<option value="inmobiliaria"' + (l.tipoLead==='inmobiliaria'?' selected':'') + '>Inmobiliaria</option>' +
+              '<option value="comunidad"' + (l.tipoLead==='comunidad'?' selected':'') + '>Comunidad</option>' +
             '</select>' +
           '</div>' +
           '<div class="form-group form-full"><label>Nombre *</label><input type="text" id="el-nombre" value="' + _esc(l.nombreCondominio) + '"></div>' +
@@ -1192,7 +1192,7 @@
     box.innerHTML =
       '<div class="modal-handle"></div>' +
       '<button class="modal-close" id="mc-mail-lead">\u00D7</button>' +
-      '<div class="modal-eyebrow">Lead · ' + _esc(l.tipoLead === 'comunidad_existente' ? 'Comunidad existente' : 'Proyecto nuevo') + '</div>' +
+      '<div class="modal-eyebrow">Lead · ' + _esc(l.tipoLead === 'comunidad' ? 'Comunidad' : 'Inmobiliaria') + '</div>' +
       '<div class="modal-titulo">Enviar correo</div>' +
       '<div class="modal-subtitulo">' + _esc(l.nombreCondominio) + ' \u00B7 ' + _esc(l.email||'Sin email') + '</div>' +
       '<div style="margin-top:18px;margin-bottom:14px">' +
@@ -2210,8 +2210,8 @@
     var cargar = function() {
       var headers = ['nombre','tipo_lead','telefono','email','contacto','cargo','comuna','direccion','constructora','fuente','observaciones'];
       var ejemplos = [
-        ['Edificio Las Rosas','comunidad_existente','+56987654321','contacto@lasrosas.cl','Carlos Méndez','Presidente comité','San Bernardo','Av. Principal 123','','referido','Contrato vence en agosto'],
-        ['Proyecto Parque Verde','proyecto_nuevo','+56912345678','gerente@inmobiliaria.cl','Felipe Rivas','Gerente proyecto','Puente Alto','Los Aromos 456','Inmobiliaria Del Valle','web','Entrega estimada dic 2026']
+        ['Edificio Las Rosas','comunidad','+56987654321','contacto@lasrosas.cl','Carlos Méndez','Presidente comité','San Bernardo','Av. Principal 123','','referido','Contrato vence en agosto'],
+        ['Proyecto Parque Verde','inmobiliaria','+56912345678','gerente@inmobiliaria.cl','Felipe Rivas','Gerente proyecto','Puente Alto','Los Aromos 456','Inmobiliaria Del Valle','web','Entrega estimada dic 2026']
       ];
       var wb = XLSX.utils.book_new();
       var data = [headers].concat(ejemplos);
@@ -2224,7 +2224,7 @@
         ['',''],
         ['Campo','Descripción'],
         ['nombre','Nombre del condominio o proyecto (OBLIGATORIO)'],
-        ['tipo_lead','comunidad_existente ó proyecto_nuevo (por defecto: proyecto_nuevo)'],
+        ['tipo_lead','comunidad ó inmobiliaria (por defecto: inmobiliaria)'],
         ['telefono','Teléfono de contacto'],
         ['email','Email de contacto (usado para detectar duplicados)'],
         ['contacto','Nombre del contacto'],
@@ -2348,7 +2348,7 @@
       var isDup = duplicados.indexOf(f) !== -1;
       var tr = document.createElement('tr');
       if (isDup) tr.style.background = 'var(--co-amber-soft)';
-      [String(f.nombre||'—'), String(f.tipo_lead||'proyecto_nuevo'), String(f.contacto||'—'), String(f.email||'—'), String(f.comuna||'—')].forEach(function(v) {
+      [String(f.nombre||'—'), String(f.tipo_lead||'inmobiliaria'), String(f.contacto||'—'), String(f.email||'—'), String(f.comuna||'—')].forEach(function(v) {
         var td = document.createElement('td');
         td.style.cssText = 'font-size:12px;padding:8px 10px;border-bottom:1px solid var(--co-line);color:var(--co-ink);vertical-align:middle';
         td.textContent = v; tr.appendChild(td);
@@ -2410,7 +2410,7 @@
       function g(key) { return String(fm[key] || '').trim(); }
       return {
         nombreCondominio:     g('nombre'),
-        tipoLead:             g('tipo_lead')     || 'proyecto_nuevo',
+        tipoLead:             g('tipo_lead')     || 'inmobiliaria',
         telefono:             g('telefono'),
         email:                g('email'),
         nombreContacto:       g('contacto'),
