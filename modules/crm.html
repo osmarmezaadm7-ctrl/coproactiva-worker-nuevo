@@ -1544,8 +1544,11 @@
     if (_plantillasCache.length > 0) return _plantillasCache;
     try {
       var resp = await api('/plantillas');
-      if (resp.ok && resp.data && resp.data.ok) {
-        _plantillasCache = resp.data.data || [];
+      // Worker devuelve { ok, data: { ok, data: [...] } }
+      if (resp.ok && resp.data && resp.data.ok && Array.isArray(resp.data.data)) {
+        _plantillasCache = resp.data.data;
+      } else if (resp.ok && Array.isArray(resp.data)) {
+        _plantillasCache = resp.data;
       }
     } catch(e) { _plantillasCache = []; }
     return _plantillasCache;
