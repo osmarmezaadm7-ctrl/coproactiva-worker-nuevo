@@ -1,2416 +1,571 @@
-<!-- modules/crm.html — CoproActiva CRM -->
-<!-- Versión: 4.0 · Junio 2026 — tabs Pipeline · Diagnóstico · Recepción -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoproActiva — Administración</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .sb-nav-area { transition: max-height 0.3s ease, opacity 0.25s ease; }
+    .sb-nav-area.sb-collapsed { max-height: 0 !important; overflow: hidden; opacity: 0; padding: 0; }
+    .sb-nav-area.sb-pinned { max-height: none !important; opacity: 1 !important; overflow-y: auto !important; }
+    #sidebarDynamic { flex: 1; overflow-y: auto; min-height: 0; }
+    #sidebarDynamic:empty { display: none; }
+    /* Sidebar fijo — no se mueve con el scroll del contenido */
+    .sidebar { position: fixed !important; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100; }
+    @media (min-width: 768px) {
+      .main-content { margin-left: var(--co-sidebar-w, 240px); }
+    }
+  </style>
+</head>
+<body>
 
-<style>
-  #crm-root { font-family: var(--co-font); color: var(--co-ink); }
-  .crm-sub-modulo .page-header { display: none !important; }
-  .crm-sub-modulo .ph           { display: none !important; }
-  .crm-sub-modulo .home-header  { display: none !important; }
-  .crm-sub-modulo #rx-root .module-loading { min-height: 200px; }
-  .crm-tabs-bar { display: flex; border-bottom: 1px solid var(--co-line); gap: 0; overflow-x: auto; margin-bottom: 20px; }
-  .crm-tab-btn { font-size: 12px; font-weight: 600; padding: 10px 16px; color: var(--co-mute); cursor: pointer; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; background: none; font-family: var(--co-font); display: flex; align-items: center; gap: 6px; transition: color 0.13s; }
-  .crm-tab-btn.act { color: var(--co-orange); border-bottom-color: var(--co-orange); }
-  .crm-tab-btn i { font-size: 14px; }
-  .crm-tab-badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px; background: var(--co-orange-soft); color: var(--co-orange); }
-  .modal-overlay { position: fixed; inset: 0; background: rgba(26,23,20,0.55); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .modal-box { background: var(--co-surface); border-radius: var(--co-r-lg); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative; box-shadow: var(--co-shadow-lg); }
-  @media (max-width: 767px) { .modal-overlay { padding: 0; align-items: flex-end; } .modal-box { border-radius: var(--co-r-lg) var(--co-r-lg) 0 0; max-height: 92vh; padding: 24px 20px 36px; } }
-  .modal-handle { display: none; width: 44px; height: 4px; background: var(--co-line); border-radius: 99px; margin: 0 auto 18px; }
-  @media (max-width: 767px) { .modal-handle { display: block; } }
-  .modal-close { position: absolute; top: 18px; right: 18px; background: var(--co-cream); border: 1px solid var(--co-line); border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--co-ink-2); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: background 0.13s, color 0.13s; }
-  .modal-close:hover { background: var(--co-orange-soft); color: var(--co-orange); }
-  .modal-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 4px; }
-  .modal-titulo { font-size: 22px; font-weight: 800; color: var(--co-ink); letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 6px; padding-right: 44px; }
-  .modal-subtitulo { font-size: 13px; color: var(--co-ink-3); margin-bottom: 24px; font-weight: 500; }
-  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-  @media (max-width: 460px) { .modal-grid { grid-template-columns: 1fr; } }
-  .modal-campo { background: var(--co-cream); border-radius: var(--co-r-sm); padding: 10px 12px; }
-  .modal-campo label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 4px; }
-  .modal-campo span { font-size: 13px; font-weight: 600; color: var(--co-ink); }
-  .modal-seccion { border-top: 1px solid var(--co-line); padding-top: 20px; margin-top: 8px; }
-  .modal-seccion-titulo { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 12px; }
-  .accion-box { background: var(--co-orange-soft); border: 1px solid var(--co-orange-line); border-radius: var(--co-r-md); padding: 14px 16px; margin-bottom: 16px; }
-  .accion-texto { font-size: 13px; font-weight: 700; color: var(--co-ink); margin-bottom: 4px; letter-spacing: -0.01em; }
-  .accion-fecha { font-size: 11px; color: var(--co-ink-3); font-weight: 500; }
-  .etapa-select { width: 100%; padding: 12px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 600; color: var(--co-ink); background: var(--co-surface); margin-bottom: 12px; min-height: 44px; }
-  .etapa-select:focus { outline: none; border-color: var(--co-orange); }
-  .btn-cambiar { background: var(--co-ink); color: #fff; border: none; padding: 13px 20px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; min-height: 46px; letter-spacing: -0.01em; transition: background 0.13s; }
-  .btn-cambiar:hover { background: var(--co-ink-2); }
-  .btn-cambiar:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-diagnostico { background: var(--co-orange); color: #fff; border: none; padding: 13px 20px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; min-height: 46px; margin-top: 10px; letter-spacing: -0.01em; transition: background 0.13s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .btn-diagnostico:hover { background: var(--co-orange-hover); }
-  .msg-ok { font-size: 12px; color: var(--co-green); margin-top: 10px; display: none; font-weight: 600; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
-  .form-group label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 6px; }
-  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 500; color: var(--co-ink); background: var(--co-surface); box-sizing: border-box; min-height: 44px; transition: border-color 0.13s; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--co-orange); }
-  .form-group input::placeholder { color: var(--co-mute); }
-  .form-full { grid-column: 1 / -1; }
-  .btn-guardar { background: var(--co-orange); color: #fff; border: none; padding: 14px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; min-height: 50px; letter-spacing: -0.01em; transition: background 0.13s; }
-  .btn-guardar:hover { background: var(--co-orange-hover); }
-  .btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
-  .form-error { color: var(--co-red); font-size: 12px; margin-top: 10px; display: none; font-weight: 600; }
-  .btn-editar-datos { display: flex; align-items: center; gap: 7px; width: 100%; background: var(--co-surface); color: var(--co-ink); border: 1.5px solid var(--co-line); padding: 11px 16px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color 0.13s, background 0.13s; letter-spacing: -0.01em; }
-  .btn-editar-datos:hover { border-color: var(--co-orange); background: var(--co-cream); }
-  .contactar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .btn-contactar { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 14px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; font-weight: 700; cursor: pointer; border: none; min-height: 44px; letter-spacing: -0.01em; transition: background 0.13s; }
-  .btn-wsp { background: #25D366; color: #fff; }
-  .btn-wsp:hover { background: #1ebe5d; }
-  .btn-mail { background: var(--co-blue-soft); color: var(--co-blue); border: 1.5px solid var(--co-blue); }
-  .btn-mail:hover { background: var(--co-blue); color: #fff; }
-  .toggle-datos-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--co-cream); border: 1px solid var(--co-line); border-radius: var(--co-r-md); cursor: pointer; margin-bottom: 4px; user-select: none; transition: background 0.13s; }
-  .toggle-datos-btn:hover { background: var(--co-cream-deep); }
-  .toggle-datos-label { font-size: 12px; font-weight: 600; color: var(--co-ink-3); letter-spacing: -0.01em; }
-  .toggle-datos-chev { font-size: 10px; color: var(--co-mute); transition: transform 0.2s; }
-  .crm-error { background: var(--co-red-soft); border: 1px solid var(--co-red); border-radius: var(--co-r-md); padding: 16px 20px; color: var(--co-red); font-size: 13px; font-weight: 600; }
-  .vista-mobile { display: none; }
-  @media (max-width: 767px) {
-    .vista-desktop { display: none !important; }
-    .vista-mobile { display: block; }
-    .accordion-etapa { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); margin-bottom: 8px; overflow: hidden; box-shadow: var(--co-shadow-sm); }
-    .accordion-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; cursor: pointer; min-height: 44px; user-select: none; }
-    .accordion-header:active { background: var(--co-cream); }
-    .accordion-titulo { font-size: 13px; font-weight: 700; color: var(--co-ink); }
-    .accordion-meta { display: flex; align-items: center; gap: 8px; }
-    .accordion-count { background: var(--co-ink); color: #fff; border-radius: 99px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
-    .accordion-count.vacio { background: var(--co-mute); opacity: 0.5; }
-    .accordion-chevron { font-size: 11px; color: var(--co-mute); transition: transform 0.2s; }
-    .accordion-chevron.abierto { transform: rotate(180deg); }
-    .accordion-body { display: none; padding: 8px 10px 10px; border-top: 1px solid var(--co-line); background: var(--co-cream); }
-    .accordion-body.abierto { display: block; }
-    .accordion-vacia { font-size: 12px; color: var(--co-mute); text-align: center; padding: 14px 0; }
-  }
-
-  /* ── Leads ── */
-  .leads-kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
-  @media (max-width: 900px) { .leads-kpis { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 767px) {
-    .leads-kpis { grid-template-columns: repeat(2, 1fr); }
-    .leads-kpi-archivados { display: none; }
-  }
-  .lead-kpi { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); padding: 14px 16px; }
-  .lead-kpi-num { font-size: 26px; font-weight: 800; color: var(--co-ink); letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px; }
-  .lead-kpi-num.conv { color: var(--co-green); }
-  .lead-kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-mute); }
-  .lead-kpi-bar { margin-top: 8px; height: 3px; background: var(--co-line); border-radius: 99px; overflow: hidden; }
-  .lead-kpi-bar-fill { height: 100%; background: var(--co-green); border-radius: 99px; transition: width 0.4s; }
-  .leads-toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .leads-search { flex: 1; min-width: 160px; padding: 9px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 13px; color: var(--co-ink); background: var(--co-surface); min-height: 40px; }
-  .leads-search:focus { outline: none; border-color: var(--co-orange); }
-  .leads-filter { padding: 9px 12px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 12px; font-weight: 600; color: var(--co-ink); background: var(--co-surface); min-height: 40px; cursor: pointer; }
-  .leads-filter:focus { outline: none; border-color: var(--co-orange); }
-  .leads-btn-sec { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border: 1.5px solid var(--co-line); border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 12px; font-weight: 700; color: var(--co-ink); background: var(--co-surface); cursor: pointer; min-height: 40px; white-space: nowrap; transition: border-color 0.13s, background 0.13s; }
-  .leads-btn-sec:hover { border-color: var(--co-orange); background: var(--co-cream); }
-  .leads-table { width: 100%; border-collapse: collapse; }
-  .leads-table th { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--co-mute); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--co-line); white-space: nowrap; }
-  .leads-table td { padding: 12px 12px; border-bottom: 1px solid var(--co-line); vertical-align: middle; }
-  .leads-table tr:last-child td { border-bottom: none; }
-  .leads-table tr:hover td { background: var(--co-cream); cursor: pointer; }
-  .lead-nombre-cell { font-size: 13px; font-weight: 700; color: var(--co-ink); }
-  .lead-sub-cell { font-size: 11px; color: var(--co-mute); margin-top: 2px; }
-  .lead-contacto-cell { font-size: 12px; color: var(--co-ink-2); font-weight: 500; }
-  .lead-fecha-cell { font-size: 11px; color: var(--co-mute); white-space: nowrap; }
-  .lead-acciones { display: flex; gap: 6px; }
-  .lead-acc-btn { width: 32px; height: 32px; border-radius: var(--co-r-sm); border: 1px solid var(--co-line); background: var(--co-surface); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--co-mute); font-size: 14px; transition: background 0.13s, color 0.13s; }
-  .lead-acc-btn:hover { background: var(--co-orange-soft); color: var(--co-orange); border-color: var(--co-orange); }
-  .pill { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
-  .pill-nuevo      { background: #e8f4ff; color: #2563eb; }
-  .pill-contactado { background: #fff7e6; color: #d97706; }
-  .pill-convertido { background: #ecfdf5; color: #059669; }
-  .pill-descartado { background: #f5f5f5; color: #6b7280; }
-  .pill-comunidad  { background: #f3e8ff; color: #7c3aed; }
-  .pill-proyecto   { background: #e0f2fe; color: #0369a1; }
-  .leads-empty { text-align: center; padding: 48px 20px; color: var(--co-mute); font-size: 13px; font-weight: 500; }
-  .leads-cards { display: none; }
-  @media (max-width: 767px) {
-    .leads-table-wrap { display: none; }
-    .leads-cards { display: flex; flex-direction: column; gap: 10px; }
-    .lead-card { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); padding: 14px 16px; box-shadow: var(--co-shadow-sm); cursor: pointer; }
-    .lead-card:active { background: var(--co-cream); }
-    .lead-card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
-    .lead-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; }
-    .lead-avatar.comunidad { background: #7c3aed; }
-    .lead-avatar.proyecto  { background: #0369a1; }
-    .lead-card-info { flex: 1; min-width: 0; }
-    .lead-card-nombre { font-size: 14px; font-weight: 700; color: var(--co-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .lead-card-meta { font-size: 11px; color: var(--co-mute); margin-top: 2px; }
-    .lead-card-footer { display: flex; align-items: center; justify-content: space-between; }
-    .lead-card-fecha { font-size: 11px; color: var(--co-mute); }
-    .lead-card-btns { display: flex; gap: 6px; }
-  }
-  .lead-hist-item { padding: 8px 0; border-bottom: 1px solid var(--co-line); font-size: 12px; }
-  .lead-hist-item:last-child { border-bottom: none; }
-  .lead-hist-tipo { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 2px; }
-  .lead-hist-texto { color: var(--co-ink-2); font-weight: 500; }
-  .lead-hist-fecha { font-size: 10px; color: var(--co-mute); margin-top: 2px; }
-  .lead-row-sel td { background: var(--co-orange-soft) !important; }
-
-  /* ── Leads toolbar responsive ── */
-  @media (max-width: 767px) {
-    .leads-toolbar { gap: 8px; }
-    .leads-search { min-width: 0; width: 100%; flex: none; order: 0; }
-    .leads-filter { flex: 1; min-width: 0; font-size: 12px; padding: 8px 10px; }
-    .leads-btn-sec { font-size: 12px; padding: 8px 10px; }
-    .leads-btn-desktop { display: none !important; }
-    .leads-btn-mas-opciones { display: flex !important; }
-  }
-  .leads-btn-mas-opciones { display: none; }
-
-  /* ── Leads sticky header ── */
-  .leads-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--co-cream);
-    padding: 8px 0 10px;
-    margin: 0 0 4px;
-    box-shadow: 0 3px 10px rgba(26,23,20,0.07);
-  }
-
-  /* ── Leads importar btn desktop destacado ── */
-  .leads-btn-importar-destac { background: var(--co-orange) !important; color: #fff !important; border-color: var(--co-orange) !important; }
-  .leads-btn-importar-destac:hover { background: var(--co-orange-hover) !important; }
-
-  /* ── Más opciones dropdown ── */
-  .leads-mas-menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); box-shadow: var(--co-shadow-lg); z-index: 200; min-width: 180px; padding: 4px 0; }
-  .leads-mas-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 10px 14px; background: none; border: none; font-family: var(--co-font); font-size: 13px; font-weight: 600; color: var(--co-ink); cursor: pointer; text-align: left; }
-  .leads-mas-item:hover { background: var(--co-cream); }
-  .leads-mas-item.danger { color: var(--co-red); }
-
-  /* ── Long press avatar modo selección ── */
-  .lead-card.sel-mode .lead-avatar { border-radius: var(--co-r-sm); cursor: pointer; }
-  .lead-card.selected .lead-avatar { background: var(--co-orange) !important; }
-  .lead-card.selected { border-color: var(--co-orange); background: var(--co-orange-soft); }
-  .lead-masiva-mobile { display: none; position: sticky; top: 0; z-index: 20; background: var(--co-ink); color: #fff; padding: 10px 16px; border-radius: var(--co-r-md); margin-bottom: 10px; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .lead-masiva-mobile.visible { display: flex; }
-  .btn-masiva-mob { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 12px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 12px; font-weight: 700; cursor: pointer; }
-  .btn-masiva-mob:hover { background: rgba(255,255,255,0.25); }
-  .btn-masiva-mob.cancel { background: none; color: rgba(255,255,255,0.6); }
-
-</style>
-
-<div id="crm-root">
-  <div class="module-loading">
-    <div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div>
-    <div class="ml-text">
-      <div class="ml-brand"><b>co</b>proactiva</div>
-      <div class="ml-status"><span class="ml-status-dot"></span>Cargando CRM</div>
+<div id="loginScreen" class="login-screen">
+  <div class="login-brand">
+    <img src="assets/coproactiva-iso.png" alt="" class="login-iso" aria-hidden="true">
+    <div class="login-brand-top">
+      <div class="login-brand-logo">
+        <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+      </div>
+      <div class="login-brand-tagline">Comunidades que funcionan</div>
+    </div>
+    <div class="login-brand-bottom">
+      <div class="login-brand-statement">
+        Una administración<br>
+        <em>Activa</em> en tu<br>
+        comunidad
+      </div>
+      <div class="login-brand-meta">
+        <span class="login-brand-meta-dot"></span>
+        Región Metropolitana · Ley N°21.442
+      </div>
+    </div>
+  </div>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="login-eyebrow">Panel de administración</div>
+      <h1 class="login-title">Ingresa al sistema</h1>
+      <p class="login-sub">Acceso exclusivo para administradores certificados.</p>
+      <label class="login-label" for="claveInput">Clave de acceso</label>
+      <input type="password" id="claveInput" class="login-input"
+             placeholder="••••••••" autocomplete="current-password">
+      <button id="loginBtn" class="login-btn">Ingresar al sistema</button>
+      <div id="loginError" class="error-message"></div>
+      <div class="login-foot">
+        <span class="login-foot-dot"></span>
+        Inscrito en el Registro Nacional de Administradores · MINVU
+      </div>
     </div>
   </div>
 </div>
 
+<div id="app" class="app" style="display:none;">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="sidebar-logo">
+          <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+        </div>
+        <button id="btnToggleNav" onclick="toggleSbNav()"
+          title="Ver menú completo"
+          style="display:none;background:rgba(255,255,255,0.08);border:none;cursor:pointer;
+                 width:26px;height:26px;border-radius:6px;align-items:center;justify-content:center;
+                 color:rgba(255,255,255,0.55);font-size:15px;font-family:var(--co-font);flex-shrink:0">
+          &#9776;
+        </button>
+      </div>
+      <div class="sidebar-tag">back office · administración</div>
+    </div>
+
+    <div class="sb-nav-area" id="sbNavArea">
+
+      <!-- GENERAL -->
+      <div class="sb-section">General</div>
+
+      <button class="mod-row" data-mod="panel" onclick="navFlat('panel','Panel maestro','')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+        <span class="mod-label">Panel maestro</span>
+      </button>
+
+      <!-- Comunidades — ítem plano, navegación interna por tabs -->
+      <button class="mod-row" data-mod="comunidades" onclick="navFlat('comunidades','Comunidades','· General')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
+        <span class="mod-label">Comunidades</span>
+        <span class="mod-badge mb-orange" id="badge-comunidades">5</span>
+      </button>
+
+      <div class="sb-sep"></div>
+      <!-- COMERCIAL -->
+      <div class="sb-section">Comercial</div>
+
+      <!-- CRM — ítem plano, navegación interna por tabs -->
+      <button class="mod-row" data-mod="crm" onclick="navFlat('crm','CRM','· Comercial')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+        <span class="mod-label">CRM</span>
+        <span class="mod-badge mb-orange" id="badge-crm">3</span>
+      </button>
+
+      <!-- Flujo comercial — ítem plano -->
+      <button class="mod-row" data-mod="flujo" onclick="navFlat('flujo','Flujo comercial','· Comercial')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4" cy="10" r="2"/><circle cx="16" cy="4" r="2"/><circle cx="16" cy="16" r="2"/><path d="M6 10h4l4-4.5M10 10l6 4.5"/></svg>
+        <span class="mod-label">Flujo comercial</span>
+      </button>
+
+      <div class="sb-sep"></div>
+      <!-- OPERACIONES -->
+      <div class="sb-section">Operaciones</div>
+
+      <div class="mod" id="mod-finanzas">
+        <button class="mod-row" onclick="navToggle('finanzas')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
+          <span class="mod-label">Finanzas</span>
+          <span class="mod-badge mb-red" id="badge-finanzas">2</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-finanzas">
+          <button class="sub-item" onclick="navSub('finanzas','resumen','Resumen financiero')"><span class="sub-dot"></span><span class="sub-label">Resumen financiero</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','gastos','Gastos comunes')"><span class="sub-dot"></span><span class="sub-label">Gastos comunes</span><span class="sub-badge sb-orange">Mayo</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','cobranza','Cobranza')"><span class="sub-dot"></span><span class="sub-label">Cobranza</span><span class="sub-badge sb-red">12</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','pagos','Ingreso de pagos')"><span class="sub-dot"></span><span class="sub-label">Ingreso de pagos</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','rendicion','Rendición al comité')"><span class="sub-dot"></span><span class="sub-label">Rendición al comité</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-servicios">
+        <button class="mod-row" onclick="navToggle('servicios')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3c0 4-4 5-4 9a4 4 0 008 0c0-4-4-5-4-9z"/></svg>
+          <span class="mod-label">Servicios comunes</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-servicios">
+          <button class="sub-item" onclick="navSub('servicios','medidores','Medidores')"><span class="sub-dot"></span><span class="sub-label">Lecturas de medidores</span></button>
+          <button class="sub-item" onclick="navSub('servicios','gas','Gas caldera')"><span class="sub-dot"></span><span class="sub-label">Gas caldera</span></button>
+          <button class="sub-item" onclick="navSub('servicios','calculo','Cálculo y prorrateo')"><span class="sub-dot"></span><span class="sub-label">Cálculo y prorrateo</span></button>
+          <button class="sub-item" onclick="navSub('servicios','historial','Historial')"><span class="sub-dot"></span><span class="sub-label">Historial de lecturas</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-remuneraciones">
+        <button class="mod-row" onclick="navToggle('remuneraciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"/><path d="M3 17c0-3.3 2.2-5 5-5"/><path d="M13 11l1.5 1.5L17 10"/></svg>
+          <span class="mod-label">Remuneraciones</span>
+          <span class="mod-badge mb-red" id="badge-rem">3</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-remuneraciones">
+          <button class="sub-item" onclick="navSub('remuneraciones','personal','Personal')"><span class="sub-dot"></span><span class="sub-label">Personal por comunidad</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','liquidaciones','Liquidaciones')"><span class="sub-dot"></span><span class="sub-label">Liquidaciones</span><span class="sub-badge sb-red">Pend.</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','previred','Previred / DT')"><span class="sub-dot"></span><span class="sub-label">Previred / DT</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','finiquitos','Finiquitos')"><span class="sub-dot"></span><span class="sub-label">Finiquitos</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-mantenciones">
+        <button class="mod-row" onclick="navToggle('mantenciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 3.3a4 4 0 00-5.5 5.5L3.3 14.7a1 1 0 001.4 1.4l5.9-5.9a4 4 0 005.5-5.5l-2.2 2.2-1.4-1.4 2.2-2.2z"/></svg>
+          <span class="mod-label">Mantenciones</span>
+          <span class="mod-badge mb-red" id="badge-man">1</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-mantenciones">
+          <button class="sub-item" onclick="navSub('mantenciones','calendario','Calendario')"><span class="sub-dot"></span><span class="sub-label">Calendario</span></button>
+          <button class="sub-item" onclick="navSub('mantenciones','proveedores','Proveedores')"><span class="sub-dot"></span><span class="sub-label">Proveedores</span></button>
+          <button class="sub-item" onclick="navSub('mantenciones','alertas','Alertas')"><span class="sub-dot"></span><span class="sub-label">Alertas de vencimiento</span><span class="sub-badge sb-red">1</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-incidencias">
+        <button class="mod-row" onclick="navToggle('incidencias')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L2 17h16L10 3z"/><path d="M10 9v4"/><circle cx="10" cy="15" r=".5" fill="currentColor"/></svg>
+          <span class="mod-label">Incidencias</span>
+          <span class="mod-badge mb-red" id="badge-inc">8</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-incidencias">
+          <button class="sub-item" onclick="navSub('incidencias','activas','Activas')"><span class="sub-dot"></span><span class="sub-label">Activas</span><span class="sub-badge sb-red">8</span></button>
+          <button class="sub-item" onclick="navSub('incidencias','historial','Historial')"><span class="sub-dot"></span><span class="sub-label">Historial</span></button>
+        </div>
+      </div>
+
+      <div class="sb-sep"></div>
+      <!-- COMUNICACIÓN -->
+      <div class="sb-section">Comunicación</div>
+
+      <div class="mod" id="mod-comunicaciones">
+        <button class="mod-row" onclick="navToggle('comunicaciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3H3a1 1 0 00-1 1v9a1 1 0 001 1h5l2 3 2-3h5a1 1 0 001-1V4a1 1 0 00-1-1z"/></svg>
+          <span class="mod-label">Comunicaciones</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-comunicaciones">
+          <button class="sub-item" onclick="navSub('comunicaciones','circulares','Circulares')"><span class="sub-dot"></span><span class="sub-label">Circulares</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','asambleas','Asambleas')"><span class="sub-dot"></span><span class="sub-label">Asambleas · Ley 21.442</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','encuestas','Encuestas')"><span class="sub-dot"></span><span class="sub-label">Encuestas</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','libro','Libro de novedades')"><span class="sub-dot"></span><span class="sub-label">Libro de novedades</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-documentos">
+        <button class="mod-row" onclick="navToggle('documentos')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H5a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V7l-3-4z"/><path d="M13 3v4h4"/></svg>
+          <span class="mod-label">Documentos</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-documentos">
+          <button class="sub-item" onclick="navSub('documentos','contratos','Contratos y seguros')"><span class="sub-dot"></span><span class="sub-label">Contratos y seguros</span></button>
+          <button class="sub-item" onclick="navSub('documentos','actas','Actas de reunión')"><span class="sub-dot"></span><span class="sub-label">Actas de reunión</span></button>
+          <button class="sub-item" onclick="navSub('documentos','reglamentos','Reglamentos')"><span class="sub-dot"></span><span class="sub-label">Reglamentos</span></button>
+        </div>
+      </div>
+
+      <div class="sb-sep"></div>
+      <!-- EMPRESA -->
+      <div class="sb-section">Empresa</div>
+
+      <div class="mod" id="mod-reportes">
+        <button class="mod-row" onclick="navToggle('reportes')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V7l4-4 4 4 4-4v14"/><path d="M7 17v-6"/><path d="M11 17v-4"/><path d="M15 17v-8"/></svg>
+          <span class="mod-label">Reportes</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-reportes">
+          <button class="sub-item" onclick="navSub('reportes','mensual','Reporte mensual')"><span class="sub-dot"></span><span class="sub-label">Reporte mensual</span></button>
+          <button class="sub-item" onclick="navSub('reportes','kpis','KPIs generales')"><span class="sub-dot"></span><span class="sub-label">KPIs generales</span></button>
+        </div>
+      </div>
+
+      <button class="mod-row" data-mod="config" onclick="navFlat('config','Configuración','· Empresa')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v1.5M10 15.5V17M3 10h1.5M15.5 10H17M5.05 5.05l1.06 1.06M13.89 13.89l1.06 1.06M5.05 14.95l1.06-1.06M13.89 6.11l1.06-1.06"/></svg>
+        <span class="mod-label">Configuración</span>
+      </button>
+
+    </div>
+
+    <div id="sidebarDynamic"></div>
+
+    <div class="sidebar-foot">
+      <div class="sb-avatar" id="sbAvatar">OM</div>
+      <div>
+        <div class="sb-user-name" id="sbUserName">Osmar Meza</div>
+        <div class="sb-user-role">Administrador</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content" id="mainContent">
+    <div id="contentArea"></div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-btn" data-nav="panel" onclick="navFlat('panel','Panel maestro','');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+      </span>
+      <span class="bottom-label">Panel</span>
+    </button>
+    <button class="nav-btn" data-nav="comunidades" onclick="navFlat('comunidades','Comunidades','· General');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
+      </span>
+      <span class="bottom-label">Comunidades</span>
+    </button>
+    <button class="nav-btn active" data-nav="crm" onclick="navFlat('crm','CRM','· Comercial');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+      </span>
+      <span class="bottom-label">CRM</span>
+    </button>
+    <button class="nav-btn" data-nav="finanzas" onclick="navToggle('finanzas');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
+      </span>
+      <span class="bottom-label">Finanzas</span>
+    </button>
+    <button class="nav-btn" data-nav="menu" onclick="abrirMenuMovil();bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+      </span>
+      <span class="bottom-label">Más</span>
+    </button>
+  </nav>
+
+</div>
+
+<script src="app.js"></script>
 <script>
-(function() {
-
-  const WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
-  const TOKEN = sessionStorage.getItem('token') || '';
-
-  const ETAPAS = [
-    'Nuevo prospecto', 'Reuni\u00F3n Agendada', 'Diagn\u00F3stico',
-    'Propuesta', 'Negociaci\u00F3n', 'Ganado', 'Perdido'
-  ];
-
-  const INSTALACIONES_OPTS = [
-    { key: 'ascensores',       label: 'Ascensores / montacargas' },
-    { key: 'calderas',         label: 'Calderas' },
-    { key: 'gas',              label: 'Gas centralizado (Sello Verde SEC)' },
-    { key: 'grupoElectrogeno', label: 'Grupo electr\u00F3geno' },
-    { key: 'redHumedaSeca',    label: 'Red h\u00FAmeda y/o red seca' },
-    { key: 'piscina',          label: 'Piscina / SPA' },
-    { key: 'personalOS10',     label: 'Personal de seguridad OS-10' },
-    { key: 'trabajadores',     label: 'Trabajadores dependientes (conserjes, limpieza, etc.)' },
-    { key: 'cercoElectrico',   label: 'Cerco el\u00E9ctrico' },
-    { key: 'panelesSolares',   label: 'Paneles solares' }
-  ];
-
-  const MIGRACION_ETAPAS = {
-    'Reuni\u00F3n agendada':      'Reuni\u00F3n Agendada',
-    'Reuni\u00F3n realizada':     'Reuni\u00F3n Agendada',
-    'Diagn\u00F3stico agendado':  'Diagn\u00F3stico',
-    'Diagn\u00F3stico realizado': 'Diagn\u00F3stico',
-    'Propuesta enviada':          'Propuesta',
-  };
-
-  function normalizarEtapa(e) { return MIGRACION_ETAPAS[e] || e; }
-
-  function _esc(str) {
-    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function _fechaCorta(iso) {
-    if (!iso) return '—';
-    try {
-      const d = new Date(iso);
-      return d.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'2-digit' });
-    } catch(e) { return iso; }
-  }
-
-  function _histLabel(tipo) {
-    const map = {
-      creacion: 'Creación', edicion: 'Edición', cambio_estado: 'Cambio de estado',
-      observacion: 'Observación', correo: 'Correo enviado', archivado: 'Archivado',
-      reactivado: 'Reactivado', convertido: 'Convertido a prospecto'
-    };
-    return map[tipo] || tipo;
-  }
-
-  function _histTexto(ev) {
-    const d = ev.datos || {};
-    if (ev.tipo === 'cambio_estado') return 'De ' + (d.de||'?') + ' → ' + (d.a||'?') + (d.notas ? ' · ' + d.notas : '');
-    if (ev.tipo === 'observacion')   return d.texto || '';
-    if (ev.tipo === 'correo')        return 'Para: ' + (d.para||'') + (d.asunto ? ' · ' + d.asunto : '');
-    if (ev.tipo === 'convertido')    return 'Prospecto: ' + (d.prospectoId||'');
-    if (ev.tipo === 'creacion')      return 'Fuente: ' + (d.fuente||'manual');
-    return d.notas || d.motivo || '';
-  }
-
-  let prospectos = [];
-  let leads = [];
-  let _tabActiva = 'leads';
-  let _leadBusqueda = '';
-  let _leadFiltroEstado = '';
-  let _leadFiltroTipo = '';
-  let _leadArchivados = false;
-  let _leadSelIds = [];
-
-  const TAB_CONFIG = {
-    leads: {
-      titulo:  'Leads <em>comerciales</em>',
-      sub:     'Prospectos iniciales antes de ingresar al pipeline.',
-      btnLbl:  'Nuevo lead',
-      btnAct:  () => abrirModalNuevoLead(),
-      kpis:    false,
-    },
-    pipeline: {
-      titulo:  'Pipeline <em>comercial</em>',
-      sub:     'Seguimiento de prospectos desde el primer contacto hasta la firma del contrato.',
-      btnLbl:  'Nuevo prospecto',
-      btnAct:  () => abrirModalNuevo(),
-      kpis:    true,
-    },
-    diagnostico: {
-      titulo:  'Diagn\u00F3sticos <em>guardados</em>',
-      sub:     'Crea nuevos diagn\u00F3sticos o contin\u00FAa uno existente.',
-      btnLbl:  'Nuevo diagn\u00F3stico',
-      btnAct:  () => { if (typeof window._diagNuevo === 'function') window._diagNuevo(); },
-      kpis:    false,
-    },
-    recepcion: {
-      titulo:  'Recepci\u00F3n <em>documental</em>',
-      sub:     'Checklist Anexo N\u00BA1 \u2014 antecedentes al tomar una comunidad.',
-      btnLbl:  'Nueva recepci\u00F3n',
-      btnAct:  () => { if (typeof window._rxNuevo === 'function') window._rxNuevo(); },
-      kpis:    false,
-    },
-  };
-
-  async function api(path, method, body) {
-    method = method || 'GET';
-    const opts = { method, headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' } };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(WORKER_URL + path, opts);
-    return res.json();
-  }
-
-  async function init() {
-    try {
-      const [respCRM, respLeads] = await Promise.all([
-        api('/crm'),
-        api('/leads')
-      ]);
-      if (!respCRM.ok || !respCRM.data || !respCRM.data.ok) {
-        mostrarError(respCRM.data && respCRM.data.error ? respCRM.data.error : (respCRM.error || 'Error desconocido'));
-        return;
-      }
-      prospectos = (respCRM.data.data || []).map(function(p) { return Object.assign({}, p, { etapa: normalizarEtapa(p.etapa) }); });
-      leads = (respLeads.ok && respLeads.data && respLeads.data.ok) ? (respLeads.data.data || []) : [];
-      renderCRM();
-    } catch (err) {
-      mostrarError('Error de conexi\u00F3n: ' + err.message);
-    }
-  }
-
-  function renderCRM() {
-    const root = document.getElementById('crm-root');
-    const activos  = prospectos.filter(function(p) { return p.etapa !== 'Ganado' && p.etapa !== 'Perdido'; });
-    const ganados  = prospectos.filter(function(p) { return p.etapa === 'Ganado'; }).length;
-    const urgentes = activos.filter(function(p) { return p.semaforo === 'rojo'; }).length;
-    const leadsActivos = leads.filter(function(l) { return !l.archivado && l.archivado !== 'TRUE'; }).length;
-
-    window._crmKpis = { activos: activos.length, urgentes: urgentes, ganados: ganados };
-    if (typeof actualizarKpisCRM === 'function') actualizarKpisCRM();
-
-    window._crmAccionNuevo = function() {
-      if (_tabActiva === 'leads')       abrirModalNuevoLead();
-      else if (_tabActiva === 'pipeline')    abrirModalNuevo();
-      else if (_tabActiva === 'diagnostico' && typeof cargarModulo === 'function') cargarModulo('diagnostico');
-      else if (_tabActiva === 'recepcion'   && typeof cargarModulo === 'function') cargarModulo('recepcion');
-    };
-
-    const cfg = TAB_CONFIG[_tabActiva];
-
-    root.innerHTML =
-      '<div class="page-header" id="crm-page-header">' +
-        '<div>' +
-          '<div class="page-eyebrow">CRM</div>' +
-          '<h1 class="page-title" id="crm-header-title">' + cfg.titulo + '</h1>' +
-          '<p class="page-sub" id="crm-header-sub">' + cfg.sub + '</p>' +
-        '</div>' +
-        '<button class="btn-nuevo" id="crm-btn-accion">' +
-          '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>' +
-          '<span id="crm-btn-lbl">' + cfg.btnLbl + '</span>' +
-        '</button>' +
-      '</div>' +
-      '<div class="crm-tabs-bar" id="crm-tabs-bar">' +
-        '<button class="crm-tab-btn ' + (_tabActiva === 'leads' ? 'act' : '') + '" data-tab="leads">' +
-          '<i class="ti ti-user-search" aria-hidden="true"></i> Leads' +
-          '<span class="crm-tab-badge">' + leadsActivos + '</span>' +
-        '</button>' +
-        '<button class="crm-tab-btn ' + (_tabActiva === 'pipeline' ? 'act' : '') + '" data-tab="pipeline">' +
-          '<i class="ti ti-layout-kanban" aria-hidden="true"></i> Pipeline' +
-          '<span class="crm-tab-badge">' + activos.length + '</span>' +
-        '</button>' +
-        '<button class="crm-tab-btn ' + (_tabActiva === 'diagnostico' ? 'act' : '') + '" data-tab="diagnostico">' +
-          '<i class="ti ti-stethoscope" aria-hidden="true"></i> Diagn\u00F3stico' +
-        '</button>' +
-        '<button class="crm-tab-btn ' + (_tabActiva === 'recepcion' ? 'act' : '') + '" data-tab="recepcion">' +
-          '<i class="ti ti-clipboard-list" aria-hidden="true"></i> Recepci\u00F3n' +
-        '</button>' +
-      '</div>' +
-      '<div id="crm-tab-content"></div>';
-
-    document.getElementById('crm-tabs-bar').addEventListener('click', function(e) {
-      const btn = e.target.closest('.crm-tab-btn');
-      if (!btn) return;
-      cambiarTab(btn.dataset.tab);
-    });
-    document.getElementById('crm-btn-accion').addEventListener('click', function() {
-      TAB_CONFIG[_tabActiva].btnAct();
-    });
-
-    _renderTabContent(_tabActiva);
-  }
-
-  function _actualizarHeader(tab) {
-    const cfg = TAB_CONFIG[tab];
-    const title = document.getElementById('crm-header-title');
-    const sub   = document.getElementById('crm-header-sub');
-    const lbl   = document.getElementById('crm-btn-lbl');
-    if (title) title.innerHTML = cfg.titulo;
-    if (sub)   sub.textContent = cfg.sub;
-    if (lbl)   lbl.textContent = cfg.btnLbl;
-  }
-
-  function _renderTabContent(tab) {
-    const container = document.getElementById('crm-tab-content');
-    if (!container) return;
-
-    if (tab === 'leads') {
-      renderLeads(container);
-      return;
-    }
-
-    if (tab === 'pipeline') {
-      container.innerHTML =
-        '<div class="crm-kpis">' +
-          '<div class="kpi-card activos"><div class="kpi-num">' + prospectos.filter(function(p){return p.etapa!=='Ganado'&&p.etapa!=='Perdido';}).length + '</div><div class="kpi-label">Activos</div></div>' +
-          '<div class="kpi-card urgente"><div class="kpi-num urgente">' + prospectos.filter(function(p){return p.semaforo==='rojo'&&p.etapa!=='Ganado'&&p.etapa!=='Perdido';}).length + '</div><div class="kpi-label">Urgentes</div></div>' +
-          '<div class="kpi-card ganado"><div class="kpi-num ganado">' + prospectos.filter(function(p){return p.etapa==='Ganado';}).length + '</div><div class="kpi-label">Ganados</div></div>' +
-          '<div class="kpi-card perdido"><div class="kpi-num perdido">' + prospectos.filter(function(p){return p.etapa==='Perdido';}).length + '</div><div class="kpi-label">Perdidos</div></div>' +
-        '</div>' +
-        '<div class="vista-desktop"><div class="pipeline-scroll"><div class="pipeline" id="pipeline-desktop"></div></div></div>' +
-        '<div class="vista-mobile" id="accordion-mobile"></div>';
-      renderKanban();
-      renderAccordion();
-      return;
-    }
-
-    container.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
-    const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
-
-    if (tab === 'diagnostico') {
-      fetch(base + 'modules/diagnostico.html')
-        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + r.url); return r.text(); })
-        .then(function(html) {
-          container.innerHTML = html;
-          container.classList.add('crm-sub-modulo');
-          Array.from(container.querySelectorAll('script')).forEach(function(old) {
-            const s = document.createElement('script');
-            s.textContent = old.textContent;
-            old.parentNode.replaceChild(s, old);
-          });
-        })
-        .catch(function(err) {
-          container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error: ' + err.message + '</div>';
-        });
-      return;
-    }
-
-    fetch(base + 'modules/' + tab + '.html')
-      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-      .then(function(html) {
-        container.innerHTML = html;
-        container.classList.add('crm-sub-modulo');
-        Array.from(container.querySelectorAll('script')).forEach(function(old) {
-          const s = document.createElement('script');
-          s.textContent = old.textContent;
-          old.parentNode.replaceChild(s, old);
-        });
-      })
-      .catch(function(err) {
-        container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error al cargar ' + tab + ': ' + err.message + '</div>';
-      });
-  }
-
-  function cambiarTab(tab) {
-    if (tab === _tabActiva) return;
-    _tabActiva = tab;
-    document.querySelectorAll('.crm-tab-btn').forEach(function(b) {
-      b.classList.toggle('act', b.dataset.tab === tab);
-    });
-    _actualizarHeader(tab);
-    _renderTabContent(tab);
-  }
-
-  // ── LEADS: render principal ───────────────────────────────
-  function renderLeads(container) {
-    const activos = leads.filter(function(l) {
-      return !l.archivado && l.archivado !== 'TRUE' && l.archivado !== 'true';
-    });
-    const contar = function(est) { return activos.filter(function(l){ return (l.estado||'nuevo') === est; }).length; };
-    const total = activos.length;
-    const convertidos = contar('convertido');
-    const tasa = total > 0 ? Math.round((convertidos/total)*100) : 0;
-
-    container.innerHTML =
-      '<div class="leads-kpis">' +
-        '<div class="lead-kpi"><div class="lead-kpi-num">' + total + '</div><div class="lead-kpi-label">Total leads</div></div>' +
-        '<div class="lead-kpi"><div class="lead-kpi-num">' + contar('nuevo') + '</div><div class="lead-kpi-label">Nuevos</div></div>' +
-        '<div class="lead-kpi"><div class="lead-kpi-num">' + contar('contactado') + '</div><div class="lead-kpi-label">Contactados</div></div>' +
-        '<div class="lead-kpi"><div class="lead-kpi-num conv">' + convertidos + '</div><div class="lead-kpi-label">Convertidos ' + tasa + '%</div>' +
-          '<div class="lead-kpi-bar"><div class="lead-kpi-bar-fill" style="width:' + tasa + '%"></div></div>' +
-        '</div>' +
-        '<div class="lead-kpi leads-kpi-archivados"><div class="lead-kpi-num">' + (leads.length - total) + '</div><div class="lead-kpi-label">Archivados</div></div>' +
-      '</div>' +
-      '<div class="leads-sticky">' +
-        '<div class="leads-toolbar">' +
-          '<input class="leads-search" id="lead-search" placeholder="Buscar condominio, contacto\u2026" value="' + _esc(_leadBusqueda) + '">' +
-          '<select class="leads-filter" id="lead-fil-estado">' +
-            '<option value="">Todos los estados</option>' +
-            '<option value="nuevo"' + (_leadFiltroEstado==='nuevo'?' selected':'') + '>Nuevo</option>' +
-            '<option value="contactado"' + (_leadFiltroEstado==='contactado'?' selected':'') + '>Contactado</option>' +
-            '<option value="convertido"' + (_leadFiltroEstado==='convertido'?' selected':'') + '>Convertido</option>' +
-            '<option value="descartado"' + (_leadFiltroEstado==='descartado'?' selected':'') + '>Descartado</option>' +
-          '</select>' +
-          '<select class="leads-filter" id="lead-fil-tipo">' +
-            '<option value="">Todos los tipos</option>' +
-            '<option value="comunidad_existente"' + (_leadFiltroTipo==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
-            '<option value="proyecto_nuevo"' + (_leadFiltroTipo==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
-          '</select>' +
-          '<button class="leads-btn-sec leads-btn-desktop" id="lead-btn-archivados">' +
-            (_leadArchivados ? '\u25A0 Ocultar archivados' : '\u25A1 Ver archivados') +
-          '</button>' +
-          '<button class="leads-btn-sec leads-btn-importar-destac leads-btn-desktop" id="lead-btn-importar">' +
-            '<i class="ti ti-upload"></i> Importar Excel' +
-          '</button>' +
-          '<button class="leads-btn-sec leads-btn-desktop" id="lead-btn-plantillas">' +
-            '<i class="ti ti-mail"></i> Plantillas' +
-          '</button>' +
-          '<div style="position:relative">' +
-            '<button class="leads-btn-sec leads-btn-mas-opciones" id="lead-btn-mas">' +
-              '<i class="ti ti-dots"></i> Opciones' +
-            '</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div id="lead-masiva-bar" style="display:none;align-items:center;gap:8px;background:var(--co-cream-deep);border:1px solid var(--co-line);border-radius:var(--co-r-md);padding:8px 14px;margin-bottom:12px;flex-wrap:wrap">' +
-        '<i class="ti ti-check" style="font-size:14px;color:var(--co-orange)"></i>' +
-        '<span id="lead-masiva-lbl" style="font-size:12px;font-weight:600;color:var(--co-ink);flex:1">0 seleccionados</span>' +
-        '<button class="leads-btn-sec" id="lead-btn-masiva-correo"><i class="ti ti-mail"></i> Enviar correo</button>' +
-        '<button class="leads-btn-sec" id="lead-btn-masiva-estado"><i class="ti ti-tag"></i> Cambiar estado</button>' +
-        '<button class="leads-btn-sec" id="lead-btn-masiva-archivar" style="color:var(--co-red)"><i class="ti ti-archive"></i> Archivar</button>' +
-      '</div>' +
-      '<div class="leads-table-wrap"><table class="leads-table"><thead><tr>' +
-        '<th style="width:36px"><input type="checkbox" id="lead-chk-all" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer"></th>' +
-        '<th>Condominio</th><th>Tipo</th><th>Contacto</th><th>Estado</th><th>\u00DAltimo contacto</th><th></th>' +
-      '</tr></thead><tbody id="leads-tbody"></tbody></table></div>' +
-      '<div class="leads-cards" id="leads-cards"></div>';
-
-    // eventos toolbar
-    container.querySelector('#lead-search').addEventListener('input', function(e) {
-      _leadBusqueda = e.target.value;
-      _renderLeadsFiltered();
-    });
-    container.querySelector('#lead-fil-estado').addEventListener('change', function(e) {
-      _leadFiltroEstado = e.target.value;
-      _renderLeadsFiltered();
-    });
-    container.querySelector('#lead-fil-tipo').addEventListener('change', function(e) {
-      _leadFiltroTipo = e.target.value;
-      _renderLeadsFiltered();
-    });
-    container.querySelector('#lead-btn-archivados').addEventListener('click', function() {
-      _leadArchivados = !_leadArchivados;
-      renderLeads(container);
-    });
-    container.querySelector('#lead-btn-importar').addEventListener('click', function() {
-      abrirModalImportarLeads();
-    });
-    container.querySelector('#lead-btn-plantillas').addEventListener('click', function() {
-      abrirModalPlantillas();
-    });
-
-    // Menú más opciones (móvil)
-    var btnMas = container.querySelector('#lead-btn-mas');
-    if (btnMas) {
-      btnMas.addEventListener('click', function(e) {
-        e.stopPropagation();
-        document.querySelectorAll('.leads-mas-menu').forEach(function(m){ m.remove(); });
-        var menu = document.createElement('div');
-        menu.className = 'leads-mas-menu';
-        var items = [
-          { ico: 'ti-upload',   lbl: 'Importar Excel', fn: abrirModalImportarLeads },
-          { ico: 'ti-mail',     lbl: 'Plantillas',     fn: abrirModalPlantillas },
-          { ico: _leadArchivados ? 'ti-eye-off' : 'ti-eye', lbl: _leadArchivados ? 'Ocultar archivados' : 'Ver archivados', fn: function() { _leadArchivados = !_leadArchivados; renderLeads(container); } }
-        ];
-        items.forEach(function(it) {
-          var btn2 = document.createElement('button');
-          btn2.className = 'leads-mas-item';
-          btn2.innerHTML = '<i class="ti ' + it.ico + '"></i> ' + it.lbl;
-          btn2.addEventListener('click', function() { menu.remove(); it.fn(); });
-          menu.appendChild(btn2);
-        });
-        btnMas.parentElement.appendChild(menu);
-        setTimeout(function() {
-          document.addEventListener('click', function cerrarMenu() {
-            menu.remove(); document.removeEventListener('click', cerrarMenu);
-          });
-        }, 50);
-      });
-    }
-
-    // Listeners barra masiva - se conectan despues de renderizar filas
-    container.addEventListener('click', function(e) {
-      var btnCorreo  = e.target.closest('#lead-btn-masiva-correo');
-      var btnEstado  = e.target.closest('#lead-btn-masiva-estado');
-      var btnArch    = e.target.closest('#lead-btn-masiva-archivar');
-      if (btnCorreo)  { e.stopPropagation(); abrirModalCorreoMasivo(); }
-      if (btnEstado)  { e.stopPropagation(); abrirModalEstadoMasivo(); }
-      if (btnArch)    { e.stopPropagation(); _archivarMasivo(); }
-    });
-
-    _renderLeadsFiltered();
-  }
-
-  function _leadsFiltrados() {
-    let lista = _leadArchivados ? leads : leads.filter(function(l) {
-      return !l.archivado && l.archivado !== 'TRUE' && l.archivado !== 'true';
-    });
-    if (_leadFiltroEstado) lista = lista.filter(function(l){ return (l.estado||'nuevo') === _leadFiltroEstado; });
-    if (_leadFiltroTipo)   lista = lista.filter(function(l){ return l.tipoLead === _leadFiltroTipo; });
-    if (_leadBusqueda) {
-      const q = _leadBusqueda.toLowerCase();
-      lista = lista.filter(function(l) {
-        return (l.nombreCondominio||'').toLowerCase().includes(q) ||
-               (l.nombreContacto||'').toLowerCase().includes(q) ||
-               (l.email||'').toLowerCase().includes(q) ||
-               (l.comuna||'').toLowerCase().includes(q);
-      });
-    }
-    return lista;
-  }
-
-  function _pillEstado(est) {
-    const map = { nuevo:'pill-nuevo', contactado:'pill-contactado', convertido:'pill-convertido', descartado:'pill-descartado' };
-    return '<span class="pill ' + (map[est]||'pill-nuevo') + '">' + _esc(est||'nuevo') + '</span>';
-  }
-
-  function _pillTipo(tipo) {
-    if (tipo === 'comunidad_existente') return '<span class="pill pill-comunidad">Existente</span>';
-    return '<span class="pill pill-proyecto">Nuevo</span>';
-  }
-
-  function _renderLeadsFiltered() {
-    const lista = _leadsFiltrados();
-    const tbody = document.getElementById('leads-tbody');
-    const cards = document.getElementById('leads-cards');
-    if (!tbody) return;
-
-    if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="leads-empty">No hay leads que mostrar.</div></td></tr>';
-      if (cards) cards.innerHTML = '<div class="leads-empty">No hay leads que mostrar.</div>';
-      return;
-    }
-
-    tbody.innerHTML = lista.map(function(l) {
-      var seleccionado = _leadSelIds.indexOf(l.id) !== -1;
-      return '<tr data-id="' + _esc(l.id) + '"' + (seleccionado ? ' class="lead-row-sel"' : '') + '>' +
-        '<td style="width:36px"><input type="checkbox" class="lead-chk" data-id="' + _esc(l.id) + '" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer"' + (seleccionado ? ' checked' : '') + '></td>' +
-        '<td><div class="lead-nombre-cell">' + _esc(l.nombreCondominio) + '</div>' +
-             '<div class="lead-sub-cell">' + _esc(l.comuna||'') + '</div></td>' +
-        '<td>' + _pillTipo(l.tipoLead) + '</td>' +
-        '<td class="lead-contacto-cell">' + _esc(l.nombreContacto||'—') + '</td>' +
-        '<td>' + _pillEstado(l.estado) + '</td>' +
-        '<td class="lead-fecha-cell">' + _fechaCorta(l.fechaUltimoContacto) + '</td>' +
-        '<td><div class="lead-acciones">' +
-          '<button class="lead-acc-btn" data-accion="correo" data-id="' + _esc(l.id) + '" title="Enviar correo"><i class="ti ti-mail"></i></button>' +
-          '<button class="lead-acc-btn" data-accion="llamar" data-id="' + _esc(l.id) + '" title="Llamar"><i class="ti ti-phone"></i></button>' +
-        '</div></td>' +
-      '</tr>';
-    }).join('');
-
-    // Barra masiva móvil — solo crear si no existe
-    if (cards) {
-      var barraMob = document.getElementById('lead-masiva-mob');
-      if (!barraMob) {
-        barraMob = document.createElement('div');
-        barraMob.id = 'lead-masiva-mob';
-        barraMob.className = 'lead-masiva-mobile';
-        barraMob.innerHTML =
-          '<span id="lead-masiva-mob-lbl" style="flex:1;font-size:12px;font-weight:700">0 seleccionados</span>' +
-          '<button class="btn-masiva-mob" id="mob-btn-correo"><i class="ti ti-mail"></i> Correo</button>' +
-          '<button class="btn-masiva-mob" id="mob-btn-estado"><i class="ti ti-tag"></i> Estado</button>' +
-          '<button class="btn-masiva-mob" id="mob-btn-archivar"><i class="ti ti-archive"></i></button>' +
-          '<button class="btn-masiva-mob cancel" id="mob-btn-cancelar">Cancelar</button>';
-        cards.parentElement.insertBefore(barraMob, cards);
-        // Listeners solo al crear por primera vez
-        barraMob.querySelector('#mob-btn-correo').addEventListener('click', function() { abrirModalCorreoMasivo(); });
-        barraMob.querySelector('#mob-btn-estado').addEventListener('click', function() { abrirModalEstadoMasivo(); });
-        barraMob.querySelector('#mob-btn-archivar').addEventListener('click', function() { _archivarMasivo(); });
-        barraMob.querySelector('#mob-btn-cancelar').addEventListener('click', function() {
-          _leadSelIds = [];
-          var barActual = document.getElementById('lead-masiva-mob');
-          var cardsActual = document.getElementById('leads-cards');
-          if (cardsActual) cardsActual.querySelectorAll('.lead-card').forEach(function(c){ c.classList.remove('selected'); });
-          if (barActual) {
-            barActual.classList.remove('visible');
-            var lbl = barActual.querySelector('#lead-masiva-mob-lbl');
-            if (lbl) lbl.textContent = '0 seleccionados';
-          }
-          _actualizarBarraMasiva();
-        });
-      } else {
-        // Ya existe — solo actualizar visibilidad
-        barraMob.classList.toggle('visible', _leadSelIds.length > 0);
-        var lblMobEx = barraMob.querySelector('#lead-masiva-mob-lbl');
-        if (lblMobEx) lblMobEx.textContent = _leadSelIds.length + ' seleccionado' + (_leadSelIds.length !== 1 ? 's' : '');
-      }
-    }
-
-    if (cards) {
-      cards.innerHTML = lista.map(function(l) {
-        const ini = ((l.nombreCondominio||'?').charAt(0)).toUpperCase();
-        const cls = l.tipoLead === 'comunidad_existente' ? 'comunidad' : 'proyecto';
-        var selMob = _leadSelIds.indexOf(l.id) !== -1;
-        return '<div class="lead-card' + (selMob ? ' selected' : '') + '" data-id="' + _esc(l.id) + '">' +
-          '<div class="lead-card-top">' +
-            '<div class="lead-avatar ' + cls + '">' + ini + '</div>' +
-            '<div class="lead-card-info">' +
-              '<div class="lead-card-nombre">' + _esc(l.nombreCondominio) + '</div>' +
-              '<div class="lead-card-meta">' + _esc(l.nombreContacto||'') + (l.comuna ? ' · ' + _esc(l.comuna) : '') + '</div>' +
-            '</div>' +
-            _pillEstado(l.estado) +
-          '</div>' +
-          '<div class="lead-card-footer">' +
-            '<div class="lead-card-fecha">' + _fechaCorta(l.fechaUltimoContacto) + '</div>' +
-            '<div class="lead-card-btns">' +
-              '<button class="lead-acc-btn" data-accion="correo" data-id="' + _esc(l.id) + '"><i class="ti ti-mail"></i></button>' +
-              '<button class="lead-acc-btn" data-accion="llamar" data-id="' + _esc(l.id) + '"><i class="ti ti-phone"></i></button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    }
-
-    // Checkbox select-all
-    var chkAll = document.getElementById('lead-chk-all');
-    if (chkAll) {
-      chkAll.addEventListener('change', function() {
-        var checked = chkAll.checked;
-        _leadSelIds = checked ? lista.map(function(l){ return l.id; }) : [];
-        document.querySelectorAll('.lead-chk').forEach(function(c){ c.checked = checked; });
-        document.querySelectorAll('tr[data-id]').forEach(function(tr){ tr.classList.toggle('lead-row-sel', checked); });
-        _actualizarBarraMasiva();
-      });
-    }
-
-    // Eventos filas tabla
-    tbody.querySelectorAll('tr[data-id]').forEach(function(tr) {
-      tr.addEventListener('click', function(e) {
-        if (e.target.closest('.lead-acc-btn') || e.target.closest('.lead-chk')) return;
-        const l = leads.find(function(x){ return x.id === tr.dataset.id; });
-        if (l) abrirModalDetalleLead(l);
-      });
-    });
-
-    // Eventos checkboxes individuales
-    tbody.querySelectorAll('.lead-chk').forEach(function(chk) {
-      chk.addEventListener('change', function(e) {
-        e.stopPropagation();
-        var id = chk.dataset.id;
-        var tr = chk.closest('tr');
-        if (chk.checked) {
-          if (_leadSelIds.indexOf(id) === -1) _leadSelIds.push(id);
-          if (tr) tr.classList.add('lead-row-sel');
-        } else {
-          _leadSelIds = _leadSelIds.filter(function(x){ return x !== id; });
-          if (tr) tr.classList.remove('lead-row-sel');
-        }
-        _actualizarBarraMasiva();
-      });
-    });
-    // Eventos cards móvil + long press para selección
-    if (cards) {
-      cards.querySelectorAll('.lead-card').forEach(function(card) {
-        var longPressTimer = null;
-        var longPressFired = false;
-
-        card.addEventListener('touchstart', function(e) {
-          longPressFired = false;
-          longPressTimer = setTimeout(function() {
-            longPressFired = true;
-            _toggleSelMob(card.dataset.id, cards);
-          }, 500);
-        }, { passive: true });
-
-        card.addEventListener('touchend', function() {
-          clearTimeout(longPressTimer);
-        });
-
-        card.addEventListener('touchmove', function() {
-          clearTimeout(longPressTimer);
-        });
-
-        card.addEventListener('click', function(e) {
-          if (longPressFired) { e.preventDefault(); return; }
-          if (e.target.closest('.lead-acc-btn')) return;
-          // Si hay seleccionados activos, toggle en lugar de abrir modal
-          if (_leadSelIds.length > 0) { _toggleSelMob(card.dataset.id, cards); return; }
-          const l = leads.find(function(x){ return x.id === card.dataset.id; });
-          if (l) abrirModalDetalleLead(l);
-        });
-      });
-    }
-    // Botones acción
-    document.querySelectorAll('.lead-acc-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const l = leads.find(function(x){ return x.id === btn.dataset.id; });
-        if (!l) return;
-        if (btn.dataset.accion === 'correo') abrirModalCorreoLead(l);
-        if (btn.dataset.accion === 'llamar') {
-          const tel = String(l.telefono||'').replace(/[^0-9]/g,'');
-          if (tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56'+tel));
-          else alert('Sin teléfono registrado.');
-        }
-      });
-    });
-  }
-
-  // ── Modal detalle lead ────────────────────────────────────
-  function abrirModalDetalleLead(l) {
-    var hist = [];
-    try { hist = JSON.parse(l.historial || '[]'); } catch(e) { hist = []; }
-    const ultimos = hist.slice(-8).reverse();
-
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    const histHTML = ultimos.length ? ultimos.map(function(ev) {
-      return '<div class="lead-hist-item">' +
-        '<div class="lead-hist-tipo">' + _histLabel(ev.tipo) + '</div>' +
-        '<div class="lead-hist-texto">' + _esc(_histTexto(ev)) + '</div>' +
-        '<div class="lead-hist-fecha">' + _fechaCorta(ev.fecha) + '</div>' +
-      '</div>';
-    }).join('') : '<div style="font-size:12px;color:var(--co-mute);padding:8px 0">Sin historial.</div>';
-
-    overlay.innerHTML =
-      '<div class="modal-box" style="max-width:620px">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc-lead">\u00D7</button>' +
-        '<div style="background:var(--co-ink);margin:-32px -32px 24px;padding:24px 32px;border-radius:var(--co-r-lg) var(--co-r-lg) 0 0">' +
-          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
-            _pillTipo(l.tipoLead) +
-            _pillEstado(l.estado) +
-          '</div>' +
-          '<div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.025em">' + _esc(l.nombreCondominio) + '</div>' +
-          '<div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:4px">' + _esc(l.nombreContacto||'') + (l.comuna ? ' · ' + _esc(l.comuna) : '') + '</div>' +
-        '</div>' +
-        '<div class="modal-grid">' +
-          '<div class="modal-campo"><label>Contacto</label><span>' + _esc(l.nombreContacto||'—') + '</span></div>' +
-          '<div class="modal-campo"><label>Cargo</label><span>' + _esc(l.cargoContacto||'—') + '</span></div>' +
-          '<div class="modal-campo"><label>Tel\u00E9fono</label><span>' + _esc(l.telefono||'—') + '</span></div>' +
-          '<div class="modal-campo"><label>Email</label><span>' + _esc(l.email||'—') + '</span></div>' +
-          '<div class="modal-campo"><label>Fuente</label><span>' + _esc(l.fuenteLead||'—') + '</span></div>' +
-          '<div class="modal-campo"><label>Ingreso</label><span>' + _fechaCorta(l.fechaIngreso) + '</span></div>' +
-          (l.constructora ? '<div class="modal-campo"><label>Constructora</label><span>' + _esc(l.constructora) + '</span></div>' : '') +
-          (l.etapaObra    ? '<div class="modal-campo"><label>Etapa obra</label><span>' + _esc(l.etapaObra) + '</span></div>' : '') +
-          (l.observaciones ? '<div class="modal-campo" style="grid-column:1/-1"><label>Observaciones</label><span>' + _esc(l.observaciones) + '</span></div>' : '') +
-        '</div>' +
-        '<div class="modal-seccion">' +
-          '<div class="modal-seccion-titulo">Historial reciente</div>' +
-          '<div style="max-height:200px;overflow-y:auto">' + histHTML + '</div>' +
-        '</div>' +
-        '<div class="modal-seccion">' +
-          '<div class="modal-seccion-titulo">Agregar observaci\u00F3n</div>' +
-          '<textarea id="lead-obs-txt" rows="3" placeholder="Escribe una nota\u2026" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical"></textarea>' +
-          '<button class="btn-cambiar" id="btn-obs-guardar" style="margin-top:10px">Guardar observaci\u00F3n</button>' +
-        '</div>' +
-        '<div class="modal-seccion">' +
-          '<div class="modal-seccion-titulo">Cambiar estado</div>' +
-          '<select class="etapa-select" id="lead-sel-estado">' +
-            ['nuevo','contactado','convertido','descartado'].map(function(est) {
-              return '<option value="' + est + '"' + ((l.estado||'nuevo')===est?' selected':'') + '>' + est.charAt(0).toUpperCase()+est.slice(1) + '</option>';
-            }).join('') +
-          '</select>' +
-          '<button class="btn-cambiar" id="btn-lead-estado">Guardar estado</button>' +
-          '<div class="msg-ok" id="lead-msg-ok">\u2713 Actualizado</div>' +
-        '</div>' +
-        '<div class="modal-seccion" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-          '<button class="btn-contactar btn-mail" id="btn-lead-correo" style="font-size:12px;padding:11px 14px">' +
-            '<i class="ti ti-mail"></i> Correo' +
-          '</button>' +
-          '<button class="btn-contactar btn-wsp" id="btn-lead-wsp" style="font-size:12px;padding:11px 14px">' +
-            '<i class="ti ti-phone"></i> Llamar' +
-          '</button>' +
-          (l.convertidoAProspectoId ? '' :
-            '<button class="btn-guardar" id="btn-lead-convertir" style="grid-column:1/-1;margin-top:0;background:var(--co-green)">Convertir a prospecto</button>'
-          ) +
-          '<button class="btn-editar-datos" id="btn-lead-editar" style="grid-column:1/-1">' +
-            '<i class="ti ti-pencil"></i> Editar datos' +
-          '</button>' +
-          (l.archivado ?
-            '<button class="btn-editar-datos" id="btn-lead-reactivar" style="grid-column:1/-1">Reactivar lead</button>' :
-            '<button class="btn-editar-datos" id="btn-lead-archivar" style="grid-column:1/-1;color:var(--co-red)">Archivar lead</button>'
-          ) +
-        '</div>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc-lead').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    // Guardar observación
-    overlay.querySelector('#btn-obs-guardar').addEventListener('click', async function() {
-      const txt = overlay.querySelector('#lead-obs-txt').value.trim();
-      if (!txt) return;
-      const btn = overlay.querySelector('#btn-obs-guardar');
-      btn.disabled = true; btn.textContent = 'Guardando\u2026';
-      const resp = await api('/leads', 'POST', { action: 'agregarObservacionLead', id: l.id, texto: txt });
-      if (resp.ok && resp.data && resp.data.ok) {
-        // actualizar local
-        var ev = { tipo:'observacion', fecha: new Date().toISOString(), datos:{ texto: txt } };
-        var h = []; try { h = JSON.parse(l.historial||'[]'); } catch(e2){h=[];}
-        h.push(ev); l.historial = JSON.stringify(h);
-        cerrar(); abrirModalDetalleLead(l);
-      } else { btn.disabled = false; btn.textContent = 'Guardar observaci\u00F3n'; alert('Error al guardar.'); }
-    });
-
-    // Cambiar estado
-    overlay.querySelector('#btn-lead-estado').addEventListener('click', async function() {
-      const est = overlay.querySelector('#lead-sel-estado').value;
-      if (est === (l.estado||'nuevo')) return;
-      const btn = overlay.querySelector('#btn-lead-estado');
-      btn.disabled = true; btn.textContent = 'Guardando\u2026';
-      const resp = await api('/leads', 'POST', { action: 'cambiarEstadoLead', id: l.id, estadoNuevo: est });
-      if (resp.ok && resp.data && resp.data.ok) {
-        l.estado = est;
-        overlay.querySelector('#lead-msg-ok').style.display = 'block';
-        btn.textContent = 'Guardar estado'; btn.disabled = false;
-        _renderLeadsFiltered();
-      } else { btn.disabled = false; btn.textContent = 'Guardar estado'; alert('Error.'); }
-    });
-
-    // Correo
-    overlay.querySelector('#btn-lead-correo').addEventListener('click', function() { cerrar(); abrirModalCorreoLead(l); });
-
-    // Llamar
-    overlay.querySelector('#btn-lead-wsp').addEventListener('click', function() {
-      const tel = String(l.telefono||'').replace(/[^0-9]/g,'');
-      if (tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56'+tel));
-      else alert('Sin teléfono registrado.');
-    });
-
-    // Convertir
-    const btnConv = overlay.querySelector('#btn-lead-convertir');
-    if (btnConv) {
-      btnConv.addEventListener('click', async function() {
-        if (!confirm('¿Convertir este lead a prospecto en el Pipeline?')) return;
-        btnConv.disabled = true; btnConv.textContent = 'Convirtiendo\u2026';
-        const resp = await api('/leads', 'POST', { action: 'convertirLead', id: l.id });
-        if (resp.ok && resp.data && resp.data.ok) {
-          l.estado = 'convertido';
-          l.convertidoAProspectoId = resp.data.prospectoId;
-          // recargar prospectos
-          api('/crm').then(function(r) {
-            if (r.ok && r.data && r.data.ok) prospectos = (r.data.data||[]).map(function(p){ return Object.assign({},p,{etapa:normalizarEtapa(p.etapa)}); });
-          });
-          cerrar();
-          alert('\u2713 Convertido. Ya aparece en el Pipeline como "Nuevo prospecto".');
-          _renderLeadsFiltered();
-        } else { btnConv.disabled = false; btnConv.textContent = 'Convertir a prospecto'; alert('Error al convertir.'); }
-      });
-    }
-
-    // Editar
-    overlay.querySelector('#btn-lead-editar').addEventListener('click', function() { cerrar(); abrirModalEditarLead(l); });
-
-    // Archivar
-    const btnArch = overlay.querySelector('#btn-lead-archivar');
-    if (btnArch) {
-      btnArch.addEventListener('click', async function() {
-        if (!confirm('¿Archivar este lead?')) return;
-        await api('/leads', 'POST', { action: 'archivarLead', id: l.id });
-        l.archivado = true; l.estado = 'descartado';
-        cerrar(); _renderLeadsFiltered();
-      });
-    }
-
-    // Reactivar
-    const btnReact = overlay.querySelector('#btn-lead-reactivar');
-    if (btnReact) {
-      btnReact.addEventListener('click', async function() {
-        await api('/leads', 'POST', { action: 'reactivarLead', id: l.id });
-        l.archivado = false; l.estado = 'nuevo';
-        cerrar(); _renderLeadsFiltered();
-      });
-    }
-  }
-
-  // ── Modal nuevo lead ──────────────────────────────────────
-  function abrirModalNuevoLead() {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
-      '<div class="modal-box">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc-nlead">\u00D7</button>' +
-        '<div class="modal-eyebrow">Nuevo registro</div>' +
-        '<div class="modal-titulo">Nuevo lead</div>' +
-        '<div class="modal-subtitulo">Datos b\u00E1sicos del condominio o proyecto</div>' +
-        '<div class="form-grid">' +
-          '<div class="form-group form-full"><label>Tipo *</label>' +
-            '<select id="nl-tipo">' +
-              '<option value="proyecto_nuevo">Proyecto nuevo</option>' +
-              '<option value="comunidad_existente">Comunidad existente</option>' +
-            '</select>' +
-          '</div>' +
-          '<div class="form-group form-full"><label>Nombre del condominio / proyecto *</label>' +
-            '<input type="text" id="nl-nombre" placeholder="Ej: Edificio Las Rosas"></div>' +
-          '<div class="form-group"><label>Comuna</label><input type="text" id="nl-comuna" placeholder="Ej: San Bernardo"></div>' +
-          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="nl-dir" placeholder="Calle y n\u00FAmero"></div>' +
-          '<div class="form-group"><label>Contacto *</label><input type="text" id="nl-contacto" placeholder="Nombre completo"></div>' +
-          '<div class="form-group"><label>Cargo</label><input type="text" id="nl-cargo" placeholder="Ej: Presidente comit\u00E9"></div>' +
-          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="nl-tel" placeholder="+569..."></div>' +
-          '<div class="form-group"><label>Email</label><input type="email" id="nl-email" placeholder="correo@cl"></div>' +
-          '<div class="form-group"><label>Fuente</label>' +
-            '<select id="nl-fuente">' +
-              '<option value="manual">Manual</option>' +
-              '<option value="web">Web</option>' +
-              '<option value="referido">Referido</option>' +
-              '<option value="Facebook">Facebook</option>' +
-              '<option value="Instagram">Instagram</option>' +
-              '<option value="otro">Otro</option>' +
-            '</select>' +
-          '</div>' +
-          '<div class="form-group"><label>Constructora</label><input type="text" id="nl-constructora" placeholder="Solo proyectos nuevos"></div>' +
-          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="nl-obs" placeholder="Notas adicionales"></div>' +
-        '</div>' +
-        '<div class="form-error" id="nl-error"></div>' +
-        '<button class="btn-guardar" id="btn-guardar-nlead">Guardar lead</button>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc-nlead').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    overlay.querySelector('#btn-guardar-nlead').addEventListener('click', async function() {
-      const nombre = overlay.querySelector('#nl-nombre').value.trim();
-      const contacto = overlay.querySelector('#nl-contacto').value.trim();
-      const errDiv = overlay.querySelector('#nl-error');
-      const btn = overlay.querySelector('#btn-guardar-nlead');
-      if (!nombre || !contacto) { errDiv.textContent = 'Nombre y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
-      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
-      const datos = {
-        action: 'crearLead',
-        tipoLead: overlay.querySelector('#nl-tipo').value,
-        nombreCondominio: nombre,
-        comuna: overlay.querySelector('#nl-comuna').value.trim(),
-        direccion: overlay.querySelector('#nl-dir').value.trim(),
-        nombreContacto: contacto,
-        cargoContacto: overlay.querySelector('#nl-cargo').value.trim(),
-        telefono: overlay.querySelector('#nl-tel').value.trim(),
-        email: overlay.querySelector('#nl-email').value.trim(),
-        fuenteLead: overlay.querySelector('#nl-fuente').value,
-        constructora: overlay.querySelector('#nl-constructora').value.trim(),
-        observaciones: overlay.querySelector('#nl-obs').value.trim(),
-      };
-      const resp = await api('/leads', 'POST', datos);
-      if (resp.ok && resp.data && resp.data.ok) {
-        leads.unshift(resp.data.data);
-        cerrar();
-        const cont = document.getElementById('crm-tab-content');
-        if (cont) renderLeads(cont);
-      } else {
-        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
-        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar lead';
-      }
-    });
-  }
-
-  // ── Modal editar lead ─────────────────────────────────────
-  function abrirModalEditarLead(l) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
-      '<div class="modal-box">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc-elead">\u00D7</button>' +
-        '<div class="modal-eyebrow">Editar lead</div>' +
-        '<div class="modal-titulo">' + _esc(l.nombreCondominio) + '</div>' +
-        '<div class="modal-subtitulo">Modifica los datos y guarda</div>' +
-        '<div class="form-grid">' +
-          '<div class="form-group form-full"><label>Tipo</label>' +
-            '<select id="el-tipo">' +
-              '<option value="proyecto_nuevo"' + (l.tipoLead==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
-              '<option value="comunidad_existente"' + (l.tipoLead==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
-            '</select>' +
-          '</div>' +
-          '<div class="form-group form-full"><label>Nombre *</label><input type="text" id="el-nombre" value="' + _esc(l.nombreCondominio) + '"></div>' +
-          '<div class="form-group"><label>Comuna</label><input type="text" id="el-comuna" value="' + _esc(l.comuna||'') + '"></div>' +
-          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="el-dir" value="' + _esc(l.direccion||'') + '"></div>' +
-          '<div class="form-group"><label>Contacto *</label><input type="text" id="el-contacto" value="' + _esc(l.nombreContacto||'') + '"></div>' +
-          '<div class="form-group"><label>Cargo</label><input type="text" id="el-cargo" value="' + _esc(l.cargoContacto||'') + '"></div>' +
-          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="el-tel" value="' + _esc(l.telefono||'') + '"></div>' +
-          '<div class="form-group"><label>Email</label><input type="email" id="el-email" value="' + _esc(l.email||'') + '"></div>' +
-          '<div class="form-group"><label>Fuente</label>' +
-            '<select id="el-fuente">' +
-              ['manual','web','referido','Facebook','Instagram','otro'].map(function(f){ return '<option value="'+f+'"'+(l.fuenteLead===f?' selected':'')+'>'+f+'</option>'; }).join('') +
-            '</select>' +
-          '</div>' +
-          '<div class="form-group"><label>Constructora</label><input type="text" id="el-constructora" value="' + _esc(l.constructora||'') + '"></div>' +
-          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="el-obs" value="' + _esc(l.observaciones||'') + '"></div>' +
-        '</div>' +
-        '<div class="form-error" id="el-error"></div>' +
-        '<button class="btn-guardar" id="btn-guardar-elead">Guardar cambios</button>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc-elead').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    overlay.querySelector('#btn-guardar-elead').addEventListener('click', async function() {
-      const nombre = overlay.querySelector('#el-nombre').value.trim();
-      const contacto = overlay.querySelector('#el-contacto').value.trim();
-      const errDiv = overlay.querySelector('#el-error');
-      const btn = overlay.querySelector('#btn-guardar-elead');
-      if (!nombre || !contacto) { errDiv.textContent = 'Nombre y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
-      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
-      const cambios = {
-        action: 'editarLead', id: l.id,
-        tipoLead: overlay.querySelector('#el-tipo').value,
-        nombreCondominio: nombre,
-        comuna: overlay.querySelector('#el-comuna').value.trim(),
-        direccion: overlay.querySelector('#el-dir').value.trim(),
-        nombreContacto: contacto,
-        cargoContacto: overlay.querySelector('#el-cargo').value.trim(),
-        telefono: overlay.querySelector('#el-tel').value.trim(),
-        email: overlay.querySelector('#el-email').value.trim(),
-        fuenteLead: overlay.querySelector('#el-fuente').value,
-        constructora: overlay.querySelector('#el-constructora').value.trim(),
-        observaciones: overlay.querySelector('#el-obs').value.trim(),
-      };
-      const resp = await api('/leads', 'POST', cambios);
-      if (resp.ok && resp.data && resp.data.ok) {
-        Object.assign(l, cambios);
-        cerrar();
-        const cont = document.getElementById('crm-tab-content');
-        if (cont) renderLeads(cont);
-      } else {
-        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error';
-        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
-      }
-    });
-  }
-
-  // ── Modal correo lead ─────────────────────────────────────
-  function abrirModalCorreoLead(l) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    const box = document.createElement('div');
-    box.className = 'modal-box';
-    box.innerHTML =
-      '<div class="modal-handle"></div>' +
-      '<button class="modal-close" id="mc-mail-lead">\u00D7</button>' +
-      '<div class="modal-eyebrow">Lead · ' + _esc(l.tipoLead === 'comunidad_existente' ? 'Comunidad existente' : 'Proyecto nuevo') + '</div>' +
-      '<div class="modal-titulo">Enviar correo</div>' +
-      '<div class="modal-subtitulo">' + _esc(l.nombreCondominio) + ' \u00B7 ' + _esc(l.email||'Sin email') + '</div>' +
-      '<div style="margin-top:18px;margin-bottom:14px">' +
-        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Cargar plantilla</div>' +
-        '<div style="display:flex;gap:8px">' +
-          '<select id="lmail-sel-plt" style="flex:1;padding:9px 12px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);min-height:40px">' +
-            '<option value="">— Sin plantilla —</option>' +
-          '</select>' +
-          '<button id="lmail-btn-plt" style="padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:700;color:var(--co-ink);background:var(--co-cream);cursor:pointer">Cargar</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="form-grid">' +
-        '<div class="form-group form-full"><label>Para</label><input type="email" id="lmail-para" value="' + _esc(l.email||'') + '"></div>' +
-        '<div class="form-group form-full"><label>Asunto</label><input type="text" id="lmail-asunto" value="CoproActiva \u2014 ' + _esc(l.nombreCondominio) + '"></div>' +
-        '<div class="form-group form-full"><label>Mensaje</label>' +
-          '<textarea id="lmail-cuerpo" rows="8" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:160px">' +
-          'Estimado/a ' + _esc(l.nombreContacto||'') + ',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n.\n\n\u00BFTendr\u00EDa disponibilidad para conversar esta semana?\n\nAtentamente,\nCoproActiva Administraci\u00F3n' +
-          '</textarea>' +
-        '</div>' +
-      '</div>' +
-      '<div class="form-error" id="lmail-error"></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
-        '<button class="btn-guardar" id="btn-lmail-enviar" style="background:var(--co-ink)">Enviar</button>' +
-        '<button class="btn-guardar" id="btn-lmail-borrador" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line)">Borrador Gmail</button>' +
-      '</div>' +
-      '<div class="msg-ok" id="lmail-ok">\u2713 Enviado correctamente</div>';
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    box.querySelector('#mc-mail-lead').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    _cargarSelectorPlantillas(box.querySelector('#lmail-sel-plt'));
-    box.querySelector('#lmail-btn-plt').addEventListener('click', function() {
-      var id = box.querySelector('#lmail-sel-plt').value;
-      if (!id) return;
-      var plt = (_plantillasCache || []).find(function(x){ return x.id === id; });
-      if (!plt) return;
-      box.querySelector('#lmail-asunto').value = _reemplazarVars(plt.asunto, l);
-      box.querySelector('#lmail-cuerpo').value = _reemplazarVars(plt.cuerpo, l);
-    });
-
-    async function _enviar(accion) {
-      const para   = box.querySelector('#lmail-para').value.trim();
-      const asunto = box.querySelector('#lmail-asunto').value.trim();
-      const cuerpo = box.querySelector('#lmail-cuerpo').value.trim();
-      const errDiv = box.querySelector('#lmail-error');
-      if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
-      errDiv.style.display = 'none';
-      const btn = accion === 'enviar' ? box.querySelector('#btn-lmail-enviar') : box.querySelector('#btn-lmail-borrador');
-      btn.disabled = true; btn.textContent = accion === 'enviar' ? 'Enviando\u2026' : 'Creando borrador\u2026';
-
-      // Registrar correo en historial del lead
-      const respLead = await api('/leads', 'POST', { action: 'registrarCorreoLead', id: l.id, para: para, asunto: asunto });
-      if (respLead.ok && respLead.data && respLead.data.ok && respLead.data.estadoNuevo) {
-        l.estado = respLead.data.estadoNuevo;
-      }
-
-      // Enviar / borrador via CRM correos
-      const resp = await api('/correo', 'POST', {
-        action: accion === 'borrador' ? 'crearBorrador' : undefined,
-        prospectoId: l.id, etapa: 'lead', para: para, asunto: asunto, cuerpo: cuerpo
-      });
-      if (accion === 'enviar') {
-        box.querySelector('#lmail-ok').style.display = 'block';
-        btn.textContent = '\u2713 Enviado'; setTimeout(cerrar, 1800);
-      } else {
-        btn.textContent = '\u2713 Borrador creado';
-        window.open('https://mail.google.com/mail/#drafts', '_blank');
-      }
-      _renderLeadsFiltered();
-    }
-
-    box.querySelector('#btn-lmail-enviar').addEventListener('click', function() { _enviar('enviar'); });
-    box.querySelector('#btn-lmail-borrador').addEventListener('click', function() { _enviar('borrador'); });
-  }
-
-  // ── Pipeline ──────────────────────────────────────────────
-  function renderKanban() {
-    const pipeline = document.getElementById('pipeline-desktop');
-    if (!pipeline) return;
-    pipeline.innerHTML = '';
-    ETAPAS.forEach(function(etapa) {
-      const enEtapa = prospectos.filter(function(p) { return p.etapa === etapa; });
-      const col = document.createElement('div');
-      col.className = 'columna';
-      col.innerHTML =
-        '<div class="columna-header">' +
-          '<span class="columna-title">' + etapa + '</span>' +
-          '<span class="columna-count ' + (enEtapa.length === 0 ? 'empty' : '') + '">' + enEtapa.length + '</span>' +
-        '</div>' +
-        (enEtapa.length === 0 ? '<div class="columna-vacia">Sin prospectos</div>' : enEtapa.map(tarjetaHTML).join(''));
-      pipeline.appendChild(col);
-    });
-    pipeline.querySelectorAll('.tarjeta').forEach(function(t) {
-      t.addEventListener('click', function() {
-        const p = prospectos.find(function(x) { return x.id === t.getAttribute('data-id'); });
-        if (p) abrirModalDetalle(p);
-      });
-    });
-  }
-
-  function renderAccordion() {
-    const acc = document.getElementById('accordion-mobile');
-    if (!acc) return;
-    acc.innerHTML = '';
-    const etapasConDatos = ETAPAS.filter(function(e) { return prospectos.some(function(p){ return p.etapa === e; }); });
-    const etapasSinDatos = ETAPAS.filter(function(e) { return !prospectos.some(function(p){ return p.etapa === e; }); });
-    etapasConDatos.concat(etapasSinDatos).forEach(function(etapa, idx) {
-      const enEtapa = prospectos.filter(function(p) { return p.etapa === etapa; });
-      const abierto = idx === 0 && enEtapa.length > 0;
-      const bloque = document.createElement('div');
-      bloque.className = 'accordion-etapa';
-      bloque.innerHTML =
-        '<div class="accordion-header">' +
-          '<span class="accordion-titulo">' + etapa + '</span>' +
-          '<div class="accordion-meta">' +
-            '<span class="accordion-count ' + (enEtapa.length === 0 ? 'vacio' : '') + '">' + enEtapa.length + '</span>' +
-            '<span class="accordion-chevron ' + (abierto ? 'abierto' : '') + '">\u25BC</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="accordion-body ' + (abierto ? 'abierto' : '') + '">' +
-          (enEtapa.length === 0 ? '<div class="accordion-vacia">Sin prospectos</div>' : enEtapa.map(tarjetaHTML).join('')) +
-        '</div>';
-      bloque.querySelector('.accordion-header').addEventListener('click', function() {
-        const body    = bloque.querySelector('.accordion-body');
-        const chevron = bloque.querySelector('.accordion-chevron');
-        const esta    = body.classList.contains('abierto');
-        body.classList.toggle('abierto', !esta);
-        chevron.classList.toggle('abierto', !esta);
-      });
-      acc.appendChild(bloque);
-    });
-    acc.querySelectorAll('.tarjeta').forEach(function(t) {
-      t.addEventListener('click', function() {
-        const p = prospectos.find(function(x) { return x.id === t.getAttribute('data-id'); });
-        if (p) abrirModalDetalle(p);
-      });
-    });
-  }
-
-  function tarjetaHTML(p) {
-    const sem = p.semaforo || 'gris';
-    return '<div class="tarjeta sem-' + sem + '" data-id="' + p.id + '">' +
-      '<div class="tarjeta-nombre">' + _esc(p.nombreCondominio) + '</div>' +
-      '<div class="tarjeta-contacto">' + _esc(p.nombreContacto) + (p.comuna ? ' \u00B7 ' + _esc(p.comuna) : '') + '</div>' +
-      '<div class="tarjeta-footer">' +
-        '<span class="tarjeta-unidades"><strong>' + (p.unidades || 0) + '</strong> unid.</span>' +
-        '<span class="semaforo-dot dot-' + sem + '"></span>' +
-      '</div>' +
-      (p.proximaAccion ? '<div class="tarjeta-accion">' + _esc(p.proximaAccion) + '</div>' : '') +
-    '</div>';
-  }
-
-  // ── Modal detalle prospecto ───────────────────────────────
-  function abrirModalDetalle(p) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
-      '<div class="modal-box">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc">\u00D7</button>' +
-        '<div class="modal-eyebrow">' + p.etapa + '</div>' +
-        '<div class="modal-titulo">' + _esc(p.nombreCondominio) + '</div>' +
-        '<div class="modal-subtitulo">' + _esc(p.comuna || '\u2014') + ' \u00B7 ' + (p.unidades || 0) + ' unidades</div>' +
-        '<div class="toggle-datos-btn" id="toggle-datos">' +
-          '<span class="toggle-datos-label" id="toggle-datos-label">Ver datos del prospecto</span>' +
-          '<span class="toggle-datos-chev" id="toggle-datos-chev">&#9660;</span>' +
-        '</div>' +
-        '<div class="modal-grid toggle-datos-body" id="toggle-datos-body" style="display:none;margin-top:10px">' +
-          '<div class="modal-campo"><label>Contacto</label><span>' + _esc(p.nombreContacto) + '</span></div>' +
-          '<div class="modal-campo"><label>Cargo</label><span>' + _esc(p.cargoContacto || '\u2014') + '</span></div>' +
-          '<div class="modal-campo"><label>Tel\u00E9fono</label><span>' + _esc(p.telefono || '\u2014') + '</span></div>' +
-          '<div class="modal-campo"><label>Email</label><span>' + _esc(p.email || '\u2014') + '</span></div>' +
-          '<div class="modal-campo"><label>Fuente</label><span>' + _esc(p.fuenteLead || '\u2014') + '</span></div>' +
-          '<div class="modal-campo"><label>Responsable</label><span>' + _esc(p.responsable || '\u2014') + '</span></div>' +
-          '<div class="modal-campo"><label>Primer contacto</label><span>' + _esc(p.fechaPrimerContacto || '\u2014') + '</span></div>' +
-          '<div class="modal-campo"><label>\u00DAltima interacci\u00F3n</label><span>' + _esc(p.fechaUltimaInteraccion || '\u2014') + '</span></div>' +
-          (p.observaciones ? '<div class="modal-campo" style="grid-column:1/-1"><label>Observaciones</label><span>' + _esc(p.observaciones) + '</span></div>' : '') +
-        '</div>' +
-        '<div class="modal-seccion">' +
-          '<div class="modal-seccion-titulo">Pr\u00F3xima acci\u00F3n</div>' +
-          '<div class="accion-box">' +
-            '<div class="accion-texto">' + _esc(p.proximaAccion || 'Sin acci\u00F3n definida') + '</div>' +
-            (p.fechaProximaAccion ? '<div class="accion-fecha">' + _esc(p.fechaProximaAccion) + '</div>' : '') +
-          '</div>' +
-        '</div>' +
-        (p.etapa === 'Diagn\u00F3stico' ?
-          '<div class="modal-seccion"><div class="modal-seccion-titulo">Diagn\u00F3stico</div>' +
-          '<button class="btn-diagnostico" id="btn-diag"><i class="ti ti-stethoscope" aria-hidden="true"></i> Ir a Diagn\u00F3stico</button></div>' : '') +
-        '<div class="modal-seccion">' +
-          '<div class="modal-seccion-titulo">Contactar</div>' +
-          '<div class="contactar-btns">' +
-            '<button class="btn-contactar btn-wsp" id="btn-wsp">' +
-              '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L.057 23.428a.5.5 0 0 0 .609.61l5.627-1.474A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.9 9.9 0 0 1-5.031-1.371l-.36-.214-3.733.978.997-3.645-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.465 0 9.9 4.434 9.9 9.9 0 5.465-4.435 9.9-9.9 9.9z"/></svg>' +
-              ' WhatsApp' +
-            '</button>' +
-            '<button class="btn-contactar btn-mail" id="btn-mail">' +
-              '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>' +
-              ' Correo' +
-            '</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="modal-seccion">' +
-          '<div class="modal-seccion-titulo">Cambiar etapa</div>' +
-          '<select class="etapa-select" id="sel-etapa">' +
-            ETAPAS.map(function(e) { return '<option value="' + e + '"' + (e === p.etapa ? ' selected' : '') + '>' + e + '</option>'; }).join('') +
-          '</select>' +
-          '<button class="btn-cambiar" id="btn-cambiar">Guardar cambio</button>' +
-          '<div class="msg-ok" id="msg-ok">\u2713 Etapa actualizada</div>' +
-        '</div>' +
-        '<div class="modal-seccion">' +
-          '<button class="btn-editar-datos" id="btn-editar">' +
-            '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>' +
-            ' Editar datos del prospecto' +
-          '</button>' +
-        '</div>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    overlay.querySelector('#toggle-datos').addEventListener('click', function() {
-      const body  = overlay.querySelector('#toggle-datos-body');
-      const label = overlay.querySelector('#toggle-datos-label');
-      const chev  = overlay.querySelector('#toggle-datos-chev');
-      const open  = body.style.display !== 'none';
-      body.style.display   = open ? 'none' : 'grid';
-      label.textContent    = open ? 'Ver datos del prospecto' : 'Ocultar datos del prospecto';
-      chev.style.transform = open ? '' : 'rotate(180deg)';
-    });
-
-    const btnDiag = overlay.querySelector('#btn-diag');
-    if (btnDiag) {
-      btnDiag.addEventListener('click', function() { cerrar(); iniciarDiagnostico(p.id, p.nombreCondominio, p); });
-    }
-
-    overlay.querySelector('#btn-wsp').addEventListener('click', function() {
-      const tel = String(p.telefono || '').trim().replace(/[^0-9]/g, '');
-      if (!tel) { alert('Sin tel\u00E9fono registrado.'); return; }
-      window.open('https://wa.me/' + (tel.startsWith('56') ? tel : '56' + tel), '_blank');
-    });
-
-    overlay.querySelector('#btn-mail').addEventListener('click', function() { abrirModalCorreo(p); });
-    overlay.querySelector('#btn-editar').addEventListener('click', function() { cerrar(); abrirModalEditar(p); });
-
-    overlay.querySelector('#btn-cambiar').addEventListener('click', async function() {
-      const nuevaEtapa    = overlay.querySelector('#sel-etapa').value;
-      const etapaAnterior = p.etapa;
-      const btn = overlay.querySelector('#btn-cambiar');
-      const msg = overlay.querySelector('#msg-ok');
-      if (nuevaEtapa === p.etapa) return;
-      btn.disabled = true; btn.textContent = 'Guardando\u2026';
-      const resp = await api('/crm', 'POST', { action: 'cambiarEtapa', id: p.id, etapaNueva: nuevaEtapa });
-      if (resp.ok && resp.data && resp.data.ok) {
-        p.etapa = nuevaEtapa; msg.style.display = 'block';
-        btn.textContent = 'Guardar cambio'; btn.disabled = false;
-        renderKanban(); renderAccordion();
-        if (nuevaEtapa === 'Ganado' && etapaAnterior !== 'Ganado') {
-          cerrar(); abrirModalCrearComunidad(p);
-        }
-      } else { btn.textContent = 'Error \u2014 reintentar'; btn.disabled = false; }
-    });
-  }
-
-  // ── Modal editar prospecto ────────────────────────────────
-  function abrirModalEditar(p) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
-      '<div class="modal-box">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc-edit">\u00D7</button>' +
-        '<div class="modal-eyebrow">Editar prospecto</div>' +
-        '<div class="modal-titulo">' + _esc(p.nombreCondominio) + '</div>' +
-        '<div class="modal-subtitulo">Modifica los datos y guarda los cambios</div>' +
-        '<div class="form-grid">' +
-          '<div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="e-nombre" value="' + _esc(p.nombreCondominio || '') + '"></div>' +
-          '<div class="form-group"><label>Comuna</label><input type="text" id="e-comuna" value="' + _esc(p.comuna || '') + '"></div>' +
-          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="e-dir" value="' + _esc(p.direccion || '') + '"></div>' +
-          '<div class="form-group"><label>Unidades</label><input type="number" id="e-unidades" value="' + (p.unidades || '') + '" min="0"></div>' +
-          '<div class="form-group"><label>Nombre contacto *</label><input type="text" id="e-contacto" value="' + _esc(p.nombreContacto || '') + '"></div>' +
-          '<div class="form-group"><label>Cargo</label><input type="text" id="e-cargo" value="' + _esc(p.cargoContacto || '') + '"></div>' +
-          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="e-tel" value="' + _esc(p.telefono || '') + '"></div>' +
-          '<div class="form-group"><label>Email</label><input type="email" id="e-email" value="' + _esc(p.email || '') + '"></div>' +
-          '<div class="form-group"><label>Fuente</label>' +
-            '<select id="e-fuente">' + ['web','referido','Facebook','Instagram','otro'].map(function(f){ return '<option value="'+f+'"'+(p.fuenteLead===f?' selected':'')+'>'+f+'</option>'; }).join('') + '</select>' +
-          '</div>' +
-          '<div class="form-group"><label>Responsable</label><input type="text" id="e-resp" value="' + _esc(p.responsable || '') + '"></div>' +
-          '<div class="form-group form-full"><label>Pr\u00F3xima acci\u00F3n</label><input type="text" id="e-accion" value="' + _esc(p.proximaAccion || '') + '"></div>' +
-          '<div class="form-group"><label>Fecha pr\u00F3xima acci\u00F3n</label><input type="text" id="e-fecha-accion" value="' + _esc(p.fechaProximaAccion || '') + '" placeholder="DD/MM/AAAA"></div>' +
-          '<div class="form-group"><label>Sem\u00E1foro</label>' +
-            '<select id="e-semaforo">' + ['verde','amarillo','rojo','gris'].map(function(s){ return '<option value="'+s+'"'+((p.semaforo||'gris')===s?' selected':'')+'>'+ s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') + '</select>' +
-          '</div>' +
-          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="e-obs" value="' + _esc(p.observaciones || '') + '"></div>' +
-        '</div>' +
-        '<div class="form-error" id="e-error"></div>' +
-        '<button class="btn-guardar" id="btn-guardar-edit">Guardar cambios</button>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc-edit').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    overlay.querySelector('#btn-guardar-edit').addEventListener('click', async function() {
-      const nombre = overlay.querySelector('#e-nombre').value.trim();
-      const contacto = overlay.querySelector('#e-contacto').value.trim();
-      const errDiv = overlay.querySelector('#e-error');
-      const btn = overlay.querySelector('#btn-guardar-edit');
-      if (!nombre || !contacto) { errDiv.textContent = 'Nombre y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
-      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
-      const datos = {
-        action: 'editarProspecto', id: p.id, nombreCondominio: nombre,
-        comuna: overlay.querySelector('#e-comuna').value.trim(),
-        direccion: overlay.querySelector('#e-dir').value.trim(),
-        unidades: overlay.querySelector('#e-unidades').value || 0,
-        nombreContacto: contacto, cargoContacto: overlay.querySelector('#e-cargo').value.trim(),
-        telefono: overlay.querySelector('#e-tel').value.trim(), email: overlay.querySelector('#e-email').value.trim(),
-        fuenteLead: overlay.querySelector('#e-fuente').value, responsable: overlay.querySelector('#e-resp').value.trim(),
-        proximaAccion: overlay.querySelector('#e-accion').value.trim(), fechaProximaAccion: overlay.querySelector('#e-fecha-accion').value.trim(),
-        semaforo: overlay.querySelector('#e-semaforo').value, observaciones: overlay.querySelector('#e-obs').value.trim(),
-      };
-      const resp = await api('/crm', 'POST', datos);
-      if (resp.ok && resp.data && resp.data.ok) {
-        Object.assign(p, datos); overlay.remove(); renderKanban(); renderAccordion();
-      } else {
-        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
-        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar cambios';
-      }
-    });
-  }
-
-  // ── Modal crear comunidad (desde "Ganado") ────────────────
-  function abrirModalCrearComunidad(p) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
-      '<div class="modal-box">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc-com">\u00D7</button>' +
-        '<div class="modal-eyebrow">Prospecto ganado</div>' +
-        '<div class="modal-titulo">Crear comunidad</div>' +
-        '<div class="modal-subtitulo">Confirma los datos y configura las instalaciones antes de continuar</div>' +
-        '<div class="form-grid">' +
-          '<div class="form-group form-full"><label>Nombre *</label><input type="text" id="nc-nombre" value="' + _esc(p.nombreCondominio || '') + '"></div>' +
-          '<div class="form-group"><label>Direcci\u00F3n *</label><input type="text" id="nc-direccion" value="' + _esc(p.direccion || '') + '"></div>' +
-          '<div class="form-group"><label>Comuna *</label><input type="text" id="nc-comuna" value="' + _esc(p.comuna || '') + '"></div>' +
-          '<div class="form-group"><label>RUT comunidad</label><input type="text" id="nc-rut" placeholder="76.XXX.XXX-X"></div>' +
-          '<div class="form-group"><label>Unidades</label><input type="number" id="nc-unidades" value="' + (p.unidades || '') + '" min="0"></div>' +
-          '<div class="form-group"><label>Honorario ($)</label><input type="number" id="nc-honorario" placeholder="0"></div>' +
-          '<div class="form-group"><label>Modalidad</label>' +
-            '<select id="nc-modalidad">' + ['Integral','Nueva','Auditoria'].map(function(m){ return '<option value="'+m+'">'+m+'</option>'; }).join('') + '</select>' +
-          '</div>' +
-          '<div class="form-group"><label>Contacto comit\u00E9</label><input type="text" id="nc-contacto" value="' + _esc(p.nombreContacto || '') + '"></div>' +
-          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="nc-telefono" value="' + _esc(p.telefono || '') + '"></div>' +
-          '<div class="form-group"><label>Inicio contrato</label><input type="text" id="nc-inicio" placeholder="DD/MM/AAAA"></div>' +
-          '<div class="form-group"><label>Renovaci\u00F3n</label><input type="text" id="nc-renovacion" placeholder="DD/MM/AAAA"></div>' +
-        '</div>' +
-        '<div style="border-top:1px solid var(--co-line);margin:20px 0 16px"></div>' +
-        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Instalaciones y equipamientos *</div>' +
-        '<div style="font-size:11px;color:var(--co-mute);margin-bottom:10px">Marca lo que aplique. Si no tiene ninguna, deja todo sin marcar y contin\u00FAa \u2014 este paso es obligatorio para poder crear la Recepci\u00F3n documental despu\u00E9s.</div>' +
-        '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px" id="nc-inst-lista">' +
-          INSTALACIONES_OPTS.map(function(inst) {
-            return '<label style="display:flex;align-items:center;gap:12px;padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--co-ink)" data-inst-item>' +
-              '<input type="checkbox" id="nci-' + inst.key + '" style="width:16px;height:16px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0">' +
-              inst.label +
-            '</label>';
-          }).join('') +
-        '</div>' +
-        '<label style="display:flex;align-items:flex-start;gap:9px;margin-top:12px;font-size:11.5px;color:var(--co-mute);cursor:pointer">' +
-          '<input type="checkbox" id="nc-inst-confirmado" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer;flex-shrink:0;margin-top:1px">' +
-          'Confirmo que revis\u00E9 las instalaciones de esta comunidad (aunque no tenga ninguna marcada).' +
-        '</label>' +
-        '<div class="form-error" id="nc-error"></div>' +
-        '<button class="btn-guardar" id="btn-crear-comunidad">Crear comunidad</button>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc-com').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    overlay.querySelectorAll('[data-inst-item]').forEach(function(item) {
-      const chk = item.querySelector('input[type=checkbox]');
-      chk.addEventListener('change', function() { item.style.borderColor = chk.checked ? 'var(--co-orange)' : 'var(--co-line)'; });
-    });
-
-    overlay.querySelector('#btn-crear-comunidad').addEventListener('click', async function() {
-      const nombre    = overlay.querySelector('#nc-nombre').value.trim();
-      const direccion = overlay.querySelector('#nc-direccion').value.trim();
-      const comuna    = overlay.querySelector('#nc-comuna').value.trim();
-      const errDiv    = overlay.querySelector('#nc-error');
-      const btn       = overlay.querySelector('#btn-crear-comunidad');
-      if (!nombre || !direccion || !comuna) { errDiv.textContent = 'Nombre, direcci\u00F3n y comuna son obligatorios.'; errDiv.style.display = 'block'; return; }
-      if (!overlay.querySelector('#nc-inst-confirmado').checked) { errDiv.textContent = 'Debes revisar y confirmar las instalaciones antes de crear la comunidad.'; errDiv.style.display = 'block'; return; }
-      const nuevaInst = {};
-      INSTALACIONES_OPTS.forEach(function(inst) {
-        const c = overlay.querySelector('#nci-' + inst.key);
-        if (c && c.checked) nuevaInst[inst.key] = true;
-      });
-      btn.disabled = true; btn.textContent = 'Creando\u2026'; errDiv.style.display = 'none';
-      const datos = {
-        action: 'crearComunidad', nombre: nombre, direccion: direccion, comuna: comuna,
-        rut: overlay.querySelector('#nc-rut').value.trim(),
-        unidades: overlay.querySelector('#nc-unidades').value || 0,
-        honorario: overlay.querySelector('#nc-honorario').value || 0,
-        modalidad: overlay.querySelector('#nc-modalidad').value,
-        contactoNombre: overlay.querySelector('#nc-contacto').value.trim(),
-        contactoTelefono: overlay.querySelector('#nc-telefono').value.trim(),
-        fechaInicioContrato: overlay.querySelector('#nc-inicio').value.trim(),
-        fechaRenovacion: overlay.querySelector('#nc-renovacion').value.trim(),
-        instalaciones: JSON.stringify(nuevaInst),
-        prospectoId: p.id
-      };
-      const resp = await api('/comunidades', 'POST', datos);
-      if (resp.ok && resp.data && resp.data.ok) {
-        btn.textContent = '\u2713 Comunidad creada'; btn.style.background = 'var(--co-green)';
-        setTimeout(cerrar, 1200);
-      } else {
-        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al crear la comunidad';
-        errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Crear comunidad';
-      }
-    });
-  }
-
-  // ── Correo prospecto ──────────────────────────────────────
-  const PLANTILLAS = {
-    'Nuevo prospecto':       { eyebrow:'Primer contacto',     asunto:'CoproActiva \u2014 Administraci\u00F3n Profesional para {c}' },
-    'Reuni\u00F3n Agendada': { eyebrow:'Confirmaci\u00F3n',   asunto:'Confirmaci\u00F3n de Reuni\u00F3n \u2014 CoproActiva \u00D7 {c}' },
-    'Diagn\u00F3stico':      { eyebrow:'Siguiente paso',      asunto:'Diagn\u00F3stico de Administraci\u00F3n \u2014 {c}' },
-    'Propuesta':             { eyebrow:'Propuesta comercial', asunto:'Propuesta Comercial \u2014 CoproActiva para {c}' },
-    'Negociaci\u00F3n':      { eyebrow:'Seguimiento',         asunto:'Seguimiento Propuesta \u2014 {c}' },
-    'Ganado':                { eyebrow:'Bienvenida',          asunto:'\u00A1Bienvenidos a CoproActiva! \u2014 {c}' },
-    'Perdido':               { eyebrow:'Cierre',              asunto:'Hasta pronto \u2014 CoproActiva' },
-  };
-
-  function abrirModalCorreo(p) {
-    const pl = PLANTILLAS[p.etapa] || { eyebrow:'', asunto:'CoproActiva - {c}' };
-    const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-    const box = document.createElement('div'); box.className = 'modal-box';
-    box.innerHTML =
-      '<div class="modal-handle"></div><button class="modal-close" id="mc-mail">&times;</button>' +
-      '<div class="modal-eyebrow"></div><div class="modal-titulo">Enviar correo</div><div class="modal-subtitulo"></div>' +
-      '<div style="margin-top:18px;margin-bottom:14px">' +
-        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Cargar plantilla</div>' +
-        '<div style="display:flex;gap:8px">' +
-          '<select id="mail-sel-plantilla" style="flex:1;padding:9px 12px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);min-height:40px">' +
-            '<option value="">— Sin plantilla —</option>' +
-          '</select>' +
-          '<button id="mail-btn-plantilla" style="padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:700;color:var(--co-ink);background:var(--co-cream);cursor:pointer;white-space:nowrap">Cargar</button>' +
-        '</div>' +
-        '<div style="font-size:11px;color:var(--co-mute);margin-top:6px">Variables disponibles: <code>{nombre}</code> <code>{condominio}</code> <code>{comuna}</code> <code>{cargo}</code></div>' +
-      '</div>' +
-      '<div class="form-grid">' +
-        '<div class="form-group form-full"><label>Para</label><input type="email" id="mail-para"></div>' +
-        '<div class="form-group form-full"><label>Asunto</label><input type="text" id="mail-asunto"></div>' +
-        '<div class="form-group form-full"><label>Mensaje</label><textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px"></textarea></div>' +
-      '</div>' +
-      '<div class="form-error" id="mail-error"></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
-        '<button class="btn-guardar" id="btn-enviar" style="background:var(--co-ink)">Enviar</button>' +
-        '<button class="btn-guardar" id="btn-gmail" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line)">Abrir en Gmail</button>' +
-      '</div>' +
-      '<div class="msg-ok" id="mail-ok" style="display:none;margin-top:12px">\u2713 Enviado correctamente</div>';
-
-    overlay.appendChild(box); document.body.appendChild(overlay);
-    box.querySelector('.modal-eyebrow').textContent = pl.eyebrow || p.etapa;
-    box.querySelector('.modal-subtitulo').textContent = (p.nombreCondominio||'') + ' \u00B7 ' + (p.email||'Sin email');
-    box.querySelector('#mail-para').value = p.email || '';
-    box.querySelector('#mail-asunto').value = (pl.asunto||'').replace('{c}', p.nombreCondominio||'');
-    box.querySelector('#mail-cuerpo').value = obtenerCuerpo(p);
-
-    // Cargar plantillas en selector
-    _cargarSelectorPlantillas(box.querySelector('#mail-sel-plantilla'));
-    box.querySelector('#mail-btn-plantilla').addEventListener('click', function() {
-      const id = box.querySelector('#mail-sel-plantilla').value;
-      if (!id) return;
-      var plt = (_plantillasCache || []).find(function(x){ return x.id === id; });
-      if (!plt) return;
-      box.querySelector('#mail-asunto').value = _reemplazarVars(plt.asunto, p);
-      box.querySelector('#mail-cuerpo').value = _reemplazarVars(plt.cuerpo, p);
-    });
-
-    const cerrar = function() { overlay.remove(); };
-    box.querySelector('#mc-mail').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    box.querySelector('#btn-enviar').addEventListener('click', async function() {
-      const para = box.querySelector('#mail-para').value.trim();
-      const asunto = box.querySelector('#mail-asunto').value.trim();
-      const cuerpo = box.querySelector('#mail-cuerpo').value.trim();
-      const errDiv = box.querySelector('#mail-error'); const btn = box.querySelector('#btn-enviar');
-      if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
-      errDiv.style.display = 'none'; btn.disabled = true; btn.textContent = 'Enviando...';
-      const resp = await api('/correo', 'POST', { prospectoId: p.id, etapa: p.etapa, para: para, asunto: asunto, cuerpo: cuerpo });
-      if (resp.ok && resp.data && resp.data.ok) { box.querySelector('#mail-ok').style.display = 'block'; btn.textContent = 'Enviado!'; setTimeout(cerrar, 2000); }
-      else { errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Enviar'; }
-    });
-
-    box.querySelector('#btn-gmail').addEventListener('click', async function() {
-      const para = box.querySelector('#mail-para').value.trim();
-      const asunto = box.querySelector('#mail-asunto').value.trim();
-      const cuerpo = box.querySelector('#mail-cuerpo').value.trim();
-      const errDiv = box.querySelector('#mail-error'); const btn = box.querySelector('#btn-gmail');
-      if (!para) { errDiv.textContent = 'El campo Para es obligatorio.'; errDiv.style.display = 'block'; return; }
-      errDiv.style.display = 'none'; btn.disabled = true; btn.textContent = 'Creando borrador...';
-      const resp = await api('/correo', 'POST', { action:'crearBorrador', prospectoId: p.id, etapa: p.etapa, para: para, asunto: asunto, cuerpo: cuerpo });
-      if (resp.ok && resp.data && resp.data.ok) { btn.textContent = '\u2713 Borrador creado'; window.open('https://mail.google.com/mail/#drafts', '_blank'); }
-      else { errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error'; errDiv.style.display='block'; btn.disabled=false; btn.textContent='Abrir en Gmail'; }
-    });
-  }
-
-  function obtenerCuerpo(p) {
-    const n = p.nombreContacto || 'estimado/a';
-    const c = p.nombreCondominio || '';
-    const f = 'Atentamente,\nCoproActiva Administraci\u00F3n\ncontacto@coproactiva.cl \u00B7 +56 9 3945 3804';
-    const map = {
-      'Nuevo prospecto': 'Estimado/a ' + n + ',\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administraci\u00F3n, empresa especializada en la gesti\u00F3n integral de condominios residenciales bajo la Ley N.\u00b0 21.442.\n\nNuestra propuesta se basa en transparencia total, proactividad y cercan\u00EDa con los residentes.\n\nMe gustar\u00EDa coordinar una breve reuni\u00F3n para conocer la situaci\u00F3n actual de ' + c + '. \u00BFTendr\u00EDa disponibilidad esta semana?\n\n' + f,
-      'Reuni\u00F3n Agendada': 'Estimado/a ' + n + ',\n\nConfirmo nuestra reuni\u00F3n seg\u00FAn lo coordinado. Estar\u00E9 puntual y preparado/a para conocer en detalle la situaci\u00F3n de ' + c + '.\n\nSi necesita reagendar, no dude en contactarme directamente.\n\n' + f,
-      'Diagn\u00F3stico': 'Estimado/a ' + n + ',\n\nFue un gusto reunirnos y conocer en detalle la situaci\u00F3n de ' + c + '. El paso siguiente es realizar un diagn\u00F3stico integral de la administraci\u00F3n actual.\n\n\u00BFTendr\u00EDa disponibilidad en los pr\u00F3ximos d\u00EDas para agendar esta sesi\u00F3n?\n\n' + f,
-      'Propuesta': 'Estimado/a ' + n + ',\n\nAdjunto nuestra propuesta comercial para la administraci\u00F3n de ' + c + ', elaborada en base al diagn\u00F3stico realizado.\n\nQuedo disponible para resolver cualquier consulta.\n\n' + f,
-      'Negociaci\u00F3n': 'Estimado/a ' + n + ',\n\nMe contacto para dar seguimiento a la propuesta enviada para ' + c + '.\n\nEstoy disponible para ajustar condiciones o resolver cualquier duda.\n\n' + f,
-      'Ganado': 'Estimado/a ' + n + ',\n\nEs un placer darles la bienvenida a CoproActiva Administraci\u00F3n.\n\nAdjunto el kit de bienvenida para iniciar nuestra gesti\u00F3n en ' + c + '.\n\n' + f,
-      'Perdido': 'Estimado/a ' + n + ',\n\nAgradezco el tiempo dedicado a evaluar los servicios de CoproActiva.\n\nEntendemos su decisi\u00F3n y quedamos disponibles para cualquier necesidad futura.\n\n' + f,
-    };
-    return map[p.etapa] || '';
-  }
-
-  // ── Iniciar diagnóstico ───────────────────────────────────
-  function iniciarDiagnostico(prospectoId, nombreCondominio, prospecto) {
-    sessionStorage.setItem('prospectoVinculado', JSON.stringify({
-      id:             prospectoId,
-      nombre:         nombreCondominio,
-      unidades:       prospecto && prospecto.unidades       ? prospecto.unidades       : '',
-      contactoNombre: prospecto && prospecto.nombreContacto ? prospecto.nombreContacto : '',
-      contactoCorreo: prospecto && prospecto.email          ? prospecto.email          : '',
-      cargoContacto:  prospecto && prospecto.cargoContacto  ? prospecto.cargoContacto  : ''
-    }));
-    cambiarTab('diagnostico');
-  }
-  window.iniciarDiagnostico = iniciarDiagnostico;
-
-  // ── Modal nuevo prospecto ─────────────────────────────────
-  function abrirModalNuevo() {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
-      '<div class="modal-box">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc2">\u00D7</button>' +
-        '<div class="modal-eyebrow">Nuevo registro</div>' +
-        '<div class="modal-titulo">Nuevo prospecto</div>' +
-        '<div class="modal-subtitulo">Datos del condominio y contacto</div>' +
-        '<div class="form-grid">' +
-          '<div class="form-group form-full"><label>Nombre del condominio *</label><input type="text" id="f-nombre" placeholder="Ej: Edificio Las Rosas"></div>' +
-          '<div class="form-group"><label>Comuna</label><input type="text" id="f-comuna" placeholder="Ej: San Bernardo"></div>' +
-          '<div class="form-group"><label>Direcci\u00F3n</label><input type="text" id="f-dir" placeholder="Calle y n\u00FAmero"></div>' +
-          '<div class="form-group"><label>Unidades</label><input type="number" id="f-unidades" placeholder="0" min="0"></div>' +
-          '<div class="form-group"><label>Nombre contacto *</label><input type="text" id="f-contacto" placeholder="Nombre completo"></div>' +
-          '<div class="form-group"><label>Cargo</label><input type="text" id="f-cargo" placeholder="Ej: Presidenta"></div>' +
-          '<div class="form-group"><label>Tel\u00E9fono</label><input type="tel" id="f-tel" placeholder="+569..."></div>' +
-          '<div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="correo@cl"></div>' +
-          '<div class="form-group"><label>Fuente</label>' +
-            '<select id="f-fuente"><option value="web">Web</option><option value="referido">Referido</option><option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="otro">Otro</option></select>' +
-          '</div>' +
-          '<div class="form-group"><label>Responsable</label><input type="text" id="f-resp" placeholder="Nombre"></div>' +
-          '<div class="form-group form-full"><label>Observaciones</label><input type="text" id="f-obs" placeholder="Notas adicionales"></div>' +
-        '</div>' +
-        '<div class="form-error" id="f-error"></div>' +
-        '<button class="btn-guardar" id="btn-guardar">Guardar prospecto</button>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc2').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-    overlay.querySelector('#btn-guardar').addEventListener('click', async function() {
-      const nombre = overlay.querySelector('#f-nombre').value.trim();
-      const contacto = overlay.querySelector('#f-contacto').value.trim();
-      const errDiv = overlay.querySelector('#f-error'); const btn = overlay.querySelector('#btn-guardar');
-      if (!nombre || !contacto) { errDiv.textContent = 'Nombre del condominio y contacto son obligatorios.'; errDiv.style.display = 'block'; return; }
-      btn.disabled = true; btn.textContent = 'Guardando\u2026'; errDiv.style.display = 'none';
-      const datos = {
-        nombreCondominio: nombre, comuna: overlay.querySelector('#f-comuna').value.trim(),
-        direccion: overlay.querySelector('#f-dir').value.trim(), unidades: overlay.querySelector('#f-unidades').value || 0,
-        nombreContacto: contacto, cargoContacto: overlay.querySelector('#f-cargo').value.trim(),
-        telefono: overlay.querySelector('#f-tel').value.trim(), email: overlay.querySelector('#f-email').value.trim(),
-        fuenteLead: overlay.querySelector('#f-fuente').value, responsable: overlay.querySelector('#f-resp').value.trim(),
-        observaciones: overlay.querySelector('#f-obs').value.trim(),
-      };
-      const resp = await api('/crm', 'POST', datos);
-      if (resp.ok && resp.data && resp.data.ok) { overlay.remove(); await init(); }
-      else { errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar'; errDiv.style.display = 'block'; btn.disabled = false; btn.textContent = 'Guardar prospecto'; }
-    });
-  }
-
-  function mostrarError(msg) {
-    document.getElementById('crm-root').innerHTML = '<div class="crm-error">Error al cargar el CRM: ' + msg + '</div>';
-  }
-
-  // ── Plantillas de correo ──────────────────────────────────
-  var _plantillasCache = [];
-
-  async function _fetchPlantillas() {
-    if (_plantillasCache.length > 0) return _plantillasCache;
-    try {
-      var resp = await api('/plantillas');
-      // Worker: { ok, data: { ok, data: [...] } }
-      var lista = null;
-      if (resp && resp.data && resp.data.data && Array.isArray(resp.data.data)) {
-        lista = resp.data.data;
-      } else if (resp && resp.data && Array.isArray(resp.data)) {
-        lista = resp.data;
-      } else if (resp && Array.isArray(resp)) {
-        lista = resp;
-      }
-      if (lista) _plantillasCache = lista;
-    } catch(e) { console.error('_fetchPlantillas error:', e); }
-    return _plantillasCache;
-  }
-
-  function _cargarSelectorPlantillas(sel) {
-    if (!sel) return;
-    _fetchPlantillas().then(function(lista) {
-      sel.innerHTML = '<option value="">— Sin plantilla —</option>';
-      lista.forEach(function(p) {
-        var opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.nombre;
-        sel.appendChild(opt);
-      });
-    });
-  }
-
-  function _reemplazarVars(texto, datos) {
-    if (!texto) return '';
-    return texto
-      .replace(/\{nombre\}/g,     _esc(datos.nombreContacto  || datos.nombre     || ''))
-      .replace(/\{condominio\}/g, _esc(datos.nombreCondominio || datos.condominio || ''))
-      .replace(/\{comuna\}/g,     _esc(datos.comuna           || ''))
-      .replace(/\{cargo\}/g,      _esc(datos.cargoContacto    || datos.cargo      || ''));
-  }
-
-  // ── Modal gestión de plantillas ───────────────────────────
-  function abrirModalPlantillas() {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
-      '<div class="modal-box" style="max-width:640px">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc-plt">×</button>' +
-        '<div class="modal-eyebrow">Correos</div>' +
-        '<div class="modal-titulo">Plantillas de correo</div>' +
-        '<div class="modal-subtitulo">Compartidas entre Leads y Pipeline. Variables: {nombre} {condominio} {comuna} {cargo}</div>' +
-        '<div id="plt-lista" style="margin-bottom:16px"></div>' +
-        '<button class="btn-guardar" id="plt-btn-nueva" style="background:var(--co-ink)">+ Nueva plantilla</button>' +
-      '</div>';
-
-    document.body.appendChild(overlay);
-    const cerrar = function() { overlay.remove(); };
-    overlay.querySelector('#mc-plt').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    function _renderLista() {
-      const lista = overlay.querySelector('#plt-lista');
-      lista.innerHTML = '<div style="font-size:12px;color:var(--co-mute);padding:8px 0">Cargando…</div>';
-      _plantillasCache = []; // forzar recarga
-      _fetchPlantillas().then(function(plt) {
-        if (!plt.length) {
-          lista.innerHTML = '<div style="font-size:12px;color:var(--co-mute);padding:8px 0">Sin plantillas. Crea la primera.</div>';
-          return;
-        }
-        lista.innerHTML = plt.map(function(p) {
-          var tags = p.tags ? p.tags.split(',').map(function(t){ return '<span style="font-size:10px;background:var(--co-cream-deep);color:var(--co-mute);padding:2px 7px;border-radius:20px;margin-right:4px">' + _esc(t.trim()) + '</span>'; }).join('') : '';
-          return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--co-line)" data-id="' + _esc(p.id) + '">' +
-            '<div style="flex:1;min-width:0">' +
-              '<div style="font-size:13px;font-weight:700;color:var(--co-ink);margin-bottom:2px">' + _esc(p.nombre) + '</div>' +
-              '<div style="font-size:11px;color:var(--co-mute);margin-bottom:4px">' + _esc(p.asunto) + '</div>' +
-              '<div>' + tags + '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:6px;flex-shrink:0">' +
-              '<button class="plt-btn-edit btn-editar-datos" style="padding:6px 10px;font-size:11px" data-id="' + _esc(p.id) + '">Editar</button>' +
-              '<button class="plt-btn-del" style="padding:6px 10px;font-size:11px;border:1.5px solid var(--co-red);border-radius:var(--co-r-md);background:none;color:var(--co-red);cursor:pointer;font-family:var(--co-font);font-weight:700" data-id="' + _esc(p.id) + '">Eliminar</button>' +
-            '</div>' +
-          '</div>';
-        }).join('');
-
-        overlay.querySelectorAll('.plt-btn-edit').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            var p = _plantillasCache.find(function(x){ return x.id === btn.dataset.id; });
-            if (p) _abrirFormPlantilla(p, _renderLista);
-          });
-        });
-        overlay.querySelectorAll('.plt-btn-del').forEach(function(btn) {
-          btn.addEventListener('click', async function() {
-            if (!confirm('¿Eliminar esta plantilla?')) return;
-            await api('/plantillas', 'POST', { action: 'eliminarPlantilla', id: btn.dataset.id });
-            _plantillasCache = [];
-            _renderLista();
-          });
-        });
-      });
-    }
-
-    overlay.querySelector('#plt-btn-nueva').addEventListener('click', function() {
-      _abrirFormPlantilla(null, _renderLista);
-    });
-
-    _renderLista();
-  }
-
-  function _abrirFormPlantilla(plantilla, onDone) {
-    const overlay2 = document.createElement('div');
-    overlay2.className = 'modal-overlay';
-    overlay2.style.zIndex = '3000';
-    overlay2.innerHTML =
-      '<div class="modal-box" style="max-width:560px">' +
-        '<div class="modal-handle"></div>' +
-        '<button class="modal-close" id="mc-fplt">×</button>' +
-        '<div class="modal-eyebrow">' + (plantilla ? 'Editar' : 'Nueva') + ' plantilla</div>' +
-        '<div class="modal-titulo">' + (plantilla ? _esc(plantilla.nombre) : 'Nueva plantilla') + '</div>' +
-        '<div class="form-grid" style="margin-top:20px">' +
-          '<div class="form-group form-full"><label>Nombre *</label><input type="text" id="fplt-nombre" value="' + _esc(plantilla ? plantilla.nombre : '') + '" placeholder="Ej: Primer contacto frío"></div>' +
-          '<div class="form-group form-full"><label>Tags (separados por coma)</label><input type="text" id="fplt-tags" value="' + _esc(plantilla ? plantilla.tags : '') + '" placeholder="leads, pipeline, proyecto-nuevo"></div>' +
-          '<div class="form-group form-full"><label>Asunto *</label><input type="text" id="fplt-asunto" value="' + _esc(plantilla ? plantilla.asunto : '') + '" placeholder="CoproActiva — Administración para {condominio}"></div>' +
-          '<div class="form-group form-full"><label>Cuerpo * <span style="font-size:10px;color:var(--co-mute);font-weight:400">(texto plano — usa {nombre}, {condominio}, {comuna}, {cargo})</span></label>' +
-            '<textarea id="fplt-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:180px">' + _esc(plantilla ? plantilla.cuerpo : '') + '</textarea>' +
-          '</div>' +
-        '</div>' +
-        '<div class="form-error" id="fplt-error" style="display:none"></div>' +
-        '<button class="btn-guardar" id="fplt-btn-guardar">' + (plantilla ? 'Guardar cambios' : 'Crear plantilla') + '</button>' +
-      '</div>';
-
-    document.body.appendChild(overlay2);
-    const cerrar2 = function() { overlay2.remove(); };
-    overlay2.querySelector('#mc-fplt').addEventListener('click', cerrar2);
-    overlay2.addEventListener('click', function(e) { if (e.target === overlay2) cerrar2(); });
-
-    overlay2.querySelector('#fplt-btn-guardar').addEventListener('click', async function() {
-      const nombre = overlay2.querySelector('#fplt-nombre').value.trim();
-      const asunto = overlay2.querySelector('#fplt-asunto').value.trim();
-      const cuerpo = overlay2.querySelector('#fplt-cuerpo').value.trim();
-      const tags   = overlay2.querySelector('#fplt-tags').value.trim();
-      const errDiv = overlay2.querySelector('#fplt-error');
-      const btn    = overlay2.querySelector('#fplt-btn-guardar');
-
-      if (!nombre || !asunto || !cuerpo) {
-        errDiv.textContent = 'Nombre, asunto y cuerpo son obligatorios.';
-        errDiv.style.display = 'block';
-        return;
-      }
-
-      btn.disabled = true; btn.textContent = 'Guardando…'; errDiv.style.display = 'none';
-
-      const accion = plantilla ? 'editarPlantilla' : 'crearPlantilla';
-      const payload = { action: accion, nombre: nombre, asunto: asunto, cuerpo: cuerpo, tags: tags };
-      if (plantilla) payload.id = plantilla.id;
-
-      const resp = await api('/plantillas', 'POST', payload);
-      if (resp.ok && resp.data && resp.data.ok) {
-        _plantillasCache = [];
-        btn.textContent = '✓ Guardado'; btn.style.background = 'var(--co-green)';
-        setTimeout(function() { cerrar2(); if (onDone) onDone(); }, 700);
-      } else {
-        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
-        errDiv.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = plantilla ? 'Guardar cambios' : 'Crear plantilla';
-      }
-    });
-  }
-
-  window.abrirModalPlantillas = abrirModalPlantillas;
-
-  // ── Helpers barra masiva ─────────────────────────────────
-  function _toggleSelMob(id, cards) {
-    var idx = _leadSelIds.indexOf(id);
-    if (idx === -1) { _leadSelIds.push(id); }
-    else { _leadSelIds.splice(idx, 1); }
-    // Actualizar visual tarjetas
-    if (cards) {
-      cards.querySelectorAll('.lead-card').forEach(function(c) {
-        c.classList.toggle('selected', _leadSelIds.indexOf(c.dataset.id) !== -1);
-      });
-    }
-    // Actualizar barra masiva móvil
-    var barMob = document.getElementById('lead-masiva-mob');
-    var lblMob = document.getElementById('lead-masiva-mob-lbl');
-    if (barMob) {
-      barMob.classList.toggle('visible', _leadSelIds.length > 0);
-      if (lblMob) lblMob.textContent = _leadSelIds.length + ' seleccionado' + (_leadSelIds.length !== 1 ? 's' : '');
-    }
-    _actualizarBarraMasiva();
-  }
-
-  function _actualizarBarraMasiva() {
-    var bar = document.getElementById('lead-masiva-bar');
-    var lbl = document.getElementById('lead-masiva-lbl');
-    if (!bar) return;
-    var n = _leadSelIds.length;
-    bar.style.display = n > 0 ? 'flex' : 'none';
-    if (lbl) lbl.textContent = n + ' lead' + (n !== 1 ? 's' : '') + ' seleccionado' + (n !== 1 ? 's' : '');
-  }
-
-  function _leadsSeleccionados() {
-    return leads.filter(function(l) { return _leadSelIds.indexOf(l.id) !== -1; });
-  }
-
-  // ── Modal correo masivo ───────────────────────────────────
-  function abrirModalCorreoMasivo() {
-    var seleccionados = _leadsSeleccionados();
-    if (!seleccionados.length) return;
-    var overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    var box = document.createElement('div');
-    box.className = 'modal-box';
-    box.innerHTML =
-      '<div class="modal-handle"></div>' +
-      '<button class="modal-close" id="mc-mcorreo">×</button>' +
-      '<div class="modal-eyebrow">Correo masivo</div>' +
-      '<div class="modal-titulo">Enviar a ' + seleccionados.length + ' lead' + (seleccionados.length !== 1 ? 's' : '') + '</div>' +
-      '<div class="modal-subtitulo">Las variables {nombre}, {condominio}, {comuna}, {cargo} se reemplazarán por cada destinatario.</div>' +
-      '<div style="margin-bottom:14px">' +
-        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Cargar plantilla</div>' +
-        '<div style="display:flex;gap:8px">' +
-          '<select id="mcorreo-sel-plt" style="flex:1;padding:9px 12px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);min-height:40px">' +
-            '<option value="">— Sin plantilla —</option>' +
-          '</select>' +
-          '<button id="mcorreo-btn-plt" style="padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:700;color:var(--co-ink);background:var(--co-cream);cursor:pointer">Cargar</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="form-grid">' +
-        '<div class="form-group form-full"><label>Asunto</label><input type="text" id="mcorreo-asunto" value="CoproActiva — Administración profesional para {condominio}"></div>' +
-        '<div class="form-group form-full"><label>Mensaje</label><textarea id="mcorreo-cuerpo" rows="8" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:160px">Estimado/a {nombre},\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administración.\n\n¿Tendría disponibilidad para conversar esta semana?\n\nAtentamente,\nCoproActiva Administración</textarea></div>' +
-      '</div>' +
-      '<div style="background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:10px 14px;font-size:12px;font-weight:600;color:var(--co-amber);margin-top:12px;display:flex;align-items:center;gap:8px">' +
-        '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>' +
-        'Se enviará un correo individual a cada lead seleccionado.' +
-      '</div>' +
-      '<div class="form-error" id="mcorreo-error" style="display:none"></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
-        '<button class="btn-guardar" id="btn-mcorreo-enviar" style="background:var(--co-ink)">Enviar ' + seleccionados.length + ' correo' + (seleccionados.length !== 1 ? 's' : '') + '</button>' +
-        '<button class="btn-guardar" id="btn-mcorreo-borrador" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line)">Crear borradores</button>' +
-      '</div>' +
-      '<div class="msg-ok" id="mcorreo-ok" style="display:none;margin-top:12px">✓ Correos enviados</div>';
-
-    overlay.appendChild(box); document.body.appendChild(overlay);
-    var cerrar = function() { overlay.remove(); };
-    box.querySelector('#mc-mcorreo').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    _cargarSelectorPlantillas(box.querySelector('#mcorreo-sel-plt'));
-    box.querySelector('#mcorreo-btn-plt').addEventListener('click', function() {
-      var id = box.querySelector('#mcorreo-sel-plt').value;
-      if (!id) return;
-      var plt = (_plantillasCache || []).find(function(x){ return x.id === id; });
-      if (!plt) return;
-      box.querySelector('#mcorreo-asunto').value = plt.asunto;
-      box.querySelector('#mcorreo-cuerpo').value = plt.cuerpo;
-    });
-
-    async function _enviarMasivo(borrador) {
-      var asunto = box.querySelector('#mcorreo-asunto').value.trim();
-      var cuerpo = box.querySelector('#mcorreo-cuerpo').value.trim();
-      var errDiv = box.querySelector('#mcorreo-error');
-      var btn = borrador ? box.querySelector('#btn-mcorreo-borrador') : box.querySelector('#btn-mcorreo-enviar');
-      if (!asunto || !cuerpo) { errDiv.textContent = 'Asunto y mensaje son obligatorios.'; errDiv.style.display = 'block'; return; }
-      btn.disabled = true; btn.textContent = borrador ? 'Creando borradores…' : 'Enviando…'; errDiv.style.display = 'none';
-      var errores = 0; var enviados = 0;
-      for (var i = 0; i < seleccionados.length; i++) {
-        var l = seleccionados[i];
-        if (!l.email) { errores++; continue; }
-        var asuntoFinal = _reemplazarVars(asunto, l);
-        var cuerpoFinal = _reemplazarVars(cuerpo, l);
-        await api('/leads', 'POST', { action: 'registrarCorreoLead', id: l.id, para: l.email, asunto: asuntoFinal });
-        await api('/correo', 'POST', { action: borrador ? 'crearBorrador' : undefined, prospectoId: l.id, etapa: 'lead', para: l.email, asunto: asuntoFinal, cuerpo: cuerpoFinal });
-        enviados++;
-      }
-      box.querySelector('#mcorreo-ok').textContent = '✓ ' + enviados + ' correo' + (enviados !== 1 ? 's' : '') + (borrador ? ' borrador' + (enviados !== 1 ? 'es' : '') : '') + ' creado' + (enviados !== 1 ? 's' : '') + (errores > 0 ? ' (' + errores + ' sin email)' : '');
-      box.querySelector('#mcorreo-ok').style.display = 'block';
-      btn.textContent = '✓ Listo';
-      setTimeout(cerrar, 2000);
-    }
-
-    box.querySelector('#btn-mcorreo-enviar').addEventListener('click', function() { _enviarMasivo(false); });
-    box.querySelector('#btn-mcorreo-borrador').addEventListener('click', function() { _enviarMasivo(true); });
-  }
-
-  // ── Modal cambiar estado masivo ───────────────────────────
-  function abrirModalEstadoMasivo() {
-    var seleccionados = _leadsSeleccionados();
-    if (!seleccionados.length) return;
-    var overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    var box = document.createElement('div');
-    box.className = 'modal-box'; box.style.maxWidth = '420px';
-    box.innerHTML =
-      '<div class="modal-handle"></div>' +
-      '<button class="modal-close" id="mc-mestado">×</button>' +
-      '<div class="modal-eyebrow">Acción masiva</div>' +
-      '<div class="modal-titulo">Cambiar estado</div>' +
-      '<div class="modal-subtitulo">' + seleccionados.length + ' leads seleccionados</div>' +
-      '<select class="etapa-select" id="mestado-sel" style="margin-top:8px">' +
-        '<option value="nuevo">Nuevo</option>' +
-        '<option value="contactado">Contactado</option>' +
-        '<option value="descartado">Descartado</option>' +
-      '</select>' +
-      '<div class="form-error" id="mestado-error" style="display:none"></div>' +
-      '<button class="btn-guardar" id="btn-mestado">Aplicar a ' + seleccionados.length + ' leads</button>';
-
-    overlay.appendChild(box); document.body.appendChild(overlay);
-    var cerrar = function() { overlay.remove(); };
-    box.querySelector('#mc-mestado').addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-
-    box.querySelector('#btn-mestado').addEventListener('click', async function() {
-      var estado = box.querySelector('#mestado-sel').value;
-      var btn = box.querySelector('#btn-mestado');
-      btn.disabled = true; btn.textContent = 'Aplicando…';
-      for (var i = 0; i < seleccionados.length; i++) {
-        var l = seleccionados[i];
-        await api('/leads', 'POST', { action: 'cambiarEstadoLead', id: l.id, estadoNuevo: estado });
-        l.estado = estado;
-      }
-      _leadSelIds = [];
-      cerrar();
-      var cont = document.getElementById('crm-tab-content');
-      if (cont) renderLeads(cont);
-    });
-  }
-
-  // ── Archivar masivo ───────────────────────────────────────
-  async function _archivarMasivo() {
-    var seleccionados = _leadsSeleccionados();
-    if (!seleccionados.length) return;
-    if (!confirm('\u00BFArchivar ' + seleccionados.length + ' lead' + (seleccionados.length !== 1 ? 's' : '') + '?')) return;
-    for (var i = 0; i < seleccionados.length; i++) {
-      var l = seleccionados[i];
-      await api('/leads', 'POST', { action: 'archivarLead', id: l.id });
-      l.archivado = true; l.estado = 'descartado';
-    }
-    _leadSelIds = [];
-    var cont = document.getElementById('crm-tab-content');
-    if (cont) renderLeads(cont);
-  }
-
-  // ── Importar leads desde Excel ────────────────────────────
-  function abrirModalImportarLeads() {
-    var overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    var box = document.createElement('div');
-    box.className = 'modal-box';
-    box.style.maxWidth = '620px';
-
-    var btnCerrar = document.createElement('button');
-    btnCerrar.className = 'modal-close'; btnCerrar.textContent = '×';
-    box.appendChild(btnCerrar);
-
-    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Leads'; box.appendChild(ey);
-    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Importar leads desde Excel'; box.appendChild(tt);
-    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Carga masiva desde archivo .xlsx o .xls.'; box.appendChild(st);
-
-    // Paso 1 — plantilla
-    var paso1 = document.createElement('div');
-    paso1.style.cssText = 'background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:14px 16px;margin-bottom:16px';
-    paso1.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 1 — Descarga la plantilla</div>' +
-      '<div style="font-size:12px;color:var(--co-ink-3);margin-bottom:10px">Una fila por lead. Columnas: nombre, tipo_lead, telefono, email, contacto, cargo, comuna, direccion, constructora, fuente, observaciones.</div>';
-    var btnDesc = document.createElement('button');
-    btnDesc.className = 'btn-ghost'; btnDesc.style.fontSize = '12px';
-    btnDesc.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Descargar plantilla Excel';
-    btnDesc.addEventListener('click', _descargarPlantillaLeads);
-    paso1.appendChild(btnDesc);
-    box.appendChild(paso1);
-
-    // Paso 2 — upload
-    var paso2 = document.createElement('div');
-    paso2.style.cssText = 'border:1.5px dashed var(--co-line);border-radius:var(--co-r-md);padding:24px;text-align:center;margin-bottom:16px;cursor:pointer;transition:border-color 0.15s';
-    paso2.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 2 — Sube el archivo completado</div>' +
-      '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--co-mute)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 11v6M9 14l3-3 3 3"/></svg>' +
-      '<div style="font-size:13px;font-weight:600;color:var(--co-ink);margin-bottom:4px">Haz clic o arrastra el archivo aquí</div>' +
-      '<div style="font-size:11px;color:var(--co-mute)">.xlsx o .xls</div>';
-    var fileInput = document.createElement('input');
-    fileInput.type = 'file'; fileInput.accept = '.xlsx,.xls'; fileInput.style.display = 'none';
-    paso2.appendChild(fileInput);
-    paso2.addEventListener('click', function() { fileInput.click(); });
-    paso2.addEventListener('dragover', function(e) { e.preventDefault(); paso2.style.borderColor = 'var(--co-orange)'; });
-    paso2.addEventListener('dragleave', function() { paso2.style.borderColor = 'var(--co-line)'; });
-    paso2.addEventListener('drop', function(e) {
-      e.preventDefault(); paso2.style.borderColor = 'var(--co-line)';
-      var f = e.dataTransfer.files[0];
-      if (f) _procesarArchivoLeads(f, box, overlay);
-    });
-    fileInput.addEventListener('change', function() {
-      if (fileInput.files[0]) _procesarArchivoLeads(fileInput.files[0], box, overlay);
-    });
-    box.appendChild(paso2);
-
-    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
-    overlay.appendChild(box); document.body.appendChild(overlay);
-    var cerrar = function() { overlay.remove(); };
-    btnCerrar.addEventListener('click', cerrar);
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
-  }
-
-  function _descargarPlantillaLeads() {
-    var cargar = function() {
-      var headers = ['nombre','tipo_lead','telefono','email','contacto','cargo','comuna','direccion','constructora','fuente','observaciones'];
-      var ejemplos = [
-        ['Edificio Las Rosas','comunidad_existente','+56987654321','contacto@lasrosas.cl','Carlos Méndez','Presidente comité','San Bernardo','Av. Principal 123','','referido','Contrato vence en agosto'],
-        ['Proyecto Parque Verde','proyecto_nuevo','+56912345678','gerente@inmobiliaria.cl','Felipe Rivas','Gerente proyecto','Puente Alto','Los Aromos 456','Inmobiliaria Del Valle','web','Entrega estimada dic 2026']
-      ];
-      var wb = XLSX.utils.book_new();
-      var data = [headers].concat(ejemplos);
-      var ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = [20,18,14,26,22,18,14,20,20,12,24].map(function(w){ return { wch: w }; });
-      XLSX.utils.book_append_sheet(wb, ws, 'Leads');
-      // Hoja instrucciones
-      var inst = [
-        ['CoproActiva — Plantilla importación de Leads',''],
-        ['',''],
-        ['Campo','Descripción'],
-        ['nombre','Nombre del condominio o proyecto (OBLIGATORIO)'],
-        ['tipo_lead','comunidad_existente ó proyecto_nuevo (por defecto: proyecto_nuevo)'],
-        ['telefono','Teléfono de contacto'],
-        ['email','Email de contacto (usado para detectar duplicados)'],
-        ['contacto','Nombre del contacto'],
-        ['cargo','Cargo del contacto (ej: Presidente comité)'],
-        ['comuna','Comuna'],
-        ['direccion','Dirección'],
-        ['constructora','Constructora o inmobiliaria (solo para proyectos nuevos)'],
-        ['fuente','Origen del lead: web, referido, Facebook, Instagram, otro'],
-        ['observaciones','Notas adicionales']
-      ];
-      var wsI = XLSX.utils.aoa_to_sheet(inst);
-      wsI['!cols'] = [{ wch: 22 }, { wch: 60 }];
-      XLSX.utils.book_append_sheet(wb, wsI, 'Instrucciones');
-      XLSX.writeFile(wb, 'Plantilla_Leads_CoproActiva.xlsx');
-    };
-    if (typeof XLSX === 'undefined') {
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload = cargar; document.head.appendChild(s);
-    } else { cargar(); }
-  }
-
-  function _procesarArchivoLeads(file, box, overlay) {
-    var cargar = function() {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          var wb = XLSX.read(e.target.result, { type: 'array' });
-          var hoja = wb.Sheets[wb.SheetNames[0]];
-          var filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
-          // Normalizar keys
-          filas = filas.map(function(f) {
-            var norm = {};
-            Object.keys(f).forEach(function(k) { norm[k.trim().toLowerCase()] = f[k]; });
-            return norm;
-          });
-          // Filtrar filas sin nombre
-          filas = filas.filter(function(f) { return String(f.nombre || '').trim() !== ''; });
-          if (!filas.length) {
-            var errDiv = box.querySelector('.form-error');
-            if (errDiv) { errDiv.textContent = 'No se encontraron filas válidas. Revisa que la primera columna sea "nombre".'; errDiv.style.display = 'block'; }
-            return;
-          }
-          _previsualizarLeads(filas, box, overlay);
-        } catch(err) {
-          var errDiv = box.querySelector('.form-error');
-          if (errDiv) { errDiv.textContent = 'Error al leer el archivo: ' + err.message; errDiv.style.display = 'block'; }
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    };
-    if (typeof XLSX === 'undefined') {
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload = cargar; document.head.appendChild(s);
-    } else { cargar(); }
-  }
-
-  function _previsualizarLeads(filas, box, overlay) {
-    // Detectar duplicados contra leads existentes
-    var duplicados = filas.filter(function(f) {
-      var nombre = String(f.nombre || '').toLowerCase().trim();
-      var email  = String(f.email  || '').toLowerCase().trim();
-      return leads.some(function(l) {
-        var lNombre = String(l.nombreCondominio || '').toLowerCase().trim();
-        var lEmail  = String(l.email            || '').toLowerCase().trim();
-        return (email && lEmail && email === lEmail) || (nombre && lNombre && nombre === lNombre);
-      });
-    });
-    var nuevos = filas.length - duplicados.length;
-
-    box.innerHTML = '';
-    var btnCerrar2 = document.createElement('button'); btnCerrar2.className = 'modal-close'; btnCerrar2.textContent = '×';
-    btnCerrar2.addEventListener('click', function() { overlay.remove(); });
-    box.appendChild(btnCerrar2);
-
-    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Confirmar importación'; box.appendChild(ey);
-    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Previsualizar leads'; box.appendChild(tt);
-
-    // KPIs
-    var kpis = document.createElement('div');
-    kpis.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px';
-    function kpi(n, lbl, col) {
-      return '<div style="background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:10px 12px;text-align:center">' +
-        '<div style="font-size:20px;font-weight:800;color:' + col + ';letter-spacing:-0.02em">' + n + '</div>' +
-        '<div style="font-size:10px;color:var(--co-mute);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">' + lbl + '</div>' +
-      '</div>';
-    }
-    kpis.innerHTML = kpi(filas.length, 'Total filas', 'var(--co-ink)') +
-                     kpi(nuevos, 'Nuevos', 'var(--co-green)') +
-                     kpi(duplicados.length, 'Duplicados', duplicados.length > 0 ? 'var(--co-amber)' : 'var(--co-mute)');
-    box.appendChild(kpis);
-
-    // Aviso duplicados
-    if (duplicados.length > 0) {
-      var avDup = document.createElement('div');
-      avDup.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:10px 14px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:12px;display:flex;align-items:flex-start;gap:8px';
-      avDup.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>' +
-        '<span>' + duplicados.length + ' lead(s) ya existen (mismo nombre o email). Puedes importarlos igual o ignorarlos.</span>';
-      box.appendChild(avDup);
-    }
-
-    // Preview tabla
-    var prevTit = document.createElement('div');
-    prevTit.style.cssText = 'font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px';
-    prevTit.textContent = 'Vista previa (primeras 5 filas)';
-    box.appendChild(prevTit);
-
-    var wrap = document.createElement('div'); wrap.style.cssText = 'overflow-x:auto;margin-bottom:14px';
-    var tabla = document.createElement('table');
-    tabla.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px;font-family:var(--co-font)';
-    var thead = document.createElement('thead'); var trh = document.createElement('tr');
-    ['Nombre','Tipo','Contacto','Email','Comuna'].forEach(function(h) {
-      var th = document.createElement('th');
-      th.style.cssText = 'font-size:10px;font-weight:700;color:var(--co-mute);text-align:left;padding:7px 10px;border-bottom:1px solid var(--co-line);letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;background:var(--co-cream-deep)';
-      th.textContent = h; trh.appendChild(th);
-    });
-    thead.appendChild(trh); tabla.appendChild(thead);
-    var tbody = document.createElement('tbody');
-    filas.slice(0, 5).forEach(function(f) {
-      var isDup = duplicados.indexOf(f) !== -1;
-      var tr = document.createElement('tr');
-      if (isDup) tr.style.background = 'var(--co-amber-soft)';
-      [String(f.nombre||'—'), String(f.tipo_lead||'proyecto_nuevo'), String(f.contacto||'—'), String(f.email||'—'), String(f.comuna||'—')].forEach(function(v) {
-        var td = document.createElement('td');
-        td.style.cssText = 'font-size:12px;padding:8px 10px;border-bottom:1px solid var(--co-line);color:var(--co-ink);vertical-align:middle';
-        td.textContent = v; tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-    if (filas.length > 5) {
-      var trM = document.createElement('tr'); var tdM = document.createElement('td');
-      tdM.colSpan = 5; tdM.style.cssText = 'text-align:center;color:var(--co-mute);font-size:11px;padding:8px';
-      tdM.textContent = '+ ' + (filas.length - 5) + ' filas más';
-      trM.appendChild(tdM); tbody.appendChild(trM);
-    }
-    tabla.appendChild(tbody); wrap.appendChild(tabla); box.appendChild(wrap);
-
-    var errDiv2 = document.createElement('div'); errDiv2.className = 'form-error'; errDiv2.style.display = 'none'; box.appendChild(errDiv2);
-
-    // Botones
-    var btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:grid;gap:8px';
-    // Botón importar nuevos (solo si hay nuevos)
-    if (nuevos > 0) {
-      var txtNuevos = duplicados.length > 0
-        ? 'Importar ' + nuevos + ' nuevo(s) — omitir ' + duplicados.length + ' duplicado(s)'
-        : 'Importar ' + nuevos + ' lead(s)';
-      btnRow.innerHTML = '<button class="btn-guardar" id="btn-imp-nuevos" style="background:var(--co-green);margin-top:0">' + txtNuevos + '</button>';
-    } else {
-      btnRow.innerHTML = '<div style="font-size:12px;color:var(--co-amber);font-weight:600;padding:10px 0">Todos los leads ya existen en el sistema.</div>';
-    }
-    // Botón importar todos (solo si hay duplicados)
-    if (duplicados.length > 0) {
-      btnRow.innerHTML += '<button class="btn-guardar" id="btn-imp-todos" style="background:var(--co-amber);margin-top:0">Importar todos (' + filas.length + ') incluyendo duplicados</button>';
-    }
-    btnRow.innerHTML += '<button class="btn-ghost" id="btn-imp-volver" style="margin-top:4px;justify-content:center">← Volver</button>';
-    box.appendChild(btnRow);
-
-    var btnVolver = box.querySelector('#btn-imp-volver');
-    if (btnVolver) btnVolver.addEventListener('click', function() { overlay.remove(); abrirModalImportarLeads(); });
-
-    var btnNuevos = box.querySelector('#btn-imp-nuevos');
-    if (btnNuevos) btnNuevos.addEventListener('click', function() {
-      _ejecutarImportacionLeads(filas, false, btnNuevos, errDiv2, overlay);
-    });
-
-    var btnTodos = box.querySelector('#btn-imp-todos');
-    if (btnTodos) btnTodos.addEventListener('click', function() {
-      if (!confirm('¿Importar también los ' + duplicados.length + ' duplicados?')) return;
-      _ejecutarImportacionLeads(filas, true, btnTodos, errDiv2, overlay);
-    });
-  }
-
-  async function _ejecutarImportacionLeads(filas, forzar, btn, errDiv, overlay) {
-    btn.disabled = true; btn.textContent = 'Importando…';
-    var accion = forzar ? 'importarLeadsForzado' : 'importarLeads';
-    // Normalizar keys del Excel — case-insensitive
-    var filasNorm = filas.map(function(f) {
-      // Crear mapa lowercase de todas las keys
-      var fm = {};
-      Object.keys(f).forEach(function(k) { fm[k.toLowerCase().trim()] = f[k]; });
-      function g(key) { return String(fm[key] || '').trim(); }
-      return {
-        nombreCondominio:     g('nombre'),
-        tipoLead:             g('tipo_lead')     || 'proyecto_nuevo',
-        telefono:             g('telefono'),
-        email:                g('email'),
-        nombreContacto:       g('contacto'),
-        cargoContacto:        g('cargo'),
-        comuna:               g('comuna'),
-        direccion:            g('direccion'),
-        constructora:         g('constructora'),
-        fuenteLead:           g('fuente')        || 'importacion',
-        observaciones:        g('observaciones'),
-        etapaObra:            g('etapa_obra'),
-        fechaEntregaEstimada: g('fecha_entrega')
-      };
-    });
-    var resp = await api('/leads', 'POST', { action: accion, filas: filasNorm });
-    var r = (resp.data && resp.data.data) ? resp.data.data : (resp.data || {});
-    if (resp.ok && (r.ok !== false)) {
-      btn.textContent = '✓ ' + (r.importados || filas.length) + ' leads importados';
-      btn.style.background = 'var(--co-green)';
-      // Recargar leads
-      api('/leads').then(function(respL) {
-        if (respL.ok && respL.data && respL.data.ok) {
-          leads = respL.data.data || [];
-          var cont = document.getElementById('crm-tab-content');
-          if (cont && _tabActiva === 'leads') renderLeads(cont);
-        }
-      });
-      setTimeout(function() { overlay.remove(); }, 1400);
-    } else {
-      errDiv.textContent = r.error || resp.error || 'Error al importar';
-      errDiv.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Reintentar';
-    }
-  }
-
-  // Sticky toolbar via scroll del contenedor padre
-  function _initStickyLeads() {
-    var sticky = document.querySelector('.leads-sticky');
-    if (!sticky) return;
-    // Buscar el contenedor con scroll
-    var scrollEl = document.getElementById('mainContent') || document.getElementById('contentArea') || window;
-    var kpis = document.querySelector('.leads-kpis');
-    if (!kpis) return;
-    var kpisBottom = kpis.getBoundingClientRect().bottom + (scrollEl === window ? 0 : scrollEl.getBoundingClientRect().top);
-    var onScroll = function() {
-      var stickyEl = document.querySelector('.leads-sticky');
-      if (!stickyEl) { scrollEl.removeEventListener('scroll', onScroll); return; }
-      // El sticky nativo ya funciona si el ancestro tiene overflow
-      // Solo necesitamos asegurar que background cubre el contenido
-    };
-    scrollEl.addEventListener('scroll', onScroll);
-  }
-
-  init();
-})();
+// Sidebar dinámico desactivado — sidebar limpio solo con módulos
+window.cargarMenuLateral = function() {
+  var sd = document.getElementById('sidebarDynamic');
+  if (sd) sd.innerHTML = '';
+};
 </script>
+<script>
+const NAV_STATE = { modActivo: 'crm', subActivo: null, modAbierto: null };
+const MOD_PLANOS = ['panel', 'config', 'crm', 'comunidades', 'flujo'];
+
+const TOP_ACTIONS = {
+  'crm':            { label: 'Nuevo prospecto',   show: true  },
+  'comunidades':    { label: 'Nueva comunidad',   show: true  },
+  'finanzas':       { label: 'Emitir GC',         show: true  },
+  'remuneraciones': { label: 'Nueva liquidación', show: true  },
+  'incidencias':    { label: 'Nueva incidencia',  show: true  },
+  'mantenciones':   { label: 'Nueva mantención',  show: true  },
+  'comunicaciones': { label: 'Nuevo comunicado',  show: true  },
+  'documentos':     { label: 'Subir documento',   show: true  },
+};
+
+const TOPBAR = {
+  'panel':                   ['Panel maestro',         ''],
+  'crm':                     ['CRM',                   '· Comercial'],
+  'comunidades':             ['Comunidades',           '· General'],
+  'flujo':                   ['Flujo comercial',       '· Comercial'],
+  'finanzas-resumen':        ['Resumen financiero',    '· Finanzas'],
+  'finanzas-gastos':         ['Gastos comunes',        '· Finanzas'],
+  'finanzas-cobranza':       ['Cobranza',              '· Finanzas'],
+  'finanzas-pagos':          ['Ingreso de pagos',      '· Finanzas'],
+  'finanzas-rendicion':      ['Rendición al comité',   '· Finanzas'],
+  'servicios-medidores':     ['Lecturas de medidores', '· Servicios comunes'],
+  'servicios-gas':           ['Gas caldera',           '· Servicios comunes'],
+  'servicios-calculo':       ['Cálculo y prorrateo',   '· Servicios comunes'],
+  'servicios-historial':     ['Historial de lecturas', '· Servicios comunes'],
+  'remuneraciones-personal': ['Personal',              '· Remuneraciones'],
+  'remuneraciones-liquidaciones':['Liquidaciones',     '· Remuneraciones'],
+  'remuneraciones-previred': ['Previred / DT',         '· Remuneraciones'],
+  'remuneraciones-finiquitos':['Finiquitos',           '· Remuneraciones'],
+  'mantenciones-calendario': ['Calendario',            '· Mantenciones'],
+  'mantenciones-proveedores':['Proveedores',           '· Mantenciones'],
+  'mantenciones-alertas':    ['Alertas de vencimiento','· Mantenciones'],
+  'incidencias-activas':     ['Incidencias activas',   '· Operaciones'],
+  'incidencias-historial':   ['Historial incidencias', '· Operaciones'],
+  'comunicaciones-circulares':['Circulares',           '· Comunicación'],
+  'comunicaciones-asambleas':['Asambleas',             '· Comunicación'],
+  'comunicaciones-encuestas':['Encuestas',             '· Comunicación'],
+  'comunicaciones-libro':    ['Libro de novedades',    '· Comunicación'],
+  'documentos-contratos':    ['Contratos y seguros',   '· Documentos'],
+  'documentos-actas':        ['Actas de reunión',      '· Documentos'],
+  'documentos-reglamentos':  ['Reglamentos',           '· Documentos'],
+  'reportes-mensual':        ['Reporte mensual',       '· Empresa'],
+  'reportes-kpis':           ['KPIs generales',        '· Empresa'],
+  'config':                  ['Configuración',         '· Empresa'],
+};
+
+// ── navFlat: para ítems planos (panel, crm, comunidades, flujo, config)
+function navFlat(modId, titulo, seccion) {
+  if (NAV_STATE.modAbierto) {
+    _cerrarSub(NAV_STATE.modAbierto);
+    const prevRow = document.querySelector(`#mod-${NAV_STATE.modAbierto} .mod-row`);
+    if (prevRow) prevRow.classList.remove('mod-open', 'mod-active');
+  }
+  _limpiarActivos();
+  const btn = document.querySelector(`[data-mod="${modId}"]`);
+  if (btn) btn.classList.add('mod-active');
+  NAV_STATE.modActivo = modId;
+  NAV_STATE.subActivo = null;
+  NAV_STATE.modAbierto = null;
+  _actualizarTopbar(modId, titulo, seccion);
+  _cargarModulo(modId);
+}
+
+// ── navToggle: para módulos con sub-ítems
+function navToggle(modId) {
+  const sub    = document.getElementById('sub-' + modId);
+  const modRow = document.querySelector(`#mod-${modId} .mod-row`);
+  const yaAbierto = sub && sub.classList.contains('sub-open');
+
+  if (NAV_STATE.modAbierto && NAV_STATE.modAbierto !== modId) {
+    _cerrarSub(NAV_STATE.modAbierto);
+    const prevRow = document.querySelector(`#mod-${NAV_STATE.modAbierto} .mod-row`);
+    if (prevRow) prevRow.classList.remove('mod-open', 'mod-active');
+  }
+
+  if (yaAbierto) {
+    if (sub)    sub.classList.remove('sub-open');
+    if (modRow) modRow.classList.remove('mod-open', 'mod-active');
+    NAV_STATE.modAbierto = null;
+  } else {
+    if (sub)    sub.classList.add('sub-open');
+    if (modRow) modRow.classList.add('mod-open');
+    NAV_STATE.modAbierto = modId;
+    const primerSub = sub && sub.querySelector('.sub-item');
+    if (primerSub && NAV_STATE.modActivo !== modId) {
+      primerSub.click();
+      return;
+    }
+  }
+}
+
+function navSub(modId, subId, titulo) {
+  document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('sub-active'));
+  const items = document.querySelectorAll(`#sub-${modId} .sub-item`);
+  items.forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${subId}'`)) {
+      el.classList.add('sub-active');
+    }
+  });
+  const modRow = document.querySelector(`#mod-${modId} .mod-row`);
+  if (modRow) { modRow.classList.add('mod-active'); modRow.classList.add('mod-open'); }
+  NAV_STATE.modActivo = modId;
+  NAV_STATE.subActivo = subId;
+  const key = `${modId}-${subId}`;
+  const tb  = TOPBAR[key];
+  if (tb) _actualizarTopbar(key, tb[0], tb[1]);
+  else    _actualizarTopbar(key, titulo, '');
+  _cargarModulo(modId, subId);
+}
+
+function _cerrarSub(modId) {
+  const sub = document.getElementById('sub-' + modId);
+  if (sub) sub.classList.remove('sub-open');
+}
+
+function _limpiarActivos() {
+  document.querySelectorAll('.mod-row').forEach(el => el.classList.remove('mod-active', 'mod-open'));
+  document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('sub-active'));
+}
+
+function _actualizarTopbar(key, titulo, trail) {
+  const t = document.getElementById('modTopbarTitle');
+  const r = document.getElementById('modTopbarTrail');
+  if (t) t.textContent = titulo;
+  if (r) r.textContent = trail;
+  const modId  = key.split('-')[0];
+  const accion = TOP_ACTIONS[modId];
+  const btn    = document.getElementById('btnTopAction');
+  const lbl    = document.getElementById('btnTopActionLabel');
+  if (btn && lbl) {
+    if (accion && accion.show) {
+      btn.style.display = 'flex';
+      lbl.textContent   = accion.label;
+      btn.onclick       = () => _topAction(modId);
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+}
+
+// ── Mapeo módulos → cargarModulo() de app.js
+function _cargarModulo(modId, subId) {
+  const MODULOS = {
+    'crm':        'crm',
+    'comunidades':'comunidades',
+    'flujo':      'flujo',
+    'diagnostico':'diagnostico',
+    'recepcion':  'recepcion',
+  };
+
+  const gasModulo = subId ? (MODULOS[`${modId}-${subId}`] || MODULOS[modId]) : MODULOS[modId];
+
+  if (gasModulo && typeof cargarModulo === 'function') {
+    cargarModulo(gasModulo);
+    return;
+  }
+  _mostrarProximamente(subId ? `${modId}-${subId}` : modId, modId, subId);
+}
+
+function _mostrarProximamente(cacheKey, modId, subId) {
+  const cache = window.moduleElements || {};
+  const ca    = document.getElementById('contentArea');
+  if (!ca) return;
+  Object.values(cache).forEach(el => { if (el && el.style) el.style.display = 'none'; });
+  const sd = document.getElementById('sidebarDynamic');
+  if (sd) sd.innerHTML = '';
+  if (cache[cacheKey]) { cache[cacheKey].style.display = 'block'; return; }
+  const tb     = TOPBAR[cacheKey];
+  const titulo = tb ? tb[0] : (subId || modId);
+  const wrapper = document.createElement('div');
+  wrapper.setAttribute('data-modulo', cacheKey);
+  wrapper.style.width = '100%';
+  wrapper.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                min-height:60vh;padding:40px;text-align:center;gap:16px">
+      <div style="width:52px;height:52px;border-radius:13px;background:var(--co-orange-soft);
+                  display:flex;align-items:center;justify-content:center;margin-bottom:4px">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--co-orange)"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+        </svg>
+      </div>
+      <div style="font-size:17px;font-weight:800;color:var(--co-ink);letter-spacing:-0.025em">${titulo}</div>
+      <div style="font-size:13px;color:var(--co-mute);max-width:300px;line-height:1.65">
+        Este módulo está en desarrollo.
+      </div>
+    </div>`;
+  ca.appendChild(wrapper);
+  cache[cacheKey] = wrapper;
+}
+
+function _topAction(modId) {
+  const acciones = {
+    'crm':            () => { if(window._crmAccionNuevo) window._crmAccionNuevo(); else document.getElementById('btn-nuevo')?.click(); },
+    'comunidades':    () => document.querySelector('#com-root .btn-nuevo')?.click(),
+    'finanzas':       () => _mostrarProximamente('finanzas-emitir','finanzas','emitir-gc'),
+    'remuneraciones': () => _mostrarProximamente('rem-nueva-liq','remuneraciones','nueva-liquidacion'),
+    'incidencias':    () => _mostrarProximamente('incidencias-nueva','incidencias','nueva'),
+    'mantenciones':   () => _mostrarProximamente('mantenciones-nueva','mantenciones','nueva'),
+    'comunicaciones': () => _mostrarProximamente('comunicaciones-nueva','comunicaciones','nueva-circular'),
+    'documentos':     () => _mostrarProximamente('documentos-subir','documentos','subir'),
+  };
+  if (acciones[modId]) acciones[modId]();
+}
+
+function abrirMenuMovil() {
+  const sb = document.querySelector('.sidebar');
+  if (sb) {
+    sb.style.display = sb.style.display === 'flex' ? 'none' : 'flex';
+    sb.style.position = 'fixed';
+    sb.style.zIndex   = '200';
+    sb.style.top = '0'; sb.style.left = '0'; sb.style.bottom = '0';
+    sb.style.overflowY = 'auto';
+  }
+}
+
+function bnav(el) {
+  document.querySelectorAll('.bottom-nav .nav-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function toggleSbNav() {
+  const navArea = document.getElementById('sbNavArea');
+  const btn     = document.getElementById('btnToggleNav');
+  if (!navArea) return;
+  const pinned = navArea.classList.contains('sb-pinned');
+  if (pinned) {
+    navArea.classList.remove('sb-pinned');
+    navArea.classList.add('sb-collapsed');
+    if (btn) btn.title = 'Ver menú completo';
+    if (btn) btn.style.opacity = '1';
+  } else {
+    navArea.classList.remove('sb-collapsed');
+    navArea.classList.add('sb-pinned');
+    if (btn) btn.title = 'Ocultar menú';
+    if (btn) btn.style.opacity = '0.7';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Marcar CRM activo al inicio
+  const btnCrm = document.querySelector('[data-mod="crm"]');
+  if (btnCrm) btnCrm.classList.add('mod-active');
+
+  const navArea = document.getElementById('sbNavArea');
+  const dynArea = document.getElementById('sidebarDynamic');
+  if (navArea && dynArea) {
+    const observer = new MutationObserver(() => {
+      const tieneContenido = dynArea.innerHTML.trim().length > 0;
+      if (!navArea.classList.contains('sb-pinned')) {
+        navArea.classList.toggle('sb-collapsed', tieneContenido);
+      }
+      const btn = document.getElementById('btnToggleNav');
+      if (btn) btn.style.display = tieneContenido ? 'flex' : 'none';
+    });
+    observer.observe(dynArea, { childList: true, subtree: false });
+  }
+});
+</script>
+</body>
+</html>
