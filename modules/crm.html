@@ -85,7 +85,10 @@
   /* ── Leads ── */
   .leads-kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
   @media (max-width: 900px) { .leads-kpis { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 500px) { .leads-kpis { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 767px) {
+    .leads-kpis { grid-template-columns: repeat(2, 1fr); }
+    .leads-kpi-archivados { display: none; }
+  }
   .lead-kpi { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); padding: 14px 16px; }
   .lead-kpi-num { font-size: 26px; font-weight: 800; color: var(--co-ink); letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px; }
   .lead-kpi-num.conv { color: var(--co-green); }
@@ -142,6 +145,41 @@
   .lead-hist-texto { color: var(--co-ink-2); font-weight: 500; }
   .lead-hist-fecha { font-size: 10px; color: var(--co-mute); margin-top: 2px; }
   .lead-row-sel td { background: var(--co-orange-soft) !important; }
+
+  /* ── Leads toolbar responsive ── */
+  @media (max-width: 767px) {
+    .leads-toolbar { gap: 8px; }
+    .leads-search { min-width: 0; width: 100%; flex: none; order: 0; }
+    .leads-filter { flex: 1; min-width: 0; font-size: 12px; padding: 8px 10px; }
+    .leads-btn-sec { font-size: 12px; padding: 8px 10px; }
+    .leads-btn-desktop { display: none !important; }
+    .leads-btn-mas-opciones { display: flex !important; }
+  }
+  .leads-btn-mas-opciones { display: none; }
+
+  /* ── Leads sticky header ── */
+  .leads-sticky { position: sticky; top: 0; z-index: 10; background: var(--co-surface); padding-bottom: 8px; }
+
+  /* ── Leads importar btn desktop destacado ── */
+  .leads-btn-importar-destac { background: var(--co-orange) !important; color: #fff !important; border-color: var(--co-orange) !important; }
+  .leads-btn-importar-destac:hover { background: var(--co-orange-hover) !important; }
+
+  /* ── Más opciones dropdown ── */
+  .leads-mas-menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); box-shadow: var(--co-shadow-lg); z-index: 200; min-width: 180px; padding: 4px 0; }
+  .leads-mas-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 10px 14px; background: none; border: none; font-family: var(--co-font); font-size: 13px; font-weight: 600; color: var(--co-ink); cursor: pointer; text-align: left; }
+  .leads-mas-item:hover { background: var(--co-cream); }
+  .leads-mas-item.danger { color: var(--co-red); }
+
+  /* ── Long press avatar modo selección ── */
+  .lead-card.sel-mode .lead-avatar { border-radius: var(--co-r-sm); cursor: pointer; }
+  .lead-card.selected .lead-avatar { background: var(--co-orange) !important; }
+  .lead-card.selected { border-color: var(--co-orange); background: var(--co-orange-soft); }
+  .lead-masiva-mobile { display: none; position: sticky; top: 0; z-index: 20; background: var(--co-ink); color: #fff; padding: 10px 16px; border-radius: var(--co-r-md); margin-bottom: 10px; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .lead-masiva-mobile.visible { display: flex; }
+  .btn-masiva-mob { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 12px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .btn-masiva-mob:hover { background: rgba(255,255,255,0.25); }
+  .btn-masiva-mob.cancel { background: none; color: rgba(255,255,255,0.6); }
+
 </style>
 
 <div id="crm-root">
@@ -445,31 +483,38 @@
         '<div class="lead-kpi"><div class="lead-kpi-num conv">' + convertidos + '</div><div class="lead-kpi-label">Convertidos ' + tasa + '%</div>' +
           '<div class="lead-kpi-bar"><div class="lead-kpi-bar-fill" style="width:' + tasa + '%"></div></div>' +
         '</div>' +
-        '<div class="lead-kpi"><div class="lead-kpi-num">' + (leads.length - total) + '</div><div class="lead-kpi-label">Archivados</div></div>' +
+        '<div class="lead-kpi leads-kpi-archivados"><div class="lead-kpi-num">' + (leads.length - total) + '</div><div class="lead-kpi-label">Archivados</div></div>' +
       '</div>' +
-      '<div class="leads-toolbar">' +
-        '<input class="leads-search" id="lead-search" placeholder="Buscar condominio, contacto\u2026" value="' + _esc(_leadBusqueda) + '">' +
-        '<select class="leads-filter" id="lead-fil-estado">' +
-          '<option value="">Todos los estados</option>' +
-          '<option value="nuevo"' + (_leadFiltroEstado==='nuevo'?' selected':'') + '>Nuevo</option>' +
-          '<option value="contactado"' + (_leadFiltroEstado==='contactado'?' selected':'') + '>Contactado</option>' +
-          '<option value="convertido"' + (_leadFiltroEstado==='convertido'?' selected':'') + '>Convertido</option>' +
-          '<option value="descartado"' + (_leadFiltroEstado==='descartado'?' selected':'') + '>Descartado</option>' +
-        '</select>' +
-        '<select class="leads-filter" id="lead-fil-tipo">' +
-          '<option value="">Todos los tipos</option>' +
-          '<option value="comunidad_existente"' + (_leadFiltroTipo==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
-          '<option value="proyecto_nuevo"' + (_leadFiltroTipo==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
-        '</select>' +
-        '<button class="leads-btn-sec" id="lead-btn-archivados">' +
-          (_leadArchivados ? '\u25A0 Ocultar archivados' : '\u25A1 Ver archivados') +
-        '</button>' +
-        '<button class="leads-btn-sec" id="lead-btn-importar">' +
-          '<i class="ti ti-upload"></i> Importar Excel' +
-        '</button>' +
-        '<button class="leads-btn-sec" id="lead-btn-plantillas">' +
-          '<i class="ti ti-mail"></i> Plantillas' +
-        '</button>' +
+      '<div class="leads-sticky">' +
+        '<div class="leads-toolbar">' +
+          '<input class="leads-search" id="lead-search" placeholder="Buscar condominio, contacto\u2026" value="' + _esc(_leadBusqueda) + '">' +
+          '<select class="leads-filter" id="lead-fil-estado">' +
+            '<option value="">Todos los estados</option>' +
+            '<option value="nuevo"' + (_leadFiltroEstado==='nuevo'?' selected':'') + '>Nuevo</option>' +
+            '<option value="contactado"' + (_leadFiltroEstado==='contactado'?' selected':'') + '>Contactado</option>' +
+            '<option value="convertido"' + (_leadFiltroEstado==='convertido'?' selected':'') + '>Convertido</option>' +
+            '<option value="descartado"' + (_leadFiltroEstado==='descartado'?' selected':'') + '>Descartado</option>' +
+          '</select>' +
+          '<select class="leads-filter" id="lead-fil-tipo">' +
+            '<option value="">Todos los tipos</option>' +
+            '<option value="comunidad_existente"' + (_leadFiltroTipo==='comunidad_existente'?' selected':'') + '>Comunidad existente</option>' +
+            '<option value="proyecto_nuevo"' + (_leadFiltroTipo==='proyecto_nuevo'?' selected':'') + '>Proyecto nuevo</option>' +
+          '</select>' +
+          '<button class="leads-btn-sec leads-btn-desktop" id="lead-btn-archivados">' +
+            (_leadArchivados ? '\u25A0 Ocultar archivados' : '\u25A1 Ver archivados') +
+          '</button>' +
+          '<button class="leads-btn-sec leads-btn-importar-destac leads-btn-desktop" id="lead-btn-importar">' +
+            '<i class="ti ti-upload"></i> Importar Excel' +
+          '</button>' +
+          '<button class="leads-btn-sec leads-btn-desktop" id="lead-btn-plantillas">' +
+            '<i class="ti ti-mail"></i> Plantillas' +
+          '</button>' +
+          '<div style="position:relative">' +
+            '<button class="leads-btn-sec leads-btn-mas-opciones" id="lead-btn-mas">' +
+              '<i class="ti ti-dots"></i> Opciones' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
       '<div id="lead-masiva-bar" style="display:none;align-items:center;gap:8px;background:var(--co-cream-deep);border:1px solid var(--co-line);border-radius:var(--co-r-md);padding:8px 14px;margin-bottom:12px;flex-wrap:wrap">' +
         '<i class="ti ti-check" style="font-size:14px;color:var(--co-orange)"></i>' +
@@ -507,6 +552,35 @@
     container.querySelector('#lead-btn-plantillas').addEventListener('click', function() {
       abrirModalPlantillas();
     });
+
+    // Menú más opciones (móvil)
+    var btnMas = container.querySelector('#lead-btn-mas');
+    if (btnMas) {
+      btnMas.addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.querySelectorAll('.leads-mas-menu').forEach(function(m){ m.remove(); });
+        var menu = document.createElement('div');
+        menu.className = 'leads-mas-menu';
+        var items = [
+          { ico: 'ti-upload',   lbl: 'Importar Excel', fn: abrirModalImportarLeads },
+          { ico: 'ti-mail',     lbl: 'Plantillas',     fn: abrirModalPlantillas },
+          { ico: _leadArchivados ? 'ti-eye-off' : 'ti-eye', lbl: _leadArchivados ? 'Ocultar archivados' : 'Ver archivados', fn: function() { _leadArchivados = !_leadArchivados; renderLeads(container); } }
+        ];
+        items.forEach(function(it) {
+          var btn2 = document.createElement('button');
+          btn2.className = 'leads-mas-item';
+          btn2.innerHTML = '<i class="ti ' + it.ico + '"></i> ' + it.lbl;
+          btn2.addEventListener('click', function() { menu.remove(); it.fn(); });
+          menu.appendChild(btn2);
+        });
+        btnMas.parentElement.appendChild(menu);
+        setTimeout(function() {
+          document.addEventListener('click', function cerrarMenu() {
+            menu.remove(); document.removeEventListener('click', cerrarMenu);
+          });
+        }, 50);
+      });
+    }
 
     // Listeners barra masiva - se conectan despues de renderizar filas
     container.addEventListener('click', function(e) {
@@ -578,11 +652,34 @@
       '</tr>';
     }).join('');
 
+    // Barra masiva móvil
+    if (cards) {
+      var barraMob = document.createElement('div');
+      barraMob.id = 'lead-masiva-mob';
+      barraMob.className = 'lead-masiva-mobile';
+      barraMob.innerHTML =
+        '<span id="lead-masiva-mob-lbl" style="flex:1;font-size:12px;font-weight:700">0 seleccionados</span>' +
+        '<button class="btn-masiva-mob" id="mob-btn-correo"><i class="ti ti-mail"></i> Correo</button>' +
+        '<button class="btn-masiva-mob" id="mob-btn-estado"><i class="ti ti-tag"></i> Estado</button>' +
+        '<button class="btn-masiva-mob" id="mob-btn-archivar"><i class="ti ti-archive"></i></button>' +
+        '<button class="btn-masiva-mob cancel" id="mob-btn-cancelar">Cancelar</button>';
+      cards.parentElement.insertBefore(barraMob, cards);
+      barraMob.querySelector('#mob-btn-correo').addEventListener('click', function() { abrirModalCorreoMasivo(); });
+      barraMob.querySelector('#mob-btn-estado').addEventListener('click', function() { abrirModalEstadoMasivo(); });
+      barraMob.querySelector('#mob-btn-archivar').addEventListener('click', function() { _archivarMasivo(); });
+      barraMob.querySelector('#mob-btn-cancelar').addEventListener('click', function() {
+        _leadSelIds = [];
+        cards.querySelectorAll('.lead-card').forEach(function(c){ c.classList.remove('selected'); });
+        barraMob.classList.remove('visible');
+      });
+    }
+
     if (cards) {
       cards.innerHTML = lista.map(function(l) {
         const ini = ((l.nombreCondominio||'?').charAt(0)).toUpperCase();
         const cls = l.tipoLead === 'comunidad_existente' ? 'comunidad' : 'proyecto';
-        return '<div class="lead-card" data-id="' + _esc(l.id) + '">' +
+        var selMob = _leadSelIds.indexOf(l.id) !== -1;
+        return '<div class="lead-card' + (selMob ? ' selected' : '') + '" data-id="' + _esc(l.id) + '">' +
           '<div class="lead-card-top">' +
             '<div class="lead-avatar ' + cls + '">' + ini + '</div>' +
             '<div class="lead-card-info">' +
@@ -639,11 +736,33 @@
         _actualizarBarraMasiva();
       });
     });
-    // Eventos cards móvil
+    // Eventos cards móvil + long press para selección
     if (cards) {
       cards.querySelectorAll('.lead-card').forEach(function(card) {
+        var longPressTimer = null;
+        var longPressFired = false;
+
+        card.addEventListener('touchstart', function(e) {
+          longPressFired = false;
+          longPressTimer = setTimeout(function() {
+            longPressFired = true;
+            _toggleSelMob(card.dataset.id, cards);
+          }, 500);
+        }, { passive: true });
+
+        card.addEventListener('touchend', function() {
+          clearTimeout(longPressTimer);
+        });
+
+        card.addEventListener('touchmove', function() {
+          clearTimeout(longPressTimer);
+        });
+
         card.addEventListener('click', function(e) {
+          if (longPressFired) { e.preventDefault(); return; }
           if (e.target.closest('.lead-acc-btn')) return;
+          // Si hay seleccionados activos, toggle en lugar de abrir modal
+          if (_leadSelIds.length > 0) { _toggleSelMob(card.dataset.id, cards); return; }
           const l = leads.find(function(x){ return x.id === card.dataset.id; });
           if (l) abrirModalDetalleLead(l);
         });
@@ -1782,6 +1901,26 @@
   window.abrirModalPlantillas = abrirModalPlantillas;
 
   // ── Helpers barra masiva ─────────────────────────────────
+  function _toggleSelMob(id, cards) {
+    var idx = _leadSelIds.indexOf(id);
+    if (idx === -1) { _leadSelIds.push(id); }
+    else { _leadSelIds.splice(idx, 1); }
+    // Actualizar visual tarjetas
+    if (cards) {
+      cards.querySelectorAll('.lead-card').forEach(function(c) {
+        c.classList.toggle('selected', _leadSelIds.indexOf(c.dataset.id) !== -1);
+      });
+    }
+    // Actualizar barra masiva móvil
+    var barMob = document.getElementById('lead-masiva-mob');
+    var lblMob = document.getElementById('lead-masiva-mob-lbl');
+    if (barMob) {
+      barMob.classList.toggle('visible', _leadSelIds.length > 0);
+      if (lblMob) lblMob.textContent = _leadSelIds.length + ' seleccionado' + (_leadSelIds.length !== 1 ? 's' : '');
+    }
+    _actualizarBarraMasiva();
+  }
+
   function _actualizarBarraMasiva() {
     var bar = document.getElementById('lead-masiva-bar');
     var lbl = document.getElementById('lead-masiva-lbl');
