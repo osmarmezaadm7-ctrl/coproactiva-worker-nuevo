@@ -159,14 +159,22 @@
 
   /* ── Leads sticky header ── */
   .leads-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 10;
     background: var(--co-cream);
     padding: 8px 0 10px;
     margin: 0 0 4px;
-    box-shadow: 0 3px 10px rgba(26,23,20,0.07);
+    transition: box-shadow 0.2s;
   }
+  .leads-sticky.is-stuck {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    box-shadow: 0 3px 10px rgba(26,23,20,0.10);
+    padding: 8px 20px 10px;
+  }
+  .leads-sticky-placeholder { display: none; }
+  .leads-sticky-placeholder.visible { display: block; }
 
   /* ── Leads importar btn desktop destacado ── */
   .leads-btn-importar-destac { background: var(--co-orange) !important; color: #fff !important; border-color: var(--co-orange) !important; }
@@ -467,6 +475,11 @@
 
   function cambiarTab(tab) {
     if (tab === _tabActiva) return;
+    // Limpiar sticky de leads al salir
+    if (_stickyScrollHandler) {
+      window.removeEventListener('scroll', _stickyScrollHandler);
+      _stickyScrollHandler = null;
+    }
     _tabActiva = tab;
     document.querySelectorAll('.crm-tab-btn').forEach(function(b) {
       b.classList.toggle('act', b.dataset.tab === tab);
@@ -495,7 +508,8 @@
         '</div>' +
         '<div class="lead-kpi leads-kpi-archivados"><div class="lead-kpi-num">' + (leads.length - total) + '</div><div class="lead-kpi-label">Archivados</div></div>' +
       '</div>' +
-      '<div class="leads-sticky">' +
+      '<div class="leads-sticky-placeholder" id="leads-sticky-ph"></div>' +
+      '<div class="leads-sticky" id="leads-sticky-bar">' +
         '<div class="leads-toolbar">' +
           '<input class="leads-search" id="lead-search" placeholder="Buscar condominio, contacto\u2026" value="' + _esc(_leadBusqueda) + '">' +
           '<select class="leads-filter" id="lead-fil-estado">' +
@@ -591,6 +605,9 @@
         }, 50);
       });
     }
+
+    // Iniciar sticky toolbar
+    setTimeout(_initStickyLeads, 50);
 
     // Listeners barra masiva - se conectan despues de renderizar filas
     container.addEventListener('click', function(e) {
@@ -2400,22 +2417,36 @@
     }
   }
 
-  // Sticky toolbar via scroll del contenedor padre
+  // Sticky toolbar via scroll del window
+  var _stickyScrollHandler = null;
+
   function _initStickyLeads() {
-    var sticky = document.querySelector('.leads-sticky');
+    // Limpiar handler anterior
+    if (_stickyScrollHandler) {
+      window.removeEventListener('scroll', _stickyScrollHandler);
+      _stickyScrollHandler = null;
+    }
+    var sticky = document.getElementById('leads-sticky-bar');
+    var ph     = document.getElementById('leads-sticky-ph');
     if (!sticky) return;
-    // Buscar el contenedor con scroll
-    var scrollEl = document.getElementById('mainContent') || document.getElementById('contentArea') || window;
-    var kpis = document.querySelector('.leads-kpis');
-    if (!kpis) return;
-    var kpisBottom = kpis.getBoundingClientRect().bottom + (scrollEl === window ? 0 : scrollEl.getBoundingClientRect().top);
-    var onScroll = function() {
-      var stickyEl = document.querySelector('.leads-sticky');
-      if (!stickyEl) { scrollEl.removeEventListener('scroll', onScroll); return; }
-      // El sticky nativo ya funciona si el ancestro tiene overflow
-      // Solo necesitamos asegurar que background cubre el contenido
+
+    _stickyScrollHandler = function() {
+      var bar = document.getElementById('leads-sticky-bar');
+      var placeholder = document.getElementById('leads-sticky-ph');
+      if (!bar) { window.removeEventListener('scroll', _stickyScrollHandler); return; }
+      var barTop = bar.classList.contains('is-stuck')
+        ? (placeholder ? placeholder.getBoundingClientRect().top : 0)
+        : bar.getBoundingClientRect().top;
+      if (barTop <= 0 && !bar.classList.contains('is-stuck')) {
+        var h = bar.offsetHeight;
+        bar.classList.add('is-stuck');
+        if (placeholder) { placeholder.style.height = h + 'px'; placeholder.classList.add('visible'); }
+      } else if (bar.classList.contains('is-stuck') && placeholder && placeholder.getBoundingClientRect().top > 1) {
+        bar.classList.remove('is-stuck');
+        if (placeholder) placeholder.classList.remove('visible');
+      }
     };
-    scrollEl.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', _stickyScrollHandler, { passive: true });
   }
 
   init();
