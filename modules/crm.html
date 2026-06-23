@@ -462,6 +462,12 @@
         '<button class="leads-btn-sec" id="lead-btn-archivados">' +
           (_leadArchivados ? '\u25A0 Ocultar archivados' : '\u25A1 Ver archivados') +
         '</button>' +
+        '<button class="leads-btn-sec" id="lead-btn-importar">' +
+          '<i class="ti ti-upload"></i> Importar Excel' +
+        '</button>' +
+        '<button class="leads-btn-sec" id="lead-btn-plantillas">' +
+          '<i class="ti ti-mail"></i> Plantillas' +
+        '</button>' +
       '</div>' +
       '<div class="leads-table-wrap"><table class="leads-table"><thead><tr>' +
         '<th>Condominio</th><th>Tipo</th><th>Contacto</th><th>Estado</th><th>\u00DAltimo contacto</th><th></th>' +
@@ -484,6 +490,12 @@
     container.querySelector('#lead-btn-archivados').addEventListener('click', function() {
       _leadArchivados = !_leadArchivados;
       renderLeads(container);
+    });
+    container.querySelector('#lead-btn-importar').addEventListener('click', function() {
+      abrirModalImportarLeads();
+    });
+    container.querySelector('#lead-btn-plantillas').addEventListener('click', function() {
+      abrirModalPlantillas();
     });
 
     _renderLeadsFiltered();
@@ -1368,7 +1380,17 @@
     box.innerHTML =
       '<div class="modal-handle"></div><button class="modal-close" id="mc-mail">&times;</button>' +
       '<div class="modal-eyebrow"></div><div class="modal-titulo">Enviar correo</div><div class="modal-subtitulo"></div>' +
-      '<div class="form-grid" style="margin-top:18px">' +
+      '<div style="margin-top:18px;margin-bottom:14px">' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Cargar plantilla</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<select id="mail-sel-plantilla" style="flex:1;padding:9px 12px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);min-height:40px">' +
+            '<option value="">— Sin plantilla —</option>' +
+          '</select>' +
+          '<button id="mail-btn-plantilla" style="padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:700;color:var(--co-ink);background:var(--co-cream);cursor:pointer;white-space:nowrap">Cargar</button>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--co-mute);margin-top:6px">Variables disponibles: <code>{nombre}</code> <code>{condominio}</code> <code>{comuna}</code> <code>{cargo}</code></div>' +
+      '</div>' +
+      '<div class="form-grid">' +
         '<div class="form-group form-full"><label>Para</label><input type="email" id="mail-para"></div>' +
         '<div class="form-group form-full"><label>Asunto</label><input type="text" id="mail-asunto"></div>' +
         '<div class="form-group form-full"><label>Mensaje</label><textarea id="mail-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:200px"></textarea></div>' +
@@ -1386,6 +1408,18 @@
     box.querySelector('#mail-para').value = p.email || '';
     box.querySelector('#mail-asunto').value = (pl.asunto||'').replace('{c}', p.nombreCondominio||'');
     box.querySelector('#mail-cuerpo').value = obtenerCuerpo(p);
+
+    // Cargar plantillas en selector
+    _cargarSelectorPlantillas(box.querySelector('#mail-sel-plantilla'));
+    box.querySelector('#mail-btn-plantilla').addEventListener('click', function() {
+      const id = box.querySelector('#mail-sel-plantilla').value;
+      if (!id) return;
+      var plt = (_plantillasCache || []).find(function(x){ return x.id === id; });
+      if (!plt) return;
+      box.querySelector('#mail-asunto').value = _reemplazarVars(plt.asunto, p);
+      box.querySelector('#mail-cuerpo').value = _reemplazarVars(plt.cuerpo, p);
+    });
+
     const cerrar = function() { overlay.remove(); };
     box.querySelector('#mc-mail').addEventListener('click', cerrar);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
@@ -1502,6 +1536,173 @@
   function mostrarError(msg) {
     document.getElementById('crm-root').innerHTML = '<div class="crm-error">Error al cargar el CRM: ' + msg + '</div>';
   }
+
+  // ── Plantillas de correo ──────────────────────────────────
+  var _plantillasCache = [];
+
+  async function _fetchPlantillas() {
+    if (_plantillasCache.length > 0) return _plantillasCache;
+    try {
+      var resp = await api('/plantillas');
+      if (resp.ok && resp.data && resp.data.ok) {
+        _plantillasCache = resp.data.data || [];
+      }
+    } catch(e) { _plantillasCache = []; }
+    return _plantillasCache;
+  }
+
+  function _cargarSelectorPlantillas(sel) {
+    if (!sel) return;
+    _fetchPlantillas().then(function(lista) {
+      sel.innerHTML = '<option value="">— Sin plantilla —</option>';
+      lista.forEach(function(p) {
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.nombre;
+        sel.appendChild(opt);
+      });
+    });
+  }
+
+  function _reemplazarVars(texto, datos) {
+    if (!texto) return '';
+    return texto
+      .replace(/\{nombre\}/g,     _esc(datos.nombreContacto  || datos.nombre     || ''))
+      .replace(/\{condominio\}/g, _esc(datos.nombreCondominio || datos.condominio || ''))
+      .replace(/\{comuna\}/g,     _esc(datos.comuna           || ''))
+      .replace(/\{cargo\}/g,      _esc(datos.cargoContacto    || datos.cargo      || ''));
+  }
+
+  // ── Modal gestión de plantillas ───────────────────────────
+  function abrirModalPlantillas() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal-box" style="max-width:640px">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc-plt">×</button>' +
+        '<div class="modal-eyebrow">Correos</div>' +
+        '<div class="modal-titulo">Plantillas de correo</div>' +
+        '<div class="modal-subtitulo">Compartidas entre Leads y Pipeline. Variables: {nombre} {condominio} {comuna} {cargo}</div>' +
+        '<div id="plt-lista" style="margin-bottom:16px"></div>' +
+        '<button class="btn-guardar" id="plt-btn-nueva" style="background:var(--co-ink)">+ Nueva plantilla</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    const cerrar = function() { overlay.remove(); };
+    overlay.querySelector('#mc-plt').addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    function _renderLista() {
+      const lista = overlay.querySelector('#plt-lista');
+      lista.innerHTML = '<div style="font-size:12px;color:var(--co-mute);padding:8px 0">Cargando…</div>';
+      _plantillasCache = []; // forzar recarga
+      _fetchPlantillas().then(function(plt) {
+        if (!plt.length) {
+          lista.innerHTML = '<div style="font-size:12px;color:var(--co-mute);padding:8px 0">Sin plantillas. Crea la primera.</div>';
+          return;
+        }
+        lista.innerHTML = plt.map(function(p) {
+          var tags = p.tags ? p.tags.split(',').map(function(t){ return '<span style="font-size:10px;background:var(--co-cream-deep);color:var(--co-mute);padding:2px 7px;border-radius:20px;margin-right:4px">' + _esc(t.trim()) + '</span>'; }).join('') : '';
+          return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--co-line)" data-id="' + _esc(p.id) + '">' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:13px;font-weight:700;color:var(--co-ink);margin-bottom:2px">' + _esc(p.nombre) + '</div>' +
+              '<div style="font-size:11px;color:var(--co-mute);margin-bottom:4px">' + _esc(p.asunto) + '</div>' +
+              '<div>' + tags + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-shrink:0">' +
+              '<button class="plt-btn-edit btn-editar-datos" style="padding:6px 10px;font-size:11px" data-id="' + _esc(p.id) + '">Editar</button>' +
+              '<button class="plt-btn-del" style="padding:6px 10px;font-size:11px;border:1.5px solid var(--co-red);border-radius:var(--co-r-md);background:none;color:var(--co-red);cursor:pointer;font-family:var(--co-font);font-weight:700" data-id="' + _esc(p.id) + '">Eliminar</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        overlay.querySelectorAll('.plt-btn-edit').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var p = _plantillasCache.find(function(x){ return x.id === btn.dataset.id; });
+            if (p) _abrirFormPlantilla(p, _renderLista);
+          });
+        });
+        overlay.querySelectorAll('.plt-btn-del').forEach(function(btn) {
+          btn.addEventListener('click', async function() {
+            if (!confirm('¿Eliminar esta plantilla?')) return;
+            await api('/plantillas', 'POST', { action: 'eliminarPlantilla', id: btn.dataset.id });
+            _plantillasCache = [];
+            _renderLista();
+          });
+        });
+      });
+    }
+
+    overlay.querySelector('#plt-btn-nueva').addEventListener('click', function() {
+      _abrirFormPlantilla(null, _renderLista);
+    });
+
+    _renderLista();
+  }
+
+  function _abrirFormPlantilla(plantilla, onDone) {
+    const overlay2 = document.createElement('div');
+    overlay2.className = 'modal-overlay';
+    overlay2.style.zIndex = '3000';
+    overlay2.innerHTML =
+      '<div class="modal-box" style="max-width:560px">' +
+        '<div class="modal-handle"></div>' +
+        '<button class="modal-close" id="mc-fplt">×</button>' +
+        '<div class="modal-eyebrow">' + (plantilla ? 'Editar' : 'Nueva') + ' plantilla</div>' +
+        '<div class="modal-titulo">' + (plantilla ? _esc(plantilla.nombre) : 'Nueva plantilla') + '</div>' +
+        '<div class="form-grid" style="margin-top:20px">' +
+          '<div class="form-group form-full"><label>Nombre *</label><input type="text" id="fplt-nombre" value="' + _esc(plantilla ? plantilla.nombre : '') + '" placeholder="Ej: Primer contacto frío"></div>' +
+          '<div class="form-group form-full"><label>Tags (separados por coma)</label><input type="text" id="fplt-tags" value="' + _esc(plantilla ? plantilla.tags : '') + '" placeholder="leads, pipeline, proyecto-nuevo"></div>' +
+          '<div class="form-group form-full"><label>Asunto *</label><input type="text" id="fplt-asunto" value="' + _esc(plantilla ? plantilla.asunto : '') + '" placeholder="CoproActiva — Administración para {condominio}"></div>' +
+          '<div class="form-group form-full"><label>Cuerpo * <span style="font-size:10px;color:var(--co-mute);font-weight:400">(texto plano — usa {nombre}, {condominio}, {comuna}, {cargo})</span></label>' +
+            '<textarea id="fplt-cuerpo" rows="10" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:180px">' + _esc(plantilla ? plantilla.cuerpo : '') + '</textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-error" id="fplt-error" style="display:none"></div>' +
+        '<button class="btn-guardar" id="fplt-btn-guardar">' + (plantilla ? 'Guardar cambios' : 'Crear plantilla') + '</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay2);
+    const cerrar2 = function() { overlay2.remove(); };
+    overlay2.querySelector('#mc-fplt').addEventListener('click', cerrar2);
+    overlay2.addEventListener('click', function(e) { if (e.target === overlay2) cerrar2(); });
+
+    overlay2.querySelector('#fplt-btn-guardar').addEventListener('click', async function() {
+      const nombre = overlay2.querySelector('#fplt-nombre').value.trim();
+      const asunto = overlay2.querySelector('#fplt-asunto').value.trim();
+      const cuerpo = overlay2.querySelector('#fplt-cuerpo').value.trim();
+      const tags   = overlay2.querySelector('#fplt-tags').value.trim();
+      const errDiv = overlay2.querySelector('#fplt-error');
+      const btn    = overlay2.querySelector('#fplt-btn-guardar');
+
+      if (!nombre || !asunto || !cuerpo) {
+        errDiv.textContent = 'Nombre, asunto y cuerpo son obligatorios.';
+        errDiv.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true; btn.textContent = 'Guardando…'; errDiv.style.display = 'none';
+
+      const accion = plantilla ? 'editarPlantilla' : 'crearPlantilla';
+      const payload = { action: accion, nombre: nombre, asunto: asunto, cuerpo: cuerpo, tags: tags };
+      if (plantilla) payload.id = plantilla.id;
+
+      const resp = await api('/plantillas', 'POST', payload);
+      if (resp.ok && resp.data && resp.data.ok) {
+        _plantillasCache = [];
+        btn.textContent = '✓ Guardado'; btn.style.background = 'var(--co-green)';
+        setTimeout(function() { cerrar2(); if (onDone) onDone(); }, 700);
+      } else {
+        errDiv.textContent = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = plantilla ? 'Guardar cambios' : 'Crear plantilla';
+      }
+    });
+  }
+
+  window.abrirModalPlantillas = abrirModalPlantillas;
 
   init();
 })();
