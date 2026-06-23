@@ -141,6 +141,7 @@
   .lead-hist-tipo { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-orange); margin-bottom: 2px; }
   .lead-hist-texto { color: var(--co-ink-2); font-weight: 500; }
   .lead-hist-fecha { font-size: 10px; color: var(--co-mute); margin-top: 2px; }
+  .lead-row-sel td { background: var(--co-orange-soft) !important; }
 </style>
 
 <div id="crm-root">
@@ -469,7 +470,15 @@
           '<i class="ti ti-mail"></i> Plantillas' +
         '</button>' +
       '</div>' +
+      '<div id="lead-masiva-bar" style="display:none;align-items:center;gap:8px;background:var(--co-cream-deep);border:1px solid var(--co-line);border-radius:var(--co-r-md);padding:8px 14px;margin-bottom:12px;flex-wrap:wrap">' +
+        '<i class="ti ti-check" style="font-size:14px;color:var(--co-orange)"></i>' +
+        '<span id="lead-masiva-lbl" style="font-size:12px;font-weight:600;color:var(--co-ink);flex:1">0 seleccionados</span>' +
+        '<button class="leads-btn-sec" id="lead-btn-masiva-correo"><i class="ti ti-mail"></i> Enviar correo</button>' +
+        '<button class="leads-btn-sec" id="lead-btn-masiva-estado"><i class="ti ti-tag"></i> Cambiar estado</button>' +
+        '<button class="leads-btn-sec" id="lead-btn-masiva-archivar" style="color:var(--co-red)"><i class="ti ti-archive"></i> Archivar</button>' +
+      '</div>' +
       '<div class="leads-table-wrap"><table class="leads-table"><thead><tr>' +
+        '<th style="width:36px"><input type="checkbox" id="lead-chk-all" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer"></th>' +
         '<th>Condominio</th><th>Tipo</th><th>Contacto</th><th>Estado</th><th>\u00DAltimo contacto</th><th></th>' +
       '</tr></thead><tbody id="leads-tbody"></tbody></table></div>' +
       '<div class="leads-cards" id="leads-cards"></div>';
@@ -496,6 +505,16 @@
     });
     container.querySelector('#lead-btn-plantillas').addEventListener('click', function() {
       abrirModalPlantillas();
+    });
+
+    // Listeners barra masiva - se conectan despues de renderizar filas
+    container.addEventListener('click', function(e) {
+      var btnCorreo  = e.target.closest('#lead-btn-masiva-correo');
+      var btnEstado  = e.target.closest('#lead-btn-masiva-estado');
+      var btnArch    = e.target.closest('#lead-btn-masiva-archivar');
+      if (btnCorreo)  { e.stopPropagation(); abrirModalCorreoMasivo(); }
+      if (btnEstado)  { e.stopPropagation(); abrirModalEstadoMasivo(); }
+      if (btnArch)    { e.stopPropagation(); _archivarMasivo(); }
     });
 
     _renderLeadsFiltered();
@@ -536,13 +555,15 @@
     if (!tbody) return;
 
     if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="6"><div class="leads-empty">No hay leads que mostrar.</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="leads-empty">No hay leads que mostrar.</div></td></tr>';
       if (cards) cards.innerHTML = '<div class="leads-empty">No hay leads que mostrar.</div>';
       return;
     }
 
     tbody.innerHTML = lista.map(function(l) {
-      return '<tr data-id="' + _esc(l.id) + '">' +
+      var seleccionado = _leadSelIds.indexOf(l.id) !== -1;
+      return '<tr data-id="' + _esc(l.id) + '"' + (seleccionado ? ' class="lead-row-sel"' : '') + '>' +
+        '<td style="width:36px"><input type="checkbox" class="lead-chk" data-id="' + _esc(l.id) + '" style="width:14px;height:14px;accent-color:var(--co-orange);cursor:pointer"' + (seleccionado ? ' checked' : '') + '></td>' +
         '<td><div class="lead-nombre-cell">' + _esc(l.nombreCondominio) + '</div>' +
              '<div class="lead-sub-cell">' + _esc(l.comuna||'') + '</div></td>' +
         '<td>' + _pillTipo(l.tipoLead) + '</td>' +
@@ -580,12 +601,41 @@
       }).join('');
     }
 
+    // Checkbox select-all
+    var chkAll = document.getElementById('lead-chk-all');
+    if (chkAll) {
+      chkAll.addEventListener('change', function() {
+        var checked = chkAll.checked;
+        _leadSelIds = checked ? lista.map(function(l){ return l.id; }) : [];
+        document.querySelectorAll('.lead-chk').forEach(function(c){ c.checked = checked; });
+        document.querySelectorAll('tr[data-id]').forEach(function(tr){ tr.classList.toggle('lead-row-sel', checked); });
+        _actualizarBarraMasiva();
+      });
+    }
+
     // Eventos filas tabla
     tbody.querySelectorAll('tr[data-id]').forEach(function(tr) {
       tr.addEventListener('click', function(e) {
-        if (e.target.closest('.lead-acc-btn')) return;
+        if (e.target.closest('.lead-acc-btn') || e.target.closest('.lead-chk')) return;
         const l = leads.find(function(x){ return x.id === tr.dataset.id; });
         if (l) abrirModalDetalleLead(l);
+      });
+    });
+
+    // Eventos checkboxes individuales
+    tbody.querySelectorAll('.lead-chk').forEach(function(chk) {
+      chk.addEventListener('change', function(e) {
+        e.stopPropagation();
+        var id = chk.dataset.id;
+        var tr = chk.closest('tr');
+        if (chk.checked) {
+          if (_leadSelIds.indexOf(id) === -1) _leadSelIds.push(id);
+          if (tr) tr.classList.add('lead-row-sel');
+        } else {
+          _leadSelIds = _leadSelIds.filter(function(x){ return x !== id; });
+          if (tr) tr.classList.remove('lead-row-sel');
+        }
+        _actualizarBarraMasiva();
       });
     });
     // Eventos cards móvil
@@ -954,7 +1004,16 @@
       '<div class="modal-eyebrow">Lead · ' + _esc(l.tipoLead === 'comunidad_existente' ? 'Comunidad existente' : 'Proyecto nuevo') + '</div>' +
       '<div class="modal-titulo">Enviar correo</div>' +
       '<div class="modal-subtitulo">' + _esc(l.nombreCondominio) + ' \u00B7 ' + _esc(l.email||'Sin email') + '</div>' +
-      '<div class="form-grid" style="margin-top:18px">' +
+      '<div style="margin-top:18px;margin-bottom:14px">' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Cargar plantilla</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<select id="lmail-sel-plt" style="flex:1;padding:9px 12px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);min-height:40px">' +
+            '<option value="">— Sin plantilla —</option>' +
+          '</select>' +
+          '<button id="lmail-btn-plt" style="padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:700;color:var(--co-ink);background:var(--co-cream);cursor:pointer">Cargar</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-grid">' +
         '<div class="form-group form-full"><label>Para</label><input type="email" id="lmail-para" value="' + _esc(l.email||'') + '"></div>' +
         '<div class="form-group form-full"><label>Asunto</label><input type="text" id="lmail-asunto" value="CoproActiva \u2014 ' + _esc(l.nombreCondominio) + '"></div>' +
         '<div class="form-group form-full"><label>Mensaje</label>' +
@@ -975,6 +1034,16 @@
     const cerrar = function() { overlay.remove(); };
     box.querySelector('#mc-mail-lead').addEventListener('click', cerrar);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    _cargarSelectorPlantillas(box.querySelector('#lmail-sel-plt'));
+    box.querySelector('#lmail-btn-plt').addEventListener('click', function() {
+      var id = box.querySelector('#lmail-sel-plt').value;
+      if (!id) return;
+      var plt = (_plantillasCache || []).find(function(x){ return x.id === id; });
+      if (!plt) return;
+      box.querySelector('#lmail-asunto').value = _reemplazarVars(plt.asunto, l);
+      box.querySelector('#lmail-cuerpo').value = _reemplazarVars(plt.cuerpo, l);
+    });
 
     async function _enviar(accion) {
       const para   = box.querySelector('#lmail-para').value.trim();
@@ -1711,6 +1780,158 @@
 
   window.abrirModalPlantillas = abrirModalPlantillas;
 
+  // ── Helpers barra masiva ─────────────────────────────────
+  function _actualizarBarraMasiva() {
+    var bar = document.getElementById('lead-masiva-bar');
+    var lbl = document.getElementById('lead-masiva-lbl');
+    if (!bar) return;
+    var n = _leadSelIds.length;
+    bar.style.display = n > 0 ? 'flex' : 'none';
+    if (lbl) lbl.textContent = n + ' lead' + (n !== 1 ? 's' : '') + ' seleccionado' + (n !== 1 ? 's' : '');
+  }
+
+  function _leadsSeleccionados() {
+    return leads.filter(function(l) { return _leadSelIds.indexOf(l.id) !== -1; });
+  }
+
+  // ── Modal correo masivo ───────────────────────────────────
+  function abrirModalCorreoMasivo() {
+    var seleccionados = _leadsSeleccionados();
+    if (!seleccionados.length) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.innerHTML =
+      '<div class="modal-handle"></div>' +
+      '<button class="modal-close" id="mc-mcorreo">×</button>' +
+      '<div class="modal-eyebrow">Correo masivo</div>' +
+      '<div class="modal-titulo">Enviar a ' + seleccionados.length + ' lead' + (seleccionados.length !== 1 ? 's' : '') + '</div>' +
+      '<div class="modal-subtitulo">Las variables {nombre}, {condominio}, {comuna}, {cargo} se reemplazarán por cada destinatario.</div>' +
+      '<div style="margin-bottom:14px">' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:6px">Cargar plantilla</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<select id="mcorreo-sel-plt" style="flex:1;padding:9px 12px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);min-height:40px">' +
+            '<option value="">— Sin plantilla —</option>' +
+          '</select>' +
+          '<button id="mcorreo-btn-plt" style="padding:9px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:12px;font-weight:700;color:var(--co-ink);background:var(--co-cream);cursor:pointer">Cargar</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-grid">' +
+        '<div class="form-group form-full"><label>Asunto</label><input type="text" id="mcorreo-asunto" value="CoproActiva — Administración profesional para {condominio}"></div>' +
+        '<div class="form-group form-full"><label>Mensaje</label><textarea id="mcorreo-cuerpo" rows="8" style="width:100%;padding:11px 14px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-family:var(--co-font);font-size:13px;color:var(--co-ink);background:var(--co-surface);box-sizing:border-box;resize:vertical;min-height:160px">Estimado/a {nombre},\n\nMe dirijo a usted para presentar los servicios de CoproActiva Administración.\n\n¿Tendría disponibilidad para conversar esta semana?\n\nAtentamente,\nCoproActiva Administración</textarea></div>' +
+      '</div>' +
+      '<div style="background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:10px 14px;font-size:12px;font-weight:600;color:var(--co-amber);margin-top:12px;display:flex;align-items:center;gap:8px">' +
+        '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>' +
+        'Se enviará un correo individual a cada lead seleccionado.' +
+      '</div>' +
+      '<div class="form-error" id="mcorreo-error" style="display:none"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">' +
+        '<button class="btn-guardar" id="btn-mcorreo-enviar" style="background:var(--co-ink)">Enviar ' + seleccionados.length + ' correo' + (seleccionados.length !== 1 ? 's' : '') + '</button>' +
+        '<button class="btn-guardar" id="btn-mcorreo-borrador" style="background:var(--co-surface);color:var(--co-ink);border:1.5px solid var(--co-line)">Crear borradores</button>' +
+      '</div>' +
+      '<div class="msg-ok" id="mcorreo-ok" style="display:none;margin-top:12px">✓ Correos enviados</div>';
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    box.querySelector('#mc-mcorreo').addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    _cargarSelectorPlantillas(box.querySelector('#mcorreo-sel-plt'));
+    box.querySelector('#mcorreo-btn-plt').addEventListener('click', function() {
+      var id = box.querySelector('#mcorreo-sel-plt').value;
+      if (!id) return;
+      var plt = (_plantillasCache || []).find(function(x){ return x.id === id; });
+      if (!plt) return;
+      box.querySelector('#mcorreo-asunto').value = plt.asunto;
+      box.querySelector('#mcorreo-cuerpo').value = plt.cuerpo;
+    });
+
+    async function _enviarMasivo(borrador) {
+      var asunto = box.querySelector('#mcorreo-asunto').value.trim();
+      var cuerpo = box.querySelector('#mcorreo-cuerpo').value.trim();
+      var errDiv = box.querySelector('#mcorreo-error');
+      var btn = borrador ? box.querySelector('#btn-mcorreo-borrador') : box.querySelector('#btn-mcorreo-enviar');
+      if (!asunto || !cuerpo) { errDiv.textContent = 'Asunto y mensaje son obligatorios.'; errDiv.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = borrador ? 'Creando borradores…' : 'Enviando…'; errDiv.style.display = 'none';
+      var errores = 0; var enviados = 0;
+      for (var i = 0; i < seleccionados.length; i++) {
+        var l = seleccionados[i];
+        if (!l.email) { errores++; continue; }
+        var asuntoFinal = _reemplazarVars(asunto, l);
+        var cuerpoFinal = _reemplazarVars(cuerpo, l);
+        await api('/leads', 'POST', { action: 'registrarCorreoLead', id: l.id, para: l.email, asunto: asuntoFinal });
+        await api('/correo', 'POST', { action: borrador ? 'crearBorrador' : undefined, prospectoId: l.id, etapa: 'lead', para: l.email, asunto: asuntoFinal, cuerpo: cuerpoFinal });
+        enviados++;
+      }
+      box.querySelector('#mcorreo-ok').textContent = '✓ ' + enviados + ' correo' + (enviados !== 1 ? 's' : '') + (borrador ? ' borrador' + (enviados !== 1 ? 'es' : '') : '') + ' creado' + (enviados !== 1 ? 's' : '') + (errores > 0 ? ' (' + errores + ' sin email)' : '');
+      box.querySelector('#mcorreo-ok').style.display = 'block';
+      btn.textContent = '✓ Listo';
+      setTimeout(cerrar, 2000);
+    }
+
+    box.querySelector('#btn-mcorreo-enviar').addEventListener('click', function() { _enviarMasivo(false); });
+    box.querySelector('#btn-mcorreo-borrador').addEventListener('click', function() { _enviarMasivo(true); });
+  }
+
+  // ── Modal cambiar estado masivo ───────────────────────────
+  function abrirModalEstadoMasivo() {
+    var seleccionados = _leadsSeleccionados();
+    if (!seleccionados.length) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box'; box.style.maxWidth = '420px';
+    box.innerHTML =
+      '<div class="modal-handle"></div>' +
+      '<button class="modal-close" id="mc-mestado">×</button>' +
+      '<div class="modal-eyebrow">Acción masiva</div>' +
+      '<div class="modal-titulo">Cambiar estado</div>' +
+      '<div class="modal-subtitulo">' + seleccionados.length + ' leads seleccionados</div>' +
+      '<select class="etapa-select" id="mestado-sel" style="margin-top:8px">' +
+        '<option value="nuevo">Nuevo</option>' +
+        '<option value="contactado">Contactado</option>' +
+        '<option value="descartado">Descartado</option>' +
+      '</select>' +
+      '<div class="form-error" id="mestado-error" style="display:none"></div>' +
+      '<button class="btn-guardar" id="btn-mestado">Aplicar a ' + seleccionados.length + ' leads</button>';
+
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    box.querySelector('#mc-mestado').addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    box.querySelector('#btn-mestado').addEventListener('click', async function() {
+      var estado = box.querySelector('#mestado-sel').value;
+      var btn = box.querySelector('#btn-mestado');
+      btn.disabled = true; btn.textContent = 'Aplicando…';
+      for (var i = 0; i < seleccionados.length; i++) {
+        var l = seleccionados[i];
+        await api('/leads', 'POST', { action: 'cambiarEstadoLead', id: l.id, estadoNuevo: estado });
+        l.estado = estado;
+      }
+      _leadSelIds = [];
+      cerrar();
+      var cont = document.getElementById('crm-tab-content');
+      if (cont) renderLeads(cont);
+    });
+  }
+
+  // ── Archivar masivo ───────────────────────────────────────
+  async function _archivarMasivo() {
+    var seleccionados = _leadsSeleccionados();
+    if (!seleccionados.length) return;
+    if (!confirm('\u00BFArchivar ' + seleccionados.length + ' lead' + (seleccionados.length !== 1 ? 's' : '') + '?')) return;
+    for (var i = 0; i < seleccionados.length; i++) {
+      var l = seleccionados[i];
+      await api('/leads', 'POST', { action: 'archivarLead', id: l.id });
+      l.archivado = true; l.estado = 'descartado';
+    }
+    _leadSelIds = [];
+    var cont = document.getElementById('crm-tab-content');
+    if (cont) renderLeads(cont);
+  }
+
   // ── Importar leads desde Excel ────────────────────────────
   function abrirModalImportarLeads() {
     var overlay = document.createElement('div');
@@ -1965,22 +2186,26 @@
   async function _ejecutarImportacionLeads(filas, forzar, btn, errDiv, overlay) {
     btn.disabled = true; btn.textContent = 'Importando…';
     var accion = forzar ? 'importarLeadsForzado' : 'importarLeads';
-    // Normalizar keys del Excel a los campos que espera Leads.gs
+    // Normalizar keys del Excel — case-insensitive
     var filasNorm = filas.map(function(f) {
+      // Crear mapa lowercase de todas las keys
+      var fm = {};
+      Object.keys(f).forEach(function(k) { fm[k.toLowerCase().trim()] = f[k]; });
+      function g(key) { return String(fm[key] || '').trim(); }
       return {
-        nombreCondominio:     String(f.nombre        || '').trim(),
-        tipoLead:             String(f.tipo_lead      || 'proyecto_nuevo').trim(),
-        telefono:             String(f.telefono       || '').trim(),
-        email:                String(f.email          || '').trim(),
-        nombreContacto:       String(f.contacto       || '').trim(),
-        cargoContacto:        String(f.cargo          || '').trim(),
-        comuna:               String(f.comuna         || '').trim(),
-        direccion:            String(f.direccion      || '').trim(),
-        constructora:         String(f.constructora   || '').trim(),
-        fuenteLead:           String(f.fuente         || 'importacion').trim(),
-        observaciones:        String(f.observaciones  || '').trim(),
-        etapaObra:            String(f.etapa_obra     || '').trim(),
-        fechaEntregaEstimada: String(f.fecha_entrega  || '').trim()
+        nombreCondominio:     g('nombre'),
+        tipoLead:             g('tipo_lead')     || 'proyecto_nuevo',
+        telefono:             g('telefono'),
+        email:                g('email'),
+        nombreContacto:       g('contacto'),
+        cargoContacto:        g('cargo'),
+        comuna:               g('comuna'),
+        direccion:            g('direccion'),
+        constructora:         g('constructora'),
+        fuenteLead:           g('fuente')        || 'importacion',
+        observaciones:        g('observaciones'),
+        etapaObra:            g('etapa_obra'),
+        fechaEntregaEstimada: g('fecha_entrega')
       };
     });
     var resp = await api('/leads', 'POST', { action: accion, filas: filasNorm });
