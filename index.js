@@ -2,6 +2,7 @@
 // CoproActiva Worker — index.js
 // Versión: 3.4 · Junio 2026
 // Cambio v3.4: agrega rutas /leads y /leads/metricas
+// Cambio v3.5: agrega rutas /plantillas
 // Cambio v3.3: agrega ruta GET /documentos/catalogo-comunidad
 // ============================================================
 
@@ -449,6 +450,24 @@ export default {
       }
 
       if (url.pathname === '/leads' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── Plantillas de correo ───────────────────────────
+
+      if (url.pathname === '/plantillas' && method === 'GET') {
+        const id = url.searchParams.get('id') || '';
+        if (id) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getPlantilla', { id });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getPlantillas');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/plantillas' && method === 'POST') {
         const body = await request.json();
         const data = await postAppsScript(APPS_SCRIPT_URL, body);
         return jsonResponse({ ok: true, data }, 200, origin);
