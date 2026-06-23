@@ -173,6 +173,12 @@
     box-shadow: 0 3px 10px rgba(26,23,20,0.10);
     padding: 8px 20px 10px;
   }
+  @media (min-width: 768px) {
+    .leads-sticky.is-stuck {
+      left: var(--co-sidebar-w, 240px);
+      padding: 8px 32px 10px;
+    }
+  }
   .leads-sticky-placeholder { display: none; }
   .leads-sticky-placeholder.visible { display: block; }
 
@@ -582,6 +588,9 @@
     if (btnMas) {
       btnMas.addEventListener('click', function(e) {
         e.stopPropagation();
+        // Si ya hay un menú abierto, cerrarlo y salir
+        var menuExistente = document.querySelector('.leads-mas-menu');
+        if (menuExistente) { menuExistente.remove(); return; }
         document.querySelectorAll('.leads-mas-menu').forEach(function(m){ m.remove(); });
         var menu = document.createElement('div');
         menu.className = 'leads-mas-menu';
