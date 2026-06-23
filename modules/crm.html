@@ -1213,10 +1213,15 @@
         prospectoId: l.id, etapa: 'lead', para: para, asunto: asunto, cuerpo: cuerpo
       });
       if (accion === 'enviar') {
-        box.querySelector('#lmail-ok').style.display = 'block';
-        btn.textContent = '\u2713 Enviado'; setTimeout(cerrar, 1800);
+        var okMsg = box.querySelector('#lmail-ok');
+        if (okMsg) { okMsg.style.display = 'block'; okMsg.style.marginTop = '12px'; }
+        btn.textContent = '\u2713 Correo enviado';
+        btn.style.background = 'var(--co-green)';
+        btn.disabled = true;
+        setTimeout(cerrar, 3000);
       } else {
         btn.textContent = '\u2713 Borrador creado';
+        btn.style.background = 'var(--co-green)';
         window.open('https://mail.google.com/mail/#drafts', '_blank');
       }
       _renderLeadsFiltered();
