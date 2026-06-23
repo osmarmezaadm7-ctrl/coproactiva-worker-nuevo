@@ -1711,6 +1711,269 @@
 
   window.abrirModalPlantillas = abrirModalPlantillas;
 
+  // ── Importar leads desde Excel ────────────────────────────
+  function abrirModalImportarLeads() {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '620px';
+
+    var btnCerrar = document.createElement('button');
+    btnCerrar.className = 'modal-close'; btnCerrar.textContent = '×';
+    box.appendChild(btnCerrar);
+
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Leads'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Importar leads desde Excel'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Carga masiva desde archivo .xlsx o .xls.'; box.appendChild(st);
+
+    // Paso 1 — plantilla
+    var paso1 = document.createElement('div');
+    paso1.style.cssText = 'background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:14px 16px;margin-bottom:16px';
+    paso1.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 1 — Descarga la plantilla</div>' +
+      '<div style="font-size:12px;color:var(--co-ink-3);margin-bottom:10px">Una fila por lead. Columnas: nombre, tipo_lead, telefono, email, contacto, cargo, comuna, direccion, constructora, fuente, observaciones.</div>';
+    var btnDesc = document.createElement('button');
+    btnDesc.className = 'btn-ghost'; btnDesc.style.fontSize = '12px';
+    btnDesc.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 3v8M5 8l3 3 3-3"/></svg> Descargar plantilla Excel';
+    btnDesc.addEventListener('click', _descargarPlantillaLeads);
+    paso1.appendChild(btnDesc);
+    box.appendChild(paso1);
+
+    // Paso 2 — upload
+    var paso2 = document.createElement('div');
+    paso2.style.cssText = 'border:1.5px dashed var(--co-line);border-radius:var(--co-r-md);padding:24px;text-align:center;margin-bottom:16px;cursor:pointer;transition:border-color 0.15s';
+    paso2.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paso 2 — Sube el archivo completado</div>' +
+      '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--co-mute)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 11v6M9 14l3-3 3 3"/></svg>' +
+      '<div style="font-size:13px;font-weight:600;color:var(--co-ink);margin-bottom:4px">Haz clic o arrastra el archivo aquí</div>' +
+      '<div style="font-size:11px;color:var(--co-mute)">.xlsx o .xls</div>';
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file'; fileInput.accept = '.xlsx,.xls'; fileInput.style.display = 'none';
+    paso2.appendChild(fileInput);
+    paso2.addEventListener('click', function() { fileInput.click(); });
+    paso2.addEventListener('dragover', function(e) { e.preventDefault(); paso2.style.borderColor = 'var(--co-orange)'; });
+    paso2.addEventListener('dragleave', function() { paso2.style.borderColor = 'var(--co-line)'; });
+    paso2.addEventListener('drop', function(e) {
+      e.preventDefault(); paso2.style.borderColor = 'var(--co-line)';
+      var f = e.dataTransfer.files[0];
+      if (f) _procesarArchivoLeads(f, box, overlay);
+    });
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files[0]) _procesarArchivoLeads(fileInput.files[0], box, overlay);
+    });
+    box.appendChild(paso2);
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none'; box.appendChild(errDiv);
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    var cerrar = function() { overlay.remove(); };
+    btnCerrar.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+  }
+
+  function _descargarPlantillaLeads() {
+    var cargar = function() {
+      var headers = ['nombre','tipo_lead','telefono','email','contacto','cargo','comuna','direccion','constructora','fuente','observaciones'];
+      var ejemplos = [
+        ['Edificio Las Rosas','comunidad_existente','+56987654321','contacto@lasrosas.cl','Carlos Méndez','Presidente comité','San Bernardo','Av. Principal 123','','referido','Contrato vence en agosto'],
+        ['Proyecto Parque Verde','proyecto_nuevo','+56912345678','gerente@inmobiliaria.cl','Felipe Rivas','Gerente proyecto','Puente Alto','Los Aromos 456','Inmobiliaria Del Valle','web','Entrega estimada dic 2026']
+      ];
+      var wb = XLSX.utils.book_new();
+      var data = [headers].concat(ejemplos);
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [20,18,14,26,22,18,14,20,20,12,24].map(function(w){ return { wch: w }; });
+      XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+      // Hoja instrucciones
+      var inst = [
+        ['CoproActiva — Plantilla importación de Leads',''],
+        ['',''],
+        ['Campo','Descripción'],
+        ['nombre','Nombre del condominio o proyecto (OBLIGATORIO)'],
+        ['tipo_lead','comunidad_existente ó proyecto_nuevo (por defecto: proyecto_nuevo)'],
+        ['telefono','Teléfono de contacto'],
+        ['email','Email de contacto (usado para detectar duplicados)'],
+        ['contacto','Nombre del contacto'],
+        ['cargo','Cargo del contacto (ej: Presidente comité)'],
+        ['comuna','Comuna'],
+        ['direccion','Dirección'],
+        ['constructora','Constructora o inmobiliaria (solo para proyectos nuevos)'],
+        ['fuente','Origen del lead: web, referido, Facebook, Instagram, otro'],
+        ['observaciones','Notas adicionales']
+      ];
+      var wsI = XLSX.utils.aoa_to_sheet(inst);
+      wsI['!cols'] = [{ wch: 22 }, { wch: 60 }];
+      XLSX.utils.book_append_sheet(wb, wsI, 'Instrucciones');
+      XLSX.writeFile(wb, 'Plantilla_Leads_CoproActiva.xlsx');
+    };
+    if (typeof XLSX === 'undefined') {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = cargar; document.head.appendChild(s);
+    } else { cargar(); }
+  }
+
+  function _procesarArchivoLeads(file, box, overlay) {
+    var cargar = function() {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var wb = XLSX.read(e.target.result, { type: 'array' });
+          var hoja = wb.Sheets[wb.SheetNames[0]];
+          var filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+          // Normalizar keys
+          filas = filas.map(function(f) {
+            var norm = {};
+            Object.keys(f).forEach(function(k) { norm[k.trim().toLowerCase()] = f[k]; });
+            return norm;
+          });
+          // Filtrar filas sin nombre
+          filas = filas.filter(function(f) { return String(f.nombre || '').trim() !== ''; });
+          if (!filas.length) {
+            var errDiv = box.querySelector('.form-error');
+            if (errDiv) { errDiv.textContent = 'No se encontraron filas válidas. Revisa que la primera columna sea "nombre".'; errDiv.style.display = 'block'; }
+            return;
+          }
+          _previsualizarLeads(filas, box, overlay);
+        } catch(err) {
+          var errDiv = box.querySelector('.form-error');
+          if (errDiv) { errDiv.textContent = 'Error al leer el archivo: ' + err.message; errDiv.style.display = 'block'; }
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
+    if (typeof XLSX === 'undefined') {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = cargar; document.head.appendChild(s);
+    } else { cargar(); }
+  }
+
+  function _previsualizarLeads(filas, box, overlay) {
+    // Detectar duplicados contra leads existentes
+    var duplicados = filas.filter(function(f) {
+      var nombre = String(f.nombre || '').toLowerCase().trim();
+      var email  = String(f.email  || '').toLowerCase().trim();
+      return leads.some(function(l) {
+        var lNombre = String(l.nombreCondominio || '').toLowerCase().trim();
+        var lEmail  = String(l.email            || '').toLowerCase().trim();
+        return (email && lEmail && email === lEmail) || (nombre && lNombre && nombre === lNombre);
+      });
+    });
+    var nuevos = filas.length - duplicados.length;
+
+    box.innerHTML = '';
+    var btnCerrar2 = document.createElement('button'); btnCerrar2.className = 'modal-close'; btnCerrar2.textContent = '×';
+    btnCerrar2.addEventListener('click', function() { overlay.remove(); });
+    box.appendChild(btnCerrar2);
+
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Confirmar importación'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Previsualizar leads'; box.appendChild(tt);
+
+    // KPIs
+    var kpis = document.createElement('div');
+    kpis.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px';
+    function kpi(n, lbl, col) {
+      return '<div style="background:var(--co-cream-deep);border-radius:var(--co-r-md);padding:10px 12px;text-align:center">' +
+        '<div style="font-size:20px;font-weight:800;color:' + col + ';letter-spacing:-0.02em">' + n + '</div>' +
+        '<div style="font-size:10px;color:var(--co-mute);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px">' + lbl + '</div>' +
+      '</div>';
+    }
+    kpis.innerHTML = kpi(filas.length, 'Total filas', 'var(--co-ink)') +
+                     kpi(nuevos, 'Nuevos', 'var(--co-green)') +
+                     kpi(duplicados.length, 'Duplicados', duplicados.length > 0 ? 'var(--co-amber)' : 'var(--co-mute)');
+    box.appendChild(kpis);
+
+    // Aviso duplicados
+    if (duplicados.length > 0) {
+      var avDup = document.createElement('div');
+      avDup.style.cssText = 'background:var(--co-amber-soft);border-radius:var(--co-r-md);padding:10px 14px;font-size:12px;font-weight:600;color:var(--co-amber);margin-bottom:12px;display:flex;align-items:flex-start;gap:8px';
+      avDup.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M8 5v4M8 11v1"/><circle cx="8" cy="8" r="6"/></svg>' +
+        '<span>' + duplicados.length + ' lead(s) ya existen (mismo nombre o email). Puedes importarlos igual o ignorarlos.</span>';
+      box.appendChild(avDup);
+    }
+
+    // Preview tabla
+    var prevTit = document.createElement('div');
+    prevTit.style.cssText = 'font-size:11px;font-weight:700;color:var(--co-mute);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px';
+    prevTit.textContent = 'Vista previa (primeras 5 filas)';
+    box.appendChild(prevTit);
+
+    var wrap = document.createElement('div'); wrap.style.cssText = 'overflow-x:auto;margin-bottom:14px';
+    var tabla = document.createElement('table'); tabla.className = 'leads-table';
+    var thead = document.createElement('thead'); var trh = document.createElement('tr');
+    ['Nombre','Tipo','Contacto','Email','Comuna'].forEach(function(h) {
+      var th = document.createElement('th'); th.textContent = h; trh.appendChild(th);
+    });
+    thead.appendChild(trh); tabla.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    filas.slice(0, 5).forEach(function(f) {
+      var isDup = duplicados.indexOf(f) !== -1;
+      var tr = document.createElement('tr');
+      if (isDup) tr.style.background = 'var(--co-amber-soft)';
+      [String(f.nombre||'—'), String(f.tipo_lead||'proyecto_nuevo'), String(f.contacto||'—'), String(f.email||'—'), String(f.comuna||'—')].forEach(function(v) {
+        var td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    if (filas.length > 5) {
+      var trM = document.createElement('tr'); var tdM = document.createElement('td');
+      tdM.colSpan = 5; tdM.style.cssText = 'text-align:center;color:var(--co-mute);font-size:11px;padding:8px';
+      tdM.textContent = '+ ' + (filas.length - 5) + ' filas más';
+      trM.appendChild(tdM); tbody.appendChild(trM);
+    }
+    tabla.appendChild(tbody); wrap.appendChild(tabla); box.appendChild(wrap);
+
+    var errDiv2 = document.createElement('div'); errDiv2.className = 'form-error'; errDiv2.style.display = 'none'; box.appendChild(errDiv2);
+
+    // Botones
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:grid;gap:8px';
+    btnRow.innerHTML = nuevos > 0
+      ? '<button class="btn-guardar" id="btn-imp-nuevos" style="background:var(--co-green)">Importar ' + nuevos + ' nuevo(s) (ignorar duplicados)</button>'
+      : '';
+    if (duplicados.length > 0) {
+      btnRow.innerHTML += '<button class="btn-guardar" id="btn-imp-todos" style="background:var(--co-amber);margin-top:0">Importar todos (' + filas.length + ') incluyendo duplicados</button>';
+    }
+    btnRow.innerHTML += '<button class="btn-ghost" id="btn-imp-volver" style="margin-top:4px;justify-content:center">← Volver</button>';
+    box.appendChild(btnRow);
+
+    var btnVolver = box.querySelector('#btn-imp-volver');
+    if (btnVolver) btnVolver.addEventListener('click', function() { overlay.remove(); abrirModalImportarLeads(); });
+
+    var btnNuevos = box.querySelector('#btn-imp-nuevos');
+    if (btnNuevos) btnNuevos.addEventListener('click', function() {
+      _ejecutarImportacionLeads(filas, false, btnNuevos, errDiv2, overlay);
+    });
+
+    var btnTodos = box.querySelector('#btn-imp-todos');
+    if (btnTodos) btnTodos.addEventListener('click', function() {
+      if (!confirm('¿Importar también los ' + duplicados.length + ' duplicados?')) return;
+      _ejecutarImportacionLeads(filas, true, btnTodos, errDiv2, overlay);
+    });
+  }
+
+  async function _ejecutarImportacionLeads(filas, forzar, btn, errDiv, overlay) {
+    btn.disabled = true; btn.textContent = 'Importando…';
+    var accion = forzar ? 'importarLeadsForzado' : 'importarLeads';
+    var resp = await api('/leads', 'POST', { action: accion, filas: filas });
+    var r = (resp.data && resp.data.data) ? resp.data.data : (resp.data || {});
+    if (resp.ok && (r.ok !== false)) {
+      btn.textContent = '✓ ' + (r.importados || filas.length) + ' leads importados';
+      btn.style.background = 'var(--co-green)';
+      // Recargar leads
+      api('/leads').then(function(respL) {
+        if (respL.ok && respL.data && respL.data.ok) {
+          leads = respL.data.data || [];
+          var cont = document.getElementById('crm-tab-content');
+          if (cont && _tabActiva === 'leads') renderLeads(cont);
+        }
+      });
+      setTimeout(function() { overlay.remove(); }, 1400);
+    } else {
+      errDiv.textContent = r.error || resp.error || 'Error al importar';
+      errDiv.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Reintentar';
+    }
+  }
+
   init();
 })();
 </script>
