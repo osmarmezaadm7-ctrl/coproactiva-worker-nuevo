@@ -158,7 +158,17 @@
   .leads-btn-mas-opciones { display: none; }
 
   /* ── Leads sticky header ── */
-  .leads-sticky { position: sticky; top: 0; z-index: 10; background: var(--co-surface); padding-bottom: 8px; }
+  .leads-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--co-cream);
+    padding: 8px 0;
+    margin: -8px 0 0;
+    box-shadow: 0 2px 8px rgba(26,23,20,0.06);
+  }
+  /* Compensar el sticky del page-header del módulo padre */
+  @media (min-width: 768px) { .leads-sticky { top: 0; } }
 
   /* ── Leads importar btn desktop destacado ── */
   .leads-btn-importar-destac { background: var(--co-orange) !important; color: #fff !important; border-color: var(--co-orange) !important; }
@@ -669,8 +679,16 @@
       barraMob.querySelector('#mob-btn-archivar').addEventListener('click', function() { _archivarMasivo(); });
       barraMob.querySelector('#mob-btn-cancelar').addEventListener('click', function() {
         _leadSelIds = [];
-        cards.querySelectorAll('.lead-card').forEach(function(c){ c.classList.remove('selected'); });
-        barraMob.classList.remove('visible');
+        // Re-buscar el barraMob actual en el DOM (puede haber cambiado)
+        var barActual = document.getElementById('lead-masiva-mob');
+        var cardsActual = document.getElementById('leads-cards');
+        if (cardsActual) cardsActual.querySelectorAll('.lead-card').forEach(function(c){ c.classList.remove('selected'); });
+        if (barActual) {
+          barActual.classList.remove('visible');
+          var lbl = barActual.querySelector('#lead-masiva-mob-lbl');
+          if (lbl) lbl.textContent = '0 seleccionados';
+        }
+        _actualizarBarraMasiva();
       });
     }
 
