@@ -163,12 +163,10 @@
     top: 0;
     z-index: 10;
     background: var(--co-cream);
-    padding: 8px 0;
-    margin: -8px 0 0;
-    box-shadow: 0 2px 8px rgba(26,23,20,0.06);
+    padding: 8px 0 10px;
+    margin: 0 0 4px;
+    box-shadow: 0 3px 10px rgba(26,23,20,0.07);
   }
-  /* Compensar el sticky del page-header del módulo padre */
-  @media (min-width: 768px) { .leads-sticky { top: 0; } }
 
   /* ── Leads importar btn desktop destacado ── */
   .leads-btn-importar-destac { background: var(--co-orange) !important; color: #fff !important; border-color: var(--co-orange) !important; }
@@ -662,34 +660,42 @@
       '</tr>';
     }).join('');
 
-    // Barra masiva móvil
+    // Barra masiva móvil — solo crear si no existe
     if (cards) {
-      var barraMob = document.createElement('div');
-      barraMob.id = 'lead-masiva-mob';
-      barraMob.className = 'lead-masiva-mobile';
-      barraMob.innerHTML =
-        '<span id="lead-masiva-mob-lbl" style="flex:1;font-size:12px;font-weight:700">0 seleccionados</span>' +
-        '<button class="btn-masiva-mob" id="mob-btn-correo"><i class="ti ti-mail"></i> Correo</button>' +
-        '<button class="btn-masiva-mob" id="mob-btn-estado"><i class="ti ti-tag"></i> Estado</button>' +
-        '<button class="btn-masiva-mob" id="mob-btn-archivar"><i class="ti ti-archive"></i></button>' +
-        '<button class="btn-masiva-mob cancel" id="mob-btn-cancelar">Cancelar</button>';
-      cards.parentElement.insertBefore(barraMob, cards);
-      barraMob.querySelector('#mob-btn-correo').addEventListener('click', function() { abrirModalCorreoMasivo(); });
-      barraMob.querySelector('#mob-btn-estado').addEventListener('click', function() { abrirModalEstadoMasivo(); });
-      barraMob.querySelector('#mob-btn-archivar').addEventListener('click', function() { _archivarMasivo(); });
-      barraMob.querySelector('#mob-btn-cancelar').addEventListener('click', function() {
-        _leadSelIds = [];
-        // Re-buscar el barraMob actual en el DOM (puede haber cambiado)
-        var barActual = document.getElementById('lead-masiva-mob');
-        var cardsActual = document.getElementById('leads-cards');
-        if (cardsActual) cardsActual.querySelectorAll('.lead-card').forEach(function(c){ c.classList.remove('selected'); });
-        if (barActual) {
-          barActual.classList.remove('visible');
-          var lbl = barActual.querySelector('#lead-masiva-mob-lbl');
-          if (lbl) lbl.textContent = '0 seleccionados';
-        }
-        _actualizarBarraMasiva();
-      });
+      var barraMob = document.getElementById('lead-masiva-mob');
+      if (!barraMob) {
+        barraMob = document.createElement('div');
+        barraMob.id = 'lead-masiva-mob';
+        barraMob.className = 'lead-masiva-mobile';
+        barraMob.innerHTML =
+          '<span id="lead-masiva-mob-lbl" style="flex:1;font-size:12px;font-weight:700">0 seleccionados</span>' +
+          '<button class="btn-masiva-mob" id="mob-btn-correo"><i class="ti ti-mail"></i> Correo</button>' +
+          '<button class="btn-masiva-mob" id="mob-btn-estado"><i class="ti ti-tag"></i> Estado</button>' +
+          '<button class="btn-masiva-mob" id="mob-btn-archivar"><i class="ti ti-archive"></i></button>' +
+          '<button class="btn-masiva-mob cancel" id="mob-btn-cancelar">Cancelar</button>';
+        cards.parentElement.insertBefore(barraMob, cards);
+        // Listeners solo al crear por primera vez
+        barraMob.querySelector('#mob-btn-correo').addEventListener('click', function() { abrirModalCorreoMasivo(); });
+        barraMob.querySelector('#mob-btn-estado').addEventListener('click', function() { abrirModalEstadoMasivo(); });
+        barraMob.querySelector('#mob-btn-archivar').addEventListener('click', function() { _archivarMasivo(); });
+        barraMob.querySelector('#mob-btn-cancelar').addEventListener('click', function() {
+          _leadSelIds = [];
+          var barActual = document.getElementById('lead-masiva-mob');
+          var cardsActual = document.getElementById('leads-cards');
+          if (cardsActual) cardsActual.querySelectorAll('.lead-card').forEach(function(c){ c.classList.remove('selected'); });
+          if (barActual) {
+            barActual.classList.remove('visible');
+            var lbl = barActual.querySelector('#lead-masiva-mob-lbl');
+            if (lbl) lbl.textContent = '0 seleccionados';
+          }
+          _actualizarBarraMasiva();
+        });
+      } else {
+        // Ya existe — solo actualizar visibilidad
+        barraMob.classList.toggle('visible', _leadSelIds.length > 0);
+        var lblMobEx = barraMob.querySelector('#lead-masiva-mob-lbl');
+        if (lblMobEx) lblMobEx.textContent = _leadSelIds.length + ' seleccionado' + (_leadSelIds.length !== 1 ? 's' : '');
+      }
     }
 
     if (cards) {
@@ -2385,6 +2391,24 @@
       errDiv.style.display = 'block';
       btn.disabled = false; btn.textContent = 'Reintentar';
     }
+  }
+
+  // Sticky toolbar via scroll del contenedor padre
+  function _initStickyLeads() {
+    var sticky = document.querySelector('.leads-sticky');
+    if (!sticky) return;
+    // Buscar el contenedor con scroll
+    var scrollEl = document.getElementById('mainContent') || document.getElementById('contentArea') || window;
+    var kpis = document.querySelector('.leads-kpis');
+    if (!kpis) return;
+    var kpisBottom = kpis.getBoundingClientRect().bottom + (scrollEl === window ? 0 : scrollEl.getBoundingClientRect().top);
+    var onScroll = function() {
+      var stickyEl = document.querySelector('.leads-sticky');
+      if (!stickyEl) { scrollEl.removeEventListener('scroll', onScroll); return; }
+      // El sticky nativo ya funciona si el ancestro tiene overflow
+      // Solo necesitamos asegurar que background cubre el contenido
+    };
+    scrollEl.addEventListener('scroll', onScroll);
   }
 
   init();
