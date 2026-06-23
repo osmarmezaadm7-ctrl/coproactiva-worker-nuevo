@@ -1897,10 +1897,13 @@
     box.appendChild(prevTit);
 
     var wrap = document.createElement('div'); wrap.style.cssText = 'overflow-x:auto;margin-bottom:14px';
-    var tabla = document.createElement('table'); tabla.className = 'leads-table';
+    var tabla = document.createElement('table');
+    tabla.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px;font-family:var(--co-font)';
     var thead = document.createElement('thead'); var trh = document.createElement('tr');
     ['Nombre','Tipo','Contacto','Email','Comuna'].forEach(function(h) {
-      var th = document.createElement('th'); th.textContent = h; trh.appendChild(th);
+      var th = document.createElement('th');
+      th.style.cssText = 'font-size:10px;font-weight:700;color:var(--co-mute);text-align:left;padding:7px 10px;border-bottom:1px solid var(--co-line);letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;background:var(--co-cream-deep)';
+      th.textContent = h; trh.appendChild(th);
     });
     thead.appendChild(trh); tabla.appendChild(thead);
     var tbody = document.createElement('tbody');
@@ -1909,7 +1912,9 @@
       var tr = document.createElement('tr');
       if (isDup) tr.style.background = 'var(--co-amber-soft)';
       [String(f.nombre||'—'), String(f.tipo_lead||'proyecto_nuevo'), String(f.contacto||'—'), String(f.email||'—'), String(f.comuna||'—')].forEach(function(v) {
-        var td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+        var td = document.createElement('td');
+        td.style.cssText = 'font-size:12px;padding:8px 10px;border-bottom:1px solid var(--co-line);color:var(--co-ink);vertical-align:middle';
+        td.textContent = v; tr.appendChild(td);
       });
       tbody.appendChild(tr);
     });
@@ -1926,9 +1931,16 @@
     // Botones
     var btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:grid;gap:8px';
-    btnRow.innerHTML = nuevos > 0
-      ? '<button class="btn-guardar" id="btn-imp-nuevos" style="background:var(--co-green)">Importar ' + nuevos + ' nuevo(s) (ignorar duplicados)</button>'
-      : '';
+    // Botón importar nuevos (solo si hay nuevos)
+    if (nuevos > 0) {
+      var txtNuevos = duplicados.length > 0
+        ? 'Importar ' + nuevos + ' nuevo(s) — omitir ' + duplicados.length + ' duplicado(s)'
+        : 'Importar ' + nuevos + ' lead(s)';
+      btnRow.innerHTML = '<button class="btn-guardar" id="btn-imp-nuevos" style="background:var(--co-green);margin-top:0">' + txtNuevos + '</button>';
+    } else {
+      btnRow.innerHTML = '<div style="font-size:12px;color:var(--co-amber);font-weight:600;padding:10px 0">Todos los leads ya existen en el sistema.</div>';
+    }
+    // Botón importar todos (solo si hay duplicados)
     if (duplicados.length > 0) {
       btnRow.innerHTML += '<button class="btn-guardar" id="btn-imp-todos" style="background:var(--co-amber);margin-top:0">Importar todos (' + filas.length + ') incluyendo duplicados</button>';
     }
@@ -1953,7 +1965,25 @@
   async function _ejecutarImportacionLeads(filas, forzar, btn, errDiv, overlay) {
     btn.disabled = true; btn.textContent = 'Importando…';
     var accion = forzar ? 'importarLeadsForzado' : 'importarLeads';
-    var resp = await api('/leads', 'POST', { action: accion, filas: filas });
+    // Normalizar keys del Excel a los campos que espera Leads.gs
+    var filasNorm = filas.map(function(f) {
+      return {
+        nombreCondominio:     String(f.nombre        || '').trim(),
+        tipoLead:             String(f.tipo_lead      || 'proyecto_nuevo').trim(),
+        telefono:             String(f.telefono       || '').trim(),
+        email:                String(f.email          || '').trim(),
+        nombreContacto:       String(f.contacto       || '').trim(),
+        cargoContacto:        String(f.cargo          || '').trim(),
+        comuna:               String(f.comuna         || '').trim(),
+        direccion:            String(f.direccion      || '').trim(),
+        constructora:         String(f.constructora   || '').trim(),
+        fuenteLead:           String(f.fuente         || 'importacion').trim(),
+        observaciones:        String(f.observaciones  || '').trim(),
+        etapaObra:            String(f.etapa_obra     || '').trim(),
+        fechaEntregaEstimada: String(f.fecha_entrega  || '').trim()
+      };
+    });
+    var resp = await api('/leads', 'POST', { action: accion, filas: filasNorm });
     var r = (resp.data && resp.data.data) ? resp.data.data : (resp.data || {});
     if (resp.ok && (r.ok !== false)) {
       btn.textContent = '✓ ' + (r.importados || filas.length) + ' leads importados';
