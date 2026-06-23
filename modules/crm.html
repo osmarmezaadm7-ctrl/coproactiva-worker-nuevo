@@ -1544,13 +1544,17 @@
     if (_plantillasCache.length > 0) return _plantillasCache;
     try {
       var resp = await api('/plantillas');
-      // Worker devuelve { ok, data: { ok, data: [...] } }
-      if (resp.ok && resp.data && resp.data.ok && Array.isArray(resp.data.data)) {
-        _plantillasCache = resp.data.data;
-      } else if (resp.ok && Array.isArray(resp.data)) {
-        _plantillasCache = resp.data;
+      // Worker: { ok, data: { ok, data: [...] } }
+      var lista = null;
+      if (resp && resp.data && resp.data.data && Array.isArray(resp.data.data)) {
+        lista = resp.data.data;
+      } else if (resp && resp.data && Array.isArray(resp.data)) {
+        lista = resp.data;
+      } else if (resp && Array.isArray(resp)) {
+        lista = resp;
       }
-    } catch(e) { _plantillasCache = []; }
+      if (lista) _plantillasCache = lista;
+    } catch(e) { console.error('_fetchPlantillas error:', e); }
     return _plantillasCache;
   }
 
