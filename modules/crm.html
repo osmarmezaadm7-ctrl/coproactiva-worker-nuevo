@@ -184,6 +184,8 @@
   .lead-card.selected { border-color: var(--co-orange); background: var(--co-orange-soft); }
   .lead-masiva-mobile { display: none; position: sticky; top: 0; z-index: 20; background: var(--co-ink); color: #fff; padding: 10px 16px; border-radius: var(--co-r-md); margin-bottom: 10px; align-items: center; gap: 8px; flex-wrap: wrap; }
   .lead-masiva-mobile.visible { display: flex; }
+  @media (max-width: 767px) { #lead-masiva-bar { display: none !important; } }
+  @media (min-width: 768px) { .lead-masiva-mobile { display: none !important; } }
   .btn-masiva-mob { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 7px 12px; border-radius: var(--co-r-md); font-family: var(--co-font); font-size: 12px; font-weight: 700; cursor: pointer; }
   .btn-masiva-mob:hover { background: rgba(255,255,255,0.25); }
   .btn-masiva-mob.cancel { background: none; color: rgba(255,255,255,0.6); }
