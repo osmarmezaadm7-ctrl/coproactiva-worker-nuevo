@@ -166,8 +166,13 @@ function _iniciarApp() {
 // ── Filtrar sidebar según módulos del usuario ─────────────────────────────────
 function _filtrarSidebar(usuario) {
     if (!usuario) return;
-    const modulos = usuario.modulos || ['*'];
-    if (modulos.includes('*')) return; // superadmin/admin ven todo
+    // modulos puede llegar como string JSON o como array — normalizar
+    var modulos = usuario.modulos || ['*'];
+    if (typeof modulos === 'string') {
+        try { modulos = JSON.parse(modulos); } catch(e) { modulos = ['*']; }
+    }
+    if (!Array.isArray(modulos)) modulos = ['*'];
+    if (modulos.includes('*')) return; // acceso total
 
     // Sidebar desktop — ocultar módulos no permitidos
     document.querySelectorAll('.mod-row[data-mod]').forEach(btn => {
@@ -489,6 +494,20 @@ function _perfilCambiarTab(tab) {
 
 // ── Router principal ──────────────────────────────────────────────────────────
 async function cargarModulo(modulo) {
+    // Guard: verificar que el usuario tiene acceso al módulo
+    const usuario = _getUsuario();
+    if (usuario) {
+        var modsPermitidos = usuario.modulos || ['*'];
+        if (typeof modsPermitidos === 'string') {
+            try { modsPermitidos = JSON.parse(modsPermitidos); } catch(e) { modsPermitidos = ['*']; }
+        }
+        if (!Array.isArray(modsPermitidos)) modsPermitidos = ['*'];
+        if (!modsPermitidos.includes('*') && !modsPermitidos.includes(modulo)) {
+            console.warn('Acceso denegado al módulo:', modulo);
+            return;
+        }
+    }
+
     const contentArea = document.getElementById('contentArea');
 
     if (currentModuleElement) {
