@@ -1,9 +1,33 @@
 // app.js — CoproActiva
-// Versión: 4.1 · Junio 2026 · agrega módulo Comunidades
+// Versión: 5.0 · Junio 2026 · sistema de usuarios con email+clave
 // Mantiene toda la lógica original intacta.
 
 var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
-var ACCESS_KEY = 'copro2025';
+
+// ── Sesión ────────────────────────────────────────────────────────────────────
+// El token ahora es HMAC generado por el Worker, no la clave en texto plano.
+// Se guarda en sessionStorage junto con los datos del usuario.
+
+function _getToken()    { return sessionStorage.getItem('token') || ''; }
+function _getUsuario()  { try { return JSON.parse(sessionStorage.getItem('usuario') || 'null'); } catch(e) { return null; } }
+function _getSesionOk() { return !!_getToken() && !!_getUsuario(); }
+
+function _guardarSesion(data) {
+    sessionStorage.setItem('token',    data.token);
+    sessionStorage.setItem('usuario',  JSON.stringify({
+        id:          data.id,
+        nombre:      data.nombre,
+        email:       data.email,
+        rol:         data.rol,
+        modulos:     data.modulos,
+        comunidades: data.comunidades,
+    }));
+}
+
+function _cerrarSesion() {
+    sessionStorage.clear();
+    location.reload();
+}
 
 let currentModule = 'crm';
 const moduleElements = {};
@@ -19,40 +43,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginScreen  = document.getElementById('loginScreen');
     const appContainer = document.getElementById('app');
     const loginBtn     = document.getElementById('loginBtn');
-    const claveInput   = document.getElementById('claveInput');
     const loginError   = document.getElementById('loginError');
 
-    loginBtn.addEventListener('click', () => {
-        const clave = claveInput.value;
-        if (clave === ACCESS_KEY) {
-            sessionStorage.setItem('token', clave);
+    // ── Login con email + clave ───────────────────────────────────────────────
+    async function doLogin() {
+        const email = (document.getElementById('emailInput')?.value || '').trim();
+        const clave = (document.getElementById('claveInput')?.value || '').trim();
+        if (!email || !clave) {
+            loginError.textContent = 'Ingresa tu email y clave';
+            return;
+        }
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Ingresando…';
+        loginError.textContent = '';
+        try {
+            const resp = await fetch(`${WORKER_URL}/auth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, clave }),
+            });
+            const json = await resp.json();
+            if (!json.ok) {
+                loginError.textContent = json.error || 'Credenciales incorrectas';
+                return;
+            }
+            _guardarSesion(json.data);
             loginScreen.style.display = 'none';
             appContainer.style.display = 'flex';
-            cargarModulo(currentModule);
-        } else {
-            loginError.textContent = 'Clave incorrecta';
+            _iniciarApp();
+        } catch(e) {
+            loginError.textContent = 'Error de conexión. Intenta nuevamente.';
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Ingresar';
         }
-    });
-
-    claveInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') loginBtn.click();
-    });
-
-    if (sessionStorage.getItem('token') === ACCESS_KEY) {
-        loginScreen.style.display = 'none';
-        appContainer.style.display = 'flex';
-        cargarModulo(currentModule);
     }
 
-    document.querySelectorAll('.nav-btn[data-modulo]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modulo = btn.getAttribute('data-modulo');
-            document.querySelectorAll('.nav-btn[data-modulo]').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll(`.nav-btn[data-modulo="${modulo}"]`).forEach(b => b.classList.add('active'));
-            currentModule = modulo;
-            cargarModulo(modulo);
-        });
+    loginBtn.addEventListener('click', doLogin);
+
+    document.getElementById('claveInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
     });
+    document.getElementById('emailInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+    });
+
+    // ── Sesión activa ─────────────────────────────────────────────────────────
+    if (_getSesionOk()) {
+        loginScreen.style.display = 'none';
+        appContainer.style.display = 'flex';
+        _iniciarApp();
+        return;
+    }
 
     // Escuchar mensajes del iframe del diagnóstico
     window.addEventListener('message', function(event) {
@@ -83,6 +125,158 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ── Iniciar app post-login ────────────────────────────────────────────────────
+function _iniciarApp() {
+    const usuario = _getUsuario();
+
+    // Mostrar nombre real en el avatar del sidebar
+    const avatarNombre = document.getElementById('sidebarUserName');
+    const avatarInicial = document.getElementById('sidebarUserInitial');
+    if (avatarNombre && usuario) avatarNombre.textContent = usuario.nombre;
+    if (avatarInicial && usuario) avatarInicial.textContent = usuario.nombre.charAt(0).toUpperCase();
+
+    // Filtrar sidebar según módulos del usuario
+    _filtrarSidebar(usuario);
+
+    // Botón cerrar sesión
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) btnLogout.addEventListener('click', _cerrarSesion);
+
+    // Botón cambiar clave
+    const btnCambiarClave = document.getElementById('btnCambiarClave');
+    if (btnCambiarClave) btnCambiarClave.addEventListener('click', _abrirModalCambiarClave);
+
+    // Navegación sidebar
+    document.querySelectorAll('.nav-btn[data-modulo]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modulo = btn.getAttribute('data-modulo');
+            document.querySelectorAll('.nav-btn[data-modulo]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll(`.nav-btn[data-modulo="${modulo}"]`).forEach(b => b.classList.add('active'));
+            currentModule = modulo;
+            cargarModulo(modulo);
+        });
+    });
+
+    cargarModulo(currentModule);
+}
+
+// ── Filtrar sidebar según módulos del usuario ─────────────────────────────────
+function _filtrarSidebar(usuario) {
+    if (!usuario) return;
+    const modulos = usuario.modulos || ['*'];
+    if (modulos.includes('*')) return; // superadmin/admin ven todo
+
+    document.querySelectorAll('.nav-btn[data-modulo]').forEach(btn => {
+        const modulo = btn.getAttribute('data-modulo');
+        if (!modulos.includes(modulo)) {
+            btn.style.display = 'none';
+        }
+    });
+
+    // Ocultar también items del menú de navegación por data-nav
+    document.querySelectorAll('[data-nav-modulo]').forEach(el => {
+        const modulo = el.getAttribute('data-nav-modulo');
+        if (!modulos.includes(modulo)) {
+            el.style.display = 'none';
+        }
+    });
+}
+
+// ── Modal cambiar clave ───────────────────────────────────────────────────────
+function _abrirModalCambiarClave() {
+    // Crear modal si no existe
+    if (document.getElementById('modalCambiarClave')) {
+        document.getElementById('modalCambiarClave').style.display = 'flex';
+        return;
+    }
+    const overlay = document.createElement('div');
+    overlay.id = 'modalCambiarClave';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:12px;padding:28px;width:360px;max-width:90vw;display:flex;flex-direction:column;gap:14px';
+
+    const titulo = document.createElement('div');
+    titulo.style.cssText = 'font-size:16px;font-weight:800;color:#1A1714;letter-spacing:-0.02em';
+    titulo.textContent = 'Cambiar clave';
+
+    const errMsg = document.createElement('div');
+    errMsg.style.cssText = 'color:#e53e3e;font-size:12px;font-weight:600;min-height:16px';
+
+    function crearCampo(label, id) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;gap:5px';
+        const lbl = document.createElement('label');
+        lbl.textContent = label;
+        lbl.style.cssText = 'font-size:12px;font-weight:700;color:#6B6560';
+        const inp = document.createElement('input');
+        inp.type = 'password';
+        inp.id = id;
+        inp.style.cssText = 'border:1.5px solid #E5DDD4;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none';
+        wrap.appendChild(lbl);
+        wrap.appendChild(inp);
+        return wrap;
+    }
+
+    const campoActual = crearCampo('Clave actual', 'cc-actual');
+    const campoNueva  = crearCampo('Clave nueva',  'cc-nueva');
+    const campoRepeat = crearCampo('Repetir clave nueva', 'cc-repetir');
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;margin-top:4px';
+
+    const btnGuardar = document.createElement('button');
+    btnGuardar.textContent = 'Guardar';
+    btnGuardar.style.cssText = 'flex:1;background:#D9853B;color:#fff;border:none;border-radius:8px;padding:11px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit';
+
+    const btnCancelar = document.createElement('button');
+    btnCancelar.textContent = 'Cancelar';
+    btnCancelar.style.cssText = 'flex:1;background:#F5EFE8;color:#1A1714;border:none;border-radius:8px;padding:11px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit';
+    btnCancelar.addEventListener('click', () => overlay.style.display = 'none');
+
+    btnGuardar.addEventListener('click', async () => {
+        const actual   = document.getElementById('cc-actual')?.value || '';
+        const nueva    = document.getElementById('cc-nueva')?.value  || '';
+        const repetir  = document.getElementById('cc-repetir')?.value || '';
+        errMsg.textContent = '';
+
+        if (!actual || !nueva || !repetir) { errMsg.textContent = 'Completa todos los campos'; return; }
+        if (nueva !== repetir)             { errMsg.textContent = 'Las claves nuevas no coinciden'; return; }
+        if (nueva.length < 6)              { errMsg.textContent = 'La clave nueva debe tener al menos 6 caracteres'; return; }
+
+        btnGuardar.disabled = true;
+        btnGuardar.textContent = 'Guardando…';
+        try {
+            const usuario = _getUsuario();
+            const resp = await apiCall('/usuarios', 'POST', {
+                action:       'cambiarClave',
+                id:           usuario.id,
+                claveActual:  actual,
+                claveNueva:   nueva,
+            });
+            if (!resp.ok) { errMsg.textContent = resp.error || 'Error al cambiar clave'; return; }
+            overlay.style.display = 'none';
+            alert('Clave actualizada correctamente.');
+        } catch(e) {
+            errMsg.textContent = 'Error de conexión';
+        } finally {
+            btnGuardar.disabled = false;
+            btnGuardar.textContent = 'Guardar';
+        }
+    });
+
+    btnRow.appendChild(btnGuardar);
+    btnRow.appendChild(btnCancelar);
+    card.appendChild(titulo);
+    card.appendChild(errMsg);
+    card.appendChild(campoActual);
+    card.appendChild(campoNueva);
+    card.appendChild(campoRepeat);
+    card.appendChild(btnRow);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+}
 
 // ── Router principal ──────────────────────────────────────────────────────────
 async function cargarModulo(modulo) {
@@ -340,7 +534,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     const options = {
         method,
         headers: {
-            'Authorization': `Bearer ${ACCESS_KEY}`,
+            'Authorization': `Bearer ${_getToken()}`,
             'Content-Type': 'application/json'
         }
     };
