@@ -529,11 +529,31 @@ function _topAction(modId) {
 function abrirMenuMovil() {
   const sb = document.querySelector('.sidebar');
   if (sb) {
-    sb.style.display = sb.style.display === 'flex' ? 'none' : 'flex';
+    const visible = sb.style.display === 'flex';
+    sb.style.display  = visible ? 'none' : 'flex';
     sb.style.position = 'fixed';
     sb.style.zIndex   = '200';
-    sb.style.top = '0'; sb.style.left = '0'; sb.style.bottom = '0';
-    sb.style.overflowY = 'auto';
+    sb.style.top      = '0';
+    sb.style.left     = '0';
+    sb.style.bottom   = '0';
+    sb.style.width    = '260px';
+    sb.style.overflowY = 'hidden';
+    sb.style.flexDirection = 'column';
+    sb.style.height = '100%';
+    // El área de nav scrollea internamente, el footer queda fijo abajo
+    var navArea = sb.querySelector('#sbNavArea');
+    if (navArea) { navArea.style.overflowY = 'auto'; navArea.style.flex = '1'; }
+    // Cerrar al tocar fuera
+    if (!visible) {
+      setTimeout(function() {
+        document.addEventListener('click', function cerrarSb(e) {
+          if (!sb.contains(e.target)) {
+            sb.style.display = 'none';
+            document.removeEventListener('click', cerrarSb);
+          }
+        });
+      }, 50);
+    }
   }
 }
 
