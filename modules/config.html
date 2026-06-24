@@ -125,14 +125,19 @@
     modoEdicion: false,
     idEditando: null,
     MODULOS: [
-      { id: 'crm',            label: 'CRM' },
+      { id: 'panel',          label: 'Panel maestro' },
       { id: 'comunidades',    label: 'Comunidades' },
+      { id: 'crm',            label: 'CRM' },
+      { id: 'flujo',          label: 'Flujo comercial' },
       { id: 'finanzas',       label: 'Finanzas' },
+      { id: 'servicios',      label: 'Servicios comunes' },
       { id: 'remuneraciones', label: 'Remuneraciones' },
       { id: 'mantenciones',   label: 'Mantenciones' },
       { id: 'incidencias',    label: 'Incidencias' },
       { id: 'comunicaciones', label: 'Comunicaciones' },
       { id: 'documentos',     label: 'Documentos' },
+      { id: 'reportes',       label: 'Reportes' },
+      { id: 'config',         label: 'Configuración' },
     ],
     ROLES: {
       superadmin:   'Superadmin',
@@ -231,11 +236,12 @@
     panel.className = 'com-tab-content act';
     root.appendChild(panel);
 
-    if (!usuario || usuario.rol !== 'superadmin') {
+    var esSuperadmin = usuario && usuario.rol === 'superadmin';
+    if (!esSuperadmin) {
       var aviso = document.createElement('div');
-      aviso.className = 'com-error';
-      aviso.style.margin = '20px 0';
-      aviso.textContent = 'Solo el superadministrador puede gestionar usuarios.';
+      aviso.style.cssText = 'background:var(--co-cream-deep);border:1px solid var(--co-line);border-radius:var(--co-r-lg);padding:20px 24px;margin:0 0 20px';
+      aviso.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--co-ink-2)">La gestión de usuarios está disponible solo para el superadministrador.</div>' +
+        '<div style="font-size:12px;color:var(--co-mute);margin-top:4px">Para modificar permisos contacta al administrador del sistema.</div>';
       panel.appendChild(aviso);
       return;
     }
