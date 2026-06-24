@@ -139,13 +139,12 @@ function _iniciarApp() {
     // Filtrar sidebar según módulos del usuario
     _filtrarSidebar(usuario);
 
-    // Botón cerrar sesión
-    const btnLogout = document.getElementById('btnLogout');
-    if (btnLogout) btnLogout.addEventListener('click', _cerrarSesion);
-
-    // Botón cambiar clave
-    const btnCambiarClave = document.getElementById('btnCambiarClave');
-    if (btnCambiarClave) btnCambiarClave.addEventListener('click', _abrirModalCambiarClave);
+    // Menú de usuario (tres puntos en el footer del sidebar)
+    const btnUserMenu = document.getElementById('btnUserMenu');
+    if (btnUserMenu) btnUserMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+        _abrirMenuUsuario(btnUserMenu);
+    });
 
     // Navegación sidebar
     document.querySelectorAll('.nav-btn[data-modulo]').forEach(btn => {
@@ -183,100 +182,262 @@ function _filtrarSidebar(usuario) {
     });
 }
 
-// ── Modal cambiar clave ───────────────────────────────────────────────────────
+// ── Menú contextual de usuario ───────────────────────────────────────────────
+function _abrirMenuUsuario(ancla) {
+    // Eliminar menú previo si existe
+    var prev = document.getElementById('menuUsuarioCtx');
+    if (prev) { prev.remove(); return; }
+
+    var menu = document.createElement('div');
+    menu.id = 'menuUsuarioCtx';
+    menu.style.cssText = 'position:fixed;background:#fff;border:1px solid var(--co-line);border-radius:var(--co-r-md);box-shadow:var(--co-shadow-lg);z-index:9998;min-width:180px;padding:4px 0;font-family:var(--co-font)';
+
+    var rect = ancla.getBoundingClientRect();
+    menu.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+    menu.style.left   = rect.left + 'px';
+
+    function item(icono, texto, fn, color) {
+        var btn = document.createElement('button');
+        btn.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:none;border:none;font-family:var(--co-font);font-size:13px;font-weight:600;color:' + (color || 'var(--co-ink)') + ';cursor:pointer;text-align:left';
+        btn.innerHTML = icono + '<span>' + texto + '</span>';
+        btn.addEventListener('mouseenter', function() { btn.style.background = 'var(--co-cream)'; });
+        btn.addEventListener('mouseleave', function() { btn.style.background = 'none'; });
+        btn.addEventListener('click', function() { menu.remove(); fn(); });
+        menu.appendChild(btn);
+    }
+
+    var icoUser = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M3 14c0-3 2-5 5-5s5 2 5 5"/></svg>';
+    var icoOut  = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10H3m3-3L3 10l3 3"/><path d="M7 6V4a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1H8a1 1 0 01-1-1v-2"/></svg>';
+
+    item(icoUser, 'Mi perfil', _abrirModalPerfil);
+
+    var sep = document.createElement('div');
+    sep.style.cssText = 'height:1px;background:var(--co-line);margin:4px 0';
+    menu.appendChild(sep);
+
+    item(icoOut, 'Cerrar sesión', _cerrarSesion, 'var(--co-red)');
+
+    document.body.appendChild(menu);
+
+    var cerrar = function(ev) {
+        if (!menu.contains(ev.target) && ev.target !== ancla) {
+            menu.remove();
+            document.removeEventListener('click', cerrar);
+        }
+    };
+    setTimeout(function() { document.addEventListener('click', cerrar); }, 50);
+}
+
+// ── Modal de perfil (todos los usuarios) ─────────────────────────────────────
 function _abrirModalCambiarClave() {
-    // Crear modal si no existe
-    if (document.getElementById('modalCambiarClave')) {
-        document.getElementById('modalCambiarClave').style.display = 'flex';
+    _abrirModalPerfil();
+}
+
+function _abrirModalPerfil() {
+    if (document.getElementById('modalPerfil')) {
+        document.getElementById('modalPerfil').style.display = 'flex';
+        _perfilCambiarTab('datos');
         return;
     }
-    const overlay = document.createElement('div');
-    overlay.id = 'modalCambiarClave';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
 
-    const card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border-radius:12px;padding:28px;width:360px;max-width:90vw;display:flex;flex-direction:column;gap:14px';
+    var usuario = _getUsuario();
+    if (!usuario) return;
 
-    const titulo = document.createElement('div');
-    titulo.style.cssText = 'font-size:16px;font-weight:800;color:#1A1714;letter-spacing:-0.02em';
-    titulo.textContent = 'Cambiar clave';
+    var overlay = document.createElement('div');
+    overlay.id = 'modalPerfil';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(26,23,20,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;z-index:9999';
 
-    const errMsg = document.createElement('div');
-    errMsg.style.cssText = 'color:#e53e3e;font-size:12px;font-weight:600;min-height:16px';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:var(--co-surface);border-radius:var(--co-r-lg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:var(--co-shadow-lg)';
 
-    function crearCampo(label, id) {
-        const wrap = document.createElement('div');
-        wrap.style.cssText = 'display:flex;flex-direction:column;gap:5px';
-        const lbl = document.createElement('label');
-        lbl.textContent = label;
-        lbl.style.cssText = 'font-size:12px;font-weight:700;color:#6B6560';
-        const inp = document.createElement('input');
-        inp.type = 'password';
-        inp.id = id;
-        inp.style.cssText = 'border:1.5px solid #E5DDD4;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none';
+    // ── Header con avatar ──
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:20px 24px 16px;border-bottom:1px solid var(--co-line);display:flex;align-items:center;gap:14px';
+    var av = document.createElement('div');
+    av.style.cssText = 'width:46px;height:46px;border-radius:50%;background:var(--co-orange);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:-0.01em';
+    av.textContent = usuario.nombre.charAt(0).toUpperCase();
+    var info = document.createElement('div');
+    info.style.flex = '1';
+    var nm = document.createElement('div');
+    nm.style.cssText = 'font-size:15px;font-weight:700;color:var(--co-ink);letter-spacing:-0.01em';
+    nm.textContent = usuario.nombre;
+    var em = document.createElement('div');
+    em.style.cssText = 'font-size:12px;color:var(--co-mute);margin-top:2px';
+    em.textContent = usuario.email;
+    var rolSpan = document.createElement('span');
+    var rolColors = { superadmin:'background:#FEF3C7;color:#92400E', admin:'background:var(--co-blue-soft);color:var(--co-blue)', operador:'background:#EDE9FE;color:#5B21B6', visualizador:'background:var(--co-cream-deep);color:var(--co-mute)' };
+    rolSpan.style.cssText = 'display:inline-block;margin-top:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;' + (rolColors[usuario.rol] || rolColors.visualizador);
+    rolSpan.textContent = { superadmin:'Superadmin', admin:'Admin', operador:'Operador', visualizador:'Visualizador' }[usuario.rol] || usuario.rol;
+    info.appendChild(nm); info.appendChild(em); info.appendChild(rolSpan);
+    var btnX = document.createElement('button');
+    btnX.style.cssText = 'background:var(--co-cream);border:1px solid var(--co-line);border-radius:50%;font-size:18px;cursor:pointer;color:var(--co-ink-2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--co-font)';
+    btnX.textContent = '×';
+    btnX.addEventListener('click', function() { overlay.style.display = 'none'; });
+    hdr.appendChild(av); hdr.appendChild(info); hdr.appendChild(btnX);
+
+    // ── Tabs ──
+    var tabsDiv = document.createElement('div');
+    tabsDiv.id = 'perfil-tabs';
+    tabsDiv.style.cssText = 'display:flex;border-bottom:1px solid var(--co-line);padding:0 24px';
+    function crearTab(id, label) {
+        var btn = document.createElement('button');
+        btn.setAttribute('data-perfil-tab', id);
+        btn.style.cssText = 'font-size:12px;font-weight:600;padding:10px 14px;color:var(--co-mute);cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;background:none;font-family:var(--co-font);transition:color 0.13s';
+        btn.textContent = label;
+        btn.addEventListener('click', function() { _perfilCambiarTab(id); });
+        return btn;
+    }
+    tabsDiv.appendChild(crearTab('datos', 'Datos personales'));
+    tabsDiv.appendChild(crearTab('seguridad', 'Seguridad'));
+
+    // ── Panel datos personales ──
+    var panelDatos = document.createElement('div');
+    panelDatos.id = 'perfil-panel-datos';
+    panelDatos.style.cssText = 'padding:20px 24px';
+
+    function crearCampoForm(labelText, inputId, type, valor, hint) {
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;gap:5px;margin-bottom:14px';
+        var lbl = document.createElement('label');
+        lbl.htmlFor = inputId;
+        lbl.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute)';
+        lbl.textContent = labelText;
+        var inp = document.createElement('input');
+        inp.type = type;
+        inp.id = inputId;
+        inp.value = valor || '';
+        inp.style.cssText = 'padding:10px 13px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-size:13px;font-family:var(--co-font);color:var(--co-ink);background:var(--co-surface);outline:none';
+        inp.addEventListener('focus', function() { inp.style.borderColor = 'var(--co-orange)'; });
+        inp.addEventListener('blur',  function() { inp.style.borderColor = 'var(--co-line)'; });
         wrap.appendChild(lbl);
         wrap.appendChild(inp);
+        if (hint) {
+            var h = document.createElement('div');
+            h.style.cssText = 'font-size:11px;color:var(--co-mute)';
+            h.textContent = hint;
+            wrap.appendChild(h);
+        }
         return wrap;
     }
 
-    const campoActual = crearCampo('Clave actual', 'cc-actual');
-    const campoNueva  = crearCampo('Clave nueva',  'cc-nueva');
-    const campoRepeat = crearCampo('Repetir clave nueva', 'cc-repetir');
+    panelDatos.appendChild(crearCampoForm('Nombre completo', 'perfil-nombre', 'text', usuario.nombre));
+    panelDatos.appendChild(crearCampoForm('Correo electrónico', 'perfil-email', 'email', usuario.email,
+        'Al cambiar el email deberás ingresar tu clave actual.'));
 
-    const btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex;gap:8px;margin-top:4px';
+    var errDatos = document.createElement('div');
+    errDatos.id = 'perfil-err-datos';
+    errDatos.style.cssText = 'color:var(--co-red);font-size:12px;font-weight:600;min-height:16px;margin-bottom:8px';
 
-    const btnGuardar = document.createElement('button');
-    btnGuardar.textContent = 'Guardar';
-    btnGuardar.style.cssText = 'flex:1;background:#D9853B;color:#fff;border:none;border-radius:8px;padding:11px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit';
-
-    const btnCancelar = document.createElement('button');
-    btnCancelar.textContent = 'Cancelar';
-    btnCancelar.style.cssText = 'flex:1;background:#F5EFE8;color:#1A1714;border:none;border-radius:8px;padding:11px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit';
-    btnCancelar.addEventListener('click', () => overlay.style.display = 'none');
-
-    btnGuardar.addEventListener('click', async () => {
-        const actual   = document.getElementById('cc-actual')?.value || '';
-        const nueva    = document.getElementById('cc-nueva')?.value  || '';
-        const repetir  = document.getElementById('cc-repetir')?.value || '';
-        errMsg.textContent = '';
-
-        if (!actual || !nueva || !repetir) { errMsg.textContent = 'Completa todos los campos'; return; }
-        if (nueva !== repetir)             { errMsg.textContent = 'Las claves nuevas no coinciden'; return; }
-        if (nueva.length < 6)              { errMsg.textContent = 'La clave nueva debe tener al menos 6 caracteres'; return; }
-
-        btnGuardar.disabled = true;
-        btnGuardar.textContent = 'Guardando…';
-        try {
-            const usuario = _getUsuario();
-            const resp = await apiCall('/usuarios', 'POST', {
-                action:       'cambiarClave',
-                id:           usuario.id,
-                claveActual:  actual,
-                claveNueva:   nueva,
-            });
-            if (!resp.ok) { errMsg.textContent = resp.error || 'Error al cambiar clave'; return; }
-            overlay.style.display = 'none';
-            alert('Clave actualizada correctamente.');
-        } catch(e) {
-            errMsg.textContent = 'Error de conexión';
-        } finally {
-            btnGuardar.disabled = false;
-            btnGuardar.textContent = 'Guardar';
+    var btnDatos = document.createElement('button');
+    btnDatos.style.cssText = 'background:var(--co-orange);color:#fff;border:none;border-radius:var(--co-r-md);padding:12px;font-weight:700;font-size:14px;cursor:pointer;width:100%;font-family:var(--co-font)';
+    btnDatos.textContent = 'Guardar cambios';
+    btnDatos.addEventListener('click', function() {
+        var nombre = document.getElementById('perfil-nombre').value.trim();
+        var email  = document.getElementById('perfil-email').value.trim();
+        errDatos.textContent = '';
+        if (!nombre) { errDatos.textContent = 'El nombre es obligatorio'; return; }
+        if (!email)  { errDatos.textContent = 'El email es obligatorio'; return; }
+        var cambioEmail = email.toLowerCase() !== usuario.email.toLowerCase();
+        if (cambioEmail) {
+            var claveConf = prompt('Para cambiar el email ingresa tu clave actual:');
+            if (!claveConf) return;
         }
+        btnDatos.disabled = true; btnDatos.textContent = 'Guardando…';
+        var payload = { action: 'editarUsuario', id: usuario.id, nombre: nombre, email: email };
+        if (cambioEmail) payload.clave = prompt('Repite tu clave para confirmar:') || '';
+        apiCall('/usuarios', 'POST', payload)
+            .then(function(resp) {
+                var ok = resp.ok || (resp.data && resp.data.ok);
+                if (!ok) { errDatos.textContent = resp.error || (resp.data && resp.data.error) || 'Error al guardar'; return; }
+                // Actualizar sessionStorage
+                usuario.nombre = nombre;
+                usuario.email  = email;
+                sessionStorage.setItem('usuario', JSON.stringify(usuario));
+                var avatarEl = document.getElementById('sidebarUserInitial');
+                var nombreEl = document.getElementById('sidebarUserName');
+                if (avatarEl) avatarEl.textContent = nombre.charAt(0).toUpperCase();
+                if (nombreEl) nombreEl.textContent = nombre;
+                av.textContent = nombre.charAt(0).toUpperCase();
+                nm.textContent = nombre;
+                em.textContent = email;
+                btnDatos.textContent = '✓ Guardado';
+                btnDatos.style.background = 'var(--co-green)';
+                setTimeout(function() { btnDatos.disabled = false; btnDatos.textContent = 'Guardar cambios'; btnDatos.style.background = ''; }, 1500);
+            })
+            .catch(function(e) { errDatos.textContent = 'Error de conexión: ' + e.message; })
+            .finally(function() { if (btnDatos.textContent !== '✓ Guardado') { btnDatos.disabled = false; btnDatos.textContent = 'Guardar cambios'; } });
     });
 
-    btnRow.appendChild(btnGuardar);
-    btnRow.appendChild(btnCancelar);
-    card.appendChild(titulo);
-    card.appendChild(errMsg);
-    card.appendChild(campoActual);
-    card.appendChild(campoNueva);
-    card.appendChild(campoRepeat);
-    card.appendChild(btnRow);
-    overlay.appendChild(card);
+    panelDatos.appendChild(errDatos);
+    panelDatos.appendChild(btnDatos);
+
+    // ── Panel seguridad ──
+    var panelSeg = document.createElement('div');
+    panelSeg.id = 'perfil-panel-seguridad';
+    panelSeg.style.cssText = 'padding:20px 24px;display:none';
+
+    panelSeg.appendChild(crearCampoForm('Clave actual', 'perfil-clave-actual', 'password', ''));
+    panelSeg.appendChild(crearCampoForm('Nueva clave', 'perfil-clave-nueva', 'password', '', 'Mínimo 6 caracteres.'));
+    panelSeg.appendChild(crearCampoForm('Repetir nueva clave', 'perfil-clave-repetir', 'password', ''));
+
+    var errSeg = document.createElement('div');
+    errSeg.id = 'perfil-err-seg';
+    errSeg.style.cssText = 'color:var(--co-red);font-size:12px;font-weight:600;min-height:16px;margin-bottom:8px';
+
+    var btnSeg = document.createElement('button');
+    btnSeg.style.cssText = 'background:var(--co-orange);color:#fff;border:none;border-radius:var(--co-r-md);padding:12px;font-weight:700;font-size:14px;cursor:pointer;width:100%;font-family:var(--co-font)';
+    btnSeg.textContent = 'Cambiar clave';
+    btnSeg.addEventListener('click', function() {
+        var actual   = document.getElementById('perfil-clave-actual').value;
+        var nueva    = document.getElementById('perfil-clave-nueva').value;
+        var repetir  = document.getElementById('perfil-clave-repetir').value;
+        errSeg.textContent = '';
+        if (!actual)              { errSeg.textContent = 'Ingresa tu clave actual'; return; }
+        if (!nueva)               { errSeg.textContent = 'Ingresa la nueva clave'; return; }
+        if (nueva.length < 6)     { errSeg.textContent = 'La nueva clave debe tener al menos 6 caracteres'; return; }
+        if (nueva !== repetir)    { errSeg.textContent = 'Las claves nuevas no coinciden'; return; }
+        btnSeg.disabled = true; btnSeg.textContent = 'Guardando…';
+        apiCall('/usuarios', 'POST', { action: 'cambiarClave', id: usuario.id, claveActual: actual, claveNueva: nueva })
+            .then(function(resp) {
+                var ok = resp.ok || (resp.data && resp.data.ok);
+                if (!ok) { errSeg.textContent = resp.error || (resp.data && resp.data.error) || 'Error al cambiar clave'; return; }
+                document.getElementById('perfil-clave-actual').value  = '';
+                document.getElementById('perfil-clave-nueva').value   = '';
+                document.getElementById('perfil-clave-repetir').value = '';
+                btnSeg.textContent = '✓ Clave actualizada';
+                btnSeg.style.background = 'var(--co-green)';
+                setTimeout(function() { btnSeg.disabled = false; btnSeg.textContent = 'Cambiar clave'; btnSeg.style.background = ''; }, 1800);
+            })
+            .catch(function(e) { errSeg.textContent = 'Error de conexión: ' + e.message; })
+            .finally(function() { if (btnSeg.textContent !== '✓ Clave actualizada') { btnSeg.disabled = false; btnSeg.textContent = 'Cambiar clave'; } });
+    });
+
+    panelSeg.appendChild(errSeg);
+    panelSeg.appendChild(btnSeg);
+
+    box.appendChild(hdr);
+    box.appendChild(tabsDiv);
+    box.appendChild(panelDatos);
+    box.appendChild(panelSeg);
+    overlay.appendChild(box);
     document.body.appendChild(overlay);
+
+    _perfilCambiarTab('datos');
 }
+
+function _perfilCambiarTab(tab) {
+    var tabs = document.querySelectorAll('[data-perfil-tab]');
+    tabs.forEach(function(btn) {
+        var activo = btn.getAttribute('data-perfil-tab') === tab;
+        btn.style.color = activo ? 'var(--co-orange)' : 'var(--co-mute)';
+        btn.style.borderBottomColor = activo ? 'var(--co-orange)' : 'transparent';
+    });
+    var panelDatos = document.getElementById('perfil-panel-datos');
+    var panelSeg   = document.getElementById('perfil-panel-seguridad');
+    if (panelDatos) panelDatos.style.display = tab === 'datos'     ? 'block' : 'none';
+    if (panelSeg)   panelSeg.style.display   = tab === 'seguridad' ? 'block' : 'none';
+}
+
 
 // ── Router principal ──────────────────────────────────────────────────────────
 async function cargarModulo(modulo) {
