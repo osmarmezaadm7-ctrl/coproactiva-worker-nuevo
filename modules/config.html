@@ -461,25 +461,21 @@
         cardEst.className = 'co-pill ' + (activo ? 'cfg-pill-activo' : 'cfg-pill-inactivo');
         cardEst.textContent = activo ? 'Activo' : 'Inactivo';
         cardMeta.appendChild(cardEst);
-        var cardActs = document.createElement('div');
-        cardActs.className = 'cfg-card-actions';
-        var cardBtnEdit = document.createElement('button');
-        cardBtnEdit.className = 'btn-ghost';
-        cardBtnEdit.style.cssText = 'padding:6px 14px;font-size:12px';
-        cardBtnEdit.textContent = 'Editar';
-        cardBtnEdit.addEventListener('click', function() { cfgEditar(u.id); });
-        cardActs.appendChild(cardBtnEdit);
-        if (!esYo) {
-          var cardBtnTog = document.createElement('button');
-          cardBtnTog.className = 'btn-ghost';
-          cardBtnTog.style.cssText = 'padding:6px 14px;font-size:12px;color:' + (activo ? 'var(--co-red)' : 'var(--co-green)') + ';border-color:' + (activo ? 'var(--co-red)' : 'var(--co-green)');
-          cardBtnTog.textContent = activo ? 'Desactivar' : 'Reactivar';
-          cardBtnTog.addEventListener('click', function() { activo ? cfgDesactivar(u.id) : cfgReactivar(u.id); });
-          cardActs.appendChild(cardBtnTog);
-        }
+        // Botón ⋯
+        var cardMenu = document.createElement('button');
+        cardMenu.style.cssText = 'background:none;border:none;cursor:pointer;font-size:20px;color:var(--co-mute);padding:4px;flex-shrink:0;line-height:1;align-self:center';
+        cardMenu.textContent = '⋯';
+        cardMenu.setAttribute('aria-label', 'Opciones');
+        (function(uid, unombre, uactivo) {
+          cardMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+            _cfgMenuCard(cardMenu, uid, unombre, uactivo);
+          });
+        })(u.id, u.nombre, activo);
+
         cardInfo.appendChild(cardNm); cardInfo.appendChild(cardEm);
-        cardInfo.appendChild(cardMeta); cardInfo.appendChild(cardActs);
-        card.appendChild(cardAv); card.appendChild(cardInfo);
+        cardInfo.appendChild(cardMeta);
+        card.appendChild(cardAv); card.appendChild(cardInfo); card.appendChild(cardMenu);
         cardsWrap.appendChild(card);
       }
     });
@@ -580,7 +576,7 @@
     modBtns.style.cssText = 'display:flex;gap:8px;margin-top:6px';
     var btnModTodos = document.createElement('button');
     btnModTodos.type = 'button';
-    btnModTodos.className = 'cfg-sel-btn';
+    btnModTodos.style.cssText = 'font-size:11px;font-weight:700;color:#D9853B;background:none;border:none;cursor:pointer;padding:0;font-family:inherit';
     btnModTodos.textContent = 'Seleccionar todos';
     btnModTodos.addEventListener('click', function() { cfgSelTodos('modulos', true); });
     var sepModBtns = document.createElement('span');
@@ -588,7 +584,7 @@
     sepModBtns.textContent = '·';
     var btnModNinguno = document.createElement('button');
     btnModNinguno.type = 'button';
-    btnModNinguno.className = 'cfg-sel-btn muted';
+    btnModNinguno.style.cssText = 'font-size:11px;font-weight:700;color:#9C958A;background:none;border:none;cursor:pointer;padding:0;font-family:inherit';
     btnModNinguno.textContent = 'Ninguno';
     btnModNinguno.addEventListener('click', function() { cfgSelTodos('modulos', false); });
     modBtns.appendChild(btnModTodos); modBtns.appendChild(sepModBtns); modBtns.appendChild(btnModNinguno);
@@ -606,7 +602,7 @@
     comBtns.style.cssText = 'display:flex;gap:8px;margin-top:6px';
     var btnComTodas = document.createElement('button');
     btnComTodas.type = 'button';
-    btnComTodas.className = 'cfg-sel-btn';
+    btnComTodas.style.cssText = 'font-size:11px;font-weight:700;color:#D9853B;background:none;border:none;cursor:pointer;padding:0;font-family:inherit';
     btnComTodas.textContent = 'Todas';
     btnComTodas.addEventListener('click', function() { cfgSelTodos('comunidades', true); });
     var sepComBtns = document.createElement('span');
@@ -614,7 +610,7 @@
     sepComBtns.textContent = '·';
     var btnComNinguna = document.createElement('button');
     btnComNinguna.type = 'button';
-    btnComNinguna.className = 'cfg-sel-btn muted';
+    btnComNinguna.style.cssText = 'font-size:11px;font-weight:700;color:#9C958A;background:none;border:none;cursor:pointer;padding:0;font-family:inherit';
     btnComNinguna.textContent = 'Ninguna';
     btnComNinguna.addEventListener('click', function() { cfgSelTodos('comunidades', false); });
     comBtns.appendChild(btnComTodas); comBtns.appendChild(sepComBtns); comBtns.appendChild(btnComNinguna);
@@ -792,6 +788,50 @@
     if (!el) return;
     el.textContent = msg;
     el.style.display = 'block';
+  }
+
+  // ── Menú contextual card móvil ──────────────────────────────────────────
+  function _cfgMenuCard(ancla, id, nombre, activo) {
+    document.querySelectorAll('.cfg-card-ctx').forEach(function(m) { m.remove(); });
+    var menu = document.createElement('div');
+    menu.className = 'cfg-card-ctx';
+    menu.style.cssText = 'position:fixed;background:var(--co-surface);border:1px solid var(--co-line);border-radius:var(--co-r-md);box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:9999;min-width:180px;padding:4px 0;font-family:var(--co-font)';
+    var rect = ancla.getBoundingClientRect();
+    var top = rect.bottom + 4;
+    if (top + 100 > window.innerHeight) top = rect.top - 104;
+    menu.style.top  = top + 'px';
+    menu.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+
+    function itemMenu(ico, txt, color, fn) {
+      var btn = document.createElement('button');
+      btn.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;background:none;border:none;font-family:var(--co-font);font-size:13px;font-weight:600;color:' + (color || 'var(--co-ink)') + ';cursor:pointer;text-align:left';
+      btn.innerHTML = ico + '<span>' + txt + '</span>';
+      btn.addEventListener('click', function() { menu.remove(); fn(); });
+      menu.appendChild(btn);
+    }
+
+    var icoEdit = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2Z"/></svg>';
+    var icoOff  = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 5l6 6"/></svg>';
+    var icoOn   = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>';
+
+    itemMenu(icoEdit, 'Editar usuario', '', function() { cfgEditar(id); });
+
+    var sep = document.createElement('div');
+    sep.style.cssText = 'height:1px;background:var(--co-line);margin:4px 0';
+    menu.appendChild(sep);
+
+    if (activo) {
+      itemMenu(icoOff, 'Desactivar', 'var(--co-red)', function() { cfgDesactivar(id); });
+    } else {
+      itemMenu(icoOn, 'Reactivar', 'var(--co-green)', function() { cfgReactivar(id); });
+    }
+
+    document.body.appendChild(menu);
+    setTimeout(function() {
+      document.addEventListener('click', function cerrar(e) {
+        if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', cerrar); }
+      });
+    }, 50);
   }
 
   init();
