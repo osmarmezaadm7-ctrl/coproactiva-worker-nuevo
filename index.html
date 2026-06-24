@@ -553,7 +553,13 @@ function cerrarSidebarMovil() {
   var sb = document.querySelector('.sidebar');
   if (!sb) return;
   sb.setAttribute('data-movil-open', 'false');
+  sb.style.cssText = '';
   sb.style.display = 'none';
+  // Limpiar estilos inline aplicados al navArea y footer
+  var navArea = sb.querySelector('#sbNavArea');
+  if (navArea) navArea.style.cssText = '';
+  var foot = sb.querySelector('.sidebar-foot');
+  if (foot) foot.style.cssText = '';
 }
 
 function abrirMenuMovil(e) {
