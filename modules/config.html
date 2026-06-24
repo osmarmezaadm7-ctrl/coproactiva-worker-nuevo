@@ -152,6 +152,8 @@
   }
 
   function _parsear(val, def) {
+    if (Array.isArray(val)) return val;
+    if (typeof val !== 'string') return def;
     try { return JSON.parse(val); } catch(e) { return def; }
   }
 
