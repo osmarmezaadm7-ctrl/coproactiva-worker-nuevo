@@ -23,7 +23,6 @@
       z-index: 100;
       overflow: hidden;
     }
-    /* Nav scrollea, footer siempre visible */
     .sidebar #sbNavArea {
       flex: 1;
       overflow-y: auto;
@@ -32,8 +31,12 @@
     .sidebar .sidebar-foot {
       flex-shrink: 0;
     }
-    /* Móvil: sidebar oculto por defecto (styles.css lo oculta con display:none) */
-    /* Solo se muestra via JS en abrirMenuMovil() */
+    /* Móvil: ocultar sidebar (el JS lo muestra cuando se necesita) */
+    @media (max-width: 767px) {
+      .sidebar {
+        display: none;
+      }
+    }
     @media (min-width: 768px) {
       .main-content { margin-left: var(--co-sidebar-w, 240px); }
     }
