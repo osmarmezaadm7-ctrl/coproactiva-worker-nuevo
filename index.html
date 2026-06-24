@@ -318,7 +318,7 @@
       </span>
       <span class="bottom-label">Finanzas</span>
     </button>
-    <button class="nav-btn" data-nav="menu" onclick="abrirMenuMovil();bnav(this)">
+    <button class="nav-btn" data-nav="menu" onclick="abrirMenuMovil(event);bnav(this)">
       <span class="bottom-icon">
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
       </span>
@@ -556,7 +556,8 @@ function cerrarSidebarMovil() {
   sb.style.display = 'none';
 }
 
-function abrirMenuMovil() {
+function abrirMenuMovil(e) {
+  if (e) e.stopPropagation();
   var sb = document.querySelector('.sidebar');
   if (!sb) return;
   var abierto = sb.getAttribute('data-movil-open') === 'true';
