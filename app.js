@@ -181,6 +181,33 @@ function _filtrarSidebar(usuario) {
     });
 }
 
+// ── Helper: input password con botón ojo ─────────────────────────────────────
+function _inputPasswordConOjo(id, placeholder) {
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:flex;align-items:center';
+    var inp = document.createElement('input');
+    inp.type = 'password';
+    inp.id = id;
+    inp.placeholder = placeholder || '••••••••';
+    inp.style.cssText = 'width:100%;padding:10px 38px 10px 13px;border:1.5px solid var(--co-line);border-radius:var(--co-r-md);font-size:13px;font-family:var(--co-font);color:var(--co-ink);background:var(--co-surface);outline:none;box-sizing:border-box';
+    inp.addEventListener('focus', function() { inp.style.borderColor = 'var(--co-orange)'; });
+    inp.addEventListener('blur',  function() { inp.style.borderColor = 'var(--co-line)'; });
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.style.cssText = 'position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--co-mute);padding:0;display:flex;align-items:center';
+    btn.innerHTML = '<svg id="' + id + '-eye-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>';
+    btn.setAttribute('aria-label', 'Mostrar/ocultar clave');
+    var visible = false;
+    btn.addEventListener('click', function() {
+        visible = !visible;
+        inp.type = visible ? 'text' : 'password';
+        btn.style.color = visible ? 'var(--co-orange)' : 'var(--co-mute)';
+    });
+    wrap.appendChild(inp);
+    wrap.appendChild(btn);
+    return wrap;
+}
+
 // ── Menú contextual de usuario ───────────────────────────────────────────────
 function _abrirMenuUsuario(ancla) {
     // Eliminar menú previo si existe
@@ -375,9 +402,26 @@ function _abrirModalPerfil() {
     panelSeg.id = 'perfil-panel-seguridad';
     panelSeg.style.cssText = 'padding:20px 24px;display:none';
 
-    panelSeg.appendChild(crearCampoForm('Clave actual', 'perfil-clave-actual', 'password', ''));
-    panelSeg.appendChild(crearCampoForm('Nueva clave', 'perfil-clave-nueva', 'password', '', 'Mínimo 6 caracteres.'));
-    panelSeg.appendChild(crearCampoForm('Repetir nueva clave', 'perfil-clave-repetir', 'password', ''));
+    function campoConOjo(labelText, id, hint) {
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;gap:5px;margin-bottom:14px';
+        var lbl = document.createElement('label');
+        lbl.htmlFor = id;
+        lbl.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute)';
+        lbl.textContent = labelText;
+        wrap.appendChild(lbl);
+        wrap.appendChild(_inputPasswordConOjo(id, '••••••••'));
+        if (hint) {
+            var h = document.createElement('div');
+            h.style.cssText = 'font-size:11px;color:var(--co-mute)';
+            h.textContent = hint;
+            wrap.appendChild(h);
+        }
+        return wrap;
+    }
+    panelSeg.appendChild(campoConOjo('Clave actual', 'perfil-clave-actual'));
+    panelSeg.appendChild(campoConOjo('Nueva clave', 'perfil-clave-nueva', 'Mínimo 6 caracteres.'));
+    panelSeg.appendChild(campoConOjo('Repetir nueva clave', 'perfil-clave-repetir'));
 
     var errSeg = document.createElement('div');
     errSeg.id = 'perfil-err-seg';
