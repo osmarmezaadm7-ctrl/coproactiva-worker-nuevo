@@ -94,17 +94,20 @@
   @media (max-width: 767px) {
     #cfg-root { padding:20px 16px 90px !important; }
     #cfg-root .com-dir-wrap { display:none !important; }
-    #cfg-root .cfg-cards { display:flex;flex-direction:column;gap:8px; }
+    #cfg-root .cfg-cards { display:flex;flex-direction:column;gap:12px; }
     #cfg-root .cfg-card {
       background:var(--co-surface);border:1px solid var(--co-line);
-      border-radius:var(--co-r-lg);padding:14px;
-      display:flex;align-items:flex-start;gap:12px;
+      border-radius:var(--co-r-lg);padding:18px 16px;
+      display:flex;align-items:flex-start;gap:14px;
     }
+    #cfg-root .cfg-avatar { width:40px;height:40px;font-size:14px;flex-shrink:0; }
     #cfg-root .cfg-card-info { flex:1;min-width:0; }
-    #cfg-root .cfg-card-nombre { font-size:13px;font-weight:700;color:var(--co-ink); }
-    #cfg-root .cfg-card-email  { font-size:11px;color:var(--co-mute);margin-top:2px; }
-    #cfg-root .cfg-card-meta   { display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center; }
-    #cfg-root .cfg-card-actions { display:flex;gap:6px;margin-top:10px; }
+    #cfg-root .cfg-card-nombre { font-size:15px;font-weight:700;color:var(--co-ink);line-height:1.2; }
+    #cfg-root .cfg-card-email  { font-size:12px;color:var(--co-mute);margin-top:3px; }
+    #cfg-root .cfg-card-meta   { display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;align-items:center; }
+    #cfg-root .cfg-card-meta .co-pill { font-size:11px;padding:3px 10px; }
+    #cfg-root .cfg-card-actions { display:flex;gap:8px;margin-top:12px; }
+    #cfg-root .cfg-card-actions .btn-ghost { padding:8px 16px;font-size:13px; }
   }
   @media (min-width: 768px) {
     #cfg-root .cfg-cards { display:none; }
