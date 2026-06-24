@@ -1,12 +1,11 @@
 // ============================================================
 // CoproActiva Worker — index.js
-// Versión: 3.4 · Junio 2026
+// Versión: 3.6 · Junio 2026
 // Cambio v3.4: agrega rutas /leads y /leads/metricas
 // Cambio v3.5: agrega rutas /plantillas
 // Cambio v3.3: agrega ruta GET /documentos/catalogo-comunidad
+// Cambio v3.6: agrega rutas /auth y /usuarios + validación HMAC
 // ============================================================
-
-const ACCESS_KEY = 'copro2025';
 
 const ALLOWED_ORIGINS = [
   'https://coproactiva.cl',
@@ -58,6 +57,54 @@ async function postAppsScript(appsScriptUrl, body) {
   if (!res.ok) throw new Error(`Apps Script respondió ${res.status}`);
   return res.json();
 }
+
+// ── Token HMAC ────────────────────────────────────────────────────────────────
+// Formato: userId.timestamp.hmac
+// Válido por 8 horas
+
+async function generarToken(userId, secretKey) {
+  const timestamp = Date.now();
+  const mensaje   = `${userId}.${timestamp}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secretKey),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const firma  = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(mensaje));
+  const hmac   = Array.from(new Uint8Array(firma)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${mensaje}.${hmac}`;
+}
+
+async function validarToken(token, secretKey) {
+  if (!token || typeof token !== 'string') return null;
+  const partes = token.split('.');
+  if (partes.length !== 3) return null;
+  const [userId, timestamp, hmacRecibido] = partes;
+
+  // Verificar expiración (8 horas)
+  const ahora = Date.now();
+  const emitido = parseInt(timestamp, 10);
+  if (isNaN(emitido) || ahora - emitido > 8 * 60 * 60 * 1000) return null;
+
+  // Verificar firma
+  const mensaje = `${userId}.${timestamp}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secretKey),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const firma = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(mensaje));
+  const hmacEsperado = Array.from(new Uint8Array(firma)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  if (hmacRecibido !== hmacEsperado) return null;
+  return userId;
+}
+
+// ── Helpers de validación ─────────────────────────────────────────────────────
 
 function validarEmail(email) {
   if (!email || typeof email !== 'string') return false;
@@ -126,6 +173,9 @@ export default {
     }
 
     const APPS_SCRIPT_URL = env.APPS_SCRIPT_URL;
+    const SECRET_KEY      = env.SECRET_KEY;
+
+    // ── Rutas públicas (sin auth) ─────────────────────────────────────────────
 
     if (url.pathname === '/webhook/contacto' && method === 'POST') {
       try {
@@ -216,9 +266,51 @@ export default {
       }
     }
 
+    // ── v3.6 — Login (público, sin token previo) ──────────────────────────────
+    if (url.pathname === '/auth' && method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!body.email || !body.clave) {
+          return jsonResponse({ ok: false, error: 'Email y clave requeridos' }, 400, origin);
+        }
+        const resp = await postAppsScript(APPS_SCRIPT_URL, {
+          action: 'loginUsuario',
+          email:  body.email,
+          clave:  body.clave,
+        });
+        if (!resp.ok) {
+          return jsonResponse({ ok: false, error: resp.error || 'Credenciales incorrectas' }, 401, origin);
+        }
+        const usuario = resp.data;
+        const token   = await generarToken(usuario.id, SECRET_KEY);
+        return jsonResponse({
+          ok: true,
+          data: {
+            token,
+            id:          usuario.id,
+            nombre:      usuario.nombre,
+            email:       usuario.email,
+            rol:         usuario.rol,
+            modulos:     usuario.modulos,
+            comunidades: usuario.comunidades,
+          }
+        }, 200, origin);
+      } catch (error) {
+        return jsonResponse({ ok: false, error: error.message }, 500, origin);
+      }
+    }
+
+    // ── Rutas protegidas — validar token HMAC ────────────────────────────────
     const authHeader = request.headers.get('Authorization') || '';
-    const token = authHeader.replace('Bearer ', '');
-    if (token !== ACCESS_KEY) {
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    // Compatibilidad transitoria: acepta clave legacy durante migración
+    // TODO: eliminar ACCESS_KEY_LEGACY una vez que todos los clientes usen el nuevo login
+    const ACCESS_KEY_LEGACY = env.ACCESS_KEY || 'copro2025';
+    const esLegacy = token === ACCESS_KEY_LEGACY;
+    const userId   = esLegacy ? 'legacy' : await validarToken(token, SECRET_KEY);
+
+    if (!userId) {
       return jsonResponse({ ok: false, error: 'No autorizado' }, 401, origin);
     }
 
@@ -431,7 +523,6 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-
       // ── v3.4 — Leads ──────────────────────────────────────
       if (url.pathname === '/leads' && method === 'GET') {
         const id                = url.searchParams.get('id')                || '';
@@ -455,8 +546,7 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
-      // ── Plantillas de correo ───────────────────────────
-
+      // ── Plantillas de correo ───────────────────────────────
       if (url.pathname === '/plantillas' && method === 'GET') {
         const id = url.searchParams.get('id') || '';
         if (id) {
@@ -474,7 +564,6 @@ export default {
       }
 
       // ── Recepción Documental ───────────────────────────────
-
       if (url.pathname === '/recepciones' && method === 'GET') {
         const id          = url.searchParams.get('id') || '';
         const comunidadId = url.searchParams.get('comunidadId') || '';
@@ -491,6 +580,18 @@ export default {
       }
 
       if (url.pathname === '/recepciones' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── v3.6 — Usuarios (requiere superadmin — validación en GAS) ─────────
+      if (url.pathname === '/usuarios' && method === 'GET') {
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getUsuarios');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/usuarios' && method === 'POST') {
         const body = await request.json();
         const data = await postAppsScript(APPS_SCRIPT_URL, body);
         return jsonResponse({ ok: true, data }, 200, origin);
