@@ -530,66 +530,27 @@ function _topAction(modId) {
 
 function cerrarSidebarMovil() {
   var sb = document.querySelector('.sidebar');
+  if (sb) sb.setAttribute('data-movil-open', 'false');
   if (sb) sb.style.display = 'none';
 }
 
 function abrirMenuMovil() {
-  const sb = document.querySelector('.sidebar');
-  if (sb) {
-    const visible = sb.style.display === 'flex';
-    sb.style.display  = visible ? 'none' : 'flex';
-    sb.style.position = 'fixed';
-    sb.style.zIndex   = '200';
-    sb.style.top      = '0';
-    sb.style.left     = '0';
-    sb.style.bottom   = '0';
-    sb.style.width    = '260px';
-    sb.style.overflowY = 'hidden';
-    sb.style.flexDirection = 'column';
-    sb.style.height = '100%';
-    // El área de nav scrollea internamente, el footer queda fijo abajo
-    var navArea = sb.querySelector('#sbNavArea');
-    if (navArea) { navArea.style.overflowY = 'auto'; navArea.style.flex = '1'; }
-    // Cerrar al tocar fuera
-    if (!visible) {
-      setTimeout(function() {
-        document.addEventListener('click', function cerrarSb(e) {
-          if (!sb.contains(e.target)) {
-            sb.style.display = 'none';
-            document.removeEventListener('click', cerrarSb);
-          }
-        });
-      }, 50);
-    }
   var sb = document.querySelector('.sidebar');
   if (!sb) return;
-  var visible = sb.style.display === 'flex';
-  if (visible) {
-    sb.style.display = 'none';
+  var abierto = sb.getAttribute('data-movil-open') === 'true';
+  if (abierto) {
+    cerrarSidebarMovil();
     return;
   }
-  // Abrir
-  sb.style.display       = 'flex';
-  sb.style.position      = 'fixed';
-  sb.style.zIndex        = '200';
-  sb.style.top           = '0';
-  sb.style.left          = '0';
-  sb.style.bottom        = '0';
-  sb.style.width         = '260px';
-  sb.style.height        = '100vh';
-  sb.style.overflowY     = 'hidden';
-  sb.style.flexDirection = 'column';
-  // Nav scrollea internamente, footer siempre visible abajo
+  sb.setAttribute('data-movil-open', 'true');
+  sb.style.cssText = 'display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:260px;height:100vh;overflow:hidden;z-index:200;background:#1A1714';
   var navArea = sb.querySelector('#sbNavArea');
-  if (navArea) {
-    navArea.style.overflowY = 'auto';
-    navArea.style.flex      = '1';
-    navArea.style.minHeight = '0';
-  }
-  // Cierre al tocar fuera
+  if (navArea) { navArea.style.overflowY = 'auto'; navArea.style.flex = '1'; navArea.style.minHeight = '0'; }
+  var foot = sb.querySelector('.sidebar-foot');
+  if (foot) { foot.style.flexShrink = '0'; }
   setTimeout(function() {
     document.addEventListener('click', function cerrarSb(e) {
-      if (!sb.contains(e.target)) {
+      if (!sb.contains(e.target) && sb.getAttribute('data-movil-open') === 'true') {
         cerrarSidebarMovil();
         document.removeEventListener('click', cerrarSb);
       }
