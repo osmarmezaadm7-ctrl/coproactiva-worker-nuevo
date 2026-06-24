@@ -65,6 +65,50 @@
   }
   #cfg-root .com-dir-table tr:last-child td { border-bottom: none; }
   #cfg-root .com-dir-table tr:hover td { background: var(--co-cream); }
+
+  /* Pills de rol */
+  #cfg-root .co-pill { font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block; }
+  #cfg-root .cfg-pill-superadmin { background:#FEF3C7;color:#92400E; }
+  #cfg-root .cfg-pill-admin      { background:var(--co-blue-soft);color:var(--co-blue); }
+  #cfg-root .cfg-pill-operador   { background:#EDE9FE;color:#5B21B6; }
+  #cfg-root .cfg-pill-visualizador { background:var(--co-cream-deep);color:var(--co-mute); }
+  #cfg-root .cfg-pill-activo     { background:var(--co-green-soft);color:var(--co-green); }
+  #cfg-root .cfg-pill-inactivo   { background:var(--co-cream-deep);color:var(--co-mute); }
+
+  /* Botones seleccionar/ninguno */
+  #cfg-root .cfg-sel-btn {
+    font-size:11px;font-weight:700;color:var(--co-orange);background:none;
+    border:none;cursor:pointer;padding:0;font-family:var(--co-font);
+  }
+  #cfg-root .cfg-sel-btn.muted { color:var(--co-mute); }
+
+  /* Avatar usuario en tabla */
+  #cfg-root .cfg-avatar {
+    width:32px;height:32px;border-radius:50%;background:var(--co-orange);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:-0.01em;
+  }
+  #cfg-root .cfg-avatar.blue { background:var(--co-blue); }
+
+  /* Vista móvil — ocultar tabla, mostrar cards */
+  @media (max-width: 767px) {
+    #cfg-root { padding:20px 16px 90px !important; }
+    #cfg-root .com-dir-wrap { display:none !important; }
+    #cfg-root .cfg-cards { display:flex;flex-direction:column;gap:8px; }
+    #cfg-root .cfg-card {
+      background:var(--co-surface);border:1px solid var(--co-line);
+      border-radius:var(--co-r-lg);padding:14px;
+      display:flex;align-items:flex-start;gap:12px;
+    }
+    #cfg-root .cfg-card-info { flex:1;min-width:0; }
+    #cfg-root .cfg-card-nombre { font-size:13px;font-weight:700;color:var(--co-ink); }
+    #cfg-root .cfg-card-email  { font-size:11px;color:var(--co-mute);margin-top:2px; }
+    #cfg-root .cfg-card-meta   { display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center; }
+    #cfg-root .cfg-card-actions { display:flex;gap:6px;margin-top:10px; }
+  }
+  @media (min-width: 768px) {
+    #cfg-root .cfg-cards { display:none; }
+  }
 </style>
 
 <div id="cfg-root" style="padding:32px 40px;max-width:1100px"></div>
@@ -117,13 +161,20 @@
 
   function _rolPill(rol) {
     var map = {
-      superadmin:   { cls: 'pill-warn',  label: 'Superadmin' },
-      admin:        { cls: 'pill-blue',  label: 'Admin' },
-      operador:     { cls: 'pill-pend',  label: 'Operador' },
-      visualizador: { cls: 'pill-pend',  label: 'Visualizador' },
+      superadmin:   { cls: 'cfg-pill-superadmin', label: 'Superadmin' },
+      admin:        { cls: 'cfg-pill-admin',       label: 'Admin' },
+      operador:     { cls: 'cfg-pill-operador',    label: 'Operador' },
+      visualizador: { cls: 'cfg-pill-visualizador',label: 'Visualizador' },
     };
-    var r = map[rol] || { cls: 'pill-pend', label: rol };
+    var r = map[rol] || { cls: 'cfg-pill-visualizador', label: rol };
     return '<span class="co-pill ' + r.cls + '">' + r.label + '</span>';
+  }
+
+  function _avatar(nombre, esYo) {
+    var av = document.createElement('div');
+    av.className = 'cfg-avatar' + (esYo ? '' : ' blue');
+    av.textContent = (nombre || '?').charAt(0).toUpperCase();
+    return av;
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────
@@ -219,6 +270,12 @@
     tableWrap.appendChild(tabla);
     panel.appendChild(tableWrap);
 
+    // Cards móvil
+    var cardsWrap = document.createElement('div');
+    cardsWrap.id = 'cfg-cards';
+    cardsWrap.className = 'cfg-cards';
+    panel.appendChild(cardsWrap);
+
     // Vacío
     var empty = document.createElement('div');
     empty.id = 'cfg-empty';
@@ -285,6 +342,8 @@
     if (!tbody) return;
     var usuarioActual = _getUsuario();
     tbody.innerHTML = '';
+    var cardsWrap = document.getElementById('cfg-cards');
+    if (cardsWrap) cardsWrap.innerHTML = '';
 
     lista.forEach(function(u) {
       var modulos = _parsear(u.modulos, ['*']);
@@ -300,6 +359,9 @@
 
       // Usuario
       var tdUser = document.createElement('td');
+      tdUser.style.cssText = 'display:flex;align-items:center;gap:10px;border-bottom:none';
+      var avEl = _avatar(u.nombre, esYo);
+      var userInfo = document.createElement('div');
       var nm = document.createElement('div');
       nm.style.fontWeight = '700';
       nm.style.fontSize = '13px';
@@ -313,7 +375,8 @@
       var em = document.createElement('div');
       em.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:2px';
       em.textContent = u.email;
-      tdUser.appendChild(nm); tdUser.appendChild(em);
+      userInfo.appendChild(nm); userInfo.appendChild(em);
+      tdUser.appendChild(avEl); tdUser.appendChild(userInfo);
 
       // Rol
       var tdRol = document.createElement('td');
@@ -337,7 +400,7 @@
       // Estado
       var tdEst = document.createElement('td');
       var pill = document.createElement('span');
-      pill.className = 'co-pill ' + (activo ? 'pill-ok' : 'pill-pend');
+      pill.className = 'co-pill ' + (activo ? 'cfg-pill-activo' : 'cfg-pill-inactivo');
       pill.textContent = activo ? 'Activo' : 'Inactivo';
       tdEst.appendChild(pill);
 
@@ -368,6 +431,54 @@
       tr.appendChild(tdCom); tr.appendChild(tdAcc); tr.appendChild(tdEst);
       tr.appendChild(tdAct);
       tbody.appendChild(tr);
+
+      // Card móvil
+      if (cardsWrap) {
+        var card = document.createElement('div');
+        card.className = 'cfg-card';
+        var cardAv = _avatar(u.nombre, esYo);
+        var cardInfo = document.createElement('div');
+        cardInfo.className = 'cfg-card-info';
+        var cardNm = document.createElement('div');
+        cardNm.className = 'cfg-card-nombre';
+        cardNm.textContent = u.nombre;
+        if (esYo) {
+          var cardYo = document.createElement('span');
+          cardYo.style.cssText = 'font-size:10px;color:var(--co-orange);font-weight:700;margin-left:6px';
+          cardYo.textContent = '(tú)';
+          cardNm.appendChild(cardYo);
+        }
+        var cardEm = document.createElement('div');
+        cardEm.className = 'cfg-card-email';
+        cardEm.textContent = u.email;
+        var cardMeta = document.createElement('div');
+        cardMeta.className = 'cfg-card-meta';
+        cardMeta.innerHTML = _rolPill(u.rol);
+        var cardEst = document.createElement('span');
+        cardEst.className = 'co-pill ' + (activo ? 'cfg-pill-activo' : 'cfg-pill-inactivo');
+        cardEst.textContent = activo ? 'Activo' : 'Inactivo';
+        cardMeta.appendChild(cardEst);
+        var cardActs = document.createElement('div');
+        cardActs.className = 'cfg-card-actions';
+        var cardBtnEdit = document.createElement('button');
+        cardBtnEdit.className = 'btn-ghost';
+        cardBtnEdit.style.cssText = 'padding:6px 14px;font-size:12px';
+        cardBtnEdit.textContent = 'Editar';
+        cardBtnEdit.addEventListener('click', function() { cfgEditar(u.id); });
+        cardActs.appendChild(cardBtnEdit);
+        if (!esYo) {
+          var cardBtnTog = document.createElement('button');
+          cardBtnTog.className = 'btn-ghost';
+          cardBtnTog.style.cssText = 'padding:6px 14px;font-size:12px;color:' + (activo ? 'var(--co-red)' : 'var(--co-green)') + ';border-color:' + (activo ? 'var(--co-red)' : 'var(--co-green)');
+          cardBtnTog.textContent = activo ? 'Desactivar' : 'Reactivar';
+          cardBtnTog.addEventListener('click', function() { activo ? cfgDesactivar(u.id) : cfgReactivar(u.id); });
+          cardActs.appendChild(cardBtnTog);
+        }
+        cardInfo.appendChild(cardNm); cardInfo.appendChild(cardEm);
+        cardInfo.appendChild(cardMeta); cardInfo.appendChild(cardActs);
+        card.appendChild(cardAv); card.appendChild(cardInfo);
+        cardsWrap.appendChild(card);
+      }
     });
   }
 
@@ -466,7 +577,7 @@
     modBtns.style.cssText = 'display:flex;gap:8px;margin-top:6px';
     var btnModTodos = document.createElement('button');
     btnModTodos.type = 'button';
-    btnModTodos.className = 'com-panel-ver';
+    btnModTodos.className = 'cfg-sel-btn';
     btnModTodos.textContent = 'Seleccionar todos';
     btnModTodos.addEventListener('click', function() { cfgSelTodos('modulos', true); });
     var sepModBtns = document.createElement('span');
@@ -474,8 +585,7 @@
     sepModBtns.textContent = '·';
     var btnModNinguno = document.createElement('button');
     btnModNinguno.type = 'button';
-    btnModNinguno.className = 'com-panel-ver';
-    btnModNinguno.style.color = 'var(--co-mute)';
+    btnModNinguno.className = 'cfg-sel-btn muted';
     btnModNinguno.textContent = 'Ninguno';
     btnModNinguno.addEventListener('click', function() { cfgSelTodos('modulos', false); });
     modBtns.appendChild(btnModTodos); modBtns.appendChild(sepModBtns); modBtns.appendChild(btnModNinguno);
@@ -493,7 +603,7 @@
     comBtns.style.cssText = 'display:flex;gap:8px;margin-top:6px';
     var btnComTodas = document.createElement('button');
     btnComTodas.type = 'button';
-    btnComTodas.className = 'com-panel-ver';
+    btnComTodas.className = 'cfg-sel-btn';
     btnComTodas.textContent = 'Todas';
     btnComTodas.addEventListener('click', function() { cfgSelTodos('comunidades', true); });
     var sepComBtns = document.createElement('span');
@@ -501,8 +611,7 @@
     sepComBtns.textContent = '·';
     var btnComNinguna = document.createElement('button');
     btnComNinguna.type = 'button';
-    btnComNinguna.className = 'com-panel-ver';
-    btnComNinguna.style.color = 'var(--co-mute)';
+    btnComNinguna.className = 'cfg-sel-btn muted';
     btnComNinguna.textContent = 'Ninguna';
     btnComNinguna.addEventListener('click', function() { cfgSelTodos('comunidades', false); });
     comBtns.appendChild(btnComTodas); comBtns.appendChild(sepComBtns); comBtns.appendChild(btnComNinguna);
