@@ -1,5 +1,71 @@
 <!-- config.html — CoproActiva · Configuración -->
-<!-- Versión: 1.1 · Junio 2026 -->
+<!-- Versión: 1.2 · Junio 2026 -->
+<style>
+  #cfg-root .com-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--co-line);
+    margin-bottom: 20px;
+    gap: 0;
+    overflow-x: auto;
+  }
+  #cfg-root .com-tab {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 14px;
+    color: var(--co-mute);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: var(--co-font);
+    transition: color 0.13s;
+  }
+  #cfg-root .com-tab.act {
+    color: var(--co-orange);
+    border-bottom-color: var(--co-orange);
+  }
+  #cfg-root .com-tab-content { display: none; }
+  #cfg-root .com-tab-content.act { display: block; }
+  #cfg-root .com-dir-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--co-line);
+    border-radius: var(--co-r-lg);
+  }
+  #cfg-root .com-dir-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #cfg-root .com-dir-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  #cfg-root .com-dir-table th {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--co-mute);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--co-line);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: var(--co-cream-deep);
+  }
+  #cfg-root .com-dir-table td {
+    font-size: 12px;
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--co-line-soft);
+    color: var(--co-ink);
+    vertical-align: middle;
+  }
+  #cfg-root .com-dir-table tr:last-child td { border-bottom: none; }
+  #cfg-root .com-dir-table tr:hover td { background: var(--co-cream); }
+</style>
 
 <div id="cfg-root" style="padding:32px 40px;max-width:1100px"></div>
 
