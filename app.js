@@ -169,18 +169,19 @@ function _filtrarSidebar(usuario) {
     const modulos = usuario.modulos || ['*'];
     if (modulos.includes('*')) return; // superadmin/admin ven todo
 
-    document.querySelectorAll('.nav-btn[data-modulo]').forEach(btn => {
-        const modulo = btn.getAttribute('data-modulo');
+    // Sidebar desktop — ocultar módulos no permitidos
+    document.querySelectorAll('.mod-row[data-mod]').forEach(btn => {
+        const modulo = btn.getAttribute('data-mod');
         if (!modulos.includes(modulo)) {
-            btn.style.display = 'none';
+            btn.closest('.mod') ? btn.closest('.mod').style.display = 'none' : btn.style.display = 'none';
         }
     });
 
-    // Ocultar también items del menú de navegación por data-nav
-    document.querySelectorAll('[data-nav-modulo]').forEach(el => {
-        const modulo = el.getAttribute('data-nav-modulo');
-        if (!modulos.includes(modulo)) {
-            el.style.display = 'none';
+    // Bottom nav móvil — ocultar botones no permitidos
+    document.querySelectorAll('.bottom-nav .nav-btn[data-nav]').forEach(btn => {
+        const modulo = btn.getAttribute('data-nav');
+        if (modulo !== 'menu' && !modulos.includes(modulo)) {
+            btn.style.display = 'none';
         }
     });
 }
