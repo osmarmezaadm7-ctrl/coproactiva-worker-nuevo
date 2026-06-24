@@ -8,3 +8,6 @@ ACCESS_KEY = "copro2025"
 
 [[secret_text_bindings]]
 name = "ANTHROPIC_API_KEY"
+
+[[secret_text_bindings]]
+name = "SECRET_KEY"
