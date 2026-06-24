@@ -621,9 +621,12 @@ function abrirBottomSheet(e) {
     ]},
   ];
 
-  var modulosUsuario = usuario ? (function() {
-    try { return JSON.parse(usuario.modulos || '["*"]'); } catch(ex) { return ['*']; }
-  })() : ['*'];
+  var modulosUsuario = ['*'];
+  if (usuario && usuario.modulos) {
+    var _m = usuario.modulos;
+    if (Array.isArray(_m)) modulosUsuario = _m;
+    else { try { modulosUsuario = JSON.parse(_m); } catch(ex) { modulosUsuario = ['*']; } }
+  }
   if (!Array.isArray(modulosUsuario)) modulosUsuario = ['*'];
 
   secciones.forEach(function(sec) {
