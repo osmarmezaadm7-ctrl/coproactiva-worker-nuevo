@@ -621,7 +621,17 @@ function abrirBottomSheet(e) {
     ]},
   ];
 
+  var modulosUsuario = usuario ? (function() {
+    try { return JSON.parse(usuario.modulos || '["*"]'); } catch(ex) { return ['*']; }
+  })() : ['*'];
+  if (!Array.isArray(modulosUsuario)) modulosUsuario = ['*'];
+
   secciones.forEach(function(sec) {
+    var itemsFiltrados = modulosUsuario.includes('*') ? sec.items : sec.items.filter(function(item) {
+      return modulosUsuario.includes(item.id);
+    });
+    if (!itemsFiltrados.length) return;
+
     var lbl = document.createElement('div');
     lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:10px 14px 5px';
     lbl.textContent = sec.label;
@@ -630,7 +640,7 @@ function abrirBottomSheet(e) {
     var grid = document.createElement('div');
     grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px 4px';
 
-    sec.items.forEach(function(item) {
+    itemsFiltrados.forEach(function(item) {
       var activo = NAV_STATE.modActivo === item.id;
       var btn = document.createElement('button');
       btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;' +
