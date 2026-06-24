@@ -566,19 +566,16 @@ function abrirMenuMovil(e) {
     return;
   }
   sb.setAttribute('data-movil-open', 'true');
-  sb.style.cssText = 'display:flex!important;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:260px;overflow:hidden;z-index:200;background:#1A1714';
-  // Forzar que el sidebar ocupe exactamente el viewport visible
-  sb.style.height = window.innerHeight + 'px';
+  var vh = window.innerHeight;
+  sb.style.cssText = 'display:flex!important;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:260px;overflow:hidden;z-index:200;background:#1A1714;height:' + vh + 'px';
+  var foot = sb.querySelector('.sidebar-foot');
+  var footH = foot ? foot.offsetHeight || 60 : 60;
   var navArea = sb.querySelector('#sbNavArea');
   if (navArea) {
-    navArea.style.overflowY = 'auto';
-    navArea.style.flex = '1';
-    navArea.style.minHeight = '0';
+    navArea.style.cssText = 'overflow-y:auto;flex:1;min-height:0;max-height:' + (vh - footH) + 'px';
   }
-  var foot = sb.querySelector('.sidebar-foot');
   if (foot) {
-    foot.style.flexShrink = '0';
-    foot.style.display = 'flex';
+    foot.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:11px 16px;border-top:1px solid rgba(255,255,255,0.06);gap:10px';
   }
 }
 
