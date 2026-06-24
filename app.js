@@ -34,6 +34,10 @@ const moduleElements = {};
 let currentModuleElement = null;
 window.moduleElements = moduleElements;
 window.moduleCache    = moduleElements;
+Object.defineProperty(window, 'currentModuleElement', {
+    get: function() { return currentModuleElement; },
+    set: function(v) { currentModuleElement = v; }
+});
 
 // ── Módulos que deben recargarse siempre (no cacheados)
 const MODULOS_SIN_CACHE = ['diagnostico'];
