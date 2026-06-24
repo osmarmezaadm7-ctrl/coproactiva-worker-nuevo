@@ -21,11 +21,9 @@
       top: 0; left: 0;
       height: 100vh;
       z-index: 100;
-      display: flex !important;
-      flex-direction: column;
       overflow: hidden;
     }
-    /* Nav scrollea, footer siempre visible — desktop y móvil */
+    /* Nav scrollea, footer siempre visible */
     .sidebar #sbNavArea {
       flex: 1;
       overflow-y: auto;
@@ -34,6 +32,8 @@
     .sidebar .sidebar-foot {
       flex-shrink: 0;
     }
+    /* Móvil: sidebar oculto por defecto (styles.css lo oculta con display:none) */
+    /* Solo se muestra via JS en abrirMenuMovil() */
     @media (min-width: 768px) {
       .main-content { margin-left: var(--co-sidebar-w, 240px); }
     }
