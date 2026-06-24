@@ -93,10 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loginScreen.style.display = 'none';
         appContainer.style.display = 'flex';
         _iniciarApp();
-        return;
     }
 
-    // Escuchar mensajes del iframe del diagnóstico
+    // Escuchar mensajes del iframe del diagnóstico (siempre registrar)
     window.addEventListener('message', function(event) {
         const data = event.data;
         if (!data || !data.type) return;
@@ -190,7 +189,7 @@ function _abrirMenuUsuario(ancla) {
 
     var menu = document.createElement('div');
     menu.id = 'menuUsuarioCtx';
-    menu.style.cssText = 'position:fixed;background:#fff;border:1px solid var(--co-line);border-radius:var(--co-r-md);box-shadow:var(--co-shadow-lg);z-index:9998;min-width:180px;padding:4px 0;font-family:var(--co-font)';
+    menu.style.cssText = 'position:fixed;background:var(--co-surface);border:1px solid var(--co-line);border-radius:var(--co-r-md);box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:9999;min-width:190px;padding:4px 0;font-family:var(--co-font)';
 
     var rect = ancla.getBoundingClientRect();
     menu.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
