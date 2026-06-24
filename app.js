@@ -174,16 +174,35 @@ function _filtrarSidebar(usuario) {
     if (!Array.isArray(modulos)) modulos = ['*'];
     if (modulos.includes('*')) return; // acceso total
 
-    // Sidebar desktop — ocultar módulos no permitidos
-    document.querySelectorAll('.mod-row[data-mod]').forEach(btn => {
+    // Sidebar desktop — módulos planos (con data-mod)
+    document.querySelectorAll('.mod-row[data-mod]').forEach(function(btn) {
         const modulo = btn.getAttribute('data-mod');
         if (!modulos.includes(modulo)) {
-            btn.closest('.mod') ? btn.closest('.mod').style.display = 'none' : btn.style.display = 'none';
+            btn.style.display = 'none';
         }
     });
 
+    // Sidebar desktop — módulos con submenú (id="mod-XXX")
+    ['finanzas','servicios','remuneraciones','mantenciones','incidencias','comunicaciones','documentos','reportes'].forEach(function(modulo) {
+        if (!modulos.includes(modulo)) {
+            const el = document.getElementById('mod-' + modulo);
+            if (el) el.style.display = 'none';
+        }
+    });
+
+    // Ocultar separadores de sección si todos sus módulos están ocultos
+    document.querySelectorAll('.sb-section').forEach(function(sec) {
+        var siguiente = sec.nextElementSibling;
+        var todosOcultos = true;
+        while (siguiente && !siguiente.classList.contains('sb-section') && !siguiente.classList.contains('sb-sep')) {
+            if (siguiente.style.display !== 'none') { todosOcultos = false; break; }
+            siguiente = siguiente.nextElementSibling;
+        }
+        if (todosOcultos) sec.style.display = 'none';
+    });
+
     // Bottom nav móvil — ocultar botones no permitidos
-    document.querySelectorAll('.bottom-nav .nav-btn[data-nav]').forEach(btn => {
+    document.querySelectorAll('.bottom-nav .nav-btn[data-nav]').forEach(function(btn) {
         const modulo = btn.getAttribute('data-nav');
         if (modulo !== 'menu' && !modulos.includes(modulo)) {
             btn.style.display = 'none';
