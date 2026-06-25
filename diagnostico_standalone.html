@@ -596,7 +596,8 @@ function critData(score){
 
 // ─── STORAGE — Google Sheets via Worker ───────────────────────────────────────
 const WORKER_BASE = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
-const _DIAG_TOKEN = 'copro2025'; // token auth Worker
+const _DIAG_TOKEN = 'copro2025'; // fallback — se reemplaza por token HMAC del padre
+function _getWorkerToken(){ return window._DIAG_TOKEN_HMAC || _DIAG_TOKEN; }
 
 // ─── ESTRATEGIA: carga instantánea desde localStorage, sincroniza Sheets en background
 let _cache = null;
@@ -615,7 +616,7 @@ async function syncWithSheets() {
   _syncInProgress = true;
   try {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
-      headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+      headers: { 'Authorization': 'Bearer ' + _getWorkerToken() }
     });
     const data = await res.json();
     if(!data.diagnosticos) return;
@@ -689,7 +690,7 @@ async function saveDiag() {
   try {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
       method: 'POST',
-      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + _DIAG_TOKEN},
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + _getWorkerToken()},
       body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, prospectoId:record.prospectoId, payload:record })
     });
     const data = await res.json();
@@ -745,7 +746,7 @@ async function deleteSaved(nombre) {
     if(d && d.id) {
       await fetch(`${WORKER_BASE}/diagnosticos`, {
         method:'POST',
-        headers:{'Content-Type':'application/json', 'Authorization': 'Bearer ' + _DIAG_TOKEN},
+        headers:{'Content-Type':'application/json', 'Authorization': 'Bearer ' + _getWorkerToken()},
         body: JSON.stringify({ action:'eliminar', id:d.id })
       });
     }
@@ -1227,7 +1228,7 @@ async function generarConclusion(){
   try{
     const res=await fetch(WORKER_BASE+'/factores',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
+      headers:{'Authorization':'Bearer '+_getWorkerToken(),'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt+variation})
     });
     if(!res.ok)throw new Error('Error del servidor: '+res.status);
@@ -1638,7 +1639,7 @@ function initApp(){
   // Precalentar Apps Script en background para reducir demora en primera carga real
 setTimeout(() => {
   fetch(`${WORKER_BASE}/diagnosticos`, {
-    headers: { 'Authorization': 'Bearer ' + _DIAG_TOKEN }
+    headers: { 'Authorization': 'Bearer ' + _getWorkerToken() }
   })
     .then(r => r.json())
     .then(data => {
@@ -1685,6 +1686,13 @@ setTimeout(() => {
   render();
 }
 
+// Solicitar token HMAC al padre (por si el iframe fue cacheado y no recibió el load)
+(function(){
+  if(window.self !== window.top){
+    window.parent.postMessage({type:'solicitar_token'},'*');
+  }
+})();
+
 // Procesar token URL e inicializar — debe ejecutarse ANTES de checkAuth()
 (function() {
   const params = new URLSearchParams(window.location.search);
@@ -1703,6 +1711,9 @@ window.addEventListener('message', function(event) {
   if (!data || !data.type) return;
   if (data.type === 'nuevo_diagnostico') { nuevoDesdeHome(); }
   if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
+  if (data.type === 'set_worker_token' && data.token) {
+    window._DIAG_TOKEN_HMAC = data.token;
+  }
 });
 
 // Verificar autenticación al cargar
