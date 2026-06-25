@@ -421,7 +421,14 @@
 
   function _renderTabContent(tab) {
     const container = document.getElementById('crm-tab-content');
-    if (!container) return;
+    const root      = document.getElementById('crm-root');
+    if (!container || !root) return;
+
+    // Tabs internos (leads, pipeline): mostrar container, ocultar wrappers externos
+    if (tab === 'leads' || tab === 'pipeline') {
+      container.style.display = 'block';
+      Object.keys(_tabCache).forEach(function(k) { _tabCache[k].style.display = 'none'; });
+    }
 
     if (tab === 'leads') {
       renderLeads(container);
@@ -443,21 +450,28 @@
       return;
     }
 
-    // Si ya existe un wrapper cacheado para este tab, mostrarlo sin recargar
+    // Tabs externos (diagnostico, recepcion): ocultar container, mostrar wrapper propio
+    container.style.display = 'none';
+
+    // Si ya está cacheado, solo mostrarlo
     if (_tabCache[tab]) {
       _tabCache[tab].style.display = 'block';
       return;
     }
 
-    // Primera carga — mostrar loading mientras fetch
-    container.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
+    // Primera carga — agregar loading dentro del root, luego reemplazar por wrapper
+    const loadingEl = document.createElement('div');
+    loadingEl.className = 'module-loading';
+    loadingEl.innerHTML = '<div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div>';
+    root.appendChild(loadingEl);
+
     const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
-    const modFile = tab === 'diagnostico' ? 'modules/diagnostico.html' : 'modules/' + tab + '.html';
+    const modFile = 'modules/' + tab + '.html';
 
     fetch(base + modFile)
-      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status + (tab === 'diagnostico' ? ' — ' + r.url : '')); return r.text(); })
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + r.url); return r.text(); })
       .then(function(html) {
-        container.innerHTML = '';
+        loadingEl.remove();
         const wrapper = document.createElement('div');
         wrapper.setAttribute('data-tab-cache', tab);
         wrapper.style.width = '100%';
@@ -467,7 +481,7 @@
         const scripts = Array.from(temp.querySelectorAll('script'));
         scripts.forEach(function(s) { s.remove(); });
         wrapper.innerHTML = temp.innerHTML;
-        container.appendChild(wrapper);
+        root.appendChild(wrapper);
         _tabCache[tab] = wrapper;
         scripts.forEach(function(old) {
           const s = document.createElement('script');
@@ -477,7 +491,11 @@
         });
       })
       .catch(function(err) {
-        container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error al cargar ' + tab + ': ' + err.message + '</div>';
+        loadingEl.remove();
+        const errEl = document.createElement('div');
+        errEl.style.cssText = 'padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600';
+        errEl.textContent = 'Error al cargar ' + tab + ': ' + err.message;
+        root.appendChild(errEl);
       });
   }
 
@@ -487,10 +505,6 @@
     if (_stickyScrollHandler) {
       window.removeEventListener('scroll', _stickyScrollHandler);
       _stickyScrollHandler = null;
-    }
-    // Ocultar wrapper cacheado del tab anterior si existe
-    if (_tabCache[_tabActiva]) {
-      _tabCache[_tabActiva].style.display = 'none';
     }
     _tabActiva = tab;
     document.querySelectorAll('.crm-tab-btn').forEach(function(b) {
