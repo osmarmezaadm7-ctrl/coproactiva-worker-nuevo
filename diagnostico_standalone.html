@@ -523,8 +523,11 @@ function critFailing(){
   AREAS.forEach(a=>{
     if(!areaApplies(a))return;
     a.items.forEach((it,i)=>{
-      if(it.w==='c'&&itemApplies(it)&&itemVal(a.id,i)===0)
-        out.push({text:it.t,area:a.label});
+      if(it.w==='c'&&itemApplies(it)){
+        const v=itemVal(a.id,i);
+        if(v===0)out.push({text:it.t,area:a.label,tipo:'nc'});
+        else if(v===0.25)out.push({text:it.t,area:a.label,tipo:'ns'});
+      }
     });
   });
   return out;
@@ -893,28 +896,7 @@ function renderCtx(){
     </div>
   </div>
 
-  <!-- Características -->
-  <div class="card">
-    <div class="card-ttl"><div class="cdot"></div>Características del inmueble</div>
-    <div class="fg">
-      <div class="f">
-        <label class="fl">Trabajadores contratados</label>
-        <input type="number" value="${c.trabajadores}" oninput="S.ctx.trabajadores=this.value" placeholder="0" min="0">
-        <span class="hint">Conserjes, personal de limpieza, etc.</span>
-      </div>
-      <div class="f full">
-        <label class="fl">Sistema de gestión actual</label>
-        <select onchange="S.ctx.sistema=this.value">
-          <option value="" ${c.sistema===''?'selected':''}>Sin sistema / no saben</option>
-          <option value="Comunidad Feliz" ${c.sistema==='Comunidad Feliz'?'selected':''}>Comunidad Feliz</option>
-          <option value="Edipro" ${c.sistema==='Edipro'?'selected':''}>Edipro</option>
-          <option value="Edifito" ${c.sistema==='Edifito'?'selected':''}>Edifito</option>
-          <option value="Kastor" ${c.sistema==='Kastor'?'selected':''}>Kastor</option>
-          <option value="Otro" ${c.sistema==='Otro'?'selected':''}>Otro</option>
-        </select>
-      </div>
-    </div>
-  </div>
+  
 
   <!-- Contacto comité -->
   <div class="card">
@@ -1039,11 +1021,12 @@ function renderArea(area){
       const val=itemVal(area.id,i);
       const wl={c:'Crítico',i:'Importante',b:'Básico'}[it.w];
       const wc={c:'wc',i:'wi',b:'wb'}[it.w];
-      const bgs=val===0?'background:var(--sr-bg);border-color:#f0b8b8':val===0.5?'background:var(--sa-bg);border-color:#f5c98a':val===1?'background:var(--vd-lt);border-color:var(--vd-md)':'';
+      const bgs=val===0?'background:var(--sr-bg);border-color:#f0b8b8':val===0.25?'background:#F0EAF8;border-color:#c9a8e0':val===0.5?'background:var(--sa-bg);border-color:#f5c98a':val===1?'background:var(--vd-lt);border-color:var(--vd-md)':'';
       const scBtns=[
-        {v:0,   lbl:'No cumple',  sel:val===0,   ss:'background:var(--sr-bg);border-color:var(--sr-ac);color:var(--sr-fg)'},
-        {v:0.5, lbl:'Parcial',    sel:val===0.5, ss:'background:var(--sa-bg);border-color:var(--sa-ac);color:var(--sa-fg)'},
-        {v:1,   lbl:'Cumple',     sel:val===1,   ss:'background:var(--vd-lt);border-color:var(--vd);color:var(--vd-dk)'},
+        {v:0,    lbl:'No cumple', sel:val===0,    ss:'background:var(--sr-bg);border-color:var(--sr-ac);color:var(--sr-fg)'},
+        {v:0.25, lbl:'No sabe',   sel:val===0.25, ss:'background:#F0EAF8;border-color:#9B6BBE;color:#5E3A8A'},
+        {v:0.5,  lbl:'Parcial',   sel:val===0.5,  ss:'background:var(--sa-bg);border-color:var(--sa-ac);color:var(--sa-fg)'},
+        {v:1,    lbl:'Cumple',    sel:val===1,     ss:'background:var(--vd-lt);border-color:var(--vd);color:var(--vd-dk)'},
       ];
       return '<div class="irow '+(na?'na':'')+'" style="'+(na?'':'cursor:default;'+bgs)+';display:block;padding:10px 12px">'
         +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:'+(na?'0':'8px')+'">'
@@ -1109,9 +1092,9 @@ function renderRevision(){
   <!-- Ítems críticos -->
   ${crits.length?`<div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--sr-ac)"></div>⚠️ Ítems críticos sin resolver (${crits.length})</div>
-    <div class="ci-list">${crits.map(cr=>`<div class="ci">
+    <div class="ci-list">${crits.map(cr=>`<div class="ci" style="${cr.tipo==='ns'?'background:#F0EAF8;border-left-color:#9B6BBE':''}">
       <span class="ci-area">${cr.area}</span>
-      <span class="ci-txt">${cr.text}</span>
+      <span class="ci-txt">${cr.tipo==='ns'?'❓ ':'⚠️ '}${cr.text}</span>
     </div>`).join('')}</div>
   </div>`:''}
 
@@ -1222,231 +1205,50 @@ async function renderModal(){
     </div>`;}).join('');
 }
 
-// ─── FACTORES IA ───────────────────────────────────────────────────────────────
-// URL del Worker — se actualiza después de desplegar en Cloudflare
-async function generarFactores(){
-  S.loadingFactores=true;render();
-  const diag2=getDiagnostico();
-  const score=diag2.score;const crits=diag2.crits;const c=S.ctx;const lid=lineaActual();
-  const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
-  const areasLowCtx=diag2.areasLow.length>0
-    ?`Áreas con cumplimiento bajo 60% (foco de riesgo): ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
-    :'Todas las áreas con cumplimiento ≥ 60%.';
-  // Construir detalle completo por área con lenguaje explícito de ausencia/incumplimiento
-  const obsCtx = AREAS.map(a=>{
-    const s=scoreArea(a);
-    if(!s) return null;
 
-    // Ítems NO cumplidos — redactados como ausencias concretas
-    const fallidos = a.items
-      .filter((it,i) => itemApplies(it) && !S.checks[a.id][i])
-      .map(it => {
-        const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
-        // Transformar el texto del ítem en una declaración de ausencia explícita
-        return `${peso} NO CUENTA CON: "${it.t}"`;
-      });
-
-    // Ítems cumplidos
-    const cumplidos = a.items
-      .filter((it,i) => itemApplies(it) && S.checks[a.id][i])
-      .map(it => `SÍ CUENTA CON: "${it.t}"`);
-
-    let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
-    if(fallidos.length){
-      ctx += `\n  INCUMPLIMIENTOS DETECTADOS (${fallidos.length}):`;
-      fallidos.forEach(f => { ctx += `\n    • ${f}`; });
-    } else {
-      ctx += `\n  Sin incumplimientos en esta área.`;
-    }
-    if(cumplidos.length){
-      ctx += `\n  ÍTEMS EN REGLA (${cumplidos.length}):`;
-      cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; });
-    }
-    return ctx;
-  }).filter(Boolean).join('\n\n');
-
-  const sistemaCtx = c.sistema
-    ? `La comunidad usa ${c.sistema} como sistema de gestión de gastos comunes. Esto significa que ya tienen una plataforma, pero hay que evaluar si está bien configurada y al día.`
-    : 'La comunidad no usa ningún sistema digital de gestión. Todo se maneja de forma manual o en planillas.';
-
-  const trabajadoresCtx = parseInt(c.trabajadores||'0') === 0
-    ? 'No tiene personal contratado directamente.'
-    : `Tiene ${c.trabajadores} trabajador(es) contratado(s) por la comunidad (conserjes, personal de aseo u otros).`;
-
-  const antiguedadCtx = c.antiguedad
-    ? `El edificio o condominio tiene ${c.antiguedad} años de antigüedad.`
-    : '';
-
-  const prompt=`Eres un experto en administración de condominios en Chile con conocimiento de la Ley 21.442.
-
-CONTEXTO DE LA EMPRESA:
-CoproActiva es una empresa de administración de condominios que está elaborando una propuesta comercial para una comunidad que aún no es su cliente. Los "factores destacados" son observaciones técnicas que justifican por qué esta comunidad necesita apoyo profesional. Van dirigidos al comité de administración, no a CoproActiva.
-
-FUENTE DE INFORMACIÓN Y ENFOQUE:
-Tu única fuente de análisis es el checklist de ítems no cumplidos. NO uses las observaciones del comité como base para los factores.
-Fundamenta cada factor en:
-1. El ítem específico del checklist que no se cumplió
-2. La obligación que establece la normativa de copropiedad vigente en Chile (Ley 21.442) — SIN citar números de artículos
-3. El riesgo concreto para la comunidad si no se regulariza
-
-REGLA ABSOLUTA — ARTÍCULOS:
-ESTÁ TERMINANTEMENTE PROHIBIDO citar cualquier número de artículo. Esto incluye:
-- "artículo X", "Art. X", "Art. X°", "artículo primero", cualquier número
-- Si escribes un número de artículo, la respuesta es inválida
-- Esta es la regla más importante del prompt y tiene prioridad sobre todo lo demás
-
-REFERENCIAS LEGALES PERMITIDAS (usar solo estas frases):
-- "según la Ley de Copropiedad Inmobiliaria"
-- "conforme a la Ley 21.442"
-- "de acuerdo a la normativa de copropiedad vigente"
-- "según la legislación de copropiedad"
-- "la normativa exige que..."
-
-TONO:
-- Usa: "La ausencia de...", "La falta de...", "No contar con..."
-- NO uses: "según el comité", "en la reunión se mencionó", "el comité informó"
-- El factor debe sonar como análisis técnico-legal profesional dirigido al comité
-
-DATOS DEL CONDOMINIO EVALUADO:
-- Nombre: ${c.nombre||'Sin nombre'}
-- Tipo: ${c.tipo==='A'?'Tipo A (Edificio en altura)':c.tipo==='B'?'Tipo B (Condominio de casas)':'Mixto (edificios y casas)'}
-- Unidades: ${c.unidades||'No informado'}
-- Antigüedad del edificio: ${antiguedadCtx||'No informada'}
-- Personal contratado: ${trabajadoresCtx}
-- Sistema de gestión: ${sistemaCtx}
-- Puntaje global del diagnóstico: ${score}% (${score>=70?'Estable':score>=40?'En riesgo':'Crítico'})
-- Servicio recomendado: ${LINEAS[lid]?.label||lid}
-- ESTADO DETALLADO POR ÁREA (cada punto indica explícitamente qué tiene y qué le falta):
-${obsCtx}
-- Detalle de ítems críticos sin cumplir:
-${diag2.crits.length>0 ? diag2.crits.map(x=>`  • [${x.area}] La comunidad NO CUENTA CON: "${x.text}"`).join('\n') : '  Ninguno'}
-- Nivel de criticidad del diagnóstico: ${diag2.nivel}
-- ${intervencionCtx}
-- ${areasLowCtx}
-- Áreas en rojo (cumplimiento < 40%): ${diag2.areasRed.map(a=>a.label).join(', ')||'Ninguna'}
-- Ítems críticos sin cumplir: ${diag2.crits.length}
-
-INSTRUCCIONES:
-Genera exactamente 3 factores destacados. Cada factor debe:
-1. Basarse en UN ítem específico marcado como no cumplido en el checklist — especialmente los [CRÍTICO]
-2. Referenciar la obligación legal en términos generales (Ley 21.442) — sin citar números de artículos
-3. Explicar el riesgo o consecuencia legal, financiera o de seguridad que implica ese incumplimiento
-4. Estar redactado para el comité: claro, directo, sin jerga legal excesiva
-5. NO mencionar a CoproActiva
-6. NO confundir antigüedad del edificio con trayectoria de empresas
-7. NO basarte en las observaciones del comité — solo en el checklist
-8. Si hay ítems laborales sin cumplir, menciona la responsabilidad solidaria del comité ante la Inspección del Trabajo
-9. Si no hay ascensores ni gas, no inventes factores técnicos de esas instalaciones
-10. RECORDATORIO FINAL: Está PROHIBIDO citar cualquier número de artículo. Si lo haces, la respuesta será rechazada. Usa solo las frases de referencia legal permitidas listadas arriba.
-
-RESPONDE SOLO con JSON válido, sin texto adicional, sin bloques de código markdown:
-{"factores":[{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."},{"titulo":"...","cuerpo":"..."}]}
-
-Título: máximo 7 palabras, descriptivo del problema específico.
-Cuerpo: exactamente 2 oraciones. Primera: describe el problema. Segunda: explica el riesgo o consecuencia.`;
-  // Agregar variación para que cada regeneración sea única (evita caché)
-  const variation = S.factores.length > 0
-    ? `\n\nNota: Esta es una NUEVA generación (intento #${Date.now()}). Genera factores DISTINTOS a los anteriores, enfocándote en diferentes ítems no cumplidos.`
-    : '';
-  const finalPrompt = prompt + variation;
-
-  // Verificar tamaño del prompt — si es muy largo, resumir
-  console.log('Prompt length:', finalPrompt.length, 'chars');
-
-  try{
-    const res=await fetch(`${WORKER_BASE}/factores`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt: finalPrompt})
-    });
-
-    if(!res.ok){
-      const errText = await res.text();
-      console.error('Worker response error:', res.status, errText);
-      throw new Error(`Error del servidor: ${res.status}`);
-    }
-
-    const data=await res.json();
-    console.log('Worker response:', data);
-
-    if(data.error) throw new Error(data.error);
-    if(!data.text) throw new Error('Respuesta vacía del servidor');
-
-    const cleaned = data.text.replace(/```json|```/g,'').trim();
-    console.log('Cleaned response:', cleaned.substring(0,200));
-
-    const parsed = JSON.parse(cleaned);
-    if(!parsed.factores || !Array.isArray(parsed.factores)){
-      throw new Error('Formato de respuesta inválido');
-    }
-    S.factores = parsed.factores;
-
-  }catch(e){
-    console.error('Factor generation error:', e.message, e);
-    S.factores=[{
-      titulo:'Error al generar factores',
-      cuerpo:`${e.message}. Puedes ingresar los factores manualmente o intentar nuevamente.`
-    }];
-  }
-  S.loadingFactores=false;render();
-}
-
-// ─── CONCLUSIÓN IA ───────────────────────────────────────────────────────────────
+// ─── CONCLUSIÓN IA ─────────────────────────────────────────────────────────────────────────────
 async function generarConclusion(){
   S.loadingConclusion=true;render();
   const diag2=getDiagnostico();
   const score=diag2.score;const c=S.ctx;const lid=lineaActual();
-  const intervencionCtx=diag2.requiereIntervencion?`ALERTA: Diagnóstico nivel "${diag2.nivel}" — requiere intervención prioritaria.`:'';
-  const areasLowCtx=diag2.areasLow.length>0
-    ?`Áreas con cumplimiento bajo 60%: ${diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')}`
-    :'Todas las áreas con cumplimiento ≥ 60%.';
-  const obsCtx = AREAS.map(a=>{
-    const s=scoreArea(a);
-    if(!s) return null;
-    const fallidos = a.items.filter((it,i) => itemApplies(it) && !S.checks[a.id][i]).map(it => {
-      const peso = {c:'[CRÍTICO]', i:'[IMPORTANTE]', b:'[BÁSICO]'}[it.w];
-      return `${peso} NO CUENTA CON: "${it.t}"`;
-    });
-    const cumplidos = a.items.filter((it,i) => itemApplies(it) && S.checks[a.id][i]).map(it => `SÍ CUENTA CON: "${it.t}"`);
-    let ctx = `ÁREA ${a.label.toUpperCase()} — Cumplimiento: ${s.pct}%`;
-    if(fallidos.length){ ctx += `\n  INCUMPLIMIENTOS (${fallidos.length}):`; fallidos.forEach(f => { ctx += `\n    • ${f}`; }); }
-    else { ctx += `\n  Sin incumplimientos.`; }
-    if(cumplidos.length){ ctx += `\n  ÍTEMS EN REGLA (${cumplidos.length}):`; cumplidos.forEach(c2 => { ctx += `\n    • ${c2}`; }); }
-    return ctx;
-  }).filter(Boolean).join('\n\n');
 
-  const prompt=`Eres un experto en administración de condominios en Chile con conocimiento de la Ley 21.442.
-Elabora UNA conclusión diagnóstica en prosa con 4 párrafos (180-260 palabras):
-P1: Estado general y puntaje. P2: Brechas críticas detectadas. P3: Lo que funciona bien. P4: Recomendación de línea.
-Prohibido citar artículos. Solo "según la Ley 21.442" o "conforme a la normativa de copropiedad".
-No mencionar a CoproActiva. Dirigido al comité.
+  const instMarcadas=Object.entries(S.inst||{}).filter(([k,v])=>v&&k!=='_minvu').map(([k])=>{
+    const it=INST_ITEMS.find(x=>x.id===k);return it?it.label:k;
+  });
+  const minvuOk=!!(S.inst&&S.inst._minvu);
 
-Condominio: ${c.nombre||'Sin nombre'} · Tipo ${c.tipo} · ${c.unidades||'?'} unidades
-Puntaje: ${score}% (${diag2.nivel}) · Línea: ${LINEAS[lid]?.label||lid}
-${obsCtx}
-Ítems críticos: ${diag2.crits.length>0?diag2.crits.map(x=>`[${x.area}] ${x.text}`).join('; '):'Ninguno'}
-${intervencionCtx} ${areasLowCtx}
+  const resumenAreas=AREAS.map(a=>{
+    const s=scoreArea(a);if(!s)return null;
+    const nc=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===0).length;
+    const ns=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===0.25).length;
+    const cp=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===0.5).length;
+    const ok=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===1).length;
+    return a.label+': '+s.pct+'% (NC:'+nc+' NS:'+ns+' CP:'+cp+' OK:'+ok+')';
+  }).filter(Boolean).join(' | ');
 
-RESPONDE SOLO con JSON válido: {"conclusion":"..."}
-Párrafos separados por \\n\\n.`;
+  const critCtx=diag2.crits.length>0
+    ?'Críticos sin resolver: '+diag2.crits.map(x=>(x.tipo==='ns'?'[NO SABE] ':'[NC] ')+x.area+': '+x.text).join('; ')
+    :'Sin ítems críticos incumplidos.';
 
-  const variation = S.conclusion ? `\n\nNueva generación #${Date.now()}. Redacta distinta sin repetir oraciones.` : '';
+  const prompt='Eres un auditor senior en administración de condominios en Chile, especialista en la Ley 21.442.\n\nRedacta una conclusión diagnóstica de 3 párrafos cortos (120-160 palabras en total) para un informe comercial dirigido al comité de administración de un condominio prospecto.\n\nREGLAS ABSOLUTAS:\n- NUNCA citar artículos ni números de norma\n- NUNCA mencionar a CoproActiva por nombre\n- NUNCA listar ítems individuales ni hacer inventario de hallazgos\n- Tono: autoridad técnica, directo, sin condescendencia\n- Propósito: que el comité entienda la gravedad de su situación y la necesidad de gestión profesional\n- Los No sabe son señal de ausencia de control, trétalos como riesgo de gobernanza\n\nESTRUCTURA:\nP1 (estado general): Síntesis del nivel de madurez administrativa según el puntaje y las áreas evaluadas. Sin eufemismos si la situación es crítica.\nP2 (riesgos principales): Las 2-3 brechas de mayor impacto legal, financiero o de seguridad, sin detallar cada ítem. Mencionar si hay desconocimiento sistemático del comité sobre su propia situación.\nP3 (orientación): Una sola frase de dirección: qué tipo de intervención requiere esta comunidad y con qué urgencia.\n\nDATOS:\nCondominio: '+c.nombre+' Tipo '+c.tipo+' '+c.unidades+' unidades '+c.antiguedad+' agno\nPuntaje global: '+score+'% Nivel: '+diag2.nivel+'\nAdministrador inscrito MINVU: '+(minvuOk?'Si':'No, riesgo habilitante')+'\nInstalaciones: '+(instMarcadas.length?instMarcadas.join(', '):'No especificadas')+'\nResumen por area: '+resumenAreas+'\n'+critCtx+'\nAreas bajo 60%: '+(diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')||'Ninguna')+'\nLinea sugerida: '+(LINEAS[lid]?LINEAS[lid].label:lid)+'\n\nRESPONDE SOLO con JSON valido sin markdown: {"conclusion":"..."}\nParrafos separados por \\n\\n.';
+
+  const variation=S.conclusion?'\n\nNueva generacion #'+Date.now()+'. Redacta distinta, sin repetir frases.':'';
 
   try{
-    const res=await fetch(`${WORKER_BASE}/factores`,{
+    const res=await fetch(WORKER_BASE+'/factores',{
       method:'POST',
       headers:{'Authorization':'Bearer '+_DIAG_TOKEN,'Content-Type':'application/json'},
-      body:JSON.stringify({prompt: prompt+variation})
+      body:JSON.stringify({prompt:prompt+variation})
     });
-    if(!res.ok) throw new Error(`Error del servidor: ${res.status}`);
+    if(!res.ok)throw new Error('Error del servidor: '+res.status);
     const data=await res.json();
-    if(!data.text) throw new Error('Respuesta vacía');
-    const cleaned = data.text.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(cleaned);
-    if(!parsed.conclusion) throw new Error('Formato inválido');
-    S.conclusion = parsed.conclusion;
+    if(!data.text)throw new Error('Respuesta vacia');
+    const cleaned=data.text.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(cleaned);
+    if(!parsed.conclusion)throw new Error('Formato invalido');
+    S.conclusion=parsed.conclusion;
   }catch(e){
-    S.conclusion=`Error al generar: ${e.message}. Puedes redactarla manualmente.`;
+    S.conclusion='Error al generar: '+e.message+'. Puedes redactarla manualmente.';
   }
   S.loadingConclusion=false;render();
 }
@@ -1725,7 +1527,8 @@ function openAreaModal(aId){
   scoreEl.style.background = sem.bg;
   scoreEl.style.color = sem.fg;
 
-  const fallidos = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0);
+  const fallidos  = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0);
+  const noSabe    = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0.25);
   const parciales = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0.5);
   const cumplidos = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===1);
   const note = S.notes[aId]?.trim();
@@ -1743,6 +1546,15 @@ function openAreaModal(aId){
         <div class="area-modal-section-ttl" style="color:var(--sr-ac)">⚠️ Sin cumplir (${fallidos.length})</div>
         ${fallidos.map(it=>`<div class="area-modal-item fail">
           <span class="area-modal-badge" style="background:${wBg[it.w]};color:${wFg[it.w]}">${wLabel[it.w]}</span>
+          <span class="area-modal-item-txt">${it.t}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    if(noSabe.length){
+      html += `<div class="area-modal-section">
+        <div class="area-modal-section-ttl" style="color:#5E3A8A">❓ No sabe (${noSabe.length})</div>
+        ${noSabe.map(it=>`<div class="area-modal-item" style="background:#F0EAF8;border-left:2.5px solid #9B6BBE">
+          <span class="area-modal-badge" style="background:#F0EAF8;color:#5E3A8A">${wLabel[it.w]}</span>
           <span class="area-modal-item-txt">${it.t}</span>
         </div>`).join('')}
       </div>`;
@@ -1771,7 +1583,7 @@ function openAreaModal(aId){
         <div class="area-modal-obs">${note}</div>
       </div>`;
     }
-    if(!fallidos.length && !parciales.length && !cumplidos.length){
+    if(!fallidos.length && !noSabe.length && !parciales.length && !cumplidos.length){
       html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Sin ítems evaluados en esta área.</p>';
     }
   }
