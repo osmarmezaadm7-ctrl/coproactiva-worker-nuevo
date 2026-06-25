@@ -284,6 +284,7 @@
   let prospectos = [];
   let leads = [];
   let _tabActiva = 'leads';
+  const _tabCache = {}; // cache de wrappers DOM para tabs que cargan módulos externos
   let _leadBusqueda = '';
   let _leadFiltroEstado = '';
   let _leadFiltroTipo = '';
@@ -442,36 +443,37 @@
       return;
     }
 
-    container.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
-    const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
-
-    if (tab === 'diagnostico') {
-      fetch(base + 'modules/diagnostico.html')
-        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + r.url); return r.text(); })
-        .then(function(html) {
-          container.innerHTML = html;
-          container.classList.add('crm-sub-modulo');
-          Array.from(container.querySelectorAll('script')).forEach(function(old) {
-            const s = document.createElement('script');
-            s.textContent = old.textContent;
-            old.parentNode.replaceChild(s, old);
-          });
-        })
-        .catch(function(err) {
-          container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--co-red);font-size:13px;font-weight:600">Error: ' + err.message + '</div>';
-        });
+    // Si ya existe un wrapper cacheado para este tab, mostrarlo sin recargar
+    if (_tabCache[tab]) {
+      _tabCache[tab].style.display = 'block';
       return;
     }
 
-    fetch(base + 'modules/' + tab + '.html')
-      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    // Primera carga — mostrar loading mientras fetch
+    container.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando...</div></div></div>';
+    const base = window.location.origin + window.location.pathname.replace('index.html','').replace(/\/$/, '') + '/';
+    const modFile = tab === 'diagnostico' ? 'modules/diagnostico.html' : 'modules/' + tab + '.html';
+
+    fetch(base + modFile)
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status + (tab === 'diagnostico' ? ' — ' + r.url : '')); return r.text(); })
       .then(function(html) {
-        container.innerHTML = html;
-        container.classList.add('crm-sub-modulo');
-        Array.from(container.querySelectorAll('script')).forEach(function(old) {
+        container.innerHTML = '';
+        const wrapper = document.createElement('div');
+        wrapper.setAttribute('data-tab-cache', tab);
+        wrapper.style.width = '100%';
+        wrapper.classList.add('crm-sub-modulo');
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const scripts = Array.from(temp.querySelectorAll('script'));
+        scripts.forEach(function(s) { s.remove(); });
+        wrapper.innerHTML = temp.innerHTML;
+        container.appendChild(wrapper);
+        _tabCache[tab] = wrapper;
+        scripts.forEach(function(old) {
           const s = document.createElement('script');
           s.textContent = old.textContent;
-          old.parentNode.replaceChild(s, old);
+          document.body.appendChild(s);
+          document.body.removeChild(s);
         });
       })
       .catch(function(err) {
@@ -485,6 +487,10 @@
     if (_stickyScrollHandler) {
       window.removeEventListener('scroll', _stickyScrollHandler);
       _stickyScrollHandler = null;
+    }
+    // Ocultar wrapper cacheado del tab anterior si existe
+    if (_tabCache[_tabActiva]) {
+      _tabCache[_tabActiva].style.display = 'none';
     }
     _tabActiva = tab;
     document.querySelectorAll('.crm-tab-btn').forEach(function(b) {
