@@ -1,5 +1,5 @@
 <!-- modules/diagnostico.html — CoproActiva Diagnóstico -->
-<!-- Versión: 3.4 · Mayo 2026 — wrapper iframe + loading rediseñado -->
+<!-- Versión: 3.5 · Junio 2026 — wrapper iframe + token HMAC -->
 <style>
   .diag-iframe-container {
     width: 100%;
@@ -56,18 +56,26 @@
   const loading = document.getElementById('diagLoading');
   const ACCESS_KEY = 'copro2025';
 
+  function enviarToken() {
+    var token = sessionStorage.getItem('token') || '';
+    if (iframe && iframe.contentWindow && token) {
+      iframe.contentWindow.postMessage({ type: 'set_worker_token', token: token }, '*');
+    }
+  }
+
   function cargarIframe() {
     const src = 'diagnostico_standalone.html?token=' + encodeURIComponent(ACCESS_KEY) + '&t=' + Date.now();
     iframe.src = src;
     loading.style.display = 'flex';
     iframe.style.opacity = '0';
   }
-
   cargarIframe();
 
   iframe.addEventListener('load', function() {
     loading.style.display = 'none';
     iframe.style.opacity  = '1';
+    // Enviar token HMAC al iframe una vez que cargó
+    enviarToken();
   });
 
   window.addEventListener('message', function(event) {
@@ -75,6 +83,10 @@
     if (!data || !data.type) return;
     if (data.type === 'recargar_diagnostico') {
       cargarIframe();
+    }
+    // El standalone puede pedir el token si aún no lo tiene
+    if (data.type === 'solicitar_token') {
+      enviarToken();
     }
   });
 
