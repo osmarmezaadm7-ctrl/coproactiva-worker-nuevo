@@ -450,8 +450,9 @@
       return;
     }
 
-    // Tabs externos (diagnostico, recepcion): ocultar container, mostrar wrapper propio
+    // Tabs externos (diagnostico, recepcion): ocultar container y otros wrappers externos
     container.style.display = 'none';
+    Object.keys(_tabCache).forEach(function(k) { _tabCache[k].style.display = 'none'; });
 
     // Si ya está cacheado, solo mostrarlo
     if (_tabCache[tab]) {
