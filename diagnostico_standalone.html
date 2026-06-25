@@ -363,65 +363,79 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const AREAS=[
-  {id:'legal',label:'Legal',emoji:'\u2696\uFE0F',items:[
+  {id:'legal',label:'Legal',emoji:'⚖️',items:[
     {t:'Administrador inscrito en Registro Nacional de Administradores de Condominios (MINVU)',w:'c'},
     {t:'Reglamento de copropiedad inscrito en el CBR y actualizado conforme a la Ley 21.442',w:'c'},
     {t:'RUT de la comunidad vigente ante el SII',w:'c'},
-    {t:'Comit\u00E9 de Administraci\u00F3n con acta de nombramiento reducida a escritura p\u00FAblica',w:'c'},
-    {t:'Libro de actas foliado al d\u00EDa (asambleas y reuniones de comit\u00E9)',w:'i'},
-    {t:'Asamblea ordinaria celebrada en los \u00FAltimos 12 meses con acta disponible',w:'i'},
+    {t:'Comité de Administración con acta de nombramiento reducida a escritura pública',w:'c'},
+    {t:'Libro de actas foliado al día (asambleas y reuniones de comité)',w:'i'},
+    {t:'Asamblea ordinaria celebrada en los últimos 12 meses con acta disponible',w:'i'},
     {t:'Libro de novedades operativo y accesible a copropietarios (Art. 20 Ley 21.442)',w:'i'},
   ]},
-  {id:'financiero',label:'Financiero',emoji:'\uD83D\uDCB0',items:[
+  {id:'financiero',label:'Financiero',emoji:'💰',items:[
     {t:'Cuenta bancaria exclusiva a nombre de la comunidad bajo su RUT',w:'c'},
     {t:'Fondo de reserva constituido, separado e invertido en instrumentos seguros',w:'c'},
-    {t:'Rendici\u00F3n de cuentas mensual con conciliaci\u00F3n bancaria y facturas de respaldo',w:'c'},
-    {t:'Aviso de gasto com\u00FAn emitido mensualmente y desglosado por al\u00EDcuota',w:'i'},
+    {t:'Rendición de cuentas mensual con conciliación bancaria y facturas de respaldo',w:'c'},
+    {t:'Aviso de gasto común emitido mensualmente y desglosado por alícuota',w:'i'},
     {t:'Tabla de prorrateo vigente aprobada en asamblea',w:'i'},
     {t:'Tabla de prorrateo diferenciada para locales comerciales',w:'i',cond:'locales'},
     {t:'Registro de morosidad actualizado',w:'i'},
     {t:'Presupuesto anual aprobado por asamblea',w:'b'},
   ]},
-  {id:'laboral',label:'Laboral',emoji:'\uD83D\uDC77',condArea:'trabajadores',items:[
+  {id:'laboral',label:'Laboral',emoji:'👷',condArea:'trabajadores',items:[
     {t:'Contratos de trabajo vigentes con funciones reales descritas',w:'c'},
-    {t:'Cotizaciones previsionales al d\u00EDa sin deuda de arrastre (Previred)',w:'c'},
+    {t:'Cotizaciones previsionales al día sin deuda de arrastre (Previred)',w:'c'},
     {t:'Carpeta laboral individual completa por trabajador (contrato, F30, liquidaciones firmadas)',w:'i'},
     {t:'Registro de asistencia y horas extra aprobado por la DT',w:'i'},
-    {t:'Gesti\u00F3n preventiva DS 44 implementada (MIPER, PTP, IRL firmado por personal, EPP entregado)',w:'i'},
+    {t:'Gestión preventiva DS 44 implementada (MIPER, PTP, IRL firmado por personal, EPP entregado)',w:'i'},
     {t:'Protocolo Ley Karin con canal de denuncia confidencial operativo',w:'i'},
     {t:'RIHS vigente (dotaciones menores de 10 trabajadores)',w:'b',cond:'menosDiez'},
-    {t:'RIOHS visado por Seremi de Salud y Mutual (10 o m\u00E1s trabajadores)',w:'b',cond:'diezOMas'},
+    {t:'RIOHS visado por Seremi de Salud y Mutual (10 o más trabajadores)',w:'b',cond:'diezOMas'},
     {t:'Seguro de vida para conserjes con funciones de seguridad (Ley 21.659)',w:'b',cond:'segPrivada'},
   ]},
-  {id:'tecnico',label:'T\u00E9cnico',emoji:'\uD83D\uDD27',items:[
-    {t:'Certificaci\u00F3n de ascensores vigente y Carpeta Cero al d\u00EDa',w:'c',cond:'asc'},
+  {id:'tecnico',label:'Técnico',emoji:'🔧',items:[
+    {t:'Certificación de ascensores vigente y Carpeta Cero al día',w:'c',cond:'asc'},
     {t:'Sello Verde de Gas SEC vigente',w:'c',cond:'gas'},
-    {t:'Certificaci\u00F3n de caldera / central t\u00E9rmica vigente',w:'c',cond:'caldera'},
-    {t:'Inscripci\u00F3n TE-4 y bit\u00E1cora de grupo electr\u00F3geno al d\u00EDa (SEC)',w:'c',cond:'genEle'},
-    {t:'Inscripci\u00F3n TE-1 o medici\u00F3n de puesta a tierra y termograf\u00EDa de tableros el\u00E9ctricos',w:'c'},
-    {t:'Bit\u00E1coras de mantenci\u00F3n al d\u00EDa por equipo e instalaci\u00F3n cr\u00EDtica (ascensores, bombas, portones y otros seg\u00FAn caracter\u00EDsticas del edificio)',w:'i'},
-    {t:'Sanitizaci\u00F3n y potabilidad de estanques de agua (ISP) al d\u00EDa',w:'i',cond:'hidro'},
-    {t:'Bit\u00E1cora de red contra incendios y extintores vigentes',w:'i',cond:'rci'},
-    {t:'Plan de mantenci\u00F3n preventiva documentado',w:'b'},
+    {t:'Certificación de caldera / central térmica vigente',w:'c',cond:'caldera'},
+    {t:'Inscripción TE-4 y bitácora de grupo electrógeno al día (SEC)',w:'c',cond:'genEle'},
+    {t:'Inscripción TE-1 o medición de puesta a tierra y termografía de tableros eléctricos',w:'c'},
+    {t:'Bitácoras de mantención al día por equipo e instalación crítica (ascensores, bombas, portones y otros según características del edificio)',w:'i'},
+    {t:'Sanitización y potabilidad de estanques de agua (ISP) al día',w:'i',cond:'hidro'},
+    {t:'Bitácora de red contra incendios y extintores vigentes',w:'i',cond:'rci'},
+    {t:'Plan de mantención preventiva documentado',w:'b'},
   ]},
-  {id:'seguridad',label:'Seguridad',emoji:'\uD83D\uDEE1\uFE0F',items:[
-    {t:'Seguro de incendio y cat\u00E1strofe vigente para bienes comunes y unidades',w:'c'},
-    {t:'Plan de emergencia y evacuaci\u00F3n vigente, visado por Bomberos',w:'i'},
-    {t:'Registro de simulacros (al menos uno en los \u00FAltimos 12 meses)',w:'i'},
-    {t:'Plan de gesti\u00F3n de riesgos de desastres GRRD (DS 44)',w:'i',cond:'trabajadores'},
-    {t:'Se\u00F1al\u00E9tica e iluminaci\u00F3n de emergencia operativa en zonas comunes',w:'i'},
+  {id:'seguridad',label:'Seguridad',emoji:'🛡️',items:[
+    {t:'Seguro de incendio y catástrofe vigente para bienes comunes y unidades',w:'c'},
+    {t:'Plan de emergencia y evacuación vigente, visado por Bomberos',w:'i'},
+    {t:'Registro de simulacros (al menos uno en los últimos 12 meses)',w:'i'},
+    {t:'Plan de gestión de riesgos de desastres GRRD (DS 44)',w:'i',cond:'trabajadores'},
+    {t:'Señalética e iluminación de emergencia operativa en zonas comunes',w:'i'},
     {t:'CCTV operativo y con acceso registrado',w:'b',cond:'cctv'},
     {t:'Control de acceso vehicular operativo',w:'b',cond:'porton'},
     {t:'Registro de electrodependientes y personas con movilidad reducida',w:'b'},
   ]},
-  {id:'documental',label:'Documental',emoji:'\uD83D\uDCC2',items:[
-    {t:'Registro de copropietarios y ocupantes actualizado (nombre, contacto, al\u00EDcuota, condici\u00F3n)',w:'i'},
-    {t:'Archivo de planos finales, recepci\u00F3n definitiva DOM e instalaciones aprobadas',w:'i'},
+  {id:'documental',label:'Documental',emoji:'📂',items:[
+    {t:'Registro de copropietarios y ocupantes actualizado (nombre, contacto, alícuota, condición)',w:'i'},
+    {t:'Archivo de planos finales, recepción definitiva DOM e instalaciones aprobadas',w:'i'},
     {t:'Carpeta de contratos de proveedores vigentes',w:'i'},
     {t:'Claves de acceso a plataformas y cuentas documentadas y custodiadas',w:'i'},
-    {t:'Canal de comunicaci\u00F3n oficial con copropietarios activo',w:'b'},
-    {t:'Pol\u00EDtica de protecci\u00F3n de datos personales de residentes',w:'b'},
+    {t:'Canal de comunicación oficial con copropietarios activo',w:'b'},
+    {t:'Política de protección de datos personales de residentes',w:'b'},
   ]},
+];
+// INSTALACIONES
+const INST_ITEMS=[
+  {id:'asc',label:'Ascensores'},
+  {id:'escMec',label:'Escaleras mecánicas'},
+  {id:'gas',label:'Red de gas centralizado'},
+  {id:'caldera',label:'Caldera / calefacción central'},
+  {id:'genEle',label:'Grupo electrógeno'},
+  {id:'hidro',label:'Estanques / sistema hidroneumático'},
+  {id:'piscina',label:'Piscina / SPA'},
+  {id:'rci',label:'Red contra incendios'},
+  {id:'porton',label:'Control vehicular / portón'},
+  {id:'cctv',label:'CCTV'},
+  {id:'locales',label:'Locales comerciales'},
 ];
 const WP={c:3,i:2,b:1};
 const LINEAS={
@@ -441,45 +455,63 @@ const LINEAS={
       items:['Auditoría documental con informe de hallazgos','Asesoría legal y normativa sobre Ley 21.442','Orientación para regularización laboral y previsional','Plan de acción priorizado por nivel de riesgo','Acompañamiento al comité en la toma de decisiones'],
       valMin:'300.000',valMax:'500.000'},
 };
-const VIEWS=['home','contexto',...AREAS.map(a=>a.id),'revision'];
+const VIEWS=['home','contexto','instalaciones',...AREAS.map(a=>a.id),'revision'];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
 function defaultState(){return{
-  ctx:{nombre:'',tipo:'A',unidades:'',locales:'no',antiguedad:'',
-       trabajadores:'',ascensores:'no',gas:'no',sistema:'',
-       contactoNombre:'',contactoCorreo:'',contactoCargo:''},
-  checks:Object.fromEntries(AREAS.map(a=>[a.id,new Array(a.items.length).fill(false)])),
+  ctx:{nombre:'',tipo:'A',unidades:'',antiguedad:'',trabajadores:'',
+       sistema:'',contactoNombre:'',contactoCorreo:'',contactoCargo:'',
+       segPrivada:false},
+  inst:Object.fromEntries(INST_ITEMS.map(x=>[x.id,false])),
+  checks:Object.fromEntries(AREAS.map(a=>[a.id,new Array(a.items.length).fill(null)])),
   notes:Object.fromEntries(AREAS.map(a=>[a.id,''])),
   factores:[],valorMin:'',valorMax:'',lineaOverride:null,loadingFactores:false,
   conclusion:'',loadingConclusion:false,
 };}
 let S={...defaultState(),view:'home'};
-let _prospectoVinculadoId = null; // id del prospecto (pipeline CRM) si el diagnóstico se abrió desde "Ir a Diagnóstico"
+let _prospectoVinculadoId = null;
 
-// ─── SCORING REFINADO ────────────────────────────────────────────────────────
+function hasInst(id){return !!(S.inst&&S.inst[id]);}
+function numTrabajadores(){return parseInt(S.ctx.trabajadores||'0');}
+
 function itemApplies(it){
   if(!it.cond)return true;
-  if(it.cond==='locales')return S.ctx.locales==='si';
-  if(it.cond==='gas')return S.ctx.gas==='si';
-  if(it.cond==='ascensores')return S.ctx.ascensores==='si';
+  const c=it.cond;
+  if(c==='locales')return hasInst('locales');
+  if(c==='asc')return hasInst('asc');
+  if(c==='gas')return hasInst('gas');
+  if(c==='caldera')return hasInst('caldera');
+  if(c==='genEle')return hasInst('genEle');
+  if(c==='hidro')return hasInst('hidro');
+  if(c==='rci')return hasInst('rci');
+  if(c==='cctv')return hasInst('cctv');
+  if(c==='porton')return hasInst('porton');
+  if(c==='trabajadores')return numTrabajadores()>0;
+  if(c==='menosDiez')return numTrabajadores()>0&&numTrabajadores()<10;
+  if(c==='diezOMas')return numTrabajadores()>=10;
+  if(c==='segPrivada')return !!(S.ctx.segPrivada);
   return true;
 }
 function areaApplies(a){
-  if(a.condArea==='trabajadores')return parseInt(S.ctx.trabajadores||'0')>0;
+  if(a.condArea==='trabajadores')return numTrabajadores()>0;
   return true;
+}
+function itemVal(aId,i){
+  const v=S.checks[aId][i];
+  return (v===null||v===undefined)?null:Number(v);
 }
 function scoreArea(a){
   if(!areaApplies(a))return null;
   let earned=0,possible=0;
   a.items.forEach((it,i)=>{
-    if(!itemApplies(it))return; // NA excluido del denominador
+    if(!itemApplies(it))return;
     const w=WP[it.w]; possible+=w;
-    if(S.checks[a.id][i])earned+=w;
+    const v=itemVal(a.id,i);
+    if(v!==null)earned+=w*v;
   });
   if(possible===0)return null;
   const pct=Math.round(earned/possible*100);
-  const critFail=a.items.filter((it,i)=>it.w==='c'&&itemApplies(it)&&!S.checks[a.id][i]).length;
-  return{pct,earned,possible,critFail};
+  const critNC=a.items.filter((it,i)=>it.w==='c'&&itemApplies(it)&&itemVal(a.id,i)===0).length;
+  return{pct,earned,possible,critNC};
 }
 function globalScore(){
   let t=0,n=0;
@@ -491,60 +523,48 @@ function critFailing(){
   AREAS.forEach(a=>{
     if(!areaApplies(a))return;
     a.items.forEach((it,i)=>{
-      if(it.w==='c'&&itemApplies(it)&&!S.checks[a.id][i])
+      if(it.w==='c'&&itemApplies(it)&&itemVal(a.id,i)===0)
         out.push({text:it.t,area:a.label});
     });
   });
   return out;
 }
 
-// ── Análisis completo — 4 niveles + gatillos ─────────────────────────────────
+// ── Análisis completo — 4 niveles + gatillos
 function getDiagnostico(){
   const score=globalScore();
   const crits=critFailing();
   const hasCritFail=crits.length>0;
-
-  // Áreas con puntaje < 60% (foco de riesgo prioritario)
-  const areasLow=AREAS
-    .map(a=>({...a,score:scoreArea(a)}))
-    .filter(a=>a.score&&a.score.pct<60);
-
-  // Áreas en rojo (< 40%)
+  const areasLow=AREAS.map(a=>({...a,score:scoreArea(a)})).filter(a=>a.score&&a.score.pct<60);
   const areasRed=areasLow.filter(a=>a.score.pct<40);
-
-  // Intervención prioritaria si hay crítico incumplido o área < 60%
   const requiereIntervencion=hasCritFail||areasLow.length>0;
-
-  // Clasificación de 4 niveles
-  // Regla: ítems críticos incumplidos o áreas <60% impiden clasificación "Estable limpio"
   let nivel,desc;
-  if(score>=70 && areasLow.length===0 && !hasCritFail){
-    // Estable limpio: global ≥70%, todas las áreas ≥60% Y sin críticos incumplidos
+  if(score>=80&&areasLow.length===0&&!hasCritFail){
     nivel='Estable';
     desc='La comunidad presenta una gestión ordenada en todas las áreas. CoproActiva puede optimizarla de manera continua.';
-  } else if(score>=70 && (areasLow.length>0 || hasCritFail)){
-    // Estable con observaciones: global ≥70% pero hay áreas <60% o ítems críticos sin cumplir
+  } else if(score>=80&&(areasLow.length>0||hasCritFail)){
     nivel='Estable con observaciones';
     const motivos=[];
-    if(areasLow.length>0) motivos.push(`focos de riesgo en: ${areasLow.map(a=>a.label).join(', ')}`);
-    if(hasCritFail) motivos.push(`${crits.length} ítem(s) crítico(s) sin resolver`);
-    desc=`El puntaje global es satisfactorio, pero se identifican: ${motivos.join(' y ')}. Estos aspectos requieren atención aunque el resultado global sea positivo.`;
-  } else if(score>=40){
+    if(areasLow.length>0)motivos.push('focos de riesgo en: '+areasLow.map(a=>a.label).join(', '));
+    if(hasCritFail)motivos.push(crits.length+' ítem(s) crítico(s) sin resolver');
+    desc='El puntaje global es satisfactorio, pero se identifican: '+motivos.join(' y ')+'. Estos aspectos requieren atención aunque el resultado global sea positivo.';
+  } else if(score>=50&&!hasCritFail){
     nivel='En riesgo';
     desc='Existen aspectos que requieren intervención moderada. Sin acción oportuna pueden derivar en problemas administrativos, legales o financieros de mayor envergadura.';
+  } else if(hasCritFail&&score>=50){
+    nivel='En riesgo';
+    desc='Se detectan incumplimientos en ítems críticos. Aunque el puntaje global sea moderado, estos hallazgos requieren intervención prioritaria.';
   } else {
     nivel='Crítico';
     desc='Se detectan deficiencias graves en una o más áreas. Se requiere intervención urgente para evitar consecuencias legales y financieras significativas.';
   }
-
   return{score,nivel,desc,hasCritFail,crits,areasLow,areasRed,requiereIntervencion};
 }
-
 // ── Línea sugerida ────────────────────────────────────────────────────────────
 function lineaSugerida(){
   const d=getDiagnostico();
-  if(d.score<30)return'L3';
-  if(d.score>=65&&d.areasRed.length<2)return'L1';
+  if(d.score<40)return'L3';
+  if(d.score>=75&&d.areasRed.length===0&&!d.hasCritFail)return'L1';
   return'L2';
 }
 function lineaActual(){return S.lineaOverride||lineaSugerida();}
@@ -552,9 +572,9 @@ function lineaActual(){return S.lineaOverride||lineaSugerida();}
 // ── Semáforo por área ─────────────────────────────────────────────────────────
 function semC(pct){
   if(pct==null)return{fg:'var(--az-md)',bg:'var(--surf)',ac:'var(--border)',lbl:'No aplica'};
-  if(pct>=70) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Bien'};
+  if(pct>=80) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Estable'};
   if(pct>=60) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Bien'};
-  if(pct>=40) return{fg:'var(--sa-fg)',bg:'var(--sa-bg)',ac:'var(--sa-ac)',lbl:'En riesgo'};
+  if(pct>=50) return{fg:'var(--sa-fg)',bg:'var(--sa-bg)',ac:'var(--sa-ac)',lbl:'En riesgo'};
   return{fg:'var(--sr-fg)',bg:'var(--sr-bg)',ac:'var(--sr-ac)',lbl:'Crítico'};
 }
 
@@ -631,7 +651,7 @@ async function getSaved() {
 let _lastSavedSnapshot = '';
 function formSnapshot(){
   return JSON.stringify({
-    ctx:S.ctx, checks:S.checks, notes:S.notes,
+    ctx:S.ctx, inst:S.inst, checks:S.checks, notes:S.notes,
     factores:S.factores, conclusion:S.conclusion||'',
     valorMin:S.valorMin, valorMax:S.valorMax, lineaOverride:S.lineaOverride,
   });
@@ -652,6 +672,7 @@ async function saveDiag() {
     linea: lineaActual(),
     prospectoId: _prospectoVinculadoId || '',
     ctx: {...S.ctx},
+    inst: {...(S.inst||{})},
     checks: JSON.parse(JSON.stringify(S.checks)),
     notes: {...S.notes},
     factores: [...S.factores],
@@ -697,7 +718,12 @@ async function loadDiag(nombre) {
   const d = saved.find(x=>x.nombre===nombre);
   if(!d) return;
   S.ctx={...d.ctx};
+  S.inst=d.inst?{...d.inst}:Object.fromEntries(INST_ITEMS.map(x=>[x.id,false]));
   S.checks=JSON.parse(JSON.stringify(d.checks));
+  AREAS.forEach(a=>{
+    S.checks[a.id]=(S.checks[a.id]||[]).map(v=>v===true?1:v===false?null:v);
+    while(S.checks[a.id].length<a.items.length)S.checks[a.id].push(null);
+  });
   S.notes={...d.notes};
   S.factores=d.factores||[];
   S.conclusion=d.conclusion||'';
@@ -733,7 +759,7 @@ async function deleteSaved(nombre) {
 
 // ─── STEPPER + SIDEBAR ───────────────────────────────────────────────────────
 function renderNav(){
-  const steps=[{id:'contexto',label:'Datos',emoji:'📋'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión',emoji:'📊'}];
+  const steps=[{id:'contexto',label:'Datos',emoji:'📋'},{id:'instalaciones',label:'Instal.',emoji:'🏗️'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión',emoji:'📊'}];
   const ai=steps.findIndex(s=>s.id===S.view);
   const score=globalScore();const crit=critData(score);
 
@@ -805,6 +831,7 @@ function render(){
     else loadHomeData();
   }
   else if(S.view==='contexto')m.innerHTML=renderCtx();
+  else if(S.view==='instalaciones')m.innerHTML=renderInstalaciones();
   else if(S.view==='revision')m.innerHTML=renderRevision();
   else{const a=AREAS.find(x=>x.id===S.view);if(a)m.innerHTML=renderArea(a);}
 }
@@ -871,27 +898,6 @@ function renderCtx(){
     <div class="card-ttl"><div class="cdot"></div>Características del inmueble</div>
     <div class="fg">
       <div class="f">
-        <label class="fl">¿Tiene locales comerciales?</label>
-        <select onchange="S.ctx.locales=this.value">
-          <option value="no" ${c.locales==='no'?'selected':''}>No</option>
-          <option value="si" ${c.locales==='si'?'selected':''}>Sí</option>
-        </select>
-      </div>
-      <div class="f">
-        <label class="fl">¿Tiene ascensores?</label>
-        <select onchange="S.ctx.ascensores=this.value">
-          <option value="no" ${c.ascensores==='no'?'selected':''}>No</option>
-          <option value="si" ${c.ascensores==='si'?'selected':''}>Sí</option>
-        </select>
-      </div>
-      <div class="f">
-        <label class="fl">¿Red de gas centralizado?</label>
-        <select onchange="S.ctx.gas=this.value">
-          <option value="no" ${c.gas==='no'?'selected':''}>No</option>
-          <option value="si" ${c.gas==='si'?'selected':''}>Sí</option>
-        </select>
-      </div>
-      <div class="f">
         <label class="fl">Trabajadores contratados</label>
         <input type="number" value="${c.trabajadores}" oninput="S.ctx.trabajadores=this.value" placeholder="0" min="0">
         <span class="hint">Conserjes, personal de limpieza, etc.</span>
@@ -937,24 +943,89 @@ function renderCtx(){
   </div>
 
   <div class="nav-row nav-row-end">
-    <button class="pri" onclick="goNext()">Comenzar diagnóstico →</button>
+    <button class="pri" onclick="goNext()">Siguiente: instalaciones →</button>
   </div>`;
 }
 
 // ─── ÁREA ─────────────────────────────────────────────────────────────────────
+// ─── INSTALACIONES ───────────────────────────────────────────────────────────
+function renderInstalaciones(){
+  const inst=S.inst||{};
+  const nTrab=numTrabajadores();
+  const minvuOk=!!(inst._minvu);
+  return`
+  <div class="ph">
+    <div class="ph-title">Instalaciones y equipamiento</div>
+    <div class="ph-sub">Marca todo lo que tiene el edificio — determina qué ítems aplican en el diagnóstico</div>
+  </div>
+
+  ${!minvuOk?`
+  <div class="card" style="border-color:var(--sr-ac);background:var(--sr-bg)">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="font-size:18px;flex-shrink:0">⚠️</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--sr-fg);margin-bottom:3px">Administrador no inscrito en Registro MINVU</div>
+        <div style="font-size:12px;color:var(--sr-fg);opacity:0.85;line-height:1.5">La comunidad no puede acreditar que su administrador está inscrito en el Registro Nacional. Esto constituye un incumplimiento normativo independiente del puntaje del diagnóstico.</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="chkMinvu" ${minvuOk?'checked':''} onchange="S.inst._minvu=this.checked;render()" style="width:16px;height:16px;accent-color:var(--vd);cursor:pointer">
+      <label for="chkMinvu" style="font-size:12.5px;font-weight:600;color:var(--sr-fg);cursor:pointer">El administrador sí está inscrito en el Registro MINVU</label>
+    </div>
+  </div>`:`
+  <div class="card" style="border-color:var(--vd-md);background:var(--vd-lt)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:18px">✅</div>
+      <div style="font-size:13px;font-weight:700;color:var(--vd-dk)">Administrador inscrito en Registro MINVU</div>
+      <button onclick="S.inst._minvu=false;render()" style="margin-left:auto;font-size:11px;color:var(--muted);border:none;background:transparent;cursor:pointer">cambiar</button>
+    </div>
+  </div>`}
+
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Instalaciones del edificio</div>
+    <div class="items">${INST_ITEMS.map(it=>{
+      const on=!!(inst[it.id]);
+      return '<div class="irow '+(on?'on':'')+'" onclick="S.inst[\''+it.id+'\']=!S.inst[\''+it.id+'\'];render()" style="cursor:pointer"><div class="chk"><div class="ckm"></div></div><div class="itxt">'+it.label+'</div></div>';
+    }).join('')}</div>
+  </div>
+
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Personal</div>
+    <div class="fg">
+      <div class="f">
+        <label class="fl">Trabajadores contratados</label>
+        <input type="number" value="${nTrab||''}" oninput="S.ctx.trabajadores=this.value;render()" placeholder="0" min="0">
+        <span class="hint">Conserjes, personal de aseo, etc.</span>
+      </div>
+    </div>
+    ${nTrab>0?`
+    <div class="items" style="margin-top:10px">
+      <div class="irow ${S.ctx.segPrivada?'on':''}" onclick="S.ctx.segPrivada=!S.ctx.segPrivada;render()">
+        <div class="chk"><div class="ckm"></div></div>
+        <div class="itxt">Conserjes con funciones de seguridad explícitas (Ley 21.659)</div>
+      </div>
+    </div>`:''}
+  </div>
+
+  <div class="nav-row">
+    <button class="ghost" onclick="goPrev()">← Anterior</button>
+    <button class="pri" onclick="goNext()">Comenzar diagnóstico →</button>
+  </div>`;
+}
+
 function renderArea(area){
   const applies=areaApplies(area);
   const s=applies?scoreArea(area):null;
   const sem=semC(s?s.pct:null);
   const ai=AREAS.indexOf(area);
   const isLast=ai===AREAS.length-1;
-  const done=S.checks[area.id].filter(Boolean).length;
-  const total=area.items.filter(it=>itemApplies(it)).length;
+  const evaluated=applies?area.items.filter((it,i)=>itemApplies(it)&&itemVal(area.id,i)!==null).length:0;
+  const total=applies?area.items.filter(it=>itemApplies(it)).length:0;
 
   return`
   <div class="ph">
     <div class="ph-title">${area.emoji} ${area.label}</div>
-    <div class="ph-sub">Marca los ítems que la comunidad tiene en orden · ${applies?`${done}/${total} marcados`:'No aplica para esta comunidad'}</div>
+    <div class="ph-sub">Selecciona el nivel de cumplimiento de cada ítem · ${applies?evaluated+'/'+total+' evaluados':'No aplica para esta comunidad'}</div>
   </div>
   <div class="card">
     ${!applies?`
@@ -962,16 +1033,27 @@ function renderArea(area){
         <div style="font-size:28px;margin-bottom:8px">👷</div>
         <div style="font-size:14px;font-weight:700;color:var(--az-md);margin-bottom:4px">Área no aplicable</div>
         <div style="font-size:13px;color:var(--muted)">Esta comunidad no tiene personal contratado,<br>por lo que el área Laboral no se evalúa.</div>
-      </div>`:
-    `<div class="items">${area.items.map((it,i)=>{
-      const na=!itemApplies(it);const on=S.checks[area.id][i];
+      </div>`:`
+    <div class="items">${area.items.map((it,i)=>{
+      const na=!itemApplies(it);
+      const val=itemVal(area.id,i);
       const wl={c:'Crítico',i:'Importante',b:'Básico'}[it.w];
       const wc={c:'wc',i:'wi',b:'wb'}[it.w];
-      return`<div class="irow ${on?'on':''} ${na?'na':''}" onclick="${na?'':`toggleItem('${area.id}',${i})`}">
-        <div class="chk"><div class="ckm"></div></div>
-        <div class="itxt">${it.t}</div>
-        ${na?`<span class="nap">No aplica</span>`:`<span class="wp ${wc}">${wl}</span>`}
-      </div>`;}).join('')}</div>
+      const bgs=val===0?'background:var(--sr-bg);border-color:#f0b8b8':val===0.5?'background:var(--sa-bg);border-color:#f5c98a':val===1?'background:var(--vd-lt);border-color:var(--vd-md)':'';
+      const scBtns=[
+        {v:0,   lbl:'No cumple',  sel:val===0,   ss:'background:var(--sr-bg);border-color:var(--sr-ac);color:var(--sr-fg)'},
+        {v:0.5, lbl:'Parcial',    sel:val===0.5, ss:'background:var(--sa-bg);border-color:var(--sa-ac);color:var(--sa-fg)'},
+        {v:1,   lbl:'Cumple',     sel:val===1,   ss:'background:var(--vd-lt);border-color:var(--vd);color:var(--vd-dk)'},
+      ];
+      return '<div class="irow '+(na?'na':'')+'" style="'+(na?'':'cursor:default;'+bgs)+';display:block;padding:10px 12px">'
+        +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:'+(na?'0':'8px')+'">'
+        +'<div class="itxt">'+it.t+'</div>'
+        +(na?'<span class="nap">No aplica</span>':'<span class="wp '+wc+'">'+wl+'</span>')
+        +'</div>'
+        +(na?'':scBtns.map(o=>'<button onclick="setItem(\''+area.id+'\','+i+','+o.v+')" style="margin-right:5px;margin-bottom:3px;padding:5px 11px;border-radius:6px;border:1.5px solid var(--border);font-size:11.5px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;background:white;color:var(--az-md);'+(o.sel?o.ss:'')+'">'
+          +o.lbl+'</button>').join(''))
+        +'</div>';
+    }).join('')}</div>
     <label class="obs-lbl">Observaciones del área</label>
     <textarea oninput="S.notes['${area.id}']=this.value" placeholder="Anota detalles o aclaraciones del comité sobre esta área...">${S.notes[area.id]}</textarea>
     ${s?`<div class="area-bar-row">
@@ -986,8 +1068,7 @@ function renderArea(area){
     <button class="pri" onclick="goNext()">${isLast?'Ver revisión →':'Siguiente →'}</button>
   </div>`;
 }
-
-function toggleItem(aId,i){S.checks[aId][i]=!S.checks[aId][i];render();}
+function setItem(aId,i,val){S.checks[aId][i]=(S.checks[aId][i]===val)?null:val;render();}
 
 // ─── REVISIÓN ─────────────────────────────────────────────────────────────────
 function renderRevision(){
@@ -1112,6 +1193,7 @@ function limpiarFormulario(){
   if(!confirm('¿Limpiar todo el formulario? Los datos no guardados se perderán.'))return;
   const nuevo=defaultState();
   S.ctx={...nuevo.ctx};S.checks=nuevo.checks;S.notes=nuevo.notes;
+  S.inst=Object.fromEntries(INST_ITEMS.map(x=>[x.id,false]));
   S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
   _lastSavedSnapshot = formSnapshot();
   S.view='contexto';render();
@@ -1549,7 +1631,7 @@ function renderHome(){
 
 function nuevoDesdeHome(){
   const def=defaultState();
-  S.ctx=def.ctx;S.checks=def.checks;S.notes=def.notes;
+  S.ctx=def.ctx;S.inst=def.inst;S.checks=def.checks;S.notes=def.notes;
   S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
   _lastSavedSnapshot = formSnapshot();
   goTo('contexto');
@@ -1643,8 +1725,9 @@ function openAreaModal(aId){
   scoreEl.style.background = sem.bg;
   scoreEl.style.color = sem.fg;
 
-  const fallidos = area.items.filter((it,i)=>itemApplies(it)&&!S.checks[aId][i]);
-  const cumplidos = area.items.filter((it,i)=>itemApplies(it)&&S.checks[aId][i]);
+  const fallidos = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0);
+  const parciales = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0.5);
+  const cumplidos = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===1);
   const note = S.notes[aId]?.trim();
   const wLabel = {c:'Crítico',i:'Importante',b:'Básico'};
   const wFg = {c:'var(--sr-ac)',i:'var(--sa-ac)',b:'var(--sg-ac)'};
@@ -1664,6 +1747,15 @@ function openAreaModal(aId){
         </div>`).join('')}
       </div>`;
     }
+    if(parciales.length){
+      html += `<div class="area-modal-section">
+        <div class="area-modal-section-ttl" style="color:var(--sa-fg)">⋅ Cumplimiento parcial (${parciales.length})</div>
+        ${parciales.map(it=>`<div class="area-modal-item" style="background:var(--sa-bg)">
+          <span class="area-modal-badge" style="background:var(--sa-bg);color:var(--sa-fg)">${wLabel[it.w]}</span>
+          <span class="area-modal-item-txt">${it.t}</span>
+        </div>`).join('')}
+      </div>`;
+    }
     if(cumplidos.length){
       html += `<div class="area-modal-section">
         <div class="area-modal-section-ttl" style="color:var(--sg-fg)">✓ Cumplidos (${cumplidos.length})</div>
@@ -1679,7 +1771,7 @@ function openAreaModal(aId){
         <div class="area-modal-obs">${note}</div>
       </div>`;
     }
-    if(!fallidos.length && !cumplidos.length){
+    if(!fallidos.length && !parciales.length && !cumplidos.length){
       html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Sin ítems evaluados en esta área.</p>';
     }
   }
