@@ -174,10 +174,12 @@
           <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
         </button>
         <div class="sub-list" id="sub-remuneraciones">
-          <button class="sub-item" onclick="navSub('remuneraciones','personal','Personal')"><span class="sub-dot"></span><span class="sub-label">Personal por comunidad</span></button>
-          <button class="sub-item" onclick="navSub('remuneraciones','liquidaciones','Liquidaciones')"><span class="sub-dot"></span><span class="sub-label">Liquidaciones</span><span class="sub-badge sb-red">Pend.</span></button>
-          <button class="sub-item" onclick="navSub('remuneraciones','previred','Previred / DT')"><span class="sub-dot"></span><span class="sub-label">Previred / DT</span></button>
-          <button class="sub-item" onclick="navSub('remuneraciones','finiquitos','Finiquitos')"><span class="sub-dot"></span><span class="sub-label">Finiquitos</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','panel','Panel')"><span class="sub-dot"></span><span class="sub-label">Panel</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','colaboradores','Colaboradores')"><span class="sub-dot"></span><span class="sub-label">Colaboradores</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','procesos','Procesos')"><span class="sub-dot"></span><span class="sub-label">Procesos</span><span class="sub-badge sb-red">Pend.</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','asistencia','Asistencia')"><span class="sub-dot"></span><span class="sub-label">Asistencia</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','novedades','Novedades')"><span class="sub-dot"></span><span class="sub-label">Novedades</span></button>
+          <button class="sub-item" onclick="navSub('remuneraciones','parametros','Par\u00e1metros')"><span class="sub-dot"></span><span class="sub-label">Par\u00e1metros</span></button>
         </div>
       </div>
 
@@ -337,7 +339,7 @@ const TOP_ACTIONS = {
   'crm':            { label: 'Nuevo prospecto',   show: true  },
   'comunidades':    { label: 'Nueva comunidad',   show: true  },
   'finanzas':       { label: 'Emitir GC',         show: true  },
-  'remuneraciones': { label: 'Nueva liquidación', show: true  },
+  'remuneraciones': { label: '', show: false },
   'incidencias':    { label: 'Nueva incidencia',  show: true  },
   'mantenciones':   { label: 'Nueva mantención',  show: true  },
   'comunicaciones': { label: 'Nuevo comunicado',  show: true  },
@@ -358,10 +360,12 @@ const TOPBAR = {
   'servicios-gas':           ['Gas caldera',           '· Servicios comunes'],
   'servicios-calculo':       ['Cálculo y prorrateo',   '· Servicios comunes'],
   'servicios-historial':     ['Historial de lecturas', '· Servicios comunes'],
-  'remuneraciones-personal': ['Personal',              '· Remuneraciones'],
-  'remuneraciones-liquidaciones':['Liquidaciones',     '· Remuneraciones'],
-  'remuneraciones-previred': ['Previred / DT',         '· Remuneraciones'],
-  'remuneraciones-finiquitos':['Finiquitos',           '· Remuneraciones'],
+  'remuneraciones-panel':        ['Panel',                '· Remuneraciones'],
+  'remuneraciones-colaboradores':['Colaboradores',        '· Remuneraciones'],
+  'remuneraciones-procesos':     ['Procesos',             '· Remuneraciones'],
+  'remuneraciones-asistencia':   ['Asistencia',           '· Remuneraciones'],
+  'remuneraciones-novedades':    ['Novedades',            '· Remuneraciones'],
+  'remuneraciones-parametros':   ['Par\u00e1metros',      '· Remuneraciones'],
   'mantenciones-calendario': ['Calendario',            '· Mantenciones'],
   'mantenciones-proveedores':['Proveedores',           '· Mantenciones'],
   'mantenciones-alertas':    ['Alertas de vencimiento','· Mantenciones'],
@@ -478,12 +482,13 @@ function _actualizarTopbar(key, titulo, trail) {
 // ── Mapeo módulos → cargarModulo() de app.js
 function _cargarModulo(modId, subId) {
   const MODULOS = {
-    'crm':        'crm',
-    'comunidades':'comunidades',
-    'flujo':      'flujo',
-    'diagnostico':'diagnostico',
-    'recepcion':  'recepcion',
-    'config':     'config',
+    'crm':            'crm',
+    'comunidades':    'comunidades',
+    'flujo':          'flujo',
+    'diagnostico':    'diagnostico',
+    'recepcion':      'recepcion',
+    'config':         'config',
+    'remuneraciones': 'remuneraciones',
   };
 
   const gasModulo = subId ? (MODULOS[`${modId}-${subId}`] || MODULOS[modId]) : MODULOS[modId];
@@ -541,7 +546,6 @@ function _topAction(modId) {
     'crm':            () => { if(window._crmAccionNuevo) window._crmAccionNuevo(); else document.getElementById('btn-nuevo')?.click(); },
     'comunidades':    () => document.querySelector('#com-root .btn-nuevo')?.click(),
     'finanzas':       () => _mostrarProximamente('finanzas-emitir','finanzas','emitir-gc'),
-    'remuneraciones': () => _mostrarProximamente('rem-nueva-liq','remuneraciones','nueva-liquidacion'),
     'incidencias':    () => _mostrarProximamente('incidencias-nueva','incidencias','nueva'),
     'mantenciones':   () => _mostrarProximamente('mantenciones-nueva','mantenciones','nueva'),
     'comunicaciones': () => _mostrarProximamente('comunicaciones-nueva','comunicaciones','nueva-circular'),
