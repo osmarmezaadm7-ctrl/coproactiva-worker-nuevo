@@ -443,8 +443,310 @@
     });
   }
 
+  // ── MODAL NUEVO / EDITAR TRABAJADOR ─────────────────────────────────────
   function abrirModalColaborador(colaborador, com) {
-    alert('Modal nuevo trabajador \u2014 pr\u00F3ximamente');
+    if (!com) { alert('Selecciona una comunidad primero.'); return; }
+
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '640px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '\u00D7';
+    btnX.addEventListener('click', cerrar);
+    box.appendChild(btnX);
+
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Remuneraciones'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = colaborador ? 'Editar trabajador' : 'Nuevo trabajador'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = com.nombre; box.appendChild(st);
+
+    // ── Formulario ──
+    var form = document.createElement('div');
+
+    function secTitle(txt) {
+      var d = document.createElement('div');
+      d.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--co-line)';
+      d.textContent = txt;
+      return d;
+    }
+
+    function field(label, el, full) {
+      var grp = document.createElement('div');
+      grp.className = 'form-group' + (full ? ' form-full' : '');
+      var lbl = document.createElement('label'); lbl.textContent = label;
+      grp.appendChild(lbl); grp.appendChild(el);
+      return grp;
+    }
+
+    function input(type, placeholder, val) {
+      var i = document.createElement('input');
+      i.type = type || 'text'; i.placeholder = placeholder || '';
+      if (val !== undefined && val !== null) i.value = val;
+      return i;
+    }
+
+    function select(opciones, val) {
+      var s = document.createElement('select');
+      opciones.forEach(function(o) {
+        var opt = document.createElement('option');
+        opt.value = o.v !== undefined ? o.v : o;
+        opt.textContent = o.l !== undefined ? o.l : o;
+        if (val !== undefined && opt.value == val) opt.selected = true;
+        s.appendChild(opt);
+      });
+      return s;
+    }
+
+    // ── SECCIÓN 1: Identificación ──
+    form.appendChild(secTitle('Identificaci\u00F3n'));
+    var grid1 = document.createElement('div'); grid1.className = 'form-grid';
+
+    var fRut    = input('text', '12345678', colaborador ? colaborador.rut : '');
+    var fDv     = input('text', 'K', colaborador ? colaborador.dv : '');
+    fDv.style.width = '60px';
+    var fApPat  = input('text', 'Apellido paterno', colaborador ? colaborador.apellidoPaterno : '');
+    var fApMat  = input('text', 'Apellido materno', colaborador ? colaborador.apellidoMaterno : '');
+    var fNombres= input('text', 'Nombres', colaborador ? colaborador.nombres : '');
+    var fSexo   = select([{v:'M',l:'Masculino'},{v:'F',l:'Femenino'}], colaborador ? colaborador.sexo : 'M');
+    var fNac    = select([{v:0,l:'Chileno/a'},{v:1,l:'Extranjero/a'}], colaborador ? colaborador.nacionalidad : 0);
+
+    // Auto-calcular DV al salir del campo RUT
+    fRut.addEventListener('blur', function() {
+      var rut = fRut.value.replace(/\./g,'').split('-')[0].trim();
+      if (rut && !fDv.value) { fDv.value = _calcDv(rut); }
+    });
+
+    grid1.appendChild(field('RUT (sin puntos, sin DV)', fRut));
+    grid1.appendChild(field('D\u00EDgito verificador', fDv));
+    grid1.appendChild(field('Apellido paterno *', fApPat));
+    grid1.appendChild(field('Apellido materno', fApMat));
+    grid1.appendChild(field('Nombres *', fNombres, true));
+    grid1.appendChild(field('Sexo', fSexo));
+    grid1.appendChild(field('Nacionalidad', fNac));
+    form.appendChild(grid1);
+
+    // ── SECCIÓN 2: Contrato ──
+    form.appendChild(secTitle('Contrato'));
+    var grid2 = document.createElement('div'); grid2.className = 'form-grid';
+
+    // Cargar cargos configurables
+    var cargosOpts = _cargos.length > 0
+      ? _cargos.map(function(c) { return { v: c.nombre, l: c.nombre }; })
+      : [{v:'Conserje',l:'Conserje'},{v:'Guardia',l:'Guardia'},{v:'Mayordomo',l:'Mayordomo'},{v:'Auxiliar',l:'Auxiliar'},{v:'Jardinero',l:'Jardinero'},{v:'Otro',l:'Otro'}];
+
+    var fCargo   = select(cargosOpts, colaborador ? colaborador.cargo : '');
+    var fTipoCto = select([{v:'Indefinido',l:'Indefinido'},{v:'Plazo fijo',l:'Plazo fijo'},{v:'Obra o faena',l:'Obra o faena'}], colaborador ? colaborador.tipoContrato : 'Indefinido');
+    var fFecIni  = input('date', '', colaborador ? _dateToInput(colaborador.fechaInicio) : '');
+    var fFecTer  = input('date', '', colaborador ? _dateToInput(colaborador.fechaTermino) : '');
+    fFecTer.disabled = !(colaborador && colaborador.tipoContrato !== 'Indefinido');
+    var fJornada = input('number', '42', colaborador ? colaborador.jornadaHoras : 42);
+    fJornada.min = 1; fJornada.max = 42;
+    var fPactoHE = document.createElement('input'); fPactoHE.type = 'checkbox';
+    fPactoHE.checked = colaborador ? colaborador.pactoHorasExtra : false;
+    var fPactoWrap = document.createElement('div');
+    fPactoWrap.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--co-ink);margin-top:8px';
+    fPactoWrap.appendChild(fPactoHE);
+    fPactoWrap.appendChild(document.createTextNode('Pacto de horas extra (Art. 32 CT)'));
+
+    fTipoCto.addEventListener('change', function() {
+      fFecTer.disabled = fTipoCto.value === 'Indefinido';
+      if (fTipoCto.value === 'Indefinido') fFecTer.value = '';
+    });
+
+    grid2.appendChild(field('Cargo *', fCargo));
+    grid2.appendChild(field('Tipo de contrato', fTipoCto));
+    grid2.appendChild(field('Fecha de inicio *', fFecIni));
+    grid2.appendChild(field('Fecha de t\u00E9rmino', fFecTer));
+    grid2.appendChild(field('Jornada semanal (hrs, m\u00E1x. 42)', fJornada));
+    form.appendChild(grid2);
+    var pactoGrp = document.createElement('div'); pactoGrp.className = 'form-group form-full'; pactoGrp.appendChild(fPactoWrap);
+    form.appendChild(pactoGrp);
+
+    // ── SECCIÓN 3: Remuneración ──
+    form.appendChild(secTitle('Remuneraci\u00F3n'));
+    var grid3 = document.createElement('div'); grid3.className = 'form-grid';
+
+    var fSueldo  = input('number', '510000', colaborador ? colaborador.sueldoBase : '');
+    var fColac   = input('number', '0', colaborador ? colaborador.asigColacion : 0);
+    var fMovil   = input('number', '0', colaborador ? colaborador.asigMovilizacion : 0);
+    var fOtras   = input('text', 'Descripci\u00F3n y monto', colaborador ? colaborador.otrasAsignaciones : '');
+
+    grid3.appendChild(field('Sueldo base ($) *', fSueldo));
+    grid3.appendChild(field('Asig. colaci\u00F3n ($)', fColac));
+    grid3.appendChild(field('Asig. movilizaci\u00F3n ($)', fMovil));
+    grid3.appendChild(field('Otras asignaciones fijas', fOtras, true));
+    form.appendChild(grid3);
+
+    // ── SECCIÓN 4: Previsional ──
+    form.appendChild(secTitle('Previsional'));
+    var grid4 = document.createElement('div'); grid4.className = 'form-grid';
+
+    var fRegimen = select([{v:'AFP',l:'AFP'},{v:'INP',l:'IPS (ex-INP)'},{v:'SIP',l:'Sin instituci\u00F3n'}], colaborador ? colaborador.regimen : 'AFP');
+    var fAfp     = select([
+      {v:'00',l:'No est\u00E1 en AFP'},{v:'33',l:'AFP Capital'},{v:'03',l:'AFP Cuprum'},
+      {v:'05',l:'AFP Habitat'},{v:'34',l:'AFP Modelo'},{v:'29',l:'AFP PlanVital'},
+      {v:'08',l:'AFP ProVida'},{v:'35',l:'AFP Uno'}
+    ], colaborador ? colaborador.codigoAfp : '05');
+    var fTipoTrab = select([{v:0,l:'Activo (no pensionado)'},{v:1,l:'Pensionado y cotiza'},{v:2,l:'Pensionado, no cotiza'},{v:3,l:'Activo > 65 a\u00F1os'}], colaborador ? colaborador.tipoTrabajador : 0);
+    var fSalud   = select([
+      {v:'07',l:'Fonasa'},{v:'01',l:'Banm\u00E9dica'},{v:'02',l:'Consalud'},
+      {v:'03',l:'VidaTres'},{v:'04',l:'Colmena'},{v:'05',l:'Cruz Blanca'},
+      {v:'10',l:'Nueva Masvida'}
+    ], colaborador ? colaborador.codigoSalud : '07');
+
+    var fFun     = input('text', 'N\u00BA contrato Isapre', colaborador ? colaborador.numeroFun : '');
+    var fMoneda  = select([{v:'1',l:'Pesos ($)'},{v:'2',l:'UF'}], colaborador ? colaborador.monedaPlanIsapre : '1');
+    var fMontoPlan = input('number', '0', colaborador ? colaborador.montoPlanIsapre : 0);
+    var fCcaf    = select([{v:'00',l:'Sin CCAF'},{v:'01',l:'Los Andes'},{v:'02',l:'La Araucana'},{v:'03',l:'Los H\u00E9roes'},{v:'06',l:'18 de Septiembre'}], colaborador ? colaborador.codigoCcaf : '00');
+    var fSC      = document.createElement('input'); fSC.type = 'checkbox'; fSC.checked = colaborador ? colaborador.seguroCesantia : true;
+    var fSCWrap  = document.createElement('div');
+    fSCWrap.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--co-ink);margin-top:8px';
+    fSCWrap.appendChild(fSC); fSCWrap.appendChild(document.createTextNode('Afiliado a seguro de cesant\u00EDa'));
+
+    // Mostrar/ocultar campos Isapre
+    var isapre = !(colaborador && colaborador.codigoSalud === '07');
+    var fFunGrp    = field('N\u00BA FUN (Isapre)', fFun);
+    var fMonedaGrp = field('Moneda plan Isapre', fMoneda);
+    var fMontoGrp  = field('Monto plan Isapre', fMontoPlan);
+    [fFunGrp, fMonedaGrp, fMontoGrp].forEach(function(g) { g.style.display = isapre ? '' : 'none'; });
+
+    fSalud.addEventListener('change', function() {
+      var esIsapre = fSalud.value !== '07';
+      [fFunGrp, fMonedaGrp, fMontoGrp].forEach(function(g) { g.style.display = esIsapre ? '' : 'none'; });
+    });
+
+    grid4.appendChild(field('R\u00E9gimen previsional', fRegimen));
+    grid4.appendChild(field('AFP', fAfp));
+    grid4.appendChild(field('Tipo de trabajador', fTipoTrab));
+    grid4.appendChild(field('Sistema de salud', fSalud));
+    grid4.appendChild(fFunGrp); grid4.appendChild(fMonedaGrp); grid4.appendChild(fMontoGrp);
+    grid4.appendChild(field('Caja de compensaci\u00F3n (CCAF)', fCcaf));
+    form.appendChild(grid4);
+    var scGrp = document.createElement('div'); scGrp.className = 'form-group form-full'; scGrp.appendChild(fSCWrap);
+    form.appendChild(scGrp);
+
+    // ── SECCIÓN 5: Cargas familiares ──
+    form.appendChild(secTitle('Cargas familiares'));
+    var grid5 = document.createElement('div'); grid5.className = 'form-grid';
+
+    var fCSim = input('number', '0', colaborador ? colaborador.cargasSimples : 0);    fCSim.min = 0; fCSim.max = 13;
+    var fCMat = input('number', '0', colaborador ? colaborador.cargasMaternales : 0); fCMat.min = 0; fCMat.max = 1;
+    var fCInv = input('number', '0', colaborador ? colaborador.cargasInvalidas : 0);  fCInv.min = 0; fCInv.max = 1;
+
+    grid5.appendChild(field('Cargas simples (m\u00E1x. 13)', fCSim));
+    grid5.appendChild(field('Cargas maternales (m\u00E1x. 1)', fCMat));
+    grid5.appendChild(field('Cargas inv\u00E1lidas (m\u00E1x. 1)', fCInv));
+    form.appendChild(grid5);
+
+    // ── Error y botón guardar ──
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; form.appendChild(errDiv);
+    var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar';
+    btnGuardar.textContent = colaborador ? 'Guardar cambios' : 'Crear trabajador';
+    btnGuardar.addEventListener('click', function() { _guardarColaborador(colaborador, com, campos(), btnGuardar, errDiv); });
+    form.appendChild(btnGuardar);
+
+    function campos() {
+      return {
+        comunidadId:      com.id,
+        rut:              fRut.value.trim(),
+        dv:               fDv.value.trim(),
+        apellidoPaterno:  fApPat.value.trim(),
+        apellidoMaterno:  fApMat.value.trim(),
+        nombres:          fNombres.value.trim(),
+        sexo:             fSexo.value,
+        nacionalidad:     Number(fNac.value),
+        cargo:            fCargo.value,
+        tipoContrato:     fTipoCto.value,
+        fechaInicio:      fFecIni.value,
+        fechaTermino:     fFecTer.value || '',
+        jornadaHoras:     Number(fJornada.value) || 42,
+        pactoHorasExtra:  fPactoHE.checked,
+        sueldoBase:       Number(fSueldo.value) || 0,
+        asigColacion:     Number(fColac.value) || 0,
+        asigMovilizacion: Number(fMovil.value) || 0,
+        otrasAsignaciones:fOtras.value.trim(),
+        regimen:          fRegimen.value,
+        tipoTrabajador:   Number(fTipoTrab.value),
+        codigoAfp:        fAfp.value,
+        codigoSalud:      fSalud.value,
+        numeroFun:        fFun.value.trim(),
+        monedaPlanIsapre: fMoneda.value,
+        montoPlanIsapre:  Number(fMontoPlan.value) || 0,
+        codigoCcaf:       fCcaf.value,
+        seguroCesantia:   fSC.checked,
+        cargasSimples:    Number(fCSim.value) || 0,
+        cargasMaternales: Number(fCMat.value) || 0,
+        cargasInvalidas:  Number(fCInv.value) || 0,
+      };
+    }
+
+    box.appendChild(form);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    function cerrar() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  }
+
+  function _guardarColaborador(colaborador, com, datos, btn, errDiv) {
+    // Validaciones básicas
+    if (!datos.rut)            { errDiv.textContent = 'El RUT es obligatorio.'; return; }
+    if (!datos.apellidoPaterno){ errDiv.textContent = 'El apellido paterno es obligatorio.'; return; }
+    if (!datos.nombres)        { errDiv.textContent = 'Los nombres son obligatorios.'; return; }
+    if (!datos.fechaInicio)    { errDiv.textContent = 'La fecha de inicio es obligatoria.'; return; }
+    if (!datos.sueldoBase || datos.sueldoBase < 510000) { errDiv.textContent = 'El sueldo base debe ser igual o mayor al ingreso m\u00EDnimo ($510.000).'; return; }
+
+    errDiv.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Guardando\u2026';
+
+    var action = colaborador ? 'editarTrabajador' : 'crearTrabajador';
+    var body   = Object.assign({ action: action }, datos);
+    if (colaborador) body.id = colaborador.id;
+
+    api('/remuneraciones/trabajadores', 'POST', body).then(function(resp) {
+      var data = (resp.data && resp.data.data) ? resp.data.data : resp.data;
+      if (data && data.ok) {
+        // Recargar lista
+        _colaboradores = [];
+        renderTabContent();
+        // Cerrar modal
+        var overlay = btn.closest('.modal-overlay');
+        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      } else {
+        errDiv.textContent = (data && data.error) ? data.error : 'Error al guardar. Intenta nuevamente.';
+        btn.disabled = false;
+        btn.textContent = colaborador ? 'Guardar cambios' : 'Crear trabajador';
+      }
+    }).catch(function() {
+      errDiv.textContent = 'Error de conexi\u00F3n. Intenta nuevamente.';
+      btn.disabled = false;
+      btn.textContent = colaborador ? 'Guardar cambios' : 'Crear trabajador';
+    });
+  }
+
+  // Helper: calcular DV del RUT
+  function _calcDv(rut) {
+    var suma = 0; var multiplo = 2;
+    for (var i = String(rut).length - 1; i >= 0; i--) {
+      suma += parseInt(String(rut)[i]) * multiplo;
+      multiplo = multiplo === 7 ? 2 : multiplo + 1;
+    }
+    var resto = 11 - (suma % 11);
+    if (resto === 11) return '0';
+    if (resto === 10) return 'K';
+    return String(resto);
+  }
+
+  // Helper: convertir fecha dd/MM/yyyy a yyyy-MM-dd para input date
+  function _dateToInput(fecha) {
+    if (!fecha) return '';
+    if (fecha.includes('-') && fecha.length === 10) return fecha;
+    var p = fecha.split('/');
+    if (p.length === 3) return p[2] + '-' + p[1] + '-' + p[0];
+    return '';
   }
 
   function abrirFichaColaborador(c) {
