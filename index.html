@@ -1,1057 +1,736 @@
-<!-- modules/remuneraciones.html — CoproActiva Remuneraciones -->
-<!-- Version: 1.0 · Junio 2026 -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoproActiva — Administración</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .sb-nav-area { transition: max-height 0.3s ease, opacity 0.25s ease; }
+    .sb-nav-area.sb-collapsed { max-height: 0 !important; overflow: hidden; opacity: 0; padding: 0; }
+    .sb-nav-area.sb-pinned { max-height: none !important; opacity: 1 !important; overflow-y: auto !important; }
+    #sidebarDynamic { flex-shrink: 0; overflow-y: auto; }
+    #sidebarDynamic:empty { display: none; }
+    @media (min-width: 768px) {
+      .main-content { margin-left: var(--co-sidebar-w, 240px); }
+      .sidebar {
+        position: fixed !important;
+        top: 0; left: 0;
+        height: 100vh;
+        z-index: 100;
+        overflow: hidden;
+      }
+      .sidebar #sbNavArea {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .sidebar .sidebar-foot {
+        flex-shrink: 0;
+      }
+    }
+  </style>
+</head>
+<body>
 
-<style>
-  #rem-root { font-family: var(--co-font); color: var(--co-ink); }
-
-  /* ── Tabs ── */
-  .rem-tabs {
-    display: flex;
-    gap: 2px;
-    border-bottom: 1px solid var(--co-line);
-    margin-bottom: 20px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .rem-tabs::-webkit-scrollbar { display: none; }
-  .rem-tab {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 9px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--co-mute);
-    cursor: pointer;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    white-space: nowrap;
-    background: transparent;
-    font-family: var(--co-font);
-    transition: color 0.15s;
-  }
-  .rem-tab:hover { color: var(--co-ink); }
-  .rem-tab.act { color: var(--co-orange); border-bottom-color: var(--co-orange); font-weight: 700; }
-  .rem-tab .rem-tab-ico { font-size: 14px; }
-
-  /* ── KPIs ── */
-  .rem-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .rem-kpi {
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-lg);
-    padding: 14px 16px;
-  }
-  .rem-kpi-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 6px;
-  }
-  .rem-kpi-val {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--co-ink);
-  }
-  .rem-kpi-val.rem-warn { color: var(--co-orange); }
-  .rem-kpi-val.rem-ok   { color: #3B6D11; }
-  .rem-kpi-sub {
-    font-size: 10px;
-    color: var(--co-mute);
-    margin-top: 3px;
-  }
-
-  /* ── Selector comunidad (wrapper) ── */
-  .com-sel-wrap { position: relative; display: inline-flex; align-items: center; }
-
-  /* ── Section label ── */
-  .rem-section-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 10px;
-  }
-
-  /* ── Tabla base ── */
-  .rem-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-  .rem-table th {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    padding: 0 12px 8px;
-    text-align: left;
-  }
-  .rem-table td {
-    padding: 10px 12px;
-    border-top: 1px solid var(--co-line);
-    color: var(--co-ink);
-    vertical-align: middle;
-  }
-  .rem-table tr:hover td {
-    background: var(--co-bg);
-    cursor: pointer;
-  }
-
-  /* ── Pills estado ── */
-  .rem-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .rem-pill.ok      { background: #EAF3DE; color: #3B6D11; }
-  .rem-pill.warn    { background: var(--co-orange-soft); color: #854F0B; }
-  .rem-pill.danger  { background: #FCEBEB; color: #A32D2D; }
-  .rem-pill.gray    { background: var(--co-bg); color: var(--co-mute); border: 1px solid var(--co-line); }
-  .rem-pill.blue    { background: #E6F1FB; color: #185FA5; }
-
-  /* ── Avatar ── */
-  .rem-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--co-orange-soft);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--co-orange);
-    flex-shrink: 0;
-  }
-
-  /* ── Botones ── */
-  .rem-btn-pri {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background: var(--co-orange);
-    color: #fff;
-    border: none;
-    border-radius: var(--co-r-md);
-    font-size: 12px;
-    font-weight: 700;
-    font-family: var(--co-font);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
-  }
-  .rem-btn-pri:hover { background: #C4762F; }
-  .rem-btn-sec {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-md);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--co-ink);
-    font-family: var(--co-font);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: border-color 0.15s;
-  }
-  .rem-btn-sec:hover { border-color: var(--co-orange); }
-
-  /* ── Search bar ── */
-  .rem-search-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .rem-search-box {
-    flex: 1;
-    min-width: 180px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-md);
-    padding: 8px 12px;
-  }
-  .rem-search-box input {
-    border: none;
-    background: transparent;
-    font-family: var(--co-font);
-    font-size: 12px;
-    color: var(--co-ink);
-    flex: 1;
-    outline: none;
-  }
-  .rem-search-box input::placeholder { color: var(--co-mute); }
-
-  /* ── Filtros pill ── */
-  .rem-filtros {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .rem-filtro {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--co-line);
-    color: var(--co-mute);
-    background: var(--co-surface);
-    cursor: pointer;
-    font-family: var(--co-font);
-    transition: all 0.13s;
-  }
-  .rem-filtro.act {
-    background: var(--co-orange-soft);
-    color: var(--co-orange);
-    border-color: var(--co-orange-line);
-  }
-
-  /* ── Panel cartera table ── */
-  .rem-cartera-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* ── Alertas ── */
-  .rem-alertas { display: flex; flex-direction: column; gap: 8px; }
-  .rem-alerta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: var(--co-r-md);
-    font-size: 12px;
-  }
-  .rem-alerta.warn   { background: var(--co-orange-soft); border: 1px solid var(--co-orange-line); }
-  .rem-alerta.danger { background: #FCEBEB; border: 1px solid #F7C1C1; }
-  .rem-alerta.info   { background: var(--co-bg); border: 1px solid var(--co-line); }
-  .rem-alerta i      { font-size: 16px; flex-shrink: 0; }
-  .rem-alerta.warn i   { color: #854F0B; }
-  .rem-alerta.danger i { color: #A32D2D; }
-  .rem-alerta.info i   { color: var(--co-mute); }
-  .rem-alerta-txt    { color: var(--co-ink); flex: 1; font-size: 12px; }
-  .rem-alerta-txt b  { font-weight: 700; }
-  .rem-alerta-link   {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--co-orange);
-    cursor: pointer;
-    white-space: nowrap;
-    background: none;
-    border: none;
-    font-family: var(--co-font);
-    padding: 0;
-  }
-
-  /* ── Panel two-col ── */
-  .rem-two-col {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 16px;
-    align-items: start;
-  }
-  @media (max-width: 768px) {
-    .rem-two-col { grid-template-columns: 1fr; }
-  }
-
-  /* ── Periodo card ── */
-  .rem-periodo-card {
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-lg);
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-  .rem-periodo-ico {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 20px;
-  }
-  .rem-periodo-ico.abierto { background: var(--co-orange-soft); color: var(--co-orange); }
-  .rem-periodo-ico.cerrado { background: #EAF3DE; color: #3B6D11; }
-  .rem-periodo-info { flex: 1; min-width: 140px; }
-  .rem-periodo-titulo { font-size: 13px; font-weight: 700; color: var(--co-ink); }
-  .rem-periodo-sub { font-size: 11px; color: var(--co-mute); margin-top: 2px; }
-  .rem-periodo-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-
-  /* ── Divider ── */
-  .rem-divider { height: 1px; background: var(--co-line); margin: 16px 0; }
-
-  /* ── Empty state ── */
-  .rem-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 20px;
-    text-align: center;
-    color: var(--co-mute);
-  }
-  .rem-empty i { font-size: 36px; margin-bottom: 12px; }
-  .rem-empty-title { font-size: 14px; font-weight: 700; color: var(--co-ink); margin-bottom: 6px; }
-  .rem-empty-sub { font-size: 12px; }
-
-  /* ── Parametros ── */
-  .rem-param-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  @media (max-width: 600px) {
-    .rem-param-grid { grid-template-columns: 1fr; }
-  }
-  .rem-param-card {
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-lg);
-    padding: 16px;
-  }
-  .rem-param-card-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 12px;
-  }
-  .rem-param-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 7px 0;
-    border-top: 1px solid var(--co-line);
-    font-size: 12px;
-  }
-  .rem-param-row:first-of-type { border-top: none; }
-  .rem-param-key { color: var(--co-mute); }
-  .rem-param-val { font-weight: 700; color: var(--co-ink); }
-
-  /* ── Novedades grid ── */
-  .rem-nov-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  @media (max-width: 500px) {
-    .rem-nov-grid { grid-template-columns: 1fr; }
-  }
-</style>
-
-<div id="rem-root">
-  <div class="module-loading">
-    <div class="ml-iso-wrap">
-      <div class="ml-iso" aria-hidden="true"></div>
+<div id="loginScreen" class="login-screen">
+  <div class="login-brand">
+    <img src="assets/coproactiva-iso.png" alt="" class="login-iso" aria-hidden="true">
+    <div class="login-brand-top">
+      <div class="login-brand-logo">
+        <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+      </div>
+      <div class="login-brand-tagline">Comunidades que funcionan</div>
     </div>
-    <div class="ml-text">
-      <div class="ml-brand"><b>co</b>proactiva</div>
-      <div class="ml-status">
-        <span class="ml-status-dot"></span>
-        Cargando Remuneraciones
+    <div class="login-brand-bottom">
+      <div class="login-brand-statement">
+        Una administración<br>
+        <em>Activa</em> en tu<br>
+        comunidad
+      </div>
+      <div class="login-brand-meta">
+        <span class="login-brand-meta-dot"></span>
+        Región Metropolitana · Ley N°21.442
+      </div>
+    </div>
+  </div>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="login-eyebrow">Panel de administración</div>
+      <h1 class="login-title">Ingresa al sistema</h1>
+      <p class="login-sub">Acceso exclusivo para administradores certificados.</p>
+      <label class="login-label" for="emailInput">Correo electrónico</label>
+      <input type="email" id="emailInput" class="login-input"
+             placeholder="correo@ejemplo.cl" autocomplete="email">
+      <label class="login-label" for="claveInput" style="margin-top:12px">Clave de acceso</label>
+      <input type="password" id="claveInput" class="login-input"
+             placeholder="••••••••" autocomplete="current-password">
+      <button id="loginBtn" class="login-btn">Ingresar al sistema</button>
+      <div id="loginError" class="error-message"></div>
+      <div class="login-foot">
+        <span class="login-foot-dot"></span>
+        Inscrito en el Registro Nacional de Administradores · MINVU
       </div>
     </div>
   </div>
 </div>
 
+<div id="app" class="app" style="display:none;">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="sidebar-logo">
+          <span class="logo-co">co</span><span class="logo-proactiva">proactiva</span>
+        </div>
+        <button id="btnToggleNav" onclick="toggleSbNav()"
+          title="Ver menú completo"
+          style="display:none;background:rgba(255,255,255,0.08);border:none;cursor:pointer;
+                 width:26px;height:26px;border-radius:6px;align-items:center;justify-content:center;
+                 color:rgba(255,255,255,0.55);font-size:15px;font-family:var(--co-font);flex-shrink:0">
+          &#9776;
+        </button>
+      </div>
+      <div class="sidebar-tag">back office · administración</div>
+    </div>
+
+    <div class="sb-nav-area" id="sbNavArea">
+
+      <!-- GENERAL -->
+      <div class="sb-section">General</div>
+
+      <button class="mod-row" data-mod="panel" onclick="navFlat('panel','Panel maestro','')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+        <span class="mod-label">Panel maestro</span>
+      </button>
+
+      <!-- Comunidades — ítem plano, navegación interna por tabs -->
+      <button class="mod-row" data-mod="comunidades" onclick="navFlat('comunidades','Comunidades','· General')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
+        <span class="mod-label">Comunidades</span>
+        <span class="mod-badge mb-orange" id="badge-comunidades">5</span>
+      </button>
+
+      <div class="sb-sep"></div>
+      <!-- COMERCIAL -->
+      <div class="sb-section">Comercial</div>
+
+      <!-- CRM — ítem plano, navegación interna por tabs -->
+      <button class="mod-row" data-mod="crm" onclick="navFlat('crm','CRM','· Comercial')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+        <span class="mod-label">CRM</span>
+        <span class="mod-badge mb-orange" id="badge-crm">3</span>
+      </button>
+
+      <!-- Flujo comercial — ítem plano -->
+      <button class="mod-row" data-mod="flujo" onclick="navFlat('flujo','Flujo comercial','· Comercial')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4" cy="10" r="2"/><circle cx="16" cy="4" r="2"/><circle cx="16" cy="16" r="2"/><path d="M6 10h4l4-4.5M10 10l6 4.5"/></svg>
+        <span class="mod-label">Flujo comercial</span>
+      </button>
+
+      <div class="sb-sep"></div>
+      <!-- OPERACIONES -->
+      <div class="sb-section">Operaciones</div>
+
+      <div class="mod" id="mod-finanzas">
+        <button class="mod-row" onclick="navToggle('finanzas')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
+          <span class="mod-label">Finanzas</span>
+          <span class="mod-badge mb-red" id="badge-finanzas">2</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-finanzas">
+          <button class="sub-item" onclick="navSub('finanzas','resumen','Resumen financiero')"><span class="sub-dot"></span><span class="sub-label">Resumen financiero</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','gastos','Gastos comunes')"><span class="sub-dot"></span><span class="sub-label">Gastos comunes</span><span class="sub-badge sb-orange">Mayo</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','cobranza','Cobranza')"><span class="sub-dot"></span><span class="sub-label">Cobranza</span><span class="sub-badge sb-red">12</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','pagos','Ingreso de pagos')"><span class="sub-dot"></span><span class="sub-label">Ingreso de pagos</span></button>
+          <button class="sub-item" onclick="navSub('finanzas','rendicion','Rendición al comité')"><span class="sub-dot"></span><span class="sub-label">Rendición al comité</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-servicios">
+        <button class="mod-row" onclick="navToggle('servicios')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3c0 4-4 5-4 9a4 4 0 008 0c0-4-4-5-4-9z"/></svg>
+          <span class="mod-label">Servicios comunes</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-servicios">
+          <button class="sub-item" onclick="navSub('servicios','medidores','Medidores')"><span class="sub-dot"></span><span class="sub-label">Lecturas de medidores</span></button>
+          <button class="sub-item" onclick="navSub('servicios','gas','Gas caldera')"><span class="sub-dot"></span><span class="sub-label">Gas caldera</span></button>
+          <button class="sub-item" onclick="navSub('servicios','calculo','Cálculo y prorrateo')"><span class="sub-dot"></span><span class="sub-label">Cálculo y prorrateo</span></button>
+          <button class="sub-item" onclick="navSub('servicios','historial','Historial')"><span class="sub-dot"></span><span class="sub-label">Historial de lecturas</span></button>
+        </div>
+      </div>
+
+      <button class="mod-row" data-mod="remuneraciones" onclick="navFlat('remuneraciones','Remuneraciones','· Operaciones')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"/><path d="M3 17c0-3.3 2.2-5 5-5"/><path d="M13 11l1.5 1.5L17 10"/></svg>
+        <span class="mod-label">Remuneraciones</span>
+        <span class="mod-badge mb-red" id="badge-rem">3</span>
+      </button>
+
+      <div class="mod" id="mod-mantenciones">
+        <button class="mod-row" onclick="navToggle('mantenciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 3.3a4 4 0 00-5.5 5.5L3.3 14.7a1 1 0 001.4 1.4l5.9-5.9a4 4 0 005.5-5.5l-2.2 2.2-1.4-1.4 2.2-2.2z"/></svg>
+          <span class="mod-label">Mantenciones</span>
+          <span class="mod-badge mb-red" id="badge-man">1</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-mantenciones">
+          <button class="sub-item" onclick="navSub('mantenciones','calendario','Calendario')"><span class="sub-dot"></span><span class="sub-label">Calendario</span></button>
+          <button class="sub-item" onclick="navSub('mantenciones','proveedores','Proveedores')"><span class="sub-dot"></span><span class="sub-label">Proveedores</span></button>
+          <button class="sub-item" onclick="navSub('mantenciones','alertas','Alertas')"><span class="sub-dot"></span><span class="sub-label">Alertas de vencimiento</span><span class="sub-badge sb-red">1</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-incidencias">
+        <button class="mod-row" onclick="navToggle('incidencias')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L2 17h16L10 3z"/><path d="M10 9v4"/><circle cx="10" cy="15" r=".5" fill="currentColor"/></svg>
+          <span class="mod-label">Incidencias</span>
+          <span class="mod-badge mb-red" id="badge-inc">8</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-incidencias">
+          <button class="sub-item" onclick="navSub('incidencias','activas','Activas')"><span class="sub-dot"></span><span class="sub-label">Activas</span><span class="sub-badge sb-red">8</span></button>
+          <button class="sub-item" onclick="navSub('incidencias','historial','Historial')"><span class="sub-dot"></span><span class="sub-label">Historial</span></button>
+        </div>
+      </div>
+
+      <div class="sb-sep"></div>
+      <!-- COMUNICACIÓN -->
+      <div class="sb-section">Comunicación</div>
+
+      <div class="mod" id="mod-comunicaciones">
+        <button class="mod-row" onclick="navToggle('comunicaciones')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3H3a1 1 0 00-1 1v9a1 1 0 001 1h5l2 3 2-3h5a1 1 0 001-1V4a1 1 0 00-1-1z"/></svg>
+          <span class="mod-label">Comunicaciones</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-comunicaciones">
+          <button class="sub-item" onclick="navSub('comunicaciones','circulares','Circulares')"><span class="sub-dot"></span><span class="sub-label">Circulares</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','asambleas','Asambleas')"><span class="sub-dot"></span><span class="sub-label">Asambleas · Ley 21.442</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','encuestas','Encuestas')"><span class="sub-dot"></span><span class="sub-label">Encuestas</span></button>
+          <button class="sub-item" onclick="navSub('comunicaciones','libro','Libro de novedades')"><span class="sub-dot"></span><span class="sub-label">Libro de novedades</span></button>
+        </div>
+      </div>
+
+      <div class="mod" id="mod-documentos">
+        <button class="mod-row" onclick="navToggle('documentos')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H5a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V7l-3-4z"/><path d="M13 3v4h4"/></svg>
+          <span class="mod-label">Documentos</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-documentos">
+          <button class="sub-item" onclick="navSub('documentos','contratos','Contratos y seguros')"><span class="sub-dot"></span><span class="sub-label">Contratos y seguros</span></button>
+          <button class="sub-item" onclick="navSub('documentos','actas','Actas de reunión')"><span class="sub-dot"></span><span class="sub-label">Actas de reunión</span></button>
+          <button class="sub-item" onclick="navSub('documentos','reglamentos','Reglamentos')"><span class="sub-dot"></span><span class="sub-label">Reglamentos</span></button>
+        </div>
+      </div>
+
+      <div class="sb-sep"></div>
+      <!-- EMPRESA -->
+      <div class="sb-section">Empresa</div>
+
+      <div class="mod" id="mod-reportes">
+        <button class="mod-row" onclick="navToggle('reportes')">
+          <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V7l4-4 4 4 4-4v14"/><path d="M7 17v-6"/><path d="M11 17v-4"/><path d="M15 17v-8"/></svg>
+          <span class="mod-label">Reportes</span>
+          <svg class="mod-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 2l4 4-4 4"/></svg>
+        </button>
+        <div class="sub-list" id="sub-reportes">
+          <button class="sub-item" onclick="navSub('reportes','mensual','Reporte mensual')"><span class="sub-dot"></span><span class="sub-label">Reporte mensual</span></button>
+          <button class="sub-item" onclick="navSub('reportes','kpis','KPIs generales')"><span class="sub-dot"></span><span class="sub-label">KPIs generales</span></button>
+        </div>
+      </div>
+
+      <button class="mod-row" data-mod="config" onclick="navFlat('config','Configuración','· Empresa')">
+        <svg class="mod-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v1.5M10 15.5V17M3 10h1.5M15.5 10H17M5.05 5.05l1.06 1.06M13.89 13.89l1.06 1.06M5.05 14.95l1.06-1.06M13.89 6.11l1.06-1.06"/></svg>
+        <span class="mod-label">Configuración</span>
+      </button>
+
+    </div>
+
+    <div id="sidebarDynamic"></div>
+
+    <div class="sidebar-foot">
+      <div class="sb-avatar" id="sbAvatar">
+        <span id="sidebarUserInitial">O</span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="sb-user-name" id="sidebarUserName">—</div>
+        <div class="sb-user-role" id="sidebarUserRole">Administrador</div>
+      </div>
+      <button id="btnUserMenu" title="Opciones de usuario"
+        style="background:rgba(255,255,255,0.08);border:none;cursor:pointer;
+               width:28px;height:28px;border-radius:6px;display:flex;align-items:center;
+               justify-content:center;color:rgba(255,255,255,0.55);flex-shrink:0;
+               font-size:16px;font-family:var(--co-font);letter-spacing:0.05em">
+        &#8943;
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content" id="mainContent">
+    <div id="contentArea"></div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-btn" data-nav="panel" onclick="navFlat('panel','Panel maestro','');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg>
+      </span>
+      <span class="bottom-label">Panel</span>
+    </button>
+    <button class="nav-btn" data-nav="comunidades" onclick="navFlat('comunidades','Comunidades','· General');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8l7-5 7 5v9"/><path d="M8 17v-5h4v5"/></svg>
+      </span>
+      <span class="bottom-label">Comunidades</span>
+    </button>
+    <button class="nav-btn active" data-nav="crm" onclick="navFlat('crm','CRM','· Comercial');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3"/></svg>
+      </span>
+      <span class="bottom-label">CRM</span>
+    </button>
+    <button class="nav-btn" data-nav="finanzas" onclick="navToggle('finanzas');bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
+      </span>
+      <span class="bottom-label">Finanzas</span>
+    </button>
+    <button class="nav-btn" data-nav="menu" onclick="abrirBottomSheet(event);bnav(this)">
+      <span class="bottom-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+      </span>
+      <span class="bottom-label">Más</span>
+    </button>
+  </nav>
+
+</div>
+
+<script src="app.js"></script>
 <script>
-(function() {
+// Sidebar dinámico desactivado — sidebar limpio solo con módulos
+window.cargarMenuLateral = function() {
+  var sd = document.getElementById('sidebarDynamic');
+  if (sd) sd.innerHTML = '';
+};
+</script>
+<script>
+const NAV_STATE = { modActivo: 'crm', subActivo: null, modAbierto: null };
+const MOD_PLANOS = ['panel', 'config', 'crm', 'comunidades', 'flujo'];
 
-  var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+const TOP_ACTIONS = {
+  'crm':            { label: 'Nuevo prospecto',   show: true  },
+  'comunidades':    { label: 'Nueva comunidad',   show: true  },
+  'finanzas':       { label: 'Emitir GC',         show: true  },
+  'remuneraciones': { label: '', show: false },
+  'incidencias':    { label: 'Nueva incidencia',  show: true  },
+  'mantenciones':   { label: 'Nueva mantención',  show: true  },
+  'comunicaciones': { label: 'Nuevo comunicado',  show: true  },
+  'documentos':     { label: 'Subir documento',   show: true  },
+};
 
-  function _token() { return sessionStorage.getItem('token') || ''; }
+const TOPBAR = {
+  'panel':                   ['Panel maestro',         ''],
+  'crm':                     ['CRM',                   '· Comercial'],
+  'comunidades':             ['Comunidades',           '· General'],
+  'flujo':                   ['Flujo comercial',       '· Comercial'],
+  'finanzas-resumen':        ['Resumen financiero',    '· Finanzas'],
+  'finanzas-gastos':         ['Gastos comunes',        '· Finanzas'],
+  'finanzas-cobranza':       ['Cobranza',              '· Finanzas'],
+  'finanzas-pagos':          ['Ingreso de pagos',      '· Finanzas'],
+  'finanzas-rendicion':      ['Rendición al comité',   '· Finanzas'],
+  'servicios-medidores':     ['Lecturas de medidores', '· Servicios comunes'],
+  'servicios-gas':           ['Gas caldera',           '· Servicios comunes'],
+  'servicios-calculo':       ['Cálculo y prorrateo',   '· Servicios comunes'],
+  'servicios-historial':     ['Historial de lecturas', '· Servicios comunes'],
+  'remuneraciones-panel':        ['Panel',                '· Remuneraciones'],
+  'remuneraciones-colaboradores':['Colaboradores',        '· Remuneraciones'],
+  'remuneraciones-procesos':     ['Procesos',             '· Remuneraciones'],
+  'remuneraciones-asistencia':   ['Asistencia',           '· Remuneraciones'],
+  'remuneraciones-novedades':    ['Novedades',            '· Remuneraciones'],
+  'remuneraciones-parametros':   ['Par\u00e1metros',      '· Remuneraciones'],
+  'mantenciones-calendario': ['Calendario',            '· Mantenciones'],
+  'mantenciones-proveedores':['Proveedores',           '· Mantenciones'],
+  'mantenciones-alertas':    ['Alertas de vencimiento','· Mantenciones'],
+  'incidencias-activas':     ['Incidencias activas',   '· Operaciones'],
+  'incidencias-historial':   ['Historial incidencias', '· Operaciones'],
+  'comunicaciones-circulares':['Circulares',           '· Comunicación'],
+  'comunicaciones-asambleas':['Asambleas',             '· Comunicación'],
+  'comunicaciones-encuestas':['Encuestas',             '· Comunicación'],
+  'comunicaciones-libro':    ['Libro de novedades',    '· Comunicación'],
+  'documentos-contratos':    ['Contratos y seguros',   '· Documentos'],
+  'documentos-actas':        ['Actas de reunión',      '· Documentos'],
+  'documentos-reglamentos':  ['Reglamentos',           '· Documentos'],
+  'reportes-mensual':        ['Reporte mensual',       '· Empresa'],
+  'reportes-kpis':           ['KPIs generales',        '· Empresa'],
+  'config':                  ['Configuración',         '· Empresa'],
+};
 
-  // Tab activa
-  var _tabActiva = 'panel';
+// ── navFlat: para ítems planos (panel, crm, comunidades, flujo, config)
+function navFlat(modId, titulo, seccion) {
+  cerrarSidebarMovil();
+  if (NAV_STATE.modAbierto) {
+    _cerrarSub(NAV_STATE.modAbierto);
+    const prevRow = document.querySelector(`#mod-${NAV_STATE.modAbierto} .mod-row`);
+    if (prevRow) prevRow.classList.remove('mod-open', 'mod-active');
+  }
+  _limpiarActivos();
+  const btn = document.querySelector(`[data-mod="${modId}"]`);
+  if (btn) btn.classList.add('mod-active');
+  NAV_STATE.modActivo = modId;
+  NAV_STATE.subActivo = null;
+  NAV_STATE.modAbierto = null;
+  _actualizarTopbar(modId, titulo, seccion);
+  _cargarModulo(modId);
+}
 
-  // Datos en memoria
-  var _colaboradores = [];
-  var _periodos      = [];
+// ── navToggle: para módulos con sub-ítems
+function navToggle(modId) {
+  const sub    = document.getElementById('sub-' + modId);
+  const modRow = document.querySelector(`#mod-${modId} .mod-row`);
+  const yaAbierto = sub && sub.classList.contains('sub-open');
 
-  // ── Utilidades ────────────────────────────────────────────────────────────
-
-  function api(path, method, body) {
-    method = method || 'GET';
-    var opts = {
-      method: method,
-      headers: {
-        'Authorization': 'Bearer ' + _token(),
-        'Content-Type': 'application/json'
-      }
-    };
-    if (body) opts.body = JSON.stringify(body);
-    return fetch(WORKER_URL + path, opts).then(function(r) { return r.json(); });
+  if (NAV_STATE.modAbierto && NAV_STATE.modAbierto !== modId) {
+    _cerrarSub(NAV_STATE.modAbierto);
+    const prevRow = document.querySelector(`#mod-${NAV_STATE.modAbierto} .mod-row`);
+    if (prevRow) prevRow.classList.remove('mod-open', 'mod-active');
   }
 
-  function iniciales(nombre) {
-    if (!nombre) return '?';
-    var partes = nombre.trim().split(' ');
-    if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
-    return partes[0].substring(0, 2).toUpperCase();
-  }
-
-  function fmtPeso(n) {
-    if (!n && n !== 0) return '\u2014';
-    return '$' + Math.round(n).toLocaleString('es-CL');
-  }
-
-  // ── Arranque ──────────────────────────────────────────────────────────────
-
-  function init() {
-    var root = document.getElementById('rem-root');
-    if (!root) return;
-    renderModulo();
-  }
-
-  // ── Shell principal ───────────────────────────────────────────────────────
-
-  function renderModulo() {
-    var root = document.getElementById('rem-root');
-    root.innerHTML = '';
-
-    // Page header
-    var pageHdr = document.createElement('div');
-    pageHdr.className = 'page-header';
-
-    var left = document.createElement('div');
-    var ey = document.createElement('div');
-    ey.className = 'page-eyebrow';
-    ey.textContent = 'OPERACIONES';
-    var tt = document.createElement('h1');
-    tt.className = 'page-title';
-    tt.innerHTML = 'Remune<em>raciones</em>';
-    var sb = document.createElement('p');
-    sb.className = 'page-sub';
-    sb.textContent = 'Gesti\u00F3n de personal, liquidaciones y procesos de pago.';
-    left.appendChild(ey); left.appendChild(tt); left.appendChild(sb);
-
-    // Selector comunidad
-    var selWrap = document.createElement('div');
-    selWrap.className = 'com-sel-wrap';
-    selWrap.id = 'rem-com-sel';
-
-    pageHdr.appendChild(left);
-    pageHdr.appendChild(selWrap);
-    root.appendChild(pageHdr);
-
-    // Inicializar selector de comunidad desde app.js
-    if (typeof renderSelectorComunidad === 'function') {
-      renderSelectorComunidad('rem-com-sel', function() {
-        renderTabContent();
-      });
+  if (yaAbierto) {
+    if (sub)    sub.classList.remove('sub-open');
+    if (modRow) modRow.classList.remove('mod-open', 'mod-active');
+    NAV_STATE.modAbierto = null;
+  } else {
+    if (sub)    sub.classList.add('sub-open');
+    if (modRow) modRow.classList.add('mod-open');
+    NAV_STATE.modAbierto = modId;
+    const primerSub = sub && sub.querySelector('.sub-item');
+    if (primerSub && NAV_STATE.modActivo !== modId) {
+      primerSub.click();
+      return;
     }
-
-    // Tabs
-    var tabsEl = document.createElement('div');
-    tabsEl.className = 'rem-tabs';
-    tabsEl.id = 'rem-tabs';
-
-    var TABS = [
-      { id: 'panel',        label: 'Panel',          ico: 'ti-layout-dashboard' },
-      { id: 'colaboradores',label: 'Colaboradores',  ico: 'ti-users'            },
-      { id: 'procesos',     label: 'Procesos',       ico: 'ti-receipt'          },
-      { id: 'asistencia',   label: 'Asistencia',     ico: 'ti-calendar-check'   },
-      { id: 'novedades',    label: 'Novedades',      ico: 'ti-beach'            },
-      { id: 'parametros',   label: 'Par\u00E1metros',ico: 'ti-settings-2'       },
-    ];
-
-    TABS.forEach(function(t) {
-      var btn = document.createElement('button');
-      btn.className = 'rem-tab' + (t.id === _tabActiva ? ' act' : '');
-      btn.dataset.tab = t.id;
-      btn.innerHTML = '<i class="ti ' + t.ico + ' rem-tab-ico" aria-hidden="true"></i> ' + t.label;
-      btn.addEventListener('click', function() {
-        _tabActiva = t.id;
-        tabsEl.querySelectorAll('.rem-tab').forEach(function(b) { b.classList.remove('act'); });
-        btn.classList.add('act');
-        renderTabContent();
-      });
-      tabsEl.appendChild(btn);
-    });
-
-    root.appendChild(tabsEl);
-
-    // Contenido
-    var contenido = document.createElement('div');
-    contenido.id = 'rem-contenido';
-    root.appendChild(contenido);
-
-    renderTabContent();
   }
+}
 
-  function renderTabContent() {
-    var contenido = document.getElementById('rem-contenido');
-    if (!contenido) return;
-    contenido.innerHTML = '';
+function navSub(modId, subId, titulo) {
+  cerrarSidebarMovil();
+  document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('sub-active'));
+  const items = document.querySelectorAll(`#sub-${modId} .sub-item`);
+  items.forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${subId}'`)) {
+      el.classList.add('sub-active');
+    }
+  });
+  const modRow = document.querySelector(`#mod-${modId} .mod-row`);
+  if (modRow) { modRow.classList.add('mod-active'); modRow.classList.add('mod-open'); }
+  NAV_STATE.modActivo = modId;
+  NAV_STATE.subActivo = subId;
+  const key = `${modId}-${subId}`;
+  const tb  = TOPBAR[key];
+  if (tb) _actualizarTopbar(key, tb[0], tb[1]);
+  else    _actualizarTopbar(key, titulo, '');
+  _cargarModulo(modId, subId);
+}
 
-    var RENDERERS = {
-      panel:         renderPanel,
-      colaboradores: renderColaboradores,
-      procesos:      renderProcesos,
-      asistencia:    renderAsistencia,
-      novedades:     renderNovedades,
-      parametros:    renderParametros,
-    };
+function _cerrarSub(modId) {
+  const sub = document.getElementById('sub-' + modId);
+  if (sub) sub.classList.remove('sub-open');
+}
 
-    if (RENDERERS[_tabActiva]) RENDERERS[_tabActiva](contenido);
-  }
+function _limpiarActivos() {
+  document.querySelectorAll('.mod-row').forEach(el => el.classList.remove('mod-active', 'mod-open'));
+  document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('sub-active'));
+}
 
-  // ── TAB: PANEL ────────────────────────────────────────────────────────────
-
-  function renderPanel(el) {
-    // KPIs globales
-    var kpiGrid = document.createElement('div');
-    kpiGrid.className = 'rem-kpi-grid';
-    [
-      { label: 'Colaboradores activos', val: '\u2014', sub: 'cargando...' },
-      { label: 'Gasto total mes',       val: '\u2014', sub: 'Jun 2026'    },
-      { label: 'Per\u00EDodos abiertos',val: '\u2014', cls: 'rem-warn', sub: 'sin cerrar' },
-      { label: 'Contratos a vencer',    val: '\u2014', cls: 'rem-warn', sub: 'pr\u00F3ximos 30 d\u00EDas' },
-    ].forEach(function(k) {
-      var card = document.createElement('div');
-      card.className = 'rem-kpi';
-      var lbl = document.createElement('div'); lbl.className = 'rem-kpi-label'; lbl.textContent = k.label;
-      var val = document.createElement('div'); val.className = 'rem-kpi-val' + (k.cls ? ' ' + k.cls : ''); val.textContent = k.val;
-      var sub = document.createElement('div'); sub.className = 'rem-kpi-sub'; sub.textContent = k.sub;
-      card.appendChild(lbl); card.appendChild(val); card.appendChild(sub);
-      kpiGrid.appendChild(card);
-    });
-    el.appendChild(kpiGrid);
-
-    var divider = document.createElement('div');
-    divider.className = 'rem-divider';
-    el.appendChild(divider);
-
-    // Two-col: cartera + alertas
-    var twoCol = document.createElement('div');
-    twoCol.className = 'rem-two-col';
-
-    // Cartera
-    var carteraWrap = document.createElement('div');
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.textContent = 'Cartera \u2014 estado del per\u00EDodo Jun 2026';
-    carteraWrap.appendChild(secLabel);
-
-    var tbWrap = document.createElement('div');
-    tbWrap.className = 'rem-cartera-wrap';
-    var tb = document.createElement('table');
-    tb.className = 'rem-table';
-    tb.innerHTML =
-      '<thead><tr>' +
-        '<th>Comunidad</th>' +
-        '<th>Colabs.</th>' +
-        '<th>Gasto mes</th>' +
-        '<th>Per\u00EDodo</th>' +
-        '<th></th>' +
-      '</tr></thead>' +
-      '<tbody id="rem-cartera-body">' +
-        '<tr><td colspan="5" style="text-align:center;color:var(--co-mute);padding:20px">Cargando comunidades\u2026</td></tr>' +
-      '</tbody>';
-    tbWrap.appendChild(tb);
-    carteraWrap.appendChild(tbWrap);
-    twoCol.appendChild(carteraWrap);
-
-    // Alertas
-    var alertasWrap = document.createElement('div');
-    var aLabel = document.createElement('div');
-    aLabel.className = 'rem-section-label';
-    aLabel.textContent = 'Alertas';
-    alertasWrap.appendChild(aLabel);
-    var alertasList = document.createElement('div');
-    alertasList.className = 'rem-alertas';
-    alertasList.id = 'rem-alertas';
-    alertasList.innerHTML = '<div class="rem-alerta info"><i class="ti ti-info-circle" aria-hidden="true"></i><div class="rem-alerta-txt">Cargando alertas\u2026</div></div>';
-    alertasWrap.appendChild(alertasList);
-    twoCol.appendChild(alertasWrap);
-
-    el.appendChild(twoCol);
-
-    // Poblar cartera con comunidades reales
-    if (window._comunidades && window._comunidades.length > 0) {
-      _poblarCartera();
+function _actualizarTopbar(key, titulo, trail) {
+  const t = document.getElementById('modTopbarTitle');
+  const r = document.getElementById('modTopbarTrail');
+  if (t) t.textContent = titulo;
+  if (r) r.textContent = trail;
+  const modId  = key.split('-')[0];
+  const accion = TOP_ACTIONS[modId];
+  const btn    = document.getElementById('btnTopAction');
+  const lbl    = document.getElementById('btnTopActionLabel');
+  if (btn && lbl) {
+    if (accion && accion.show) {
+      btn.style.display = 'flex';
+      lbl.textContent   = accion.label;
+      btn.onclick       = () => _topAction(modId);
     } else {
-      setTimeout(_poblarCartera, 800);
+      btn.style.display = 'none';
     }
   }
+}
 
-  function _poblarCartera() {
-    var tbody = document.getElementById('rem-cartera-body');
-    var alertasEl = document.getElementById('rem-alertas');
-    if (!tbody) return;
+// ── Mapeo módulos → cargarModulo() de app.js
+function _cargarModulo(modId, subId) {
+  const MODULOS = {
+    'crm':            'crm',
+    'comunidades':    'comunidades',
+    'flujo':          'flujo',
+    'diagnostico':    'diagnostico',
+    'recepcion':      'recepcion',
+    'config':         'config',
+    'remuneraciones': 'remuneraciones',
+  };
 
-    var lista = window._comunidades || [];
-    if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--co-mute);padding:20px">Sin comunidades disponibles.</td></tr>';
-      return;
-    }
+  const gasModulo = subId ? (MODULOS[`${modId}-${subId}`] || MODULOS[modId]) : MODULOS[modId];
 
-    tbody.innerHTML = '';
-    var alertas = [];
+  if (gasModulo && typeof cargarModulo === 'function') {
+    cargarModulo(gasModulo);
+    return;
+  }
+  _mostrarProximamente(subId ? `${modId}-${subId}` : modId, modId, subId);
+}
 
-    lista.forEach(function(c) {
-      var tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td><b>' + c.nombre + '</b><br><span style="font-size:11px;color:var(--co-mute)">' + (c.comuna || '') + '</span></td>' +
-        '<td style="text-align:center">\u2014</td>' +
-        '<td>\u2014</td>' +
-        '<td><span class="rem-pill gray">Sin datos</span></td>' +
-        '<td><button class="rem-btn-sec" style="font-size:11px;padding:4px 10px">Ver</button></td>';
-      tr.querySelector('button').addEventListener('click', function() {
-        if (typeof setComunidadActiva === 'function') setComunidadActiva({ id: c.id, nombre: c.nombre });
-        _tabActiva = 'procesos';
-        renderModulo();
-      });
-      tbody.appendChild(tr);
+function _mostrarProximamente(cacheKey, modId, subId) {
+  const cache = window.moduleElements || {};
+  const ca    = document.getElementById('contentArea');
+  if (!ca) return;
+  // Ocultar todos los elementos conocidos incluyendo currentModuleElement de app.js
+  Object.values(cache).forEach(el => { if (el && el.style) el.style.display = 'none'; });
+  if (window.currentModuleElement && window.currentModuleElement.style) {
+    window.currentModuleElement.style.display = 'none';
+  }
+  const sd = document.getElementById('sidebarDynamic');
+  if (sd) sd.innerHTML = '';
+  if (cache[cacheKey]) {
+    cache[cacheKey].style.display = 'block';
+    window.currentModuleElement = cache[cacheKey];
+    return;
+  }
+  const tb     = TOPBAR[cacheKey];
+  const titulo = tb ? tb[0] : (subId || modId);
+  const wrapper = document.createElement('div');
+  wrapper.setAttribute('data-modulo', cacheKey);
+  wrapper.style.width = '100%';
+  wrapper.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                min-height:60vh;padding:40px;text-align:center;gap:16px">
+      <div style="width:52px;height:52px;border-radius:13px;background:var(--co-orange-soft);
+                  display:flex;align-items:center;justify-content:center;margin-bottom:4px">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--co-orange)"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+        </svg>
+      </div>
+      <div style="font-size:17px;font-weight:800;color:var(--co-ink);letter-spacing:-0.025em">${titulo}</div>
+      <div style="font-size:13px;color:var(--co-mute);max-width:300px;line-height:1.65">
+        Este módulo está en desarrollo.
+      </div>
+    </div>`;
+  ca.appendChild(wrapper);
+  cache[cacheKey] = wrapper;
+  window.currentModuleElement = wrapper;
+}
+
+function _topAction(modId) {
+  const acciones = {
+    'crm':            () => { if(window._crmAccionNuevo) window._crmAccionNuevo(); else document.getElementById('btn-nuevo')?.click(); },
+    'comunidades':    () => document.querySelector('#com-root .btn-nuevo')?.click(),
+    'finanzas':       () => _mostrarProximamente('finanzas-emitir','finanzas','emitir-gc'),
+    'incidencias':    () => _mostrarProximamente('incidencias-nueva','incidencias','nueva'),
+    'mantenciones':   () => _mostrarProximamente('mantenciones-nueva','mantenciones','nueva'),
+    'comunicaciones': () => _mostrarProximamente('comunicaciones-nueva','comunicaciones','nueva-circular'),
+    'documentos':     () => _mostrarProximamente('documentos-subir','documentos','subir'),
+  };
+  if (acciones[modId]) acciones[modId]();
+}
+
+// ── Bottom sheet móvil ───────────────────────────────────────────────────────
+function cerrarSidebarMovil() { cerrarBottomSheet(); }
+
+function cerrarBottomSheet() {
+  var bs = document.getElementById('bottomSheet');
+  var overlay = document.getElementById('bottomSheetOverlay');
+  if (bs) bs.remove();
+  if (overlay) overlay.remove();
+}
+
+function abrirBottomSheet(e) {
+  if (e) e.stopPropagation();
+  if (document.getElementById('bottomSheet')) { cerrarBottomSheet(); return; }
+
+  var usuario = null;
+  try { usuario = JSON.parse(sessionStorage.getItem('usuario') || 'null'); } catch(ex) {}
+
+  // Overlay
+  var overlay = document.createElement('div');
+  overlay.id = 'bottomSheetOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300';
+  overlay.addEventListener('click', cerrarBottomSheet);
+
+  // Sheet
+  var bs = document.createElement('div');
+  bs.id = 'bottomSheet';
+  bs.style.cssText = 'position:fixed;left:0;right:0;bottom:0;background:#1A1714;border-radius:18px 18px 0 0;z-index:301;max-height:85vh;overflow-y:auto;font-family:var(--co-font)';
+
+  // Handle + swipe para cerrar
+  var handle = document.createElement('div');
+  handle.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:10px 0 4px;gap:4px;cursor:pointer';
+  handle.innerHTML = '<div style="width:36px;height:3px;background:rgba(255,255,255,0.2);border-radius:99px"></div>' +
+    '<span style="font-size:9px;color:rgba(255,255,255,0.25);font-weight:500;letter-spacing:0.04em">desliza para cerrar</span>';
+  handle.addEventListener('click', cerrarBottomSheet);
+  bs.appendChild(handle);
+
+  // Swipe hacia abajo para cerrar
+  var touchStartY = 0;
+  bs.addEventListener('touchstart', function(ev) { touchStartY = ev.touches[0].clientY; }, { passive: true });
+  bs.addEventListener('touchend', function(ev) {
+    var dy = ev.changedTouches[0].clientY - touchStartY;
+    if (dy > 60) cerrarBottomSheet();
+  }, { passive: true });
+
+  // Secciones
+  var secciones = [
+    { label: 'General', items: [
+      { id: 'panel',       label: 'Panel maestro',   ico: 'ti-layout-dashboard', fn: function() { navFlat('panel','Panel maestro',''); } },
+      { id: 'comunidades', label: 'Comunidades',      ico: 'ti-building-estate',  fn: function() { navFlat('comunidades','Comunidades','· General'); } },
+    ]},
+    { label: 'Comercial', items: [
+      { id: 'crm',  label: 'CRM',            ico: 'ti-search',     fn: function() { navFlat('crm','CRM','· Comercial'); } },
+      { id: 'flujo',label: 'Flujo comercial', ico: 'ti-git-branch', fn: function() { navFlat('flujo','Flujo comercial','· Comercial'); } },
+    ]},
+    { label: 'Operaciones', items: [
+      { id: 'finanzas',       label: 'Finanzas',         ico: 'ti-coin',           fn: function() { navToggle('finanzas'); } },
+      { id: 'servicios',      label: 'Servicios',         ico: 'ti-flame',          fn: function() { navToggle('servicios'); } },
+      { id: 'remuneraciones', label: 'Remuneraciones',    ico: 'ti-users',          fn: function() { navToggle('remuneraciones'); } },
+      { id: 'mantenciones',   label: 'Mantenciones',      ico: 'ti-tool',           fn: function() { navToggle('mantenciones'); } },
+      { id: 'incidencias',    label: 'Incidencias',       ico: 'ti-alert-triangle', fn: function() { navToggle('incidencias'); } },
+    ]},
+    { label: 'Comunicación', items: [
+      { id: 'comunicaciones', label: 'Comunicaciones', ico: 'ti-message',   fn: function() { navToggle('comunicaciones'); } },
+      { id: 'documentos',     label: 'Documentos',     ico: 'ti-file-text', fn: function() { navToggle('documentos'); } },
+    ]},
+    { label: 'Empresa', items: [
+      { id: 'reportes', label: 'Reportes',      ico: 'ti-chart-bar', fn: function() { navToggle('reportes'); } },
+      { id: 'config',   label: 'Configuración', ico: 'ti-settings',  fn: function() { navFlat('config','Configuración','· Empresa'); } },
+    ]},
+  ];
+
+  var modulosUsuario = ['*'];
+  if (usuario && usuario.modulos) {
+    var _m = usuario.modulos;
+    if (Array.isArray(_m)) modulosUsuario = _m;
+    else { try { modulosUsuario = JSON.parse(_m); } catch(ex) { modulosUsuario = ['*']; } }
+  }
+  if (!Array.isArray(modulosUsuario)) modulosUsuario = ['*'];
+
+  secciones.forEach(function(sec) {
+    var itemsFiltrados = modulosUsuario.includes('*') ? sec.items : sec.items.filter(function(item) {
+      return modulosUsuario.includes(item.id);
     });
+    if (!itemsFiltrados.length) return;
 
-    // Alerta placeholder
-    if (alertasEl) {
-      alertasEl.innerHTML =
-        '<div class="rem-alerta info"><i class="ti ti-info-circle" aria-hidden="true"></i>' +
-        '<div class="rem-alerta-txt">Las alertas aparecer\u00E1n cuando se registren per\u00EDodos y colaboradores.</div></div>';
-    }
-  }
-
-  // ── TAB: COLABORADORES ────────────────────────────────────────────────────
-
-  function renderColaboradores(el) {
-    var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
-
-    // Header acciones
-    var hdrAcc = document.createElement('div');
-    hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap';
-    var btnImportar = document.createElement('button');
-    btnImportar.className = 'rem-btn-sec';
-    btnImportar.innerHTML = '<i class="ti ti-upload" aria-hidden="true"></i> Importar n\u00F3mina';
-    var btnNuevo = document.createElement('button');
-    btnNuevo.className = 'rem-btn-pri';
-    btnNuevo.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Nuevo trabajador';
-    btnNuevo.addEventListener('click', function() { abrirModalColaborador(null); });
-    hdrAcc.appendChild(btnImportar);
-    hdrAcc.appendChild(btnNuevo);
-    el.appendChild(hdrAcc);
-
-    // Aviso si no hay comunidad
-    if (!com) {
-      el.appendChild(_avisoSinComunidad());
-      return;
-    }
-
-    // Search + filtros
-    var searchBar = document.createElement('div');
-    searchBar.className = 'rem-search-bar';
-    var searchBox = document.createElement('div');
-    searchBox.className = 'rem-search-box';
-    searchBox.innerHTML = '<i class="ti ti-search" aria-hidden="true" style="color:var(--co-mute);font-size:14px"></i>';
-    var searchInput = document.createElement('input');
-    searchInput.type = 'text';
-    searchInput.placeholder = 'Buscar por nombre, RUT o cargo\u2026';
-    searchBox.appendChild(searchInput);
-    searchBar.appendChild(searchBox);
-    el.appendChild(searchBar);
-
-    var filtros = document.createElement('div');
-    filtros.className = 'rem-filtros';
-    var _filtroActivo = 'vigentes';
-    [
-      { id: 'vigentes',      label: 'Vigentes'      },
-      { id: 'desvinculados', label: 'Desvinculados' },
-      { id: 'todos',         label: 'Todos'         },
-    ].forEach(function(f) {
-      var btn = document.createElement('button');
-      btn.className = 'rem-filtro' + (f.id === _filtroActivo ? ' act' : '');
-      btn.textContent = f.label;
-      btn.addEventListener('click', function() {
-        _filtroActivo = f.id;
-        filtros.querySelectorAll('.rem-filtro').forEach(function(b) { b.classList.remove('act'); });
-        btn.classList.add('act');
-        _renderListaColaboradores(tbody, searchInput.value, _filtroActivo);
-      });
-      filtros.appendChild(btn);
-    });
-    el.appendChild(filtros);
-
-    // Tabla
-    var tbWrap = document.createElement('div');
-    tbWrap.style.overflowX = 'auto';
-    var table = document.createElement('table');
-    table.className = 'rem-table';
-    table.innerHTML =
-      '<thead><tr>' +
-        '<th></th>' +
-        '<th>Nombre</th>' +
-        '<th>RUT</th>' +
-        '<th>Cargo</th>' +
-        '<th>Contrato</th>' +
-        '<th>Sueldo base</th>' +
-        '<th>Estado</th>' +
-        '<th></th>' +
-      '</tr></thead>';
-    var tbody = document.createElement('tbody');
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--co-mute);padding:24px">Cargando colaboradores\u2026</td></tr>';
-    table.appendChild(tbody);
-    tbWrap.appendChild(table);
-    el.appendChild(tbWrap);
-
-    searchInput.addEventListener('input', function() {
-      _renderListaColaboradores(tbody, searchInput.value, _filtroActivo);
-    });
-
-    // Cargar datos — por ahora placeholder hasta GAS
-    _colaboradores = [];
-    _renderListaColaboradores(tbody, '', _filtroActivo);
-  }
-
-  function _renderListaColaboradores(tbody, busqueda, filtro) {
-    var lista = _colaboradores.filter(function(c) {
-      if (filtro === 'vigentes'      && c.estado !== 'activo')       return false;
-      if (filtro === 'desvinculados' && c.estado !== 'desvinculado') return false;
-      if (busqueda) {
-        var q = busqueda.toLowerCase();
-        return (c.nombre || '').toLowerCase().includes(q) ||
-               (c.rut    || '').toLowerCase().includes(q) ||
-               (c.cargo  || '').toLowerCase().includes(q);
-      }
-      return true;
-    });
-
-    if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--co-mute);padding:24px">' +
-        'No hay colaboradores registrados en esta comunidad.<br>' +
-        '<span style="font-size:11px">Usa "Nuevo trabajador" para agregar el primero.</span>' +
-        '</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = '';
-    lista.forEach(function(c) {
-      var estadoPill = {
-        activo:        '<span class="rem-pill ok">Activo</span>',
-        licencia:      '<span class="rem-pill warn">Licencia</span>',
-        desvinculado:  '<span class="rem-pill gray">Desvinculado</span>',
-      }[c.estado] || '<span class="rem-pill gray">' + (c.estado || '\u2014') + '</span>';
-
-      var tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td><div class="rem-avatar">' + iniciales(c.nombre) + '</div></td>' +
-        '<td><b>' + (c.nombre || '\u2014') + '</b></td>' +
-        '<td>' + (c.rut || '\u2014') + '</td>' +
-        '<td>' + (c.cargo || '\u2014') + '</td>' +
-        '<td>' + (c.tipoContrato || '\u2014') + '</td>' +
-        '<td>' + fmtPeso(c.sueldoBase) + '</td>' +
-        '<td>' + estadoPill + '</td>' +
-        '<td><i class="ti ti-chevron-right" aria-hidden="true" style="color:var(--co-mute)"></i></td>';
-      tr.addEventListener('click', function() { abrirFichaColaborador(c); });
-      tbody.appendChild(tr);
-    });
-  }
-
-  function abrirModalColaborador(colaborador) {
-    // TODO: implementar modal de creacion/edicion
-    alert('Modal nuevo trabajador \u2014 pr\u00F3ximamente');
-  }
-
-  function abrirFichaColaborador(c) {
-    // TODO: implementar ficha individual con tabs historial/docs
-    alert('Ficha de ' + c.nombre + ' \u2014 pr\u00F3ximamente');
-  }
-
-  // ── TAB: PROCESOS ─────────────────────────────────────────────────────────
-
-  function renderProcesos(el) {
-    var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
-    if (!com) {
-      el.appendChild(_avisoSinComunidad());
-      return;
-    }
-
-    var hdrAcc = document.createElement('div');
-    hdrAcc.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px';
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.style.marginBottom = '0';
-    secLabel.textContent = 'Per\u00EDodos \u2014 ' + com.nombre;
-    var btnAbrir = document.createElement('button');
-    btnAbrir.className = 'rem-btn-pri';
-    btnAbrir.innerHTML = '<i class="ti ti-calendar-plus" aria-hidden="true"></i> Abrir per\u00EDodo';
-    hdrAcc.appendChild(secLabel);
-    hdrAcc.appendChild(btnAbrir);
-    el.appendChild(hdrAcc);
-
-    // Periodos placeholder hasta GAS
-    var periodos = [
-      { mes: 'Julio 2026',  estado: 'abierto', liquidaciones: 0, total: 3, liquido: null,   previredPagado: false },
-      { mes: 'Junio 2026',  estado: 'cerrado', liquidaciones: 3, total: 3, liquido: 1650000, previredPagado: true  },
-      { mes: 'Mayo 2026',   estado: 'cerrado', liquidaciones: 3, total: 3, liquido: 1610000, previredPagado: true  },
-    ];
-
-    periodos.forEach(function(p) {
-      var card = document.createElement('div');
-      card.className = 'rem-periodo-card';
-
-      var ico = document.createElement('div');
-      ico.className = 'rem-periodo-ico ' + p.estado;
-      ico.innerHTML = p.estado === 'abierto'
-        ? '<i class="ti ti-clock" aria-hidden="true"></i>'
-        : '<i class="ti ti-circle-check" aria-hidden="true"></i>';
-
-      var info = document.createElement('div');
-      info.className = 'rem-periodo-info';
-      var titulo = document.createElement('div');
-      titulo.className = 'rem-periodo-titulo';
-      titulo.textContent = p.mes + (p.estado === 'abierto' ? ' \u2014 Abierto' : ' \u2014 Cerrado');
-      var sub = document.createElement('div');
-      sub.className = 'rem-periodo-sub';
-      if (p.estado === 'abierto') {
-        sub.textContent = p.liquidaciones + ' de ' + p.total + ' liquidaciones generadas';
-      } else {
-        sub.textContent = p.total + ' liquidaciones \u00B7 ' + fmtPeso(p.liquido) + ' l\u00EDquido' + (p.previredPagado ? ' \u00B7 Previred pagado' : '');
-      }
-      info.appendChild(titulo);
-      info.appendChild(sub);
-
-      var actions = document.createElement('div');
-      actions.className = 'rem-periodo-actions';
-      if (p.estado === 'abierto') {
-        var btnGen = document.createElement('button');
-        btnGen.className = 'rem-btn-pri';
-        btnGen.textContent = 'Generar liquidaciones';
-        actions.appendChild(btnGen);
-      } else {
-        var btnPrev = document.createElement('button');
-        btnPrev.className = 'rem-btn-sec';
-        btnPrev.innerHTML = '<i class="ti ti-download" aria-hidden="true"></i> Previred';
-        var btnLibro = document.createElement('button');
-        btnLibro.className = 'rem-btn-sec';
-        btnLibro.innerHTML = '<i class="ti ti-book" aria-hidden="true"></i> Libro';
-        actions.appendChild(btnPrev);
-        actions.appendChild(btnLibro);
-      }
-
-      card.appendChild(ico);
-      card.appendChild(info);
-      card.appendChild(actions);
-      el.appendChild(card);
-    });
-  }
-
-  // ── TAB: ASISTENCIA ───────────────────────────────────────────────────────
-
-  function renderAsistencia(el) {
-    el.appendChild(_proximamente(
-      'ti-calendar-check',
-      'Registro de asistencia',
-      'Control de turnos, horas extra y ausencias por colaborador.'
-    ));
-  }
-
-  // ── TAB: NOVEDADES ────────────────────────────────────────────────────────
-
-  function renderNovedades(el) {
-    var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
-    if (!com) {
-      el.appendChild(_avisoSinComunidad());
-      return;
-    }
-
-    var hdrAcc = document.createElement('div');
-    hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:16px';
-    var btnNov = document.createElement('button');
-    btnNov.className = 'rem-btn-pri';
-    btnNov.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Registrar novedad';
-    hdrAcc.appendChild(btnNov);
-    el.appendChild(hdrAcc);
-
-    // KPIs novedades
-    var novGrid = document.createElement('div');
-    novGrid.className = 'rem-nov-grid';
-    [
-      { label: 'Vacaciones pendientes', val: '0 d\u00EDas', cls: '' },
-      { label: 'Licencias activas',     val: '0',          cls: '' },
-    ].forEach(function(k) {
-      var card = document.createElement('div');
-      card.className = 'rem-kpi';
-      card.innerHTML = '<div class="rem-kpi-label">' + k.label + '</div><div class="rem-kpi-val' + (k.cls ? ' ' + k.cls : '') + '">' + k.val + '</div>';
-      novGrid.appendChild(card);
-    });
-    el.appendChild(novGrid);
-
-    var divider = document.createElement('div');
-    divider.className = 'rem-divider';
-    el.appendChild(divider);
-
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.textContent = 'Novedades del per\u00EDodo';
-    el.appendChild(secLabel);
-
-    var tbWrap = document.createElement('div');
-    tbWrap.style.overflowX = 'auto';
-    var table = document.createElement('table');
-    table.className = 'rem-table';
-    table.innerHTML =
-      '<thead><tr>' +
-        '<th>Colaborador</th><th>Tipo</th><th>Desde</th><th>Hasta</th><th>D\u00EDas</th><th>Estado</th>' +
-      '</tr></thead>' +
-      '<tbody><tr><td colspan="6" style="text-align:center;color:var(--co-mute);padding:24px">Sin novedades registradas para este per\u00EDodo.</td></tr></tbody>';
-    tbWrap.appendChild(table);
-    el.appendChild(tbWrap);
-  }
-
-  // ── TAB: PARAMETROS ───────────────────────────────────────────────────────
-
-  function renderParametros(el) {
-    var hdrAcc = document.createElement('div');
-    hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap';
-    var btnUF = document.createElement('button');
-    btnUF.className = 'rem-btn-sec';
-    btnUF.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> Actualizar UF';
-    var btnEditar = document.createElement('button');
-    btnEditar.className = 'rem-btn-sec';
-    btnEditar.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> Editar par\u00E1metros';
-    hdrAcc.appendChild(btnUF);
-    hdrAcc.appendChild(btnEditar);
-    el.appendChild(hdrAcc);
+    var lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:10px 14px 5px';
+    lbl.textContent = sec.label;
+    bs.appendChild(lbl);
 
     var grid = document.createElement('div');
-    grid.className = 'rem-param-grid';
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px 4px';
 
-    // Card valores generales
-    var card1 = document.createElement('div');
-    card1.className = 'rem-param-card';
-    card1.innerHTML = '<div class="rem-param-card-title">Valores generales 2026</div>';
-    [
-      { k: 'Ingreso m\u00EDnimo',    v: '$510.000'    },
-      { k: 'Tope imponible',         v: '83.3 UF'     },
-      { k: 'UF (hoy)',               v: '$38.942,00'  },
-      { k: 'SIS (empleado)',         v: '1.49%'       },
-      { k: 'SUS',                    v: '0.22%'       },
-      { k: 'Salud m\u00EDnimo legal',v: '7.00%'       },
-      { k: 'Retenci\u00F3n honorarios', v: '14.5%'    },
-    ].forEach(function(r) {
-      var row = document.createElement('div');
-      row.className = 'rem-param-row';
-      row.innerHTML = '<span class="rem-param-key">' + r.k + '</span><span class="rem-param-val">' + r.v + '</span>';
-      card1.appendChild(row);
+    itemsFiltrados.forEach(function(item) {
+      var activo = NAV_STATE.modActivo === item.id;
+      var btn = document.createElement('button');
+      btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;' +
+        'background:' + (activo ? 'rgba(217,133,59,0.18)' : 'rgba(255,255,255,0.05)') + ';' +
+        'border:0.5px solid ' + (activo ? 'rgba(217,133,59,0.4)' : 'rgba(255,255,255,0.08)') + ';' +
+        'border-radius:10px;cursor:pointer;font-family:var(--co-font);text-align:left;width:100%';
+      btn.innerHTML = '<i class="ti ' + item.ico + '" style="font-size:16px;flex-shrink:0;color:' +
+        (activo ? '#D9853B' : 'rgba(255,255,255,0.5)') + '" aria-hidden="true"></i>' +
+        '<span style="font-size:11px;font-weight:600;color:' +
+        (activo ? '#D9853B' : 'rgba(255,255,255,0.75)') + ';line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+        item.label + '</span>';
+      btn.addEventListener('click', function() { cerrarBottomSheet(); item.fn(); });
+      grid.appendChild(btn);
     });
-    grid.appendChild(card1);
+    bs.appendChild(grid);
+  });
 
-    // Card AFP
-    var card2 = document.createElement('div');
-    card2.className = 'rem-param-card';
-    card2.innerHTML = '<div class="rem-param-card-title">Tasas AFP vigentes</div>';
-    [
-      { k: 'AFP Capital',   v: '11.44%' },
-      { k: 'AFP Cuprum',    v: '11.44%' },
-      { k: 'AFP Habitat',   v: '11.27%' },
-      { k: 'AFP Modelo',    v: '10.58%' },
-      { k: 'AFP PlanVital', v: '11.16%' },
-      { k: 'AFP ProVida',   v: '11.45%' },
-      { k: 'AFP Uno',       v: '10.49%' },
-    ].forEach(function(r) {
-      var row = document.createElement('div');
-      row.className = 'rem-param-row';
-      row.innerHTML = '<span class="rem-param-key">' + r.k + '</span><span class="rem-param-val">' + r.v + '</span>';
-      card2.appendChild(row);
+  // Footer perfil
+  var sep = document.createElement('div');
+  sep.style.cssText = 'height:0.5px;background:rgba(255,255,255,0.08);margin:10px 10px 0';
+  bs.appendChild(sep);
+
+  var foot = document.createElement('div');
+  foot.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 14px 20px';
+
+  var av = document.createElement('div');
+  av.style.cssText = 'width:30px;height:30px;border-radius:50%;background:#D9853B;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0';
+  av.textContent = usuario ? usuario.nombre.charAt(0).toUpperCase() : 'U';
+
+  var info = document.createElement('div');
+  info.style.cssText = 'flex:1;min-width:0';
+  info.innerHTML = '<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+    (usuario ? usuario.nombre : '—') + '</div>' +
+    '<div style="font-size:10px;color:rgba(255,255,255,0.35)">' +
+    (usuario ? (usuario.rol || 'Administrador') : '') + '</div>';
+
+  var btnMenu = document.createElement('button');
+  btnMenu.style.cssText = 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.12);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.5);flex-shrink:0;font-family:var(--co-font)';
+  btnMenu.textContent = '⋯';
+  btnMenu.addEventListener('click', function(ev) {
+    ev.stopPropagation();
+    cerrarBottomSheet();
+    if (typeof _abrirModalPerfil === 'function') _abrirModalPerfil();
+  });
+
+  foot.appendChild(av); foot.appendChild(info); foot.appendChild(btnMenu);
+  bs.appendChild(foot);
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(bs);
+}
+
+function bnav(el) {
+  document.querySelectorAll('.bottom-nav .nav-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function toggleSbNav() {
+  const navArea = document.getElementById('sbNavArea');
+  const btn     = document.getElementById('btnToggleNav');
+  if (!navArea) return;
+  const pinned = navArea.classList.contains('sb-pinned');
+  if (pinned) {
+    navArea.classList.remove('sb-pinned');
+    navArea.classList.add('sb-collapsed');
+    if (btn) btn.title = 'Ver menú completo';
+    if (btn) btn.style.opacity = '1';
+  } else {
+    navArea.classList.remove('sb-collapsed');
+    navArea.classList.add('sb-pinned');
+    if (btn) btn.title = 'Ocultar menú';
+    if (btn) btn.style.opacity = '0.7';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Marcar CRM activo al inicio
+  const btnCrm = document.querySelector('[data-mod="crm"]');
+  if (btnCrm) btnCrm.classList.add('mod-active');
+
+  const navArea = document.getElementById('sbNavArea');
+  const dynArea = document.getElementById('sidebarDynamic');
+  if (navArea && dynArea) {
+    const observer = new MutationObserver(() => {
+      const tieneContenido = dynArea.innerHTML.trim().length > 0;
+      if (!navArea.classList.contains('sb-pinned')) {
+        navArea.classList.toggle('sb-collapsed', tieneContenido);
+      }
+      const btn = document.getElementById('btnToggleNav');
+      if (btn) btn.style.display = tieneContenido ? 'flex' : 'none';
     });
-    grid.appendChild(card2);
-
-    el.appendChild(grid);
-
-    var divider = document.createElement('div');
-    divider.className = 'rem-divider';
-    el.appendChild(divider);
-
-    // Tabla tramos impuesto
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.textContent = 'Tabla impuesto 2\u00AA categor\u00EDa \u2014 Jun 2026';
-    el.appendChild(secLabel);
-
-    var tbWrap = document.createElement('div');
-    tbWrap.style.overflowX = 'auto';
-    var table = document.createElement('table');
-    table.className = 'rem-table';
-    table.innerHTML =
-      '<thead><tr><th>Desde</th><th>Hasta</th><th>Tasa</th><th>Rebaja</th></tr></thead>' +
-      '<tbody>' +
-        '<tr><td>$0</td><td>$660.590</td><td><b>Exento</b></td><td>\u2014</td></tr>' +
-        '<tr><td>$660.591</td><td>$1.467.978</td><td><b>4%</b></td><td>$26.424</td></tr>' +
-        '<tr><td>$1.467.979</td><td>$2.446.630</td><td><b>8%</b></td><td>$85.143</td></tr>' +
-        '<tr><td>$2.446.631</td><td>$3.425.282</td><td><b>13,5%</b></td><td>$219.698</td></tr>' +
-        '<tr><td>$3.425.283</td><td>$4.893.260</td><td><b>23%</b></td><td>$562.595</td></tr>' +
-        '<tr><td>$4.893.261</td><td>$6.116.576</td><td><b>30,4%</b></td><td>$924.716</td></tr>' +
-        '<tr><td>$6.116.577</td><td>$7.339.891</td><td><b>35%</b></td><td>$1.206.258</td></tr>' +
-        '<tr><td>$7.339.892</td><td>En adelante</td><td><b>40%</b></td><td>$1.573.253</td></tr>' +
-      '</tbody>';
-    tbWrap.appendChild(table);
-    el.appendChild(tbWrap);
-
-    var nota = document.createElement('p');
-    nota.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:10px';
-    nota.textContent = 'Valores hardcodeados para v1. La actualizaci\u00F3n autom\u00E1tica desde SII y Banco Central se implementar\u00E1 en la siguiente versi\u00F3n.';
-    el.appendChild(nota);
+    observer.observe(dynArea, { childList: true, subtree: false });
   }
-
-  // ── Helpers UI ────────────────────────────────────────────────────────────
-
-  function _avisoSinComunidad() {
-    var div = document.createElement('div');
-    div.className = 'rem-empty';
-    div.innerHTML =
-      '<i class="ti ti-building-estate" aria-hidden="true"></i>' +
-      '<div class="rem-empty-title">Selecciona una comunidad</div>' +
-      '<div class="rem-empty-sub">Usa el selector en la parte superior derecha para elegir la comunidad con la que deseas trabajar.</div>';
-    return div;
-  }
-
-  function _proximamente(ico, titulo, sub) {
-    var div = document.createElement('div');
-    div.className = 'rem-empty';
-    div.innerHTML =
-      '<i class="ti ' + ico + '" aria-hidden="true"></i>' +
-      '<div class="rem-empty-title">' + titulo + '</div>' +
-      '<div class="rem-empty-sub">' + sub + '<br>Disponible en la pr\u00F3xima versi\u00F3n.</div>';
-    return div;
-  }
-
-  // ── Init ──────────────────────────────────────────────────────────────────
-  init();
-
-})();
+});
 </script>
+</body>
+</html>
