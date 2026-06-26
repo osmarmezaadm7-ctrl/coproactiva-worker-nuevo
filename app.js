@@ -22,6 +22,7 @@ function _guardarSesion(data) {
         modulos:     data.modulos,
         comunidades: data.comunidades,
     }));
+    cargarComunidades();
 }
 
 function _cerrarSesion() {
@@ -789,3 +790,152 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     const response = await fetch(`${WORKER_URL}${endpoint}`, options);
     return response.json();
 }
+
+// ── Selector de comunidad global ──────────────────────────────────────────────
+// Lista de comunidades disponibles para el usuario activo
+window._comunidades = [];
+
+// Carga comunidades desde el Worker al iniciar sesion
+// Filtra segun usuario.comunidades si no es ['*']
+async function cargarComunidades() {
+    try {
+        const resp = await apiCall('/comunidades');
+        const lista = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+        const usuario = _getUsuario();
+        const permitidas = usuario && usuario.comunidades ? usuario.comunidades : ['*'];
+        if (Array.isArray(permitidas) && !permitidas.includes('*')) {
+            window._comunidades = lista.filter(function(c) { return permitidas.includes(c.id); });
+        } else {
+            window._comunidades = lista;
+        }
+        // Si la comunidad activa en localStorage ya no esta disponible, resetear
+        var activa = getComunidadActiva();
+        if (activa && !window._comunidades.find(function(c) { return c.id === activa.id; })) {
+            localStorage.removeItem('coproActiva_comunidad');
+        }
+    } catch(e) {
+        console.warn('cargarComunidades error:', e);
+        window._comunidades = [];
+    }
+}
+
+// Obtiene la comunidad activa desde localStorage
+// Retorna objeto {id, nombre} o null
+function getComunidadActiva() {
+    try {
+        return JSON.parse(localStorage.getItem('coproActiva_comunidad') || 'null');
+    } catch(e) {
+        return null;
+    }
+}
+
+// Guarda la comunidad activa en localStorage
+function setComunidadActiva(comunidad) {
+    if (!comunidad) {
+        localStorage.removeItem('coproActiva_comunidad');
+        return;
+    }
+    localStorage.setItem('coproActiva_comunidad', JSON.stringify({ id: comunidad.id, nombre: comunidad.nombre }));
+}
+
+// Renderiza el selector de comunidad en el elemento indicado
+// containerId: id del elemento donde se inyecta el selector
+// onCambio: callback(comunidad) que se llama al cambiar la seleccion
+function renderSelectorComunidad(containerId, onCambio) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+
+    function _render() {
+        var lista = window._comunidades || [];
+        var activa = getComunidadActiva();
+
+        // Si no hay comunidad activa, usar la primera disponible
+        if (!activa && lista.length > 0) {
+            activa = { id: lista[0].id, nombre: lista[0].nombre };
+            setComunidadActiva(activa);
+        }
+
+        var nombreActiva = activa ? activa.nombre : 'Sin comunidad';
+        var nombreCorto = nombreActiva.length > 22 ? nombreActiva.substring(0, 22) + '\u2026' : nombreActiva;
+
+        var itemsHtml = lista.map(function(c) {
+            var esActiva = activa && c.id === activa.id;
+            return '<div class="com-sel-item' + (esActiva ? ' activa' : '') + '" data-id="' + c.id + '" data-nombre="' + c.nombre.replace(/"/g, '&quot;') + '">' +
+                '<span class="com-sel-check">' + (esActiva ? '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l3.5 3.5L13 4.5"/></svg>' : '') + '</span>' +
+                '<span>' + c.nombre + '</span>' +
+            '</div>';
+        }).join('');
+
+        container.innerHTML =
+            '<div class="com-sel-btn" id="comSelBtn_' + containerId + '">' +
+                '<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="#D9853B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2C7.24 2 5 4.24 5 7c0 4.25 5 11 5 11s5-6.75 5-11c0-2.76-2.24-5-5-5z"/><circle cx="10" cy="7" r="2"/></svg>' +
+                '<span class="com-sel-nombre">' + nombreCorto + '</span>' +
+                '<svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="#B0A89E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>' +
+            '</div>' +
+            '<div class="com-sel-dropdown" id="comSelDd_' + containerId + '" style="display:none">' +
+                '<div class="com-sel-dd-label">Mis comunidades</div>' +
+                itemsHtml +
+            '</div>';
+
+        // Toggle dropdown
+        var btn = document.getElementById('comSelBtn_' + containerId);
+        var dd  = document.getElementById('comSelDd_' + containerId);
+        if (btn) btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var abierto = dd.style.display !== 'none';
+            // Cerrar todos los dropdowns abiertos
+            document.querySelectorAll('.com-sel-dropdown').forEach(function(el) { el.style.display = 'none'; });
+            dd.style.display = abierto ? 'none' : 'block';
+        });
+
+        // Seleccion de item
+        container.querySelectorAll('.com-sel-item').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var nueva = { id: item.dataset.id, nombre: item.dataset.nombre };
+                setComunidadActiva(nueva);
+                dd.style.display = 'none';
+                _render();
+                if (typeof onCambio === 'function') onCambio(nueva);
+            });
+        });
+    }
+
+    // Si las comunidades ya estan cargadas, renderizar inmediatamente
+    // Si no, esperar hasta que se carguen (reintento simple)
+    if (window._comunidades && window._comunidades.length > 0) {
+        _render();
+    } else {
+        var intentos = 0;
+        var espera = setInterval(function() {
+            intentos++;
+            if ((window._comunidades && window._comunidades.length > 0) || intentos > 20) {
+                clearInterval(espera);
+                _render();
+            }
+        }, 200);
+    }
+}
+
+// Cerrar dropdowns al hacer clic fuera
+document.addEventListener('click', function() {
+    document.querySelectorAll('.com-sel-dropdown').forEach(function(el) { el.style.display = 'none'; });
+});
+
+// ── Estilos del selector de comunidad ────────────────────────────────────────
+(function() {
+    var style = document.createElement('style');
+    style.textContent = [
+        '.com-sel-wrap{position:relative;display:inline-flex;align-items:center}',
+        '.com-sel-btn{display:flex;align-items:center;gap:7px;padding:7px 12px;background:#fff;border:1px solid #E0D9D0;border-radius:10px;cursor:pointer;transition:border-color 0.15s;font-family:var(--co-font);user-select:none}',
+        '.com-sel-btn:hover{border-color:#D9853B}',
+        '.com-sel-nombre{font-size:13px;font-weight:700;color:#1A1714;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}',
+        '.com-sel-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid #E0D9D0;border-radius:12px;padding:6px;min-width:220px;box-shadow:0 4px 16px rgba(26,23,20,0.12);z-index:999}',
+        '.com-sel-dd-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B0A89E;padding:6px 10px 4px}',
+        '.com-sel-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:600;color:#1A1714;cursor:pointer;font-family:var(--co-font)}',
+        '.com-sel-item:hover{background:#FBF7F0}',
+        '.com-sel-item.activa{background:#FEF0E3;color:#D9853B}',
+        '.com-sel-check{width:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#D9853B}'
+    ].join('');
+    document.head.appendChild(style);
+})();
