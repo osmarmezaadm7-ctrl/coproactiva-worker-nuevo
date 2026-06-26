@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (_getSesionOk()) {
         loginScreen.style.display = 'none';
         appContainer.style.display = 'flex';
+        cargarComunidades();
         _iniciarApp();
     }
 
