@@ -1,10 +1,11 @@
 // ============================================================
 // CoproActiva Worker — index.js
-// Versión: 3.6 · Junio 2026
+// Versión: 3.7 · Junio 2026
 // Cambio v3.4: agrega rutas /leads y /leads/metricas
 // Cambio v3.5: agrega rutas /plantillas
 // Cambio v3.3: agrega ruta GET /documentos/catalogo-comunidad
 // Cambio v3.6: agrega rutas /auth y /usuarios + validación HMAC
+// Cambio v3.7: agrega rutas /remuneraciones/trabajadores, /remuneraciones/parametros
 // ============================================================
 
 const ALLOWED_ORIGINS = [
@@ -595,6 +596,85 @@ export default {
         const body = await request.json();
         const data = await postAppsScript(APPS_SCRIPT_URL, body);
         return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── v3.7 — Remuneraciones: Trabajadores ──────────────────
+      if (url.pathname === '/remuneraciones/trabajadores' && method === 'GET') {
+        const id          = url.searchParams.get('id')          || '';
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (id) {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getTrabajador', { id });
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getTrabajadores', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/trabajadores' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/trabajadores/resumen' && method === 'GET') {
+        const comunidadId = url.searchParams.get('comunidadId') || '';
+        if (!comunidadId) return jsonResponse({ ok: false, error: 'comunidadId requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getResumenTrabajadores', { comunidadId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/trabajadores/previred' && method === 'GET') {
+        const id = url.searchParams.get('id') || '';
+        if (!id) return jsonResponse({ ok: false, error: 'id requerido' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getDatosPrevired', { id });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // ── v3.7 — Remuneraciones: Parámetros ─────────────────
+      if (url.pathname === '/remuneraciones/parametros/indicadores' && method === 'GET') {
+        const periodo = url.searchParams.get('periodo') || '';
+        const data    = await callAppsScript(APPS_SCRIPT_URL, 'getIndicadoresRem', { periodo });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/parametros/indicadores' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/parametros/plantillas' && method === 'GET') {
+        const cargo = url.searchParams.get('cargo') || '*';
+        const todas = url.searchParams.get('todas') || 'false';
+        if (todas === 'true') {
+          const data = await callAppsScript(APPS_SCRIPT_URL, 'getTodasPlantillas');
+          return jsonResponse({ ok: true, data }, 200, origin);
+        }
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getPlantillaOnboarding', { cargo });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/parametros/plantillas' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/parametros/cargos' && method === 'GET') {
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getCargosRem');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/parametros/cargos' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname === '/remuneraciones/instalar' && method === 'POST') {
+        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojasParametrosRem' });
+        const data2 = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojaTrabajadores' });
+        return jsonResponse({ ok: true, parametros: data, trabajadores: data2 }, 200, origin);
       }
 
       return jsonResponse({ ok: false, error: 'Ruta no encontrada' }, 404, origin);
