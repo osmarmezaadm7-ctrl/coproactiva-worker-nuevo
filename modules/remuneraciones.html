@@ -1,253 +1,87 @@
 <!-- modules/remuneraciones.html — CoproActiva Remuneraciones -->
-<!-- Version: 1.0 · Junio 2026 -->
+<!-- Version: 1.1 · Junio 2026 -->
+<!-- v1.1: datos reales colaboradores, parametros con subtabs y datos desde GAS -->
 
 <style>
   #rem-root { font-family: var(--co-font); color: var(--co-ink); }
 
-  /* ── Tabs ── */
   .rem-tabs {
-    display: flex;
-    gap: 2px;
-    border-bottom: 1px solid var(--co-line);
-    margin-bottom: 20px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    display: flex; gap: 2px; border-bottom: 1px solid var(--co-line);
+    margin-bottom: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
   .rem-tabs::-webkit-scrollbar { display: none; }
   .rem-tab {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 9px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--co-mute);
-    cursor: pointer;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    white-space: nowrap;
-    background: transparent;
-    font-family: var(--co-font);
-    transition: color 0.15s;
+    display: flex; align-items: center; gap: 5px; padding: 9px 14px;
+    font-size: 12px; font-weight: 600; color: var(--co-mute); cursor: pointer;
+    border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    white-space: nowrap; background: transparent; font-family: var(--co-font); transition: color 0.15s;
   }
   .rem-tab:hover { color: var(--co-ink); }
   .rem-tab.act { color: var(--co-orange); border-bottom-color: var(--co-orange); font-weight: 700; }
   .rem-tab .rem-tab-ico { font-size: 14px; }
 
-  /* ── KPIs ── */
+  /* Subtabs (igual a com-tabs) */
+  .rem-subtabs {
+    display: flex; border-bottom: 1px solid var(--co-line);
+    margin-bottom: 18px; gap: 0; overflow-x: auto; scrollbar-width: none;
+  }
+  .rem-subtabs::-webkit-scrollbar { display: none; }
+  .rem-subtab {
+    font-size: 12px; font-weight: 600; padding: 9px 14px; color: var(--co-mute);
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    white-space: nowrap; background: none; border-top: none; border-left: none;
+    border-right: none; font-family: var(--co-font); transition: color 0.13s;
+  }
+  .rem-subtab.act { color: var(--co-orange); border-bottom-color: var(--co-orange); }
+
   .rem-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 10px;
-    margin-bottom: 20px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px; margin-bottom: 20px;
   }
-  .rem-kpi {
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-lg);
-    padding: 14px 16px;
-  }
-  .rem-kpi-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 6px;
-  }
-  .rem-kpi-val {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--co-ink);
-  }
+  .rem-kpi { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-lg); padding: 14px 16px; }
+  .rem-kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 6px; }
+  .rem-kpi-val { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: var(--co-ink); }
   .rem-kpi-val.rem-warn { color: var(--co-orange); }
   .rem-kpi-val.rem-ok   { color: #3B6D11; }
-  .rem-kpi-sub {
-    font-size: 10px;
-    color: var(--co-mute);
-    margin-top: 3px;
-  }
+  .rem-kpi-sub { font-size: 10px; color: var(--co-mute); margin-top: 3px; }
 
-  /* ── Selector comunidad (wrapper) ── */
   .com-sel-wrap { position: relative; display: inline-flex; align-items: center; }
 
-  /* ── Section label ── */
-  .rem-section-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 10px;
-  }
+  .rem-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 10px; }
 
-  /* ── Tabla base ── */
-  .rem-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-  .rem-table th {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    padding: 0 12px 8px;
-    text-align: left;
-  }
-  .rem-table td {
-    padding: 10px 12px;
-    border-top: 1px solid var(--co-line);
-    color: var(--co-ink);
-    vertical-align: middle;
-  }
-  .rem-table tr:hover td {
-    background: var(--co-bg);
-    cursor: pointer;
-  }
+  .rem-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rem-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--co-mute); padding: 0 12px 8px; text-align: left; }
+  .rem-table td { padding: 10px 12px; border-top: 1px solid var(--co-line); color: var(--co-ink); vertical-align: middle; }
+  .rem-table tr:hover td { background: var(--co-bg); cursor: pointer; }
 
-  /* ── Pills estado ── */
-  .rem-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .rem-pill.ok      { background: #EAF3DE; color: #3B6D11; }
-  .rem-pill.warn    { background: var(--co-orange-soft); color: #854F0B; }
-  .rem-pill.danger  { background: #FCEBEB; color: #A32D2D; }
-  .rem-pill.gray    { background: var(--co-bg); color: var(--co-mute); border: 1px solid var(--co-line); }
-  .rem-pill.blue    { background: #E6F1FB; color: #185FA5; }
+  .rem-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .rem-pill.ok     { background: #EAF3DE; color: #3B6D11; }
+  .rem-pill.warn   { background: var(--co-orange-soft); color: #854F0B; }
+  .rem-pill.danger { background: #FCEBEB; color: #A32D2D; }
+  .rem-pill.gray   { background: var(--co-bg); color: var(--co-mute); border: 1px solid var(--co-line); }
+  .rem-pill.blue   { background: #E6F1FB; color: #185FA5; }
+  .rem-pill.legal  { background: #FEF0E3; color: #633806; }
 
-  /* ── Avatar ── */
-  .rem-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--co-orange-soft);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--co-orange);
-    flex-shrink: 0;
-  }
+  .rem-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--co-orange-soft); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--co-orange); flex-shrink: 0; }
 
-  /* ── Botones ── */
-  .rem-btn-pri {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background: var(--co-orange);
-    color: #fff;
-    border: none;
-    border-radius: var(--co-r-md);
-    font-size: 12px;
-    font-weight: 700;
-    font-family: var(--co-font);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
-  }
+  .rem-btn-pri { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--co-orange); color: #fff; border: none; border-radius: var(--co-r-md); font-size: 12px; font-weight: 700; font-family: var(--co-font); cursor: pointer; white-space: nowrap; transition: background 0.15s; }
   .rem-btn-pri:hover { background: #C4762F; }
-  .rem-btn-sec {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-md);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--co-ink);
-    font-family: var(--co-font);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: border-color 0.15s;
-  }
+  .rem-btn-sec { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); font-size: 12px; font-weight: 600; color: var(--co-ink); font-family: var(--co-font); cursor: pointer; white-space: nowrap; transition: border-color 0.15s; }
   .rem-btn-sec:hover { border-color: var(--co-orange); }
 
-  /* ── Search bar ── */
-  .rem-search-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .rem-search-box {
-    flex: 1;
-    min-width: 180px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-md);
-    padding: 8px 12px;
-  }
-  .rem-search-box input {
-    border: none;
-    background: transparent;
-    font-family: var(--co-font);
-    font-size: 12px;
-    color: var(--co-ink);
-    flex: 1;
-    outline: none;
-  }
+  .rem-search-bar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+  .rem-search-box { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px; background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-md); padding: 8px 12px; }
+  .rem-search-box input { border: none; background: transparent; font-family: var(--co-font); font-size: 12px; color: var(--co-ink); flex: 1; outline: none; }
   .rem-search-box input::placeholder { color: var(--co-mute); }
 
-  /* ── Filtros pill ── */
-  .rem-filtros {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .rem-filtro {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--co-line);
-    color: var(--co-mute);
-    background: var(--co-surface);
-    cursor: pointer;
-    font-family: var(--co-font);
-    transition: all 0.13s;
-  }
-  .rem-filtro.act {
-    background: var(--co-orange-soft);
-    color: var(--co-orange);
-    border-color: var(--co-orange-line);
-  }
+  .rem-filtros { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .rem-filtro { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--co-line); color: var(--co-mute); background: var(--co-surface); cursor: pointer; font-family: var(--co-font); transition: all 0.13s; }
+  .rem-filtro.act { background: var(--co-orange-soft); color: var(--co-orange); border-color: var(--co-orange-line); }
 
-  /* ── Panel cartera table ── */
-  .rem-cartera-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  .rem-cartera-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-  /* ── Alertas ── */
   .rem-alertas { display: flex; flex-direction: column; gap: 8px; }
-  .rem-alerta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: var(--co-r-md);
-    font-size: 12px;
-  }
+  .rem-alerta { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--co-r-md); font-size: 12px; }
   .rem-alerta.warn   { background: var(--co-orange-soft); border: 1px solid var(--co-orange-line); }
   .rem-alerta.danger { background: #FCEBEB; border: 1px solid #F7C1C1; }
   .rem-alerta.info   { background: var(--co-bg); border: 1px solid var(--co-line); }
@@ -257,51 +91,13 @@
   .rem-alerta.info i   { color: var(--co-mute); }
   .rem-alerta-txt    { color: var(--co-ink); flex: 1; font-size: 12px; }
   .rem-alerta-txt b  { font-weight: 700; }
-  .rem-alerta-link   {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--co-orange);
-    cursor: pointer;
-    white-space: nowrap;
-    background: none;
-    border: none;
-    font-family: var(--co-font);
-    padding: 0;
-  }
+  .rem-alerta-link   { font-size: 11px; font-weight: 700; color: var(--co-orange); cursor: pointer; white-space: nowrap; background: none; border: none; font-family: var(--co-font); padding: 0; }
 
-  /* ── Panel two-col ── */
-  .rem-two-col {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 16px;
-    align-items: start;
-  }
-  @media (max-width: 768px) {
-    .rem-two-col { grid-template-columns: 1fr; }
-  }
+  .rem-two-col { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
+  @media (max-width: 768px) { .rem-two-col { grid-template-columns: 1fr; } }
 
-  /* ── Periodo card ── */
-  .rem-periodo-card {
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-lg);
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-  .rem-periodo-ico {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 20px;
-  }
+  .rem-periodo-card { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-lg); padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .rem-periodo-ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
   .rem-periodo-ico.abierto { background: var(--co-orange-soft); color: var(--co-orange); }
   .rem-periodo-ico.cerrado { background: #EAF3DE; color: #3B6D11; }
   .rem-periodo-info { flex: 1; min-width: 140px; }
@@ -309,81 +105,50 @@
   .rem-periodo-sub { font-size: 11px; color: var(--co-mute); margin-top: 2px; }
   .rem-periodo-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
-  /* ── Divider ── */
   .rem-divider { height: 1px; background: var(--co-line); margin: 16px 0; }
 
-  /* ── Empty state ── */
-  .rem-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 20px;
-    text-align: center;
-    color: var(--co-mute);
-  }
+  .rem-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; text-align: center; color: var(--co-mute); }
   .rem-empty i { font-size: 36px; margin-bottom: 12px; }
   .rem-empty-title { font-size: 14px; font-weight: 700; color: var(--co-ink); margin-bottom: 6px; }
   .rem-empty-sub { font-size: 12px; }
 
-  /* ── Parametros ── */
-  .rem-param-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  @media (max-width: 600px) {
-    .rem-param-grid { grid-template-columns: 1fr; }
-  }
-  .rem-param-card {
-    background: var(--co-surface);
-    border: 1px solid var(--co-line);
-    border-radius: var(--co-r-lg);
-    padding: 16px;
-  }
-  .rem-param-card-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--co-mute);
-    margin-bottom: 12px;
-  }
-  .rem-param-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 7px 0;
-    border-top: 1px solid var(--co-line);
-    font-size: 12px;
-  }
+  /* Parametros */
+  .rem-param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .rem-param-grid { grid-template-columns: 1fr; } }
+  .rem-param-card { background: var(--co-surface); border: 1px solid var(--co-line); border-radius: var(--co-r-lg); padding: 16px; }
+  .rem-param-card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--co-mute); margin-bottom: 12px; border-bottom: 1px solid var(--co-line); padding-bottom: 8px; }
+  .rem-param-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-top: 1px solid var(--co-line); font-size: 12px; }
   .rem-param-row:first-of-type { border-top: none; }
   .rem-param-key { color: var(--co-mute); }
   .rem-param-val { font-weight: 700; color: var(--co-ink); }
 
-  /* ── Novedades grid ── */
-  .rem-nov-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  @media (max-width: 500px) {
-    .rem-nov-grid { grid-template-columns: 1fr; }
-  }
+  .rem-nov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  @media (max-width: 500px) { .rem-nov-grid { grid-template-columns: 1fr; } }
+
+  /* Plantillas onboarding */
+  .rem-cargo-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .rem-cargo-chip { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--co-line); color: var(--co-mute); background: var(--co-surface); cursor: pointer; font-family: var(--co-font); transition: all 0.13s; }
+  .rem-cargo-chip.act { background: var(--co-orange-soft); color: var(--co-orange); border-color: var(--co-orange-line); }
+
+  .rem-plt-item { display: flex; align-items: center; gap: 10px; background: var(--co-surface); border: 1px solid var(--co-line); border-radius: 8px; padding: 9px 12px; margin-bottom: 5px; font-size: 12px; }
+  .rem-plt-item.legal { border-left: 3px solid var(--co-orange); border-radius: 0 8px 8px 0; }
+  .rem-plt-name { flex: 1; font-weight: 600; color: var(--co-ink); }
+  .rem-plt-cat { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--co-bg); color: var(--co-mute); border: 1px solid var(--co-line); white-space: nowrap; }
+  .rem-plt-badges { display: flex; gap: 4px; flex-shrink: 0; }
+  .rem-plt-plazo { font-size: 11px; color: var(--co-mute); white-space: nowrap; }
+  .rem-plt-actions { display: flex; gap: 4px; }
+  .rem-ico-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--co-line); background: var(--co-surface); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--co-mute); font-size: 13px; font-family: var(--co-font); transition: all 0.13s; }
+  .rem-ico-btn:hover { border-color: var(--co-orange); color: var(--co-orange); }
+  .rem-ico-btn.danger:hover { border-color: #F7C1C1; color: #A32D2D; background: #FCEBEB; }
+  .rem-lock { opacity: 0.35; cursor: not-allowed; }
 </style>
 
 <div id="rem-root">
   <div class="module-loading">
-    <div class="ml-iso-wrap">
-      <div class="ml-iso" aria-hidden="true"></div>
-    </div>
+    <div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div>
     <div class="ml-text">
       <div class="ml-brand"><b>co</b>proactiva</div>
-      <div class="ml-status">
-        <span class="ml-status-dot"></span>
-        Cargando Remuneraciones
-      </div>
+      <div class="ml-status"><span class="ml-status-dot"></span>Cargando Remuneraciones</div>
     </div>
   </div>
 </div>
@@ -392,36 +157,29 @@
 (function() {
 
   var WORKER_URL = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
-
   function _token() { return sessionStorage.getItem('token') || ''; }
 
-  // Tab activa
-  var _tabActiva = 'panel';
-
-  // Datos en memoria
+  var _tabActiva    = 'panel';
+  var _subtabParam  = 'indicadores';
+  var _cargoActivo  = '*';
   var _colaboradores = [];
-  var _periodos      = [];
+  var _indicadores   = [];
+  var _plantillas    = [];
+  var _cargos        = [];
+  var _filtroActivo  = 'vigentes';
 
-  // ── Utilidades ────────────────────────────────────────────────────────────
-
+  // ── API ───────────────────────────────────────────────────────────────────
   function api(path, method, body) {
     method = method || 'GET';
-    var opts = {
-      method: method,
-      headers: {
-        'Authorization': 'Bearer ' + _token(),
-        'Content-Type': 'application/json'
-      }
-    };
+    var opts = { method: method, headers: { 'Authorization': 'Bearer ' + _token(), 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
     return fetch(WORKER_URL + path, opts).then(function(r) { return r.json(); });
   }
 
   function iniciales(nombre) {
     if (!nombre) return '?';
-    var partes = nombre.trim().split(' ');
-    if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
-    return partes[0].substring(0, 2).toUpperCase();
+    var p = nombre.trim().split(' ');
+    return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : p[0].substring(0,2).toUpperCase();
   }
 
   function fmtPeso(n) {
@@ -429,66 +187,43 @@
     return '$' + Math.round(n).toLocaleString('es-CL');
   }
 
-  // ── Arranque ──────────────────────────────────────────────────────────────
-
-  function init() {
-    var root = document.getElementById('rem-root');
-    if (!root) return;
-    renderModulo();
+  function fmtPct(n) {
+    if (!n && n !== 0) return '\u2014';
+    return n + '%';
   }
 
-  // ── Shell principal ───────────────────────────────────────────────────────
+  // ── Init ──────────────────────────────────────────────────────────────────
+  function init() { renderModulo(); }
 
+  // ── Shell ─────────────────────────────────────────────────────────────────
   function renderModulo() {
     var root = document.getElementById('rem-root');
     root.innerHTML = '';
 
-    // Page header
     var pageHdr = document.createElement('div');
     pageHdr.className = 'page-header';
-
     var left = document.createElement('div');
-    var ey = document.createElement('div');
-    ey.className = 'page-eyebrow';
-    ey.textContent = 'OPERACIONES';
-    var tt = document.createElement('h1');
-    tt.className = 'page-title';
-    tt.innerHTML = 'Remune<em>raciones</em>';
-    var sb = document.createElement('p');
-    sb.className = 'page-sub';
-    sb.textContent = 'Gesti\u00F3n de personal, liquidaciones y procesos de pago.';
+    var ey = document.createElement('div'); ey.className = 'page-eyebrow'; ey.textContent = 'OPERACIONES';
+    var tt = document.createElement('h1'); tt.className = 'page-title'; tt.innerHTML = 'Remune<em>raciones</em>';
+    var sb = document.createElement('p'); sb.className = 'page-sub'; sb.textContent = 'Gesti\u00F3n de personal, liquidaciones y procesos de pago.';
     left.appendChild(ey); left.appendChild(tt); left.appendChild(sb);
-
-    // Selector comunidad
-    var selWrap = document.createElement('div');
-    selWrap.className = 'com-sel-wrap';
-    selWrap.id = 'rem-com-sel';
-
-    pageHdr.appendChild(left);
-    pageHdr.appendChild(selWrap);
+    var selWrap = document.createElement('div'); selWrap.className = 'com-sel-wrap'; selWrap.id = 'rem-com-sel';
+    pageHdr.appendChild(left); pageHdr.appendChild(selWrap);
     root.appendChild(pageHdr);
 
-    // Inicializar selector de comunidad desde app.js
     if (typeof renderSelectorComunidad === 'function') {
-      renderSelectorComunidad('rem-com-sel', function() {
-        renderTabContent();
-      });
+      renderSelectorComunidad('rem-com-sel', function() { renderTabContent(); });
     }
 
-    // Tabs
-    var tabsEl = document.createElement('div');
-    tabsEl.className = 'rem-tabs';
-    tabsEl.id = 'rem-tabs';
-
+    var tabsEl = document.createElement('div'); tabsEl.className = 'rem-tabs'; tabsEl.id = 'rem-tabs';
     var TABS = [
-      { id: 'panel',        label: 'Panel',          ico: 'ti-layout-dashboard' },
-      { id: 'colaboradores',label: 'Colaboradores',  ico: 'ti-users'            },
-      { id: 'procesos',     label: 'Procesos',       ico: 'ti-receipt'          },
-      { id: 'asistencia',   label: 'Asistencia',     ico: 'ti-calendar-check'   },
-      { id: 'novedades',    label: 'Novedades',      ico: 'ti-beach'            },
-      { id: 'parametros',   label: 'Par\u00E1metros',ico: 'ti-settings-2'       },
+      { id: 'panel',         label: 'Panel',          ico: 'ti-layout-dashboard' },
+      { id: 'colaboradores', label: 'Colaboradores',  ico: 'ti-users'            },
+      { id: 'procesos',      label: 'Procesos',       ico: 'ti-receipt'          },
+      { id: 'asistencia',    label: 'Asistencia',     ico: 'ti-calendar-check'   },
+      { id: 'novedades',     label: 'Novedades',      ico: 'ti-beach'            },
+      { id: 'parametros',    label: 'Par\u00E1metros',ico: 'ti-settings-2'       },
     ];
-
     TABS.forEach(function(t) {
       var btn = document.createElement('button');
       btn.className = 'rem-tab' + (t.id === _tabActiva ? ' act' : '');
@@ -502,14 +237,10 @@
       });
       tabsEl.appendChild(btn);
     });
-
     root.appendChild(tabsEl);
 
-    // Contenido
-    var contenido = document.createElement('div');
-    contenido.id = 'rem-contenido';
+    var contenido = document.createElement('div'); contenido.id = 'rem-contenido';
     root.appendChild(contenido);
-
     renderTabContent();
   }
 
@@ -517,142 +248,110 @@
     var contenido = document.getElementById('rem-contenido');
     if (!contenido) return;
     contenido.innerHTML = '';
-
     var RENDERERS = {
-      panel:         renderPanel,
-      colaboradores: renderColaboradores,
-      procesos:      renderProcesos,
-      asistencia:    renderAsistencia,
-      novedades:     renderNovedades,
-      parametros:    renderParametros,
+      panel: renderPanel, colaboradores: renderColaboradores,
+      procesos: renderProcesos, asistencia: renderAsistencia,
+      novedades: renderNovedades, parametros: renderParametros,
     };
-
     if (RENDERERS[_tabActiva]) RENDERERS[_tabActiva](contenido);
   }
 
-  // ── TAB: PANEL ────────────────────────────────────────────────────────────
-
+  // ── PANEL ─────────────────────────────────────────────────────────────────
   function renderPanel(el) {
-    // KPIs globales
-    var kpiGrid = document.createElement('div');
-    kpiGrid.className = 'rem-kpi-grid';
-    [
-      { label: 'Colaboradores activos', val: '\u2014', sub: 'cargando...' },
-      { label: 'Gasto total mes',       val: '\u2014', sub: 'Jun 2026'    },
-      { label: 'Per\u00EDodos abiertos',val: '\u2014', cls: 'rem-warn', sub: 'sin cerrar' },
-      { label: 'Contratos a vencer',    val: '\u2014', cls: 'rem-warn', sub: 'pr\u00F3ximos 30 d\u00EDas' },
-    ].forEach(function(k) {
-      var card = document.createElement('div');
-      card.className = 'rem-kpi';
+    var kpiGrid = document.createElement('div'); kpiGrid.className = 'rem-kpi-grid';
+    var kpiData = [
+      { label: 'Colaboradores activos', id: 'kpi-activos', val: '\u2014', sub: 'cargando...' },
+      { label: 'Gasto total mes',       id: 'kpi-gasto',   val: '\u2014', sub: 'Jun 2026'    },
+      { label: 'Per\u00EDodos abiertos',id: 'kpi-periodos',val: '\u2014', cls: 'rem-warn', sub: 'sin cerrar' },
+      { label: 'Contratos a vencer',    id: 'kpi-contratos',val: '\u2014', cls: 'rem-warn', sub: 'pr\u00F3ximos 30 d\u00EDas' },
+    ];
+    kpiData.forEach(function(k) {
+      var card = document.createElement('div'); card.className = 'rem-kpi';
       var lbl = document.createElement('div'); lbl.className = 'rem-kpi-label'; lbl.textContent = k.label;
-      var val = document.createElement('div'); val.className = 'rem-kpi-val' + (k.cls ? ' ' + k.cls : ''); val.textContent = k.val;
+      var val = document.createElement('div'); val.className = 'rem-kpi-val' + (k.cls ? ' ' + k.cls : ''); val.id = k.id; val.textContent = k.val;
       var sub = document.createElement('div'); sub.className = 'rem-kpi-sub'; sub.textContent = k.sub;
       card.appendChild(lbl); card.appendChild(val); card.appendChild(sub);
       kpiGrid.appendChild(card);
     });
     el.appendChild(kpiGrid);
+    el.appendChild(_divider());
 
-    var divider = document.createElement('div');
-    divider.className = 'rem-divider';
-    el.appendChild(divider);
-
-    // Two-col: cartera + alertas
-    var twoCol = document.createElement('div');
-    twoCol.className = 'rem-two-col';
-
-    // Cartera
+    var twoCol = document.createElement('div'); twoCol.className = 'rem-two-col';
     var carteraWrap = document.createElement('div');
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.textContent = 'Cartera \u2014 estado del per\u00EDodo Jun 2026';
+    var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.textContent = 'Cartera \u2014 estado del per\u00EDodo actual';
     carteraWrap.appendChild(secLabel);
+    var tbWrap = document.createElement('div'); tbWrap.className = 'rem-cartera-wrap';
+    var tb = document.createElement('table'); tb.className = 'rem-table';
+    tb.innerHTML = '<thead><tr><th>Comunidad</th><th>Colabs.</th><th>Gasto base</th><th>Estado</th><th></th></tr></thead>' +
+      '<tbody id="rem-cartera-body"><tr><td colspan="5" style="text-align:center;color:var(--co-mute);padding:20px">Cargando\u2026</td></tr></tbody>';
+    tbWrap.appendChild(tb); carteraWrap.appendChild(tbWrap); twoCol.appendChild(carteraWrap);
 
-    var tbWrap = document.createElement('div');
-    tbWrap.className = 'rem-cartera-wrap';
-    var tb = document.createElement('table');
-    tb.className = 'rem-table';
-    tb.innerHTML =
-      '<thead><tr>' +
-        '<th>Comunidad</th>' +
-        '<th>Colabs.</th>' +
-        '<th>Gasto mes</th>' +
-        '<th>Per\u00EDodo</th>' +
-        '<th></th>' +
-      '</tr></thead>' +
-      '<tbody id="rem-cartera-body">' +
-        '<tr><td colspan="5" style="text-align:center;color:var(--co-mute);padding:20px">Cargando comunidades\u2026</td></tr>' +
-      '</tbody>';
-    tbWrap.appendChild(tb);
-    carteraWrap.appendChild(tbWrap);
-    twoCol.appendChild(carteraWrap);
-
-    // Alertas
     var alertasWrap = document.createElement('div');
-    var aLabel = document.createElement('div');
-    aLabel.className = 'rem-section-label';
-    aLabel.textContent = 'Alertas';
+    var aLabel = document.createElement('div'); aLabel.className = 'rem-section-label'; aLabel.textContent = 'Alertas';
     alertasWrap.appendChild(aLabel);
-    var alertasList = document.createElement('div');
-    alertasList.className = 'rem-alertas';
-    alertasList.id = 'rem-alertas';
-    alertasList.innerHTML = '<div class="rem-alerta info"><i class="ti ti-info-circle" aria-hidden="true"></i><div class="rem-alerta-txt">Cargando alertas\u2026</div></div>';
-    alertasWrap.appendChild(alertasList);
-    twoCol.appendChild(alertasWrap);
-
+    var alertasList = document.createElement('div'); alertasList.className = 'rem-alertas'; alertasList.id = 'rem-alertas';
+    alertasList.innerHTML = '<div class="rem-alerta info"><i class="ti ti-info-circle" aria-hidden="true"></i><div class="rem-alerta-txt">Cargando\u2026</div></div>';
+    alertasWrap.appendChild(alertasList); twoCol.appendChild(alertasWrap);
     el.appendChild(twoCol);
 
-    // Poblar cartera con comunidades reales
-    if (window._comunidades && window._comunidades.length > 0) {
-      _poblarCartera();
-    } else {
-      setTimeout(_poblarCartera, 800);
-    }
+    _cargarPanel();
   }
 
-  function _poblarCartera() {
+  function _cargarPanel() {
+    var lista = window._comunidades || [];
+    if (!lista.length) { setTimeout(_cargarPanel, 600); return; }
+
     var tbody = document.getElementById('rem-cartera-body');
     var alertasEl = document.getElementById('rem-alertas');
     if (!tbody) return;
 
-    var lista = window._comunidades || [];
-    if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--co-mute);padding:20px">Sin comunidades disponibles.</td></tr>';
-      return;
-    }
-
+    var totalActivos = 0; var totalGasto = 0;
+    var pendientes = lista.length;
     tbody.innerHTML = '';
-    var alertas = [];
 
     lista.forEach(function(c) {
       var tr = document.createElement('tr');
       tr.innerHTML =
         '<td><b>' + c.nombre + '</b><br><span style="font-size:11px;color:var(--co-mute)">' + (c.comuna || '') + '</span></td>' +
-        '<td style="text-align:center">\u2014</td>' +
-        '<td>\u2014</td>' +
+        '<td id="pan-col-' + c.id + '" style="text-align:center">\u2014</td>' +
+        '<td id="pan-gasto-' + c.id + '">\u2014</td>' +
         '<td><span class="rem-pill gray">Sin datos</span></td>' +
         '<td><button class="rem-btn-sec" style="font-size:11px;padding:4px 10px">Ver</button></td>';
       tr.querySelector('button').addEventListener('click', function() {
         if (typeof setComunidadActiva === 'function') setComunidadActiva({ id: c.id, nombre: c.nombre });
-        _tabActiva = 'procesos';
+        _tabActiva = 'colaboradores';
         renderModulo();
       });
       tbody.appendChild(tr);
+
+      api('/remuneraciones/trabajadores/resumen?comunidadId=' + c.id).then(function(resp) {
+        var data = resp.data || {};
+        var colEl   = document.getElementById('pan-col-' + c.id);
+        var gastoEl = document.getElementById('pan-gasto-' + c.id);
+        if (colEl)   colEl.textContent   = data.activos || 0;
+        if (gastoEl) gastoEl.textContent = fmtPeso(data.gastoBase || 0);
+        totalActivos += (data.activos || 0);
+        totalGasto   += (data.gastoBase || 0);
+        pendientes--;
+        if (pendientes === 0) {
+          var kA = document.getElementById('kpi-activos');
+          var kG = document.getElementById('kpi-gasto');
+          if (kA) kA.textContent = totalActivos;
+          if (kG) kG.textContent = fmtPeso(totalGasto);
+        }
+      }).catch(function() { pendientes--; });
     });
 
-    // Alerta placeholder
     if (alertasEl) {
-      alertasEl.innerHTML =
-        '<div class="rem-alerta info"><i class="ti ti-info-circle" aria-hidden="true"></i>' +
+      alertasEl.innerHTML = '<div class="rem-alerta info"><i class="ti ti-info-circle" aria-hidden="true"></i>' +
         '<div class="rem-alerta-txt">Las alertas aparecer\u00E1n cuando se registren per\u00EDodos y colaboradores.</div></div>';
     }
   }
 
-  // ── TAB: COLABORADORES ────────────────────────────────────────────────────
-
+  // ── COLABORADORES ─────────────────────────────────────────────────────────
   function renderColaboradores(el) {
     var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
 
-    // Header acciones
     var hdrAcc = document.createElement('div');
     hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap';
     var btnImportar = document.createElement('button');
@@ -661,38 +360,20 @@
     var btnNuevo = document.createElement('button');
     btnNuevo.className = 'rem-btn-pri';
     btnNuevo.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Nuevo trabajador';
-    btnNuevo.addEventListener('click', function() { abrirModalColaborador(null); });
-    hdrAcc.appendChild(btnImportar);
-    hdrAcc.appendChild(btnNuevo);
+    btnNuevo.addEventListener('click', function() { abrirModalColaborador(null, com); });
+    hdrAcc.appendChild(btnImportar); hdrAcc.appendChild(btnNuevo);
     el.appendChild(hdrAcc);
 
-    // Aviso si no hay comunidad
-    if (!com) {
-      el.appendChild(_avisoSinComunidad());
-      return;
-    }
+    if (!com) { el.appendChild(_avisoSinComunidad()); return; }
 
-    // Search + filtros
-    var searchBar = document.createElement('div');
-    searchBar.className = 'rem-search-bar';
-    var searchBox = document.createElement('div');
-    searchBox.className = 'rem-search-box';
+    var searchBar = document.createElement('div'); searchBar.className = 'rem-search-bar';
+    var searchBox = document.createElement('div'); searchBox.className = 'rem-search-box';
     searchBox.innerHTML = '<i class="ti ti-search" aria-hidden="true" style="color:var(--co-mute);font-size:14px"></i>';
-    var searchInput = document.createElement('input');
-    searchInput.type = 'text';
-    searchInput.placeholder = 'Buscar por nombre, RUT o cargo\u2026';
-    searchBox.appendChild(searchInput);
-    searchBar.appendChild(searchBox);
-    el.appendChild(searchBar);
+    var searchInput = document.createElement('input'); searchInput.type = 'text'; searchInput.placeholder = 'Buscar por nombre, RUT o cargo\u2026';
+    searchBox.appendChild(searchInput); searchBar.appendChild(searchBox); el.appendChild(searchBar);
 
-    var filtros = document.createElement('div');
-    filtros.className = 'rem-filtros';
-    var _filtroActivo = 'vigentes';
-    [
-      { id: 'vigentes',      label: 'Vigentes'      },
-      { id: 'desvinculados', label: 'Desvinculados' },
-      { id: 'todos',         label: 'Todos'         },
-    ].forEach(function(f) {
+    var filtros = document.createElement('div'); filtros.className = 'rem-filtros';
+    [{ id:'vigentes',label:'Vigentes' },{ id:'desvinculados',label:'Desvinculados' },{ id:'todos',label:'Todos' }].forEach(function(f) {
       var btn = document.createElement('button');
       btn.className = 'rem-filtro' + (f.id === _filtroActivo ? ' act' : '');
       btn.textContent = f.label;
@@ -706,71 +387,52 @@
     });
     el.appendChild(filtros);
 
-    // Tabla
-    var tbWrap = document.createElement('div');
-    tbWrap.style.overflowX = 'auto';
-    var table = document.createElement('table');
-    table.className = 'rem-table';
-    table.innerHTML =
-      '<thead><tr>' +
-        '<th></th>' +
-        '<th>Nombre</th>' +
-        '<th>RUT</th>' +
-        '<th>Cargo</th>' +
-        '<th>Contrato</th>' +
-        '<th>Sueldo base</th>' +
-        '<th>Estado</th>' +
-        '<th></th>' +
-      '</tr></thead>';
+    var tbWrap = document.createElement('div'); tbWrap.style.overflowX = 'auto';
+    var table = document.createElement('table'); table.className = 'rem-table';
+    table.innerHTML = '<thead><tr><th></th><th>Nombre</th><th>RUT</th><th>Cargo</th><th>Contrato</th><th>Sueldo base</th><th>Estado</th><th></th></tr></thead>';
     var tbody = document.createElement('tbody');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--co-mute);padding:24px">Cargando colaboradores\u2026</td></tr>';
-    table.appendChild(tbody);
-    tbWrap.appendChild(table);
-    el.appendChild(tbWrap);
+    table.appendChild(tbody); tbWrap.appendChild(table); el.appendChild(tbWrap);
 
-    searchInput.addEventListener('input', function() {
-      _renderListaColaboradores(tbody, searchInput.value, _filtroActivo);
+    searchInput.addEventListener('input', function() { _renderListaColaboradores(tbody, searchInput.value, _filtroActivo); });
+
+    // Cargar datos reales
+    api('/remuneraciones/trabajadores?comunidadId=' + com.id).then(function(resp) {
+      _colaboradores = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+      _renderListaColaboradores(tbody, '', _filtroActivo);
+    }).catch(function() {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#A32D2D;padding:24px">Error al cargar colaboradores.</td></tr>';
     });
-
-    // Cargar datos — por ahora placeholder hasta GAS
-    _colaboradores = [];
-    _renderListaColaboradores(tbody, '', _filtroActivo);
   }
 
   function _renderListaColaboradores(tbody, busqueda, filtro) {
     var lista = _colaboradores.filter(function(c) {
-      if (filtro === 'vigentes'      && c.estado !== 'activo')       return false;
+      if (filtro === 'vigentes'      && c.estado !== 'activo' && c.estado !== 'licencia') return false;
       if (filtro === 'desvinculados' && c.estado !== 'desvinculado') return false;
       if (busqueda) {
         var q = busqueda.toLowerCase();
-        return (c.nombre || '').toLowerCase().includes(q) ||
-               (c.rut    || '').toLowerCase().includes(q) ||
-               (c.cargo  || '').toLowerCase().includes(q);
+        var nombre = (c.nombreCompleto || c.nombres || '').toLowerCase();
+        return nombre.includes(q) || (c.rut || '').toLowerCase().includes(q) || (c.cargo || '').toLowerCase().includes(q);
       }
       return true;
     });
 
     if (!lista.length) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--co-mute);padding:24px">' +
-        'No hay colaboradores registrados en esta comunidad.<br>' +
-        '<span style="font-size:11px">Usa "Nuevo trabajador" para agregar el primero.</span>' +
-        '</td></tr>';
+        'No hay colaboradores' + (filtro === 'todos' ? '' : ' ' + (filtro === 'vigentes' ? 'vigentes' : 'desvinculados')) + ' en esta comunidad.<br>' +
+        '<span style="font-size:11px">Usa "Nuevo trabajador" para agregar el primero.</span></td></tr>';
       return;
     }
 
     tbody.innerHTML = '';
     lista.forEach(function(c) {
-      var estadoPill = {
-        activo:        '<span class="rem-pill ok">Activo</span>',
-        licencia:      '<span class="rem-pill warn">Licencia</span>',
-        desvinculado:  '<span class="rem-pill gray">Desvinculado</span>',
-      }[c.estado] || '<span class="rem-pill gray">' + (c.estado || '\u2014') + '</span>';
-
+      var estadoPill = { activo:'<span class="rem-pill ok">Activo</span>', licencia:'<span class="rem-pill warn">Licencia</span>', desvinculado:'<span class="rem-pill gray">Desvinculado</span>' }[c.estado] || '<span class="rem-pill gray">' + (c.estado || '\u2014') + '</span>';
+      var nombre = c.nombreCompleto || ((c.nombres || '') + ' ' + (c.apellidoPaterno || '')).trim() || '\u2014';
       var tr = document.createElement('tr');
       tr.innerHTML =
-        '<td><div class="rem-avatar">' + iniciales(c.nombre) + '</div></td>' +
-        '<td><b>' + (c.nombre || '\u2014') + '</b></td>' +
-        '<td>' + (c.rut || '\u2014') + '</td>' +
+        '<td><div class="rem-avatar">' + iniciales(nombre) + '</div></td>' +
+        '<td><b>' + nombre + '</b></td>' +
+        '<td>' + (c.rut ? c.rut + '-' + (c.dv || '') : '\u2014') + '</td>' +
         '<td>' + (c.cargo || '\u2014') + '</td>' +
         '<td>' + (c.tipoContrato || '\u2014') + '</td>' +
         '<td>' + fmtPeso(c.sueldoBase) + '</td>' +
@@ -781,276 +443,327 @@
     });
   }
 
-  function abrirModalColaborador(colaborador) {
-    // TODO: implementar modal de creacion/edicion
+  function abrirModalColaborador(colaborador, com) {
     alert('Modal nuevo trabajador \u2014 pr\u00F3ximamente');
   }
 
   function abrirFichaColaborador(c) {
-    // TODO: implementar ficha individual con tabs historial/docs
-    alert('Ficha de ' + c.nombre + ' \u2014 pr\u00F3ximamente');
+    alert('Ficha de ' + (c.nombreCompleto || c.nombres) + ' \u2014 pr\u00F3ximamente');
   }
 
-  // ── TAB: PROCESOS ─────────────────────────────────────────────────────────
-
+  // ── PROCESOS ──────────────────────────────────────────────────────────────
   function renderProcesos(el) {
     var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
-    if (!com) {
-      el.appendChild(_avisoSinComunidad());
-      return;
-    }
+    if (!com) { el.appendChild(_avisoSinComunidad()); return; }
 
     var hdrAcc = document.createElement('div');
     hdrAcc.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px';
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.style.marginBottom = '0';
-    secLabel.textContent = 'Per\u00EDodos \u2014 ' + com.nombre;
-    var btnAbrir = document.createElement('button');
-    btnAbrir.className = 'rem-btn-pri';
-    btnAbrir.innerHTML = '<i class="ti ti-calendar-plus" aria-hidden="true"></i> Abrir per\u00EDodo';
-    hdrAcc.appendChild(secLabel);
-    hdrAcc.appendChild(btnAbrir);
-    el.appendChild(hdrAcc);
+    var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.style.marginBottom = '0'; secLabel.textContent = 'Per\u00EDodos \u2014 ' + com.nombre;
+    var btnAbrir = document.createElement('button'); btnAbrir.className = 'rem-btn-pri'; btnAbrir.innerHTML = '<i class="ti ti-calendar-plus" aria-hidden="true"></i> Abrir per\u00EDodo';
+    hdrAcc.appendChild(secLabel); hdrAcc.appendChild(btnAbrir); el.appendChild(hdrAcc);
 
-    // Periodos placeholder hasta GAS
     var periodos = [
-      { mes: 'Julio 2026',  estado: 'abierto', liquidaciones: 0, total: 3, liquido: null,   previredPagado: false },
-      { mes: 'Junio 2026',  estado: 'cerrado', liquidaciones: 3, total: 3, liquido: 1650000, previredPagado: true  },
-      { mes: 'Mayo 2026',   estado: 'cerrado', liquidaciones: 3, total: 3, liquido: 1610000, previredPagado: true  },
+      { mes:'Julio 2026', estado:'abierto', liquidaciones:0, total:3, liquido:null, previredPagado:false },
+      { mes:'Junio 2026', estado:'cerrado', liquidaciones:3, total:3, liquido:1650000, previredPagado:true },
+      { mes:'Mayo 2026',  estado:'cerrado', liquidaciones:3, total:3, liquido:1610000, previredPagado:true },
     ];
-
     periodos.forEach(function(p) {
-      var card = document.createElement('div');
-      card.className = 'rem-periodo-card';
-
-      var ico = document.createElement('div');
-      ico.className = 'rem-periodo-ico ' + p.estado;
-      ico.innerHTML = p.estado === 'abierto'
-        ? '<i class="ti ti-clock" aria-hidden="true"></i>'
-        : '<i class="ti ti-circle-check" aria-hidden="true"></i>';
-
-      var info = document.createElement('div');
-      info.className = 'rem-periodo-info';
-      var titulo = document.createElement('div');
-      titulo.className = 'rem-periodo-titulo';
-      titulo.textContent = p.mes + (p.estado === 'abierto' ? ' \u2014 Abierto' : ' \u2014 Cerrado');
-      var sub = document.createElement('div');
-      sub.className = 'rem-periodo-sub';
+      var card = document.createElement('div'); card.className = 'rem-periodo-card';
+      var ico = document.createElement('div'); ico.className = 'rem-periodo-ico ' + p.estado;
+      ico.innerHTML = p.estado === 'abierto' ? '<i class="ti ti-clock" aria-hidden="true"></i>' : '<i class="ti ti-circle-check" aria-hidden="true"></i>';
+      var info = document.createElement('div'); info.className = 'rem-periodo-info';
+      var titulo = document.createElement('div'); titulo.className = 'rem-periodo-titulo'; titulo.textContent = p.mes + (p.estado === 'abierto' ? ' \u2014 Abierto' : ' \u2014 Cerrado');
+      var sub = document.createElement('div'); sub.className = 'rem-periodo-sub';
+      sub.textContent = p.estado === 'abierto' ? p.liquidaciones + ' de ' + p.total + ' liquidaciones generadas' : p.total + ' liquidaciones \u00B7 ' + fmtPeso(p.liquido) + ' l\u00EDquido' + (p.previredPagado ? ' \u00B7 Previred pagado' : '');
+      info.appendChild(titulo); info.appendChild(sub);
+      var actions = document.createElement('div'); actions.className = 'rem-periodo-actions';
       if (p.estado === 'abierto') {
-        sub.textContent = p.liquidaciones + ' de ' + p.total + ' liquidaciones generadas';
+        var btnGen = document.createElement('button'); btnGen.className = 'rem-btn-pri'; btnGen.textContent = 'Generar liquidaciones'; actions.appendChild(btnGen);
       } else {
-        sub.textContent = p.total + ' liquidaciones \u00B7 ' + fmtPeso(p.liquido) + ' l\u00EDquido' + (p.previredPagado ? ' \u00B7 Previred pagado' : '');
+        var btnPrev = document.createElement('button'); btnPrev.className = 'rem-btn-sec'; btnPrev.innerHTML = '<i class="ti ti-download" aria-hidden="true"></i> Previred';
+        var btnLibro = document.createElement('button'); btnLibro.className = 'rem-btn-sec'; btnLibro.innerHTML = '<i class="ti ti-book" aria-hidden="true"></i> Libro';
+        actions.appendChild(btnPrev); actions.appendChild(btnLibro);
       }
-      info.appendChild(titulo);
-      info.appendChild(sub);
-
-      var actions = document.createElement('div');
-      actions.className = 'rem-periodo-actions';
-      if (p.estado === 'abierto') {
-        var btnGen = document.createElement('button');
-        btnGen.className = 'rem-btn-pri';
-        btnGen.textContent = 'Generar liquidaciones';
-        actions.appendChild(btnGen);
-      } else {
-        var btnPrev = document.createElement('button');
-        btnPrev.className = 'rem-btn-sec';
-        btnPrev.innerHTML = '<i class="ti ti-download" aria-hidden="true"></i> Previred';
-        var btnLibro = document.createElement('button');
-        btnLibro.className = 'rem-btn-sec';
-        btnLibro.innerHTML = '<i class="ti ti-book" aria-hidden="true"></i> Libro';
-        actions.appendChild(btnPrev);
-        actions.appendChild(btnLibro);
-      }
-
-      card.appendChild(ico);
-      card.appendChild(info);
-      card.appendChild(actions);
-      el.appendChild(card);
+      card.appendChild(ico); card.appendChild(info); card.appendChild(actions); el.appendChild(card);
     });
   }
 
-  // ── TAB: ASISTENCIA ───────────────────────────────────────────────────────
+  // ── ASISTENCIA ────────────────────────────────────────────────────────────
+  function renderAsistencia(el) { el.appendChild(_proximamente('ti-calendar-check','Registro de asistencia','Control de turnos, horas extra y ausencias por colaborador.')); }
 
-  function renderAsistencia(el) {
-    el.appendChild(_proximamente(
-      'ti-calendar-check',
-      'Registro de asistencia',
-      'Control de turnos, horas extra y ausencias por colaborador.'
-    ));
-  }
-
-  // ── TAB: NOVEDADES ────────────────────────────────────────────────────────
-
+  // ── NOVEDADES ─────────────────────────────────────────────────────────────
   function renderNovedades(el) {
     var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
-    if (!com) {
-      el.appendChild(_avisoSinComunidad());
+    if (!com) { el.appendChild(_avisoSinComunidad()); return; }
+    var hdrAcc = document.createElement('div'); hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:16px';
+    var btnNov = document.createElement('button'); btnNov.className = 'rem-btn-pri'; btnNov.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Registrar novedad';
+    hdrAcc.appendChild(btnNov); el.appendChild(hdrAcc);
+    var novGrid = document.createElement('div'); novGrid.className = 'rem-nov-grid';
+    [{ label:'Vacaciones pendientes',val:'0 d\u00EDas' },{ label:'Licencias activas',val:'0' }].forEach(function(k) {
+      var card = document.createElement('div'); card.className = 'rem-kpi';
+      card.innerHTML = '<div class="rem-kpi-label">' + k.label + '</div><div class="rem-kpi-val">' + k.val + '</div>';
+      novGrid.appendChild(card);
+    });
+    el.appendChild(novGrid); el.appendChild(_divider());
+    var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.textContent = 'Novedades del per\u00EDodo'; el.appendChild(secLabel);
+    var tbWrap = document.createElement('div'); tbWrap.style.overflowX = 'auto';
+    var table = document.createElement('table'); table.className = 'rem-table';
+    table.innerHTML = '<thead><tr><th>Colaborador</th><th>Tipo</th><th>Desde</th><th>Hasta</th><th>D\u00EDas</th><th>Estado</th></tr></thead>' +
+      '<tbody><tr><td colspan="6" style="text-align:center;color:var(--co-mute);padding:24px">Sin novedades registradas para este per\u00EDodo.</td></tr></tbody>';
+    tbWrap.appendChild(table); el.appendChild(tbWrap);
+  }
+
+  // ── PARÁMETROS ────────────────────────────────────────────────────────────
+  function renderParametros(el) {
+    // Subtabs
+    var subtabsEl = document.createElement('div'); subtabsEl.className = 'rem-subtabs';
+    [{ id:'indicadores',label:'Indicadores previsionales' },{ id:'plantillas',label:'Plantillas de onboarding' }].forEach(function(st) {
+      var btn = document.createElement('button');
+      btn.className = 'rem-subtab' + (st.id === _subtabParam ? ' act' : '');
+      btn.textContent = st.label;
+      btn.addEventListener('click', function() {
+        _subtabParam = st.id;
+        subtabsEl.querySelectorAll('.rem-subtab').forEach(function(b) { b.classList.remove('act'); });
+        btn.classList.add('act');
+        subContenido.innerHTML = '';
+        if (_subtabParam === 'indicadores') renderIndicadores(subContenido);
+        else renderPlantillas(subContenido);
+      });
+      subtabsEl.appendChild(btn);
+    });
+    el.appendChild(subtabsEl);
+
+    var subContenido = document.createElement('div');
+    el.appendChild(subContenido);
+
+    if (_subtabParam === 'indicadores') renderIndicadores(subContenido);
+    else renderPlantillas(subContenido);
+  }
+
+  // ── INDICADORES ───────────────────────────────────────────────────────────
+  function renderIndicadores(el) {
+    var hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap';
+    var btnUF = document.createElement('button'); btnUF.className = 'rem-btn-sec'; btnUF.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> Actualizar UF';
+    var btnEdit = document.createElement('button'); btnEdit.className = 'rem-btn-sec'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> Editar';
+    hdr.appendChild(btnUF); hdr.appendChild(btnEdit); el.appendChild(hdr);
+
+    var contenedor = document.createElement('div'); contenedor.id = 'rem-ind-contenedor';
+    contenedor.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">Cargando indicadores\u2026</div>';
+    el.appendChild(contenedor);
+
+    // Cargar desde GAS
+    if (_indicadores.length > 0) {
+      _renderIndicadoresData(contenedor, _indicadores);
+    } else {
+      api('/remuneraciones/parametros/indicadores').then(function(resp) {
+        _indicadores = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+        _renderIndicadoresData(contenedor, _indicadores);
+      }).catch(function() {
+        contenedor.innerHTML = '<div style="text-align:center;color:#A32D2D;padding:24px">Error al cargar indicadores.</div>';
+      });
+    }
+  }
+
+  function _renderIndicadoresData(el, lista) {
+    if (!lista.length) { el.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">Sin indicadores cargados.</div>'; return; }
+
+    // Agrupar en categorías
+    var generales = lista.filter(function(d) { return ['IMM','TOPE_IMPONIBLE_UF','UF_HOY','SIS_TASA','SUS_TASA','SALUD_MINIMO','RETENCION_HON','SC_TRABAJADOR_IND','SC_EMPLEADOR_IND','SC_TRABAJADOR_PF','SC_EMPLEADOR_PF'].includes(d.clave); });
+    var afps       = lista.filter(function(d) { return d.clave.startsWith('AFP_'); });
+    var tramosAF   = lista.filter(function(d) { return d.clave.startsWith('AF_'); });
+    var tramosImp  = lista.filter(function(d) { return d.clave.startsWith('IMP2_'); });
+
+    var AFP_NOMBRES = { AFP_03_CUPRUM:'AFP Cuprum', AFP_05_HABITAT:'AFP Habitat', AFP_08_PROVIDA:'AFP ProVida', AFP_29_PLANVITAL:'AFP PlanVital', AFP_33_CAPITAL:'AFP Capital', AFP_34_MODELO:'AFP Modelo', AFP_35_UNO:'AFP Uno' };
+
+    function fmtInd(clave, val) {
+      if (clave === 'IMM' || clave === 'UF_HOY') return '$' + Math.round(val).toLocaleString('es-CL');
+      if (clave.endsWith('_TASA') || clave.endsWith('_MINIMO') || clave === 'RETENCION_HON' || clave.includes('SC_')) return val + '%';
+      if (clave === 'TOPE_IMPONIBLE_UF') return val + ' UF';
+      return val;
+    }
+
+    var LABELS = { IMM:'Ingreso m\u00EDnimo', TOPE_IMPONIBLE_UF:'Tope imponible', UF_HOY:'UF (hoy)', SIS_TASA:'SIS empleado', SUS_TASA:'SUS', SALUD_MINIMO:'Salud m\u00EDnimo', RETENCION_HON:'Retenci\u00F3n honorarios', SC_TRABAJADOR_IND:'SC trabajador indefinido', SC_EMPLEADOR_IND:'SC empleador indefinido', SC_TRABAJADOR_PF:'SC trabajador plazo fijo', SC_EMPLEADOR_PF:'SC empleador plazo fijo' };
+
+    function mkCard(titulo, items, labelFn, valFn) {
+      var card = document.createElement('div'); card.className = 'rem-param-card';
+      card.innerHTML = '<div class="rem-param-card-title">' + titulo + '</div>';
+      items.forEach(function(d) {
+        var row = document.createElement('div'); row.className = 'rem-param-row';
+        row.innerHTML = '<span class="rem-param-key">' + (labelFn ? labelFn(d) : d.clave) + '</span><span class="rem-param-val">' + (valFn ? valFn(d) : d.valor) + '</span>';
+        card.appendChild(row);
+      });
+      return card;
+    }
+
+    el.innerHTML = '';
+    var grid = document.createElement('div'); grid.className = 'rem-param-grid';
+    grid.appendChild(mkCard('Valores generales 2026', generales, function(d) { return LABELS[d.clave] || d.clave; }, function(d) { return fmtInd(d.clave, d.valor); }));
+    grid.appendChild(mkCard('Tasas AFP vigentes', afps, function(d) { return AFP_NOMBRES[d.clave] || d.clave; }, function(d) { return d.valor + '%'; }));
+    el.appendChild(grid);
+
+    // Tramos asig familiar
+    el.appendChild(_divider());
+    var lfAF = document.createElement('div'); lfAF.className = 'rem-section-label'; lfAF.textContent = 'Asignaci\u00F3n familiar \u2014 tramos y montos'; el.appendChild(lfAF);
+    var gridAF = document.createElement('div'); gridAF.className = 'rem-param-grid';
+    var montos  = tramosAF.filter(function(d) { return d.clave.includes('TRAMO'); });
+    var limites = tramosAF.filter(function(d) { return d.clave.includes('LIMITE'); });
+    gridAF.appendChild(mkCard('Monto por carga ($)', montos, function(d) { return 'Tramo ' + d.clave.split('_').pop(); }, function(d) { return '$' + Math.round(d.valor).toLocaleString('es-CL'); }));
+    gridAF.appendChild(mkCard('Renta m\u00E1xima por tramo', limites, function(d) { return 'L\u00EDmite tramo ' + d.clave.split('_').pop(); }, function(d) { return '$' + Math.round(d.valor).toLocaleString('es-CL'); }));
+    el.appendChild(gridAF);
+
+    // Tabla impuesto 2a categoría
+    el.appendChild(_divider());
+    var lfImp = document.createElement('div'); lfImp.className = 'rem-section-label'; lfImp.textContent = 'Tabla impuesto 2\u00AA categor\u00EDa \u2014 tramos mensuales'; el.appendChild(lfImp);
+    var tbWrap = document.createElement('div'); tbWrap.style.overflowX = 'auto';
+    var table = document.createElement('table'); table.className = 'rem-table';
+    table.innerHTML = '<thead><tr><th>Tramo</th><th>Hasta</th><th>Tasa</th><th>Rebaja</th></tr></thead>';
+    var tbodyImp = document.createElement('tbody');
+
+    var tramos = [
+      { num:1, hasta:'IMP2_TRAMO1_HASTA', tasa:null, rebaja:null },
+      { num:2, hasta:'IMP2_TRAMO2_HASTA', tasa:'IMP2_TRAMO2_TASA', rebaja:'IMP2_TRAMO2_REBAJA' },
+      { num:3, hasta:'IMP2_TRAMO3_HASTA', tasa:'IMP2_TRAMO3_TASA', rebaja:'IMP2_TRAMO3_REBAJA' },
+      { num:4, hasta:'IMP2_TRAMO4_HASTA', tasa:'IMP2_TRAMO4_TASA', rebaja:'IMP2_TRAMO4_REBAJA' },
+      { num:5, hasta:'IMP2_TRAMO5_HASTA', tasa:'IMP2_TRAMO5_TASA', rebaja:'IMP2_TRAMO5_REBAJA' },
+      { num:6, hasta:'IMP2_TRAMO6_HASTA', tasa:'IMP2_TRAMO6_TASA', rebaja:'IMP2_TRAMO6_REBAJA' },
+      { num:7, hasta:'IMP2_TRAMO7_HASTA', tasa:'IMP2_TRAMO7_TASA', rebaja:'IMP2_TRAMO7_REBAJA' },
+      { num:8, hasta:null,                tasa:'IMP2_TRAMO8_TASA', rebaja:'IMP2_TRAMO8_REBAJA' },
+    ];
+    var mapaInd = {};
+    tramosImp.forEach(function(d) { mapaInd[d.clave] = d.valor; });
+
+    tramos.forEach(function(t) {
+      var tr = document.createElement('tr');
+      var hasta  = t.hasta   ? ('$' + Math.round(mapaInd[t.hasta]  || 0).toLocaleString('es-CL')) : 'En adelante';
+      var tasa   = t.tasa    ? ((mapaInd[t.tasa] || 0) + '%') : 'Exento';
+      var rebaja = t.rebaja  ? ('$' + Math.round(mapaInd[t.rebaja] || 0).toLocaleString('es-CL')) : '\u2014';
+      tr.innerHTML = '<td>Tramo ' + t.num + '</td><td>' + hasta + '</td><td><b>' + tasa + '</b></td><td>' + rebaja + '</td>';
+      tbodyImp.appendChild(tr);
+    });
+    table.appendChild(tbodyImp); tbWrap.appendChild(table); el.appendChild(tbWrap);
+  }
+
+  // ── PLANTILLAS ONBOARDING ─────────────────────────────────────────────────
+  function renderPlantillas(el) {
+    // Cargar cargos si no están
+    var cargarYRenderizar = function() {
+      var hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px';
+      var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.style.marginBottom = '0'; secLabel.textContent = 'Plantillas de onboarding por cargo';
+      var btnNuevo = document.createElement('button'); btnNuevo.className = 'rem-btn-pri'; btnNuevo.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Agregar \u00EDtem';
+      hdr.appendChild(secLabel); hdr.appendChild(btnNuevo); el.appendChild(hdr);
+
+      var cargoList = document.createElement('div'); cargoList.className = 'rem-cargo-list';
+      var cargosRender = [{ id:'*',label:'Todos (generales)' }].concat(_cargos.map(function(c) { return { id:c.nombre, label:c.nombre }; }));
+      cargosRender.forEach(function(c) {
+        var chip = document.createElement('button');
+        chip.className = 'rem-cargo-chip' + (c.id === _cargoActivo ? ' act' : '');
+        chip.textContent = c.label;
+        chip.addEventListener('click', function() {
+          _cargoActivo = c.id;
+          cargoList.querySelectorAll('.rem-cargo-chip').forEach(function(b) { b.classList.remove('act'); });
+          chip.classList.add('act');
+          itemsContenedor.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px">Cargando\u2026</div>';
+          _cargarItemsPlantilla(itemsContenedor, _cargoActivo);
+        });
+        cargoList.appendChild(chip);
+      });
+      el.appendChild(cargoList);
+
+      var itemsContenedor = document.createElement('div'); itemsContenedor.id = 'rem-plt-items'; el.appendChild(itemsContenedor);
+      _cargarItemsPlantilla(itemsContenedor, _cargoActivo);
+    };
+
+    if (_cargos.length > 0) {
+      cargarYRenderizar();
+    } else {
+      api('/remuneraciones/parametros/cargos').then(function(resp) {
+        _cargos = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+        cargarYRenderizar();
+      }).catch(function() { cargarYRenderizar(); });
+    }
+  }
+
+  function _cargarItemsPlantilla(el, cargo) {
+    var url = cargo === '*'
+      ? '/remuneraciones/parametros/plantillas?todas=true'
+      : '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(cargo);
+
+    api(url).then(function(resp) {
+      _plantillas = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+      _renderItemsPlantilla(el, _plantillas, cargo);
+    }).catch(function() {
+      el.innerHTML = '<div style="text-align:center;color:#A32D2D;padding:16px">Error al cargar plantilla.</div>';
+    });
+  }
+
+  function _renderItemsPlantilla(el, items, cargo) {
+    el.innerHTML = '';
+    if (!items.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">No hay \u00EDtems para este cargo.</div>';
       return;
     }
 
-    var hdrAcc = document.createElement('div');
-    hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:16px';
-    var btnNov = document.createElement('button');
-    btnNov.className = 'rem-btn-pri';
-    btnNov.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Registrar novedad';
-    hdrAcc.appendChild(btnNov);
-    el.appendChild(hdrAcc);
+    // Agrupar por categoría
+    var cats = {};
+    items.forEach(function(it) { if (!cats[it.categoria]) cats[it.categoria] = []; cats[it.categoria].push(it); });
 
-    // KPIs novedades
-    var novGrid = document.createElement('div');
-    novGrid.className = 'rem-nov-grid';
-    [
-      { label: 'Vacaciones pendientes', val: '0 d\u00EDas', cls: '' },
-      { label: 'Licencias activas',     val: '0',          cls: '' },
-    ].forEach(function(k) {
-      var card = document.createElement('div');
-      card.className = 'rem-kpi';
-      card.innerHTML = '<div class="rem-kpi-label">' + k.label + '</div><div class="rem-kpi-val' + (k.cls ? ' ' + k.cls : '') + '">' + k.val + '</div>';
-      novGrid.appendChild(card);
+    Object.keys(cats).forEach(function(cat) {
+      var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.textContent = cat; el.appendChild(secLabel);
+      cats[cat].forEach(function(it) {
+        var div = document.createElement('div'); div.className = 'rem-plt-item' + (it.esLegal ? ' legal' : '');
+        var nombre = document.createElement('span'); nombre.className = 'rem-plt-name'; nombre.textContent = it.nombre;
+        var catPill = document.createElement('span'); catPill.className = 'rem-plt-cat'; catPill.textContent = it.cargo === '*' ? 'General' : it.cargo;
+        var badges = document.createElement('div'); badges.className = 'rem-plt-badges';
+        if (it.esLegal)         { var b = document.createElement('span'); b.className = 'rem-pill legal'; b.textContent = 'Legal'; badges.appendChild(b); }
+        if (it.requiereFirma)   { var b = document.createElement('span'); b.className = 'rem-pill blue'; b.textContent = 'Firma'; badges.appendChild(b); }
+        if (it.requiereAdjunto) { var b = document.createElement('span'); b.className = 'rem-pill ok'; b.style.cssText='background:#EAF3DE;color:#3B6D11'; b.textContent = 'Adjunto'; badges.appendChild(b); }
+        var plazo = document.createElement('span'); plazo.className = 'rem-plt-plazo'; plazo.textContent = 'D\u00EDa ' + it.plazosDias;
+        var actions = document.createElement('div'); actions.className = 'rem-plt-actions';
+        var btnEdit = document.createElement('button'); btnEdit.className = 'rem-ico-btn'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i>';
+        var btnDel  = document.createElement('button');
+        if (it.esLegal) {
+          btnDel.className = 'rem-ico-btn rem-lock'; btnDel.title = '\u00CDtem legal \u2014 no eliminable';
+        } else {
+          btnDel.className = 'rem-ico-btn danger'; btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>';
+          btnDel.addEventListener('click', function(e) { e.stopPropagation(); _eliminarItem(it.id, el, cargo); });
+        }
+        btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>';
+        actions.appendChild(btnEdit); actions.appendChild(btnDel);
+        div.appendChild(nombre); div.appendChild(catPill); div.appendChild(badges); div.appendChild(plazo); div.appendChild(actions);
+        el.appendChild(div);
+      });
     });
-    el.appendChild(novGrid);
-
-    var divider = document.createElement('div');
-    divider.className = 'rem-divider';
-    el.appendChild(divider);
-
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.textContent = 'Novedades del per\u00EDodo';
-    el.appendChild(secLabel);
-
-    var tbWrap = document.createElement('div');
-    tbWrap.style.overflowX = 'auto';
-    var table = document.createElement('table');
-    table.className = 'rem-table';
-    table.innerHTML =
-      '<thead><tr>' +
-        '<th>Colaborador</th><th>Tipo</th><th>Desde</th><th>Hasta</th><th>D\u00EDas</th><th>Estado</th>' +
-      '</tr></thead>' +
-      '<tbody><tr><td colspan="6" style="text-align:center;color:var(--co-mute);padding:24px">Sin novedades registradas para este per\u00EDodo.</td></tr></tbody>';
-    tbWrap.appendChild(table);
-    el.appendChild(tbWrap);
-  }
-
-  // ── TAB: PARAMETROS ───────────────────────────────────────────────────────
-
-  function renderParametros(el) {
-    var hdrAcc = document.createElement('div');
-    hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap';
-    var btnUF = document.createElement('button');
-    btnUF.className = 'rem-btn-sec';
-    btnUF.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> Actualizar UF';
-    var btnEditar = document.createElement('button');
-    btnEditar.className = 'rem-btn-sec';
-    btnEditar.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> Editar par\u00E1metros';
-    hdrAcc.appendChild(btnUF);
-    hdrAcc.appendChild(btnEditar);
-    el.appendChild(hdrAcc);
-
-    var grid = document.createElement('div');
-    grid.className = 'rem-param-grid';
-
-    // Card valores generales
-    var card1 = document.createElement('div');
-    card1.className = 'rem-param-card';
-    card1.innerHTML = '<div class="rem-param-card-title">Valores generales 2026</div>';
-    [
-      { k: 'Ingreso m\u00EDnimo',    v: '$510.000'    },
-      { k: 'Tope imponible',         v: '83.3 UF'     },
-      { k: 'UF (hoy)',               v: '$38.942,00'  },
-      { k: 'SIS (empleado)',         v: '1.49%'       },
-      { k: 'SUS',                    v: '0.22%'       },
-      { k: 'Salud m\u00EDnimo legal',v: '7.00%'       },
-      { k: 'Retenci\u00F3n honorarios', v: '14.5%'    },
-    ].forEach(function(r) {
-      var row = document.createElement('div');
-      row.className = 'rem-param-row';
-      row.innerHTML = '<span class="rem-param-key">' + r.k + '</span><span class="rem-param-val">' + r.v + '</span>';
-      card1.appendChild(row);
-    });
-    grid.appendChild(card1);
-
-    // Card AFP
-    var card2 = document.createElement('div');
-    card2.className = 'rem-param-card';
-    card2.innerHTML = '<div class="rem-param-card-title">Tasas AFP vigentes</div>';
-    [
-      { k: 'AFP Capital',   v: '11.44%' },
-      { k: 'AFP Cuprum',    v: '11.44%' },
-      { k: 'AFP Habitat',   v: '11.27%' },
-      { k: 'AFP Modelo',    v: '10.58%' },
-      { k: 'AFP PlanVital', v: '11.16%' },
-      { k: 'AFP ProVida',   v: '11.45%' },
-      { k: 'AFP Uno',       v: '10.49%' },
-    ].forEach(function(r) {
-      var row = document.createElement('div');
-      row.className = 'rem-param-row';
-      row.innerHTML = '<span class="rem-param-key">' + r.k + '</span><span class="rem-param-val">' + r.v + '</span>';
-      card2.appendChild(row);
-    });
-    grid.appendChild(card2);
-
-    el.appendChild(grid);
-
-    var divider = document.createElement('div');
-    divider.className = 'rem-divider';
-    el.appendChild(divider);
-
-    // Tabla tramos impuesto
-    var secLabel = document.createElement('div');
-    secLabel.className = 'rem-section-label';
-    secLabel.textContent = 'Tabla impuesto 2\u00AA categor\u00EDa \u2014 Jun 2026';
-    el.appendChild(secLabel);
-
-    var tbWrap = document.createElement('div');
-    tbWrap.style.overflowX = 'auto';
-    var table = document.createElement('table');
-    table.className = 'rem-table';
-    table.innerHTML =
-      '<thead><tr><th>Desde</th><th>Hasta</th><th>Tasa</th><th>Rebaja</th></tr></thead>' +
-      '<tbody>' +
-        '<tr><td>$0</td><td>$660.590</td><td><b>Exento</b></td><td>\u2014</td></tr>' +
-        '<tr><td>$660.591</td><td>$1.467.978</td><td><b>4%</b></td><td>$26.424</td></tr>' +
-        '<tr><td>$1.467.979</td><td>$2.446.630</td><td><b>8%</b></td><td>$85.143</td></tr>' +
-        '<tr><td>$2.446.631</td><td>$3.425.282</td><td><b>13,5%</b></td><td>$219.698</td></tr>' +
-        '<tr><td>$3.425.283</td><td>$4.893.260</td><td><b>23%</b></td><td>$562.595</td></tr>' +
-        '<tr><td>$4.893.261</td><td>$6.116.576</td><td><b>30,4%</b></td><td>$924.716</td></tr>' +
-        '<tr><td>$6.116.577</td><td>$7.339.891</td><td><b>35%</b></td><td>$1.206.258</td></tr>' +
-        '<tr><td>$7.339.892</td><td>En adelante</td><td><b>40%</b></td><td>$1.573.253</td></tr>' +
-      '</tbody>';
-    tbWrap.appendChild(table);
-    el.appendChild(tbWrap);
 
     var nota = document.createElement('p');
-    nota.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:10px';
-    nota.textContent = 'Valores hardcodeados para v1. La actualizaci\u00F3n autom\u00E1tica desde SII y Banco Central se implementar\u00E1 en la siguiente versi\u00F3n.';
+    nota.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:10px;display:flex;align-items:center;gap:4px';
+    nota.innerHTML = '<i class="ti ti-lock" aria-hidden="true" style="color:var(--co-orange);font-size:13px"></i> Los \u00EDtems marcados como <b style="color:var(--co-ink)">&nbsp;Legal&nbsp;</b> son obligatorios y no pueden eliminarse.';
     el.appendChild(nota);
   }
 
+  function _eliminarItem(id, contenedor, cargo) {
+    if (!confirm('\u00BFEliminar este \u00EDtem de la plantilla?')) return;
+    api('/remuneraciones/parametros/plantillas', 'POST', { action:'eliminarItemPlantilla', id:id })
+      .then(function(resp) {
+        if (resp.data && resp.data.ok) { _plantillas = []; _cargarItemsPlantilla(contenedor, cargo); }
+        else alert('Error: ' + (resp.data && resp.data.error ? resp.data.error : 'No se pudo eliminar.'));
+      });
+  }
+
   // ── Helpers UI ────────────────────────────────────────────────────────────
-
   function _avisoSinComunidad() {
-    var div = document.createElement('div');
-    div.className = 'rem-empty';
-    div.innerHTML =
-      '<i class="ti ti-building-estate" aria-hidden="true"></i>' +
-      '<div class="rem-empty-title">Selecciona una comunidad</div>' +
-      '<div class="rem-empty-sub">Usa el selector en la parte superior derecha para elegir la comunidad con la que deseas trabajar.</div>';
+    var div = document.createElement('div'); div.className = 'rem-empty';
+    div.innerHTML = '<i class="ti ti-building-estate" aria-hidden="true"></i><div class="rem-empty-title">Selecciona una comunidad</div><div class="rem-empty-sub">Usa el selector en la parte superior derecha para elegir la comunidad con la que deseas trabajar.</div>';
     return div;
   }
-
   function _proximamente(ico, titulo, sub) {
-    var div = document.createElement('div');
-    div.className = 'rem-empty';
-    div.innerHTML =
-      '<i class="ti ' + ico + '" aria-hidden="true"></i>' +
-      '<div class="rem-empty-title">' + titulo + '</div>' +
-      '<div class="rem-empty-sub">' + sub + '<br>Disponible en la pr\u00F3xima versi\u00F3n.</div>';
+    var div = document.createElement('div'); div.className = 'rem-empty';
+    div.innerHTML = '<i class="ti ' + ico + '" aria-hidden="true"></i><div class="rem-empty-title">' + titulo + '</div><div class="rem-empty-sub">' + sub + '<br>Disponible en la pr\u00F3xima versi\u00F3n.</div>';
     return div;
   }
+  function _divider() {
+    var d = document.createElement('div'); d.className = 'rem-divider'; return d;
+  }
 
-  // ── Init ──────────────────────────────────────────────────────────────────
   init();
 
 })();
