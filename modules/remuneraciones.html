@@ -560,7 +560,9 @@
     grid2.appendChild(field('Tipo de contrato', fTipoCto));
     grid2.appendChild(field('Fecha de inicio *', fFecIni));
     grid2.appendChild(field('Fecha de t\u00E9rmino', fFecTer));
+    var fTipoJornada = select([{v:'1',l:'Jornada completa'},{v:'2',l:'Part-time (jornada parcial)'}], colaborador ? String(colaborador.tipoJornada || '1') : '1');
     grid2.appendChild(field('Jornada semanal (hrs, m\u00E1x. 42)', fJornada));
+    grid2.appendChild(field('Tipo de jornada *', fTipoJornada));
     form.appendChild(grid2);
     var pactoGrp = document.createElement('div'); pactoGrp.className = 'form-group form-full'; pactoGrp.appendChild(fPactoWrap);
     form.appendChild(pactoGrp);
@@ -590,17 +592,38 @@
       {v:'05',l:'AFP Habitat'},{v:'34',l:'AFP Modelo'},{v:'29',l:'AFP PlanVital'},
       {v:'08',l:'AFP ProVida'},{v:'35',l:'AFP Uno'}
     ], colaborador ? colaborador.codigoAfp : '05');
-    var fTipoTrab = select([{v:0,l:'Activo (no pensionado)'},{v:1,l:'Pensionado y cotiza'},{v:2,l:'Pensionado, no cotiza'},{v:3,l:'Activo > 65 a\u00F1os'}], colaborador ? colaborador.tipoTrabajador : 0);
+    var fTipoTrab = select([
+      {v:0, l:'Activo (No pensionado)'},
+      {v:1, l:'Pensionado y cotiza'},
+      {v:2, l:'Pensionado y No cotiza o Pensionado por Invalidez Total'},
+      {v:3, l:'Activo desde los 65 a\u00F1os (Nunca pensionado)'},
+      {v:8, l:'Exento de cotizar (Mujer desde 60 a\u00F1os, Hombre desde 65 o Extranjero)'},
+      {v:9, l:'Pensionado por Invalidez Parcial'}
+    ], colaborador ? colaborador.tipoTrabajador : 0);
     var fSalud   = select([
-      {v:'07',l:'Fonasa'},{v:'01',l:'Banm\u00E9dica'},{v:'02',l:'Consalud'},
-      {v:'03',l:'VidaTres'},{v:'04',l:'Colmena'},{v:'05',l:'Cruz Blanca'},
-      {v:'10',l:'Nueva Masvida'}
+      {v:'07',l:'Fonasa'},
+      {v:'01',l:'Banm\u00E9dica'},
+      {v:'02',l:'Consalud'},
+      {v:'03',l:'VidaTres'},
+      {v:'04',l:'Colmena'},
+      {v:'05',l:'Cruz Blanca'},
+      {v:'10',l:'Nueva Masvida'},
+      {v:'11',l:'Isalud'},
+      {v:'12',l:'Fundaci\u00F3n'},
+      {v:'25',l:'Cruz del Norte'},
+      {v:'28',l:'Esencial'}
     ], colaborador ? colaborador.codigoSalud : '07');
 
     var fFun     = input('text', 'N\u00BA contrato Isapre', colaborador ? colaborador.numeroFun : '');
     var fMoneda  = select([{v:'1',l:'Pesos ($)'},{v:'2',l:'UF'}], colaborador ? colaborador.monedaPlanIsapre : '1');
     var fMontoPlan = input('number', '0', colaborador ? colaborador.montoPlanIsapre : 0);
-    var fCcaf    = select([{v:'00',l:'Sin CCAF'},{v:'01',l:'Los Andes'},{v:'02',l:'La Araucana'},{v:'03',l:'Los H\u00E9roes'},{v:'06',l:'18 de Septiembre'}], colaborador ? colaborador.codigoCcaf : '00');
+    var fCcaf    = select([
+      {v:'00',l:'Sin CCAF'},
+      {v:'01',l:'Los Andes'},
+      {v:'02',l:'La Araucana'},
+      {v:'03',l:'Los H\u00E9roes'},
+      {v:'04',l:'18 de Septiembre'}
+    ], colaborador ? colaborador.codigoCcaf : '00');
     var fSC      = document.createElement('input'); fSC.type = 'checkbox'; fSC.checked = colaborador ? colaborador.seguroCesantia : true;
     var fSCWrap  = document.createElement('div');
     fSCWrap.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--co-ink);margin-top:8px';
@@ -663,6 +686,7 @@
         fechaInicio:      fFecIni.value,
         fechaTermino:     fFecTer.value || '',
         jornadaHoras:     Number(fJornada.value) || 42,
+        tipoJornada:      fTipoJornada.value,
         pactoHorasExtra:  fPactoHE.checked,
         sueldoBase:       Number(fSueldo.value) || 0,
         asigColacion:     Number(fColac.value) || 0,
