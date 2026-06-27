@@ -683,6 +683,11 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
+      if (url.pathname === '/remuneraciones/parametros/reinstalar' && method === 'POST') {
+        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'reinstalarIndicadores' });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
       if (url.pathname === '/remuneraciones/instalar' && method === 'POST') {
         const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojasParametrosRem' });
         const data2 = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojaTrabajadores' });
