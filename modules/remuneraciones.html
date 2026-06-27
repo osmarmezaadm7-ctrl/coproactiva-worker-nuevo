@@ -1118,13 +1118,28 @@
       { label: 'Expectativa de Vida',        val: mapa['EXPECTATIVA_VIDA']     ? fmtPct(mapa['EXPECTATIVA_VIDA'])      : null },
     ]));
 
-    // Card 2: AFP
+    // Card 2: AFP — con columna 0.1% cargo empleador
     var AFP_NOMBRES = { AFP_33_CAPITAL:'Capital', AFP_03_CUPRUM:'Cuprum', AFP_05_HABITAT:'Habitat',
                         AFP_34_MODELO:'Modelo', AFP_29_PLANVITAL:'PlanVital', AFP_08_PROVIDA:'ProVida', AFP_35_UNO:'Uno' };
-    var filasAfp = Object.keys(AFP_NOMBRES).map(function(k) {
-      return { label: 'AFP ' + AFP_NOMBRES[k], val: mapa[k] ? fmtPct(mapa[k]) : null };
+    var cardAfp = document.createElement('div'); cardAfp.className = 'rem-param-card';
+    cardAfp.innerHTML = '<div class="rem-param-card-title">Tasas AFP vigentes</div>';
+    // Header tabla AFP
+    var afpHdr = document.createElement('div');
+    afpHdr.style.cssText = 'display:grid;grid-template-columns:1fr 80px 80px 90px;gap:4px;padding:4px 0 6px;border-bottom:1px solid var(--co-line);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--co-mute)';
+    afpHdr.innerHTML = '<span>AFP</span><span style="text-align:right">Trabajador</span><span style="text-align:right">Empleador</span><span style="text-align:right">Total</span>';
+    cardAfp.appendChild(afpHdr);
+    Object.keys(AFP_NOMBRES).forEach(function(k) {
+      if (!mapa[k]) return;
+      var trab = mapa[k]; var emp = 0.1; var total = Math.round((trab + emp) * 100) / 100;
+      var row = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 80px 80px 90px;gap:4px;padding:6px 0;border-top:1px solid var(--co-line);font-size:12px;align-items:center';
+      row.innerHTML = '<span style="color:var(--co-mute)">' + AFP_NOMBRES[k] + '</span>' +
+        '<span style="text-align:right;font-weight:700">' + trab + '%</span>' +
+        '<span style="text-align:right;color:var(--co-mute)">' + emp + '%</span>' +
+        '<span style="text-align:right;font-weight:700">' + total + '%</span>';
+      cardAfp.appendChild(row);
     });
-    grid.appendChild(mkCard('Tasas AFP vigentes', filasAfp));
+    grid.appendChild(cardAfp);
     el.appendChild(grid);
 
     el.appendChild(_divider());
@@ -1181,10 +1196,41 @@
     el.appendChild(gridAF);
 
     el.appendChild(_divider());
-    var notaImp = document.createElement('p');
-    notaImp.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:16px;padding:10px 14px;background:var(--co-bg);border-radius:8px;border:1px solid var(--co-line)';
-    notaImp.innerHTML = '<i class="ti ti-info-circle" style="color:var(--co-orange)"></i> La tabla de impuesto 2ª categoría se carga con los datos base — usa <b>Cargar datos base</b> para inicializar o restaurar.';
-    el.appendChild(notaImp);
+    // Tabla impuesto 2a categoría — solo si hay datos IMP2
+    var tieneImp = lista.some(function(d) { return d.clave.startsWith('IMP2_'); });
+    if (tieneImp) {
+      el.appendChild(_divider());
+      var lfImp = document.createElement('div'); lfImp.className = 'rem-section-label';
+      lfImp.textContent = 'Tabla impuesto 2ª categoría — tramos mensuales'; el.appendChild(lfImp);
+      var tbWrap = document.createElement('div'); tbWrap.style.overflowX = 'auto';
+      var table = document.createElement('table'); table.className = 'rem-table';
+      table.innerHTML = '<thead><tr><th>Tramo</th><th>Hasta</th><th>Tasa</th><th>Rebaja</th></tr></thead>';
+      var tbodyImp = document.createElement('tbody');
+      var tramos = [
+        { num:1, hasta:'IMP2_TRAMO1_HASTA', tasa:null,               rebaja:null },
+        { num:2, hasta:'IMP2_TRAMO2_HASTA', tasa:'IMP2_TRAMO2_TASA', rebaja:'IMP2_TRAMO2_REBAJA' },
+        { num:3, hasta:'IMP2_TRAMO3_HASTA', tasa:'IMP2_TRAMO3_TASA', rebaja:'IMP2_TRAMO3_REBAJA' },
+        { num:4, hasta:'IMP2_TRAMO4_HASTA', tasa:'IMP2_TRAMO4_TASA', rebaja:'IMP2_TRAMO4_REBAJA' },
+        { num:5, hasta:'IMP2_TRAMO5_HASTA', tasa:'IMP2_TRAMO5_TASA', rebaja:'IMP2_TRAMO5_REBAJA' },
+        { num:6, hasta:'IMP2_TRAMO6_HASTA', tasa:'IMP2_TRAMO6_TASA', rebaja:'IMP2_TRAMO6_REBAJA' },
+        { num:7, hasta:'IMP2_TRAMO7_HASTA', tasa:'IMP2_TRAMO7_TASA', rebaja:'IMP2_TRAMO7_REBAJA' },
+        { num:8, hasta:null,                tasa:'IMP2_TRAMO8_TASA', rebaja:'IMP2_TRAMO8_REBAJA' },
+      ];
+      tramos.forEach(function(t) {
+        var tr = document.createElement('tr');
+        var hasta  = t.hasta  ? (mapa[t.hasta]  ? fmtPesos(mapa[t.hasta])  : '—') : 'En adelante';
+        var tasa   = t.tasa   ? (mapa[t.tasa]   ? fmtPct(mapa[t.tasa])     : '—') : 'Exento';
+        var rebaja = t.rebaja ? (mapa[t.rebaja] ? fmtPesos(mapa[t.rebaja]) : '—') : '—';
+        tr.innerHTML = '<td>Tramo ' + t.num + '</td><td>' + hasta + '</td><td><b>' + tasa + '</b></td><td>' + rebaja + '</td>';
+        tbodyImp.appendChild(tr);
+      });
+      table.appendChild(tbodyImp); tbWrap.appendChild(table); el.appendChild(tbWrap);
+    } else {
+      var notaImp = document.createElement('p');
+      notaImp.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:16px;padding:10px 14px;background:var(--co-bg);border-radius:8px;border:1px solid var(--co-line)';
+      notaImp.innerHTML = '<i class="ti ti-info-circle" style="color:var(--co-orange)"></i> La tabla de impuesto 2ª categoría se carga con los datos base — usa <b>Cargar datos base</b> para inicializar o restaurar.';
+      el.appendChild(notaImp);
+    }
   }
 
   function _eliminarItem(id, contenedor, cargo) {
