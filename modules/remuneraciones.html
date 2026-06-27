@@ -921,10 +921,25 @@
 
       // Construir tabla de revisión
       var LABELS = {
-        UF_MES:'UF mes actual', IMM:'Ingreso mínimo mensual', SIS_TASA:'Tasa SIS (%)',
+        UF_MES:'UF mes actual', UF_MES_ANT:'UF mes anterior', UTM:'UTM',
+        IMM:'Ingreso mínimo mensual ($)', IMM_CASA_PARTICULAR:'IMM Casa Particular ($)',
+        TOPE_AFP_UF:'Tope imponible AFP (UF)', TOPE_IPS_UF:'Tope imponible IPS (UF)',
+        TOPE_AFC_UF:'Tope imponible AFC/SC (UF)', TOPE_AFP_PESOS:'Tope imponible AFP ($)',
+        SIS_TASA:'Tasa SIS (%)', EXPECTATIVA_VIDA:'Expectativa de Vida (%)',
+        FONASA_CON_CCAF_CCAF:'Fonasa con CCAF — a CCAF (%)', FONASA_CON_CCAF_EMP:'Fonasa con CCAF — empleado (%)',
+        CCAF_NO_ISAPRE:'CCAF no afiliados Isapre (%)',
+        SC_EMP_INDEFINIDO:'SC empleador indefinido (%)', SC_TRAB_INDEFINIDO:'SC trabajador indefinido (%)',
+        SC_EMP_PLAZO_FIJO:'SC empleador plazo fijo (%)', SC_EMP_11_ANOS:'SC empleador >11 años (%)',
+        SC_TRAB_PLAZO_FIJO:'SC trabajador plazo fijo (%)',
+        TRABAJO_PESADO_TASA:'Trabajo pesado total (%)', TRABAJO_MEN_PESADO:'Trabajo menos pesado total (%)',
         AFP_33_CAPITAL:'AFP Capital (%)', AFP_03_CUPRUM:'AFP Cuprum (%)', AFP_05_HABITAT:'AFP Habitat (%)',
-        AFP_34_MODELO:'AFP Modelo (%)', AFP_29_PLANVITAL:'AFP PlanVital (%)', AFP_08_PROVIDA:'AFP ProVida (%)',
-        AFP_35_UNO:'AFP Uno (%)', AF_TRAMO_A_MONTO:'Asig. familiar tramo A ($)', AF_TRAMO_B_MONTO:'Asig. familiar tramo B ($)'
+        AFP_34_MODELO:'AFP Modelo (%)', AFP_29_PLANVITAL:'AFP PlanVital (%)',
+        AFP_08_PROVIDA:'AFP ProVida (%)', AFP_35_UNO:'AFP Uno (%)',
+        APV_TOPE_MENSUAL_UF:'APV tope mensual (UF)', APV_TOPE_ANUAL_UF:'APV tope anual (UF)',
+        DEP_CONV_TOPE_UF:'Depósito convenido tope anual (UF)',
+        AF_TRAMO_A_MONTO:'Asig. familiar tramo A ($)', AF_TRAMO_B_MONTO:'Asig. familiar tramo B ($)',
+        AF_TRAMO_C_MONTO:'Asig. familiar tramo C ($)',
+        AF_LIMITE_A:'Límite tramo A ($)', AF_LIMITE_B:'Límite tramo B ($)', AF_LIMITE_C:'Límite tramo C ($)'
       };
 
       var html = '<div class="rem-alerta warn" style="margin-bottom:14px"><i class="ti ti-alert-triangle" aria-hidden="true"></i>' +
@@ -959,7 +974,13 @@
 
         btnGuardar.addEventListener('click', function() {
           btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando…'; errDiv.style.display = 'none';
-          var periodo = data.mes ? data.mes.split(' ').reverse().join('-') : '';
+          // Período YYYY-MM ej: "2026-06"
+          var partesMes = data.mes ? data.mes.split(' ') : [];
+          var MESES = {'Enero':'01','Febrero':'02','Marzo':'03','Abril':'04','Mayo':'05','Junio':'06',
+                       'Julio':'07','Agosto':'08','Septiembre':'09','Octubre':'10','Noviembre':'11','Diciembre':'12'};
+          var periodo = partesMes.length === 2
+            ? partesMes[1] + '-' + (MESES[partesMes[0]] || '01')
+            : new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0');
           var promesas = Object.keys(ind).map(function(clave) {
             return api('/remuneraciones/parametros/indicadores', 'POST', {
               action: 'actualizarIndicadorRem',
