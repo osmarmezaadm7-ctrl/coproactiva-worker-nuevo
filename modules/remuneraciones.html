@@ -952,8 +952,29 @@
       Object.keys(LABELS).forEach(function(k) {
         if (ind[k] !== undefined && ind[k] !== null) {
           tieneValores = true;
-          var fmt = k === 'IMM' || k.includes('MONTO') ? '$' + Math.round(ind[k]).toLocaleString('es-CL') :
-                    k === 'UF_MES' ? '$' + ind[k].toLocaleString('es-CL') : ind[k] + '%';
+          var CLAVES_UF_VAL  = ['UF_MES','UF_MES_ANT'];
+          var CLAVES_PESOS   = ['IMM','IMM_CASA_PARTICULAR','UTM','AF_LIMITE_A','AF_LIMITE_B','AF_LIMITE_C'];
+          var CLAVES_TOPE_UF = ['TOPE_AFP_UF','TOPE_IPS_UF','TOPE_AFC_UF'];
+          var CLAVES_APV_UF  = ['APV_TOPE_MENSUAL_UF','APV_TOPE_ANUAL_UF','DEP_CONV_TOPE_UF'];
+          // Tope AFP pesos — para calcular junto a UF
+          var ufMes = ind['UF_MES'] || 0;
+          var topeUfPesos = {
+            TOPE_AFP_UF: Math.round((ind['TOPE_AFP_UF']||0) * ufMes),
+            TOPE_IPS_UF: Math.round((ind['TOPE_IPS_UF']||0) * ufMes),
+            TOPE_AFC_UF: Math.round((ind['TOPE_AFC_UF']||0) * ufMes),
+            APV_TOPE_MENSUAL_UF: Math.round((ind['APV_TOPE_MENSUAL_UF']||0) * ufMes),
+            APV_TOPE_ANUAL_UF:   Math.round((ind['APV_TOPE_ANUAL_UF']||0)   * ufMes),
+            DEP_CONV_TOPE_UF:    Math.round((ind['DEP_CONV_TOPE_UF']||0)    * ufMes),
+          };
+          var fmt;
+          if (CLAVES_UF_VAL.includes(k))
+            fmt = '$' + ind[k].toLocaleString('es-CL');
+          else if (CLAVES_PESOS.includes(k) || k.includes('MONTO') || k.includes('PESOS'))
+            fmt = '$' + Math.round(ind[k]).toLocaleString('es-CL');
+          else if (CLAVES_TOPE_UF.includes(k) || CLAVES_APV_UF.includes(k))
+            fmt = ind[k] + ' UF / $' + (topeUfPesos[k]||0).toLocaleString('es-CL');
+          else
+            fmt = ind[k] + '%';
           html += '<tr><td>' + LABELS[k] + '</td><td><b>' + fmt + '</b></td></tr>';
         }
       });
