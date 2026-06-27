@@ -995,32 +995,36 @@
 
         btnGuardar.addEventListener('click', function() {
           btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando…'; errDiv.style.display = 'none';
-          // Período YYYY-MM ej: "2026-06"
           var partesMes = data.mes ? data.mes.split(' ') : [];
           var MESES = {'Enero':'01','Febrero':'02','Marzo':'03','Abril':'04','Mayo':'05','Junio':'06',
                        'Julio':'07','Agosto':'08','Septiembre':'09','Octubre':'10','Noviembre':'11','Diciembre':'12'};
           var periodo = partesMes.length === 2
             ? partesMes[1] + '-' + (MESES[partesMes[0]] || '01')
             : new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0');
-          var promesas = Object.keys(ind).map(function(clave) {
-            return api('/remuneraciones/parametros/indicadores', 'POST', {
-              action: 'actualizarIndicadorRem',
-              clave: clave,
-              valor: ind[clave],
-              periodo: periodo,
-              usuario: 'sistema-scraping'
-            });
-          });
-          Promise.all(promesas).then(function() {
-            btnGuardar.textContent = '✓ Indicadores actualizados';
-            btnGuardar.style.background = 'var(--co-green, #3B6D11)';
-            _indicadores = [];
-            setTimeout(function() {
-              overlay.remove();
-              renderIndicadores(contenedor);
-            }, 1200);
+
+          // Una sola llamada con todos los indicadores
+          api('/remuneraciones/parametros/indicadores/masivo', 'POST', {
+            action: 'guardarIndicadoresMasivo',
+            indicadores: ind,
+            periodo: periodo,
+            usuario: 'sistema-scraping'
+          }).then(function(resp) {
+            var ok = resp.ok && resp.data && (resp.data.ok || (resp.data.data && resp.data.data.ok));
+            if (ok) {
+              btnGuardar.textContent = '✓ Indicadores guardados';
+              btnGuardar.style.background = '#3B6D11';
+              _indicadores = [];
+              setTimeout(function() {
+                overlay.remove();
+                renderIndicadores(contenedor);
+              }, 1200);
+            } else {
+              var err = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
+              errDiv.textContent = err; errDiv.style.display = 'block';
+              btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar indicadores actualizados';
+            }
           }).catch(function(e) {
-            errDiv.textContent = 'Error al guardar: ' + e.message;
+            errDiv.textContent = 'Error de conexión: ' + e.message;
             errDiv.style.display = 'block';
             btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar indicadores actualizados';
           });
