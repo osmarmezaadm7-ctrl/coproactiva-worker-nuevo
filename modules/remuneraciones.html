@@ -1233,6 +1233,96 @@
     }
   }
 
+  // ── PLANTILLAS ONBOARDING ─────────────────────────────────────────────────
+  function renderPlantillas(el) {
+    var cargarYRenderizar = function() {
+      var hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px';
+      var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.style.marginBottom = '0'; secLabel.textContent = 'Plantillas de onboarding por cargo';
+      var btnNuevo = document.createElement('button'); btnNuevo.className = 'rem-btn-pri'; btnNuevo.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Agregar ítem';
+      hdr.appendChild(secLabel); hdr.appendChild(btnNuevo); el.appendChild(hdr);
+
+      var cargoList = document.createElement('div'); cargoList.className = 'rem-cargo-list';
+      var cargosRender = [{ id:'*', label:'Todos (generales)' }].concat(_cargos.map(function(c) { return { id: c.nombre, label: c.nombre }; }));
+      cargosRender.forEach(function(c) {
+        var chip = document.createElement('button');
+        chip.className = 'rem-cargo-chip' + (c.id === _cargoActivo ? ' act' : '');
+        chip.textContent = c.label;
+        chip.addEventListener('click', function() {
+          _cargoActivo = c.id;
+          cargoList.querySelectorAll('.rem-cargo-chip').forEach(function(b) { b.classList.remove('act'); });
+          chip.classList.add('act');
+          itemsContenedor.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px">Cargando…</div>';
+          _cargarItemsPlantilla(itemsContenedor, _cargoActivo);
+        });
+        cargoList.appendChild(chip);
+      });
+      el.appendChild(cargoList);
+
+      var itemsContenedor = document.createElement('div'); itemsContenedor.id = 'rem-plt-items'; el.appendChild(itemsContenedor);
+      _cargarItemsPlantilla(itemsContenedor, _cargoActivo);
+    };
+
+    if (_cargos.length > 0) {
+      cargarYRenderizar();
+    } else {
+      api('/remuneraciones/parametros/cargos').then(function(resp) {
+        _cargos = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+        cargarYRenderizar();
+      }).catch(function() { cargarYRenderizar(); });
+    }
+  }
+
+  function _cargarItemsPlantilla(el, cargo) {
+    var url = cargo === '*'
+      ? '/remuneraciones/parametros/plantillas?todas=true'
+      : '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(cargo);
+    api(url).then(function(resp) {
+      _plantillas = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+      _renderItemsPlantilla(el, _plantillas, cargo);
+    }).catch(function() {
+      el.innerHTML = '<div style="text-align:center;color:#A32D2D;padding:16px">Error al cargar plantilla.</div>';
+    });
+  }
+
+  function _renderItemsPlantilla(el, items, cargo) {
+    el.innerHTML = '';
+    if (!items.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">No hay ítems para este cargo.</div>';
+      return;
+    }
+    var cats = {};
+    items.forEach(function(it) { if (!cats[it.categoria]) cats[it.categoria] = []; cats[it.categoria].push(it); });
+    Object.keys(cats).forEach(function(cat) {
+      var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.textContent = cat; el.appendChild(secLabel);
+      cats[cat].forEach(function(it) {
+        var div = document.createElement('div'); div.className = 'rem-plt-item' + (it.esLegal ? ' legal' : '');
+        var nombre = document.createElement('span'); nombre.className = 'rem-plt-name'; nombre.textContent = it.nombre;
+        var catPill = document.createElement('span'); catPill.className = 'rem-plt-cat'; catPill.textContent = it.cargo === '*' ? 'General' : it.cargo;
+        var badges = document.createElement('div'); badges.className = 'rem-plt-badges';
+        if (it.esLegal)         { var b = document.createElement('span'); b.className = 'rem-pill legal'; b.textContent = 'Legal'; badges.appendChild(b); }
+        if (it.requiereFirma)   { var b = document.createElement('span'); b.className = 'rem-pill blue'; b.textContent = 'Firma'; badges.appendChild(b); }
+        if (it.requiereAdjunto) { var b = document.createElement('span'); b.style.cssText='background:#EAF3DE;color:#3B6D11;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700'; b.textContent = 'Adjunto'; badges.appendChild(b); }
+        var plazo = document.createElement('span'); plazo.className = 'rem-plt-plazo'; plazo.textContent = 'Día ' + it.plazosDias;
+        var actions = document.createElement('div'); actions.className = 'rem-plt-actions';
+        var btnEdit = document.createElement('button'); btnEdit.className = 'rem-ico-btn'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i>';
+        var btnDel = document.createElement('button');
+        if (it.esLegal) {
+          btnDel.className = 'rem-ico-btn rem-lock'; btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>'; btnDel.title = 'Ítem legal — no eliminable';
+        } else {
+          btnDel.className = 'rem-ico-btn danger'; btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>';
+          btnDel.addEventListener('click', function(e) { e.stopPropagation(); _eliminarItem(it.id, el, cargo); });
+        }
+        actions.appendChild(btnEdit); actions.appendChild(btnDel);
+        div.appendChild(nombre); div.appendChild(catPill); div.appendChild(badges); div.appendChild(plazo); div.appendChild(actions);
+        el.appendChild(div);
+      });
+    });
+    var nota = document.createElement('p');
+    nota.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:10px;display:flex;align-items:center;gap:4px';
+    nota.innerHTML = '<i class="ti ti-lock" aria-hidden="true" style="color:var(--co-orange);font-size:13px"></i> Los ítems marcados como <b style="color:var(--co-ink)">&nbsp;Legal&nbsp;</b> son obligatorios y no pueden eliminarse.';
+    el.appendChild(nota);
+  }
+
   function _eliminarItem(id, contenedor, cargo) {
     if (!confirm('\u00BFEliminar este \u00EDtem de la plantilla?')) return;
     api('/remuneraciones/parametros/plantillas', 'POST', { action:'eliminarItemPlantilla', id:id })
