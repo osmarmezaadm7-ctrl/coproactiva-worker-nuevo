@@ -1185,8 +1185,8 @@
     gridAF.appendChild(mkCard('Monto por carga ($)', [
       { label: 'Tramo A', val: mapa['AF_TRAMO_A_MONTO'] !== undefined ? fmtPesos(mapa['AF_TRAMO_A_MONTO']) : null },
       { label: 'Tramo B', val: mapa['AF_TRAMO_B_MONTO'] !== undefined ? fmtPesos(mapa['AF_TRAMO_B_MONTO']) : null },
-      { label: 'Tramo C', val: '$0' },
-      { label: 'Tramo D', val: '$0' },
+      { label: 'Tramo C', val: mapa['AF_TRAMO_C_MONTO'] !== undefined ? fmtPesos(mapa['AF_TRAMO_C_MONTO']) : null },
+      { label: 'Tramo D', val: '—' },
     ]));
     gridAF.appendChild(mkCard('Renta máxima por tramo', [
       { label: 'Límite tramo A', val: mapa['AF_LIMITE_A'] ? fmtPesos(mapa['AF_LIMITE_A']) : null },
