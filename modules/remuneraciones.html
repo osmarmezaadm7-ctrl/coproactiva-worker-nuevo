@@ -869,11 +869,38 @@
   // ── INDICADORES ───────────────────────────────────────────────────────────
   function renderIndicadores(el) {
     var hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap';
+    var btnBase = document.createElement('button'); btnBase.className = 'rem-btn-sec';
+    btnBase.innerHTML = '<i class="ti ti-database-import" aria-hidden="true"></i> Cargar datos base';
     var btnPrevired = document.createElement('button'); btnPrevired.className = 'rem-btn-sec';
     btnPrevired.innerHTML = '<i class="ti ti-cloud-download" aria-hidden="true"></i> Actualizar desde Previred';
     var btnEdit = document.createElement('button'); btnEdit.className = 'rem-btn-sec'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> Editar';
+
+    btnBase.addEventListener('click', function() {
+      if (!confirm('Esto eliminará todos los indicadores actuales y cargará los datos base del sistema. ¿Continuar?')) return;
+      btnBase.disabled = true; btnBase.textContent = 'Cargando…';
+      api('/remuneraciones/parametros/reinstalar', 'POST', {}).then(function(resp) {
+        var ok = resp.ok && resp.data && (resp.data.ok || (resp.data.data && resp.data.data.ok));
+        if (ok) {
+          _indicadores = [];
+          btnBase.textContent = '✓ Datos base cargados';
+          btnBase.style.background = '#3B6D11'; btnBase.style.color = '#fff';
+          var subContenido = document.getElementById('rem-ind-contenedor');
+          if (subContenido) {
+            subContenido.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px">Cargando…</div>';
+            api('/remuneraciones/parametros/indicadores').then(function(r) {
+              _indicadores = (r.data && r.data.data) ? r.data.data : (r.data || []);
+              _renderIndicadoresData(subContenido, _indicadores);
+            });
+          }
+        } else {
+          alert('Error al cargar datos base.');
+          btnBase.disabled = false; btnBase.innerHTML = '<i class="ti ti-database-import"></i> Cargar datos base';
+        }
+      });
+    });
+
     btnPrevired.addEventListener('click', function() { _scrapingPrevired(el); });
-    hdr.appendChild(btnPrevired); hdr.appendChild(btnEdit); el.appendChild(hdr);
+    hdr.appendChild(btnBase); hdr.appendChild(btnPrevired); hdr.appendChild(btnEdit); el.appendChild(hdr);
 
     var contenedor = document.createElement('div'); contenedor.id = 'rem-ind-contenedor';
     contenedor.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">Cargando indicadores\u2026</div>';
@@ -1154,33 +1181,10 @@
     el.appendChild(gridAF);
 
     el.appendChild(_divider());
-
-    // Tabla impuesto 2a categoría
-    var lfImp = document.createElement('div'); lfImp.className = 'rem-section-label';
-    lfImp.textContent = 'Tabla impuesto 2ª categoría — tramos mensuales'; el.appendChild(lfImp);
-    var tbWrap = document.createElement('div'); tbWrap.style.overflowX = 'auto';
-    var table = document.createElement('table'); table.className = 'rem-table';
-    table.innerHTML = '<thead><tr><th>Tramo</th><th>Hasta</th><th>Tasa</th><th>Rebaja</th></tr></thead>';
-    var tbodyImp = document.createElement('tbody');
-    var tramos = [
-      { num:1, hasta:'IMP2_TRAMO1_HASTA', tasa:null,               rebaja:null },
-      { num:2, hasta:'IMP2_TRAMO2_HASTA', tasa:'IMP2_TRAMO2_TASA', rebaja:'IMP2_TRAMO2_REBAJA' },
-      { num:3, hasta:'IMP2_TRAMO3_HASTA', tasa:'IMP2_TRAMO3_TASA', rebaja:'IMP2_TRAMO3_REBAJA' },
-      { num:4, hasta:'IMP2_TRAMO4_HASTA', tasa:'IMP2_TRAMO4_TASA', rebaja:'IMP2_TRAMO4_REBAJA' },
-      { num:5, hasta:'IMP2_TRAMO5_HASTA', tasa:'IMP2_TRAMO5_TASA', rebaja:'IMP2_TRAMO5_REBAJA' },
-      { num:6, hasta:'IMP2_TRAMO6_HASTA', tasa:'IMP2_TRAMO6_TASA', rebaja:'IMP2_TRAMO6_REBAJA' },
-      { num:7, hasta:'IMP2_TRAMO7_HASTA', tasa:'IMP2_TRAMO7_TASA', rebaja:'IMP2_TRAMO7_REBAJA' },
-      { num:8, hasta:null,                tasa:'IMP2_TRAMO8_TASA', rebaja:'IMP2_TRAMO8_REBAJA' },
-    ];
-    tramos.forEach(function(t) {
-      var tr = document.createElement('tr');
-      var hasta  = t.hasta  ? (mapa[t.hasta]  ? fmtPesos(mapa[t.hasta])  : '—') : 'En adelante';
-      var tasa   = t.tasa   ? (mapa[t.tasa]   ? fmtPct(mapa[t.tasa])     : '—') : 'Exento';
-      var rebaja = t.rebaja ? (mapa[t.rebaja] ? fmtPesos(mapa[t.rebaja]) : '—') : '—';
-      tr.innerHTML = '<td>Tramo ' + t.num + '</td><td>' + hasta + '</td><td><b>' + tasa + '</b></td><td>' + rebaja + '</td>';
-      tbodyImp.appendChild(tr);
-    });
-    table.appendChild(tbodyImp); tbWrap.appendChild(table); el.appendChild(tbWrap);
+    var notaImp = document.createElement('p');
+    notaImp.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:16px;padding:10px 14px;background:var(--co-bg);border-radius:8px;border:1px solid var(--co-line)';
+    notaImp.innerHTML = '<i class="ti ti-info-circle" style="color:var(--co-orange)"></i> La tabla de impuesto 2ª categoría se carga con los datos base — usa <b>Cargar datos base</b> para inicializar o restaurar.';
+    el.appendChild(notaImp);
   }
 
   function _eliminarItem(id, contenedor, cargo) {
