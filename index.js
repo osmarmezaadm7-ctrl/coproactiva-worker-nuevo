@@ -643,6 +643,12 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
+      if (url.pathname === '/remuneraciones/parametros/indicadores/masivo' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, body);
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
       if (url.pathname === '/remuneraciones/parametros/plantillas' && method === 'GET') {
         const cargo = url.searchParams.get('cargo') || '*';
         const todas = url.searchParams.get('todas') || 'false';
