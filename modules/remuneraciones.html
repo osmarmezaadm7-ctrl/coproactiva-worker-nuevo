@@ -869,9 +869,11 @@
   // ── INDICADORES ───────────────────────────────────────────────────────────
   function renderIndicadores(el) {
     var hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap';
-    var btnUF = document.createElement('button'); btnUF.className = 'rem-btn-sec'; btnUF.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> Actualizar UF';
+    var btnPrevired = document.createElement('button'); btnPrevired.className = 'rem-btn-sec';
+    btnPrevired.innerHTML = '<i class="ti ti-cloud-download" aria-hidden="true"></i> Actualizar desde Previred';
     var btnEdit = document.createElement('button'); btnEdit.className = 'rem-btn-sec'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> Editar';
-    hdr.appendChild(btnUF); hdr.appendChild(btnEdit); el.appendChild(hdr);
+    btnPrevired.addEventListener('click', function() { _scrapingPrevired(el); });
+    hdr.appendChild(btnPrevired); hdr.appendChild(btnEdit); el.appendChild(hdr);
 
     var contenedor = document.createElement('div'); contenedor.id = 'rem-ind-contenedor';
     contenedor.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">Cargando indicadores\u2026</div>';
@@ -888,6 +890,103 @@
         contenedor.innerHTML = '<div style="text-align:center;color:#A32D2D;padding:24px">Error al cargar indicadores.</div>';
       });
     }
+  }
+
+  function _scrapingPrevired(contenedor) {
+    // Mostrar loading
+    var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    var box = document.createElement('div'); box.className = 'modal-box'; box.style.maxWidth = '560px';
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Parámetros';
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Actualizar indicadores desde Previred';
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Obteniendo datos del PDF oficial de Previred…';
+    var btnCerrar = document.createElement('button'); btnCerrar.className = 'modal-close'; btnCerrar.textContent = '×';
+    var cerrar = function() { overlay.remove(); };
+    btnCerrar.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+    var contenidoModal = document.createElement('div'); contenidoModal.style.cssText = 'margin-top:16px';
+    contenidoModal.innerHTML = '<div style="text-align:center;padding:24px;color:var(--co-mute)"><i class="ti ti-loader-2" aria-hidden="true" style="font-size:28px;display:block;margin-bottom:8px"></i>Consultando Previred…</div>';
+    box.appendChild(btnCerrar); box.appendChild(ey); box.appendChild(tt); box.appendChild(st); box.appendChild(contenidoModal);
+    overlay.appendChild(box); document.body.appendChild(overlay);
+
+    api('/remuneraciones/parametros/scraping-previred').then(function(resp) {
+      var data = resp.data && resp.data.data ? resp.data.data : (resp.data || {});
+      if (!resp.data || !resp.data.ok) {
+        contenidoModal.innerHTML = '<div class="rem-alerta danger" style="margin-top:8px"><i class="ti ti-alert-circle" aria-hidden="true"></i><div class="rem-alerta-txt">' + (resp.data && resp.data.error ? resp.data.error : 'Error al obtener datos.') + '</div></div>' +
+          '<p style="font-size:12px;color:var(--co-mute);margin-top:12px">Puedes ingresar los valores manualmente usando el botón Editar.</p>';
+        return;
+      }
+
+      var ind = data.indicadores || {};
+      st.textContent = data.mes + ' — ' + (data.urlUsada ? 'PDF obtenido correctamente' : '');
+
+      // Construir tabla de revisión
+      var LABELS = {
+        UF_MES:'UF mes actual', IMM:'Ingreso mínimo mensual', SIS_TASA:'Tasa SIS (%)',
+        AFP_33_CAPITAL:'AFP Capital (%)', AFP_03_CUPRUM:'AFP Cuprum (%)', AFP_05_HABITAT:'AFP Habitat (%)',
+        AFP_34_MODELO:'AFP Modelo (%)', AFP_29_PLANVITAL:'AFP PlanVital (%)', AFP_08_PROVIDA:'AFP ProVida (%)',
+        AFP_35_UNO:'AFP Uno (%)', AF_TRAMO_A_MONTO:'Asig. familiar tramo A ($)', AF_TRAMO_B_MONTO:'Asig. familiar tramo B ($)'
+      };
+
+      var html = '<div class="rem-alerta warn" style="margin-bottom:14px"><i class="ti ti-alert-triangle" aria-hidden="true"></i>' +
+        '<div class="rem-alerta-txt"><b>Revisa los valores antes de guardar.</b> ' + (data.advertencia || '') + '</div></div>';
+
+      html += '<div style="overflow-x:auto"><table class="rem-table" style="margin-bottom:14px">' +
+        '<thead><tr><th>Indicador</th><th>Valor extraído</th></tr></thead><tbody>';
+
+      var tieneValores = false;
+      Object.keys(LABELS).forEach(function(k) {
+        if (ind[k] !== undefined && ind[k] !== null) {
+          tieneValores = true;
+          var fmt = k === 'IMM' || k.includes('MONTO') ? '$' + Math.round(ind[k]).toLocaleString('es-CL') :
+                    k === 'UF_MES' ? '$' + ind[k].toLocaleString('es-CL') : ind[k] + '%';
+          html += '<tr><td>' + LABELS[k] + '</td><td><b>' + fmt + '</b></td></tr>';
+        }
+      });
+
+      if (!tieneValores) {
+        html += '<tr><td colspan="2" style="text-align:center;color:var(--co-mute)">No se pudieron extraer valores del PDF. Ingresa los datos manualmente.</td></tr>';
+      }
+      html += '</tbody></table></div>';
+
+      contenidoModal.innerHTML = html;
+
+      if (tieneValores) {
+        var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none';
+        var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar';
+        btnGuardar.textContent = 'Guardar indicadores actualizados';
+        contenidoModal.appendChild(errDiv);
+        contenidoModal.appendChild(btnGuardar);
+
+        btnGuardar.addEventListener('click', function() {
+          btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando…'; errDiv.style.display = 'none';
+          var periodo = data.mes ? data.mes.split(' ').reverse().join('-') : '';
+          var promesas = Object.keys(ind).map(function(clave) {
+            return api('/remuneraciones/parametros/indicadores', 'POST', {
+              action: 'actualizarIndicadorRem',
+              clave: clave,
+              valor: ind[clave],
+              periodo: periodo,
+              usuario: 'sistema-scraping'
+            });
+          });
+          Promise.all(promesas).then(function() {
+            btnGuardar.textContent = '✓ Indicadores actualizados';
+            btnGuardar.style.background = 'var(--co-green, #3B6D11)';
+            _indicadores = [];
+            setTimeout(function() {
+              overlay.remove();
+              renderIndicadores(contenedor);
+            }, 1200);
+          }).catch(function(e) {
+            errDiv.textContent = 'Error al guardar: ' + e.message;
+            errDiv.style.display = 'block';
+            btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar indicadores actualizados';
+          });
+        });
+      }
+    }).catch(function(e) {
+      contenidoModal.innerHTML = '<div class="rem-alerta danger"><i class="ti ti-alert-circle" aria-hidden="true"></i><div class="rem-alerta-txt">Error de conexión: ' + e.message + '</div></div>';
+    });
   }
 
   function _renderIndicadoresData(el, lista) {
