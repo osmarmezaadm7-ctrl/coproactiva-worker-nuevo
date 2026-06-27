@@ -1016,7 +1016,15 @@
               _indicadores = [];
               setTimeout(function() {
                 overlay.remove();
-                renderIndicadores(contenedor);
+                // Recargar subtab completa
+                var subContenido = document.getElementById('rem-ind-contenedor');
+                if (subContenido) {
+                  subContenido.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px">Cargando indicadores…</div>';
+                  api('/remuneraciones/parametros/indicadores').then(function(r) {
+                    _indicadores = (r.data && r.data.data) ? r.data.data : (r.data || []);
+                    _renderIndicadoresData(subContenido, _indicadores);
+                  });
+                }
               }, 1200);
             } else {
               var err = (resp.data && resp.data.error) || resp.error || 'Error al guardar';
@@ -1036,31 +1044,31 @@
   }
 
   function _renderIndicadoresData(el, lista) {
-    if (!lista.length) { el.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">Sin indicadores cargados.</div>'; return; }
-
-    // Agrupar en categorías
-    var generales = lista.filter(function(d) { return ['IMM','TOPE_IMPONIBLE_UF','UF_HOY','SIS_TASA','SUS_TASA','SALUD_MINIMO','RETENCION_HON','SC_TRABAJADOR_IND','SC_EMPLEADOR_IND','SC_TRABAJADOR_PF','SC_EMPLEADOR_PF'].includes(d.clave); });
-    var afps       = lista.filter(function(d) { return d.clave.startsWith('AFP_'); });
-    var tramosAF   = lista.filter(function(d) { return d.clave.startsWith('AF_'); });
-    var tramosImp  = lista.filter(function(d) { return d.clave.startsWith('IMP2_'); });
-
-    var AFP_NOMBRES = { AFP_03_CUPRUM:'AFP Cuprum', AFP_05_HABITAT:'AFP Habitat', AFP_08_PROVIDA:'AFP ProVida', AFP_29_PLANVITAL:'AFP PlanVital', AFP_33_CAPITAL:'AFP Capital', AFP_34_MODELO:'AFP Modelo', AFP_35_UNO:'AFP Uno' };
-
-    function fmtInd(clave, val) {
-      if (clave === 'IMM' || clave === 'UF_HOY') return '$' + Math.round(val).toLocaleString('es-CL');
-      if (clave.endsWith('_TASA') || clave.endsWith('_MINIMO') || clave === 'RETENCION_HON' || clave.includes('SC_')) return val + '%';
-      if (clave === 'TOPE_IMPONIBLE_UF') return val + ' UF';
-      return val;
+    if (!lista.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">Sin indicadores cargados.</div>';
+      return;
     }
 
-    var LABELS = { IMM:'Ingreso m\u00EDnimo', TOPE_IMPONIBLE_UF:'Tope imponible', UF_HOY:'UF (hoy)', SIS_TASA:'SIS empleado', SUS_TASA:'SUS', SALUD_MINIMO:'Salud m\u00EDnimo', RETENCION_HON:'Retenci\u00F3n honorarios', SC_TRABAJADOR_IND:'SC trabajador indefinido', SC_EMPLEADOR_IND:'SC empleador indefinido', SC_TRABAJADOR_PF:'SC trabajador plazo fijo', SC_EMPLEADOR_PF:'SC empleador plazo fijo' };
+    // Construir mapa clave→valor
+    var mapa = {};
+    lista.forEach(function(d) { mapa[d.clave] = Number(d.valor) || 0; });
 
-    function mkCard(titulo, items, labelFn, valFn) {
+    var ufMes = mapa['UF_MES'] || 0;
+
+    function fmtPesos(v)  { return '$' + Math.round(v).toLocaleString('es-CL'); }
+    function fmtUFPesos(uf) {
+      return uf + ' UF / ' + fmtPesos(Math.round(uf * ufMes));
+    }
+    function fmtPct(v)    { return v + '%'; }
+    function fmtUFVal(v)  { return '$' + v.toLocaleString('es-CL'); }
+
+    function mkCard(titulo, filas) {
       var card = document.createElement('div'); card.className = 'rem-param-card';
       card.innerHTML = '<div class="rem-param-card-title">' + titulo + '</div>';
-      items.forEach(function(d) {
+      filas.forEach(function(f) {
+        if (f.val === undefined || f.val === null) return;
         var row = document.createElement('div'); row.className = 'rem-param-row';
-        row.innerHTML = '<span class="rem-param-key">' + (labelFn ? labelFn(d) : d.clave) + '</span><span class="rem-param-val">' + (valFn ? valFn(d) : d.valor) + '</span>';
+        row.innerHTML = '<span class="rem-param-key">' + f.label + '</span><span class="rem-param-val">' + f.val + '</span>';
         card.appendChild(row);
       });
       return card;
@@ -1068,30 +1076,94 @@
 
     el.innerHTML = '';
     var grid = document.createElement('div'); grid.className = 'rem-param-grid';
-    grid.appendChild(mkCard('Valores generales 2026', generales, function(d) { return LABELS[d.clave] || d.clave; }, function(d) { return fmtInd(d.clave, d.valor); }));
-    grid.appendChild(mkCard('Tasas AFP vigentes', afps, function(d) { return AFP_NOMBRES[d.clave] || d.clave; }, function(d) { return d.valor + '%'; }));
+
+    // Card 1: Valores generales
+    grid.appendChild(mkCard('Valores generales ' + new Date().getFullYear(), [
+      { label: 'UF mes actual',              val: mapa['UF_MES']              ? fmtUFVal(mapa['UF_MES'])              : null },
+      { label: 'UF mes anterior',            val: mapa['UF_MES_ANT']          ? fmtUFVal(mapa['UF_MES_ANT'])          : null },
+      { label: 'UTM',                        val: mapa['UTM']                  ? fmtPesos(mapa['UTM'])                  : null },
+      { label: 'Ingreso mínimo mensual',val: mapa['IMM']                  ? fmtPesos(mapa['IMM'])                  : null },
+      { label: 'IMM Casa Particular',        val: mapa['IMM_CASA_PARTICULAR']  ? fmtPesos(mapa['IMM_CASA_PARTICULAR'])  : null },
+      { label: 'Tope imponible AFP',         val: mapa['TOPE_AFP_UF']          ? fmtUFPesos(mapa['TOPE_AFP_UF'])       : null },
+      { label: 'Tope imponible IPS',         val: mapa['TOPE_IPS_UF']          ? fmtUFPesos(mapa['TOPE_IPS_UF'])       : null },
+      { label: 'Tope imponible AFC/SC',      val: mapa['TOPE_AFC_UF']          ? fmtUFPesos(mapa['TOPE_AFC_UF'])       : null },
+      { label: 'Tasa SIS',                   val: mapa['SIS_TASA']             ? fmtPct(mapa['SIS_TASA'])              : null },
+      { label: 'Expectativa de Vida',        val: mapa['EXPECTATIVA_VIDA']     ? fmtPct(mapa['EXPECTATIVA_VIDA'])      : null },
+    ]));
+
+    // Card 2: AFP
+    var AFP_NOMBRES = { AFP_33_CAPITAL:'Capital', AFP_03_CUPRUM:'Cuprum', AFP_05_HABITAT:'Habitat',
+                        AFP_34_MODELO:'Modelo', AFP_29_PLANVITAL:'PlanVital', AFP_08_PROVIDA:'ProVida', AFP_35_UNO:'Uno' };
+    var filasAfp = Object.keys(AFP_NOMBRES).map(function(k) {
+      return { label: 'AFP ' + AFP_NOMBRES[k], val: mapa[k] ? fmtPct(mapa[k]) : null };
+    });
+    grid.appendChild(mkCard('Tasas AFP vigentes', filasAfp));
     el.appendChild(grid);
 
-    // Tramos asig familiar
     el.appendChild(_divider());
-    var lfAF = document.createElement('div'); lfAF.className = 'rem-section-label'; lfAF.textContent = 'Asignaci\u00F3n familiar \u2014 tramos y montos'; el.appendChild(lfAF);
+
+    // Salud / CCAF / SC
+    var grid2 = document.createElement('div'); grid2.className = 'rem-param-grid';
+    grid2.appendChild(mkCard('Salud y CCAF', [
+      { label: 'Fonasa sin CCAF',            val: '7%' },
+      { label: 'Fonasa con CCAF (empleado)', val: mapa['FONASA_CON_CCAF_EMP']  ? fmtPct(mapa['FONASA_CON_CCAF_EMP'])  : null },
+      { label: 'Fonasa con CCAF (a CCAF)',   val: mapa['FONASA_CON_CCAF_CCAF'] ? fmtPct(mapa['FONASA_CON_CCAF_CCAF']) : null },
+      { label: 'CCAF no afiliados Isapre',   val: mapa['CCAF_NO_ISAPRE']       ? fmtPct(mapa['CCAF_NO_ISAPRE'])       : null },
+    ]));
+    grid2.appendChild(mkCard('Seguro de Cesantía (AFC)', [
+      { label: 'Empleador indefinido',       val: mapa['SC_EMP_INDEFINIDO']    ? fmtPct(mapa['SC_EMP_INDEFINIDO'])    : null },
+      { label: 'Trabajador indefinido',      val: mapa['SC_TRAB_INDEFINIDO']   ? fmtPct(mapa['SC_TRAB_INDEFINIDO'])   : null },
+      { label: 'Empleador plazo fijo',       val: mapa['SC_EMP_PLAZO_FIJO']    ? fmtPct(mapa['SC_EMP_PLAZO_FIJO'])    : null },
+      { label: 'Trabajador plazo fijo',      val: '0%' },
+      { label: 'Empleador >11 años',   val: mapa['SC_EMP_11_ANOS']       ? fmtPct(mapa['SC_EMP_11_ANOS'])       : null },
+    ]));
+    el.appendChild(grid2);
+
+    el.appendChild(_divider());
+
+    // APV / Depósito / Trabajo Pesado
+    var grid3 = document.createElement('div'); grid3.className = 'rem-param-grid';
+    grid3.appendChild(mkCard('APV y Depósito Convenido', [
+      { label: 'APV tope mensual',           val: mapa['APV_TOPE_MENSUAL_UF']  ? fmtUFPesos(mapa['APV_TOPE_MENSUAL_UF'])  : null },
+      { label: 'APV tope anual',             val: mapa['APV_TOPE_ANUAL_UF']    ? fmtUFPesos(mapa['APV_TOPE_ANUAL_UF'])    : null },
+      { label: 'Dep. Convenido tope anual',  val: mapa['DEP_CONV_TOPE_UF']     ? fmtUFPesos(mapa['DEP_CONV_TOPE_UF'])     : null },
+    ]));
+    grid3.appendChild(mkCard('Trabajo Pesado', [
+      { label: 'Trabajo pesado total',       val: mapa['TRABAJO_PESADO_TASA']  ? fmtPct(mapa['TRABAJO_PESADO_TASA'])  : null },
+      { label: 'Trabajo menos pesado total', val: mapa['TRABAJO_MEN_PESADO']   ? fmtPct(mapa['TRABAJO_MEN_PESADO'])   : null },
+    ]));
+    el.appendChild(grid3);
+
+    el.appendChild(_divider());
+
+    // Asignación familiar
+    var secLabel2 = document.createElement('div'); secLabel2.className = 'rem-section-label';
+    secLabel2.textContent = 'Asignación familiar — tramos y montos'; el.appendChild(secLabel2);
     var gridAF = document.createElement('div'); gridAF.className = 'rem-param-grid';
-    var montos  = tramosAF.filter(function(d) { return d.clave.includes('TRAMO'); });
-    var limites = tramosAF.filter(function(d) { return d.clave.includes('LIMITE'); });
-    gridAF.appendChild(mkCard('Monto por carga ($)', montos, function(d) { return 'Tramo ' + d.clave.split('_').pop(); }, function(d) { return '$' + Math.round(d.valor).toLocaleString('es-CL'); }));
-    gridAF.appendChild(mkCard('Renta m\u00E1xima por tramo', limites, function(d) { return 'L\u00EDmite tramo ' + d.clave.split('_').pop(); }, function(d) { return '$' + Math.round(d.valor).toLocaleString('es-CL'); }));
+    gridAF.appendChild(mkCard('Monto por carga ($)', [
+      { label: 'Tramo A', val: mapa['AF_TRAMO_A_MONTO'] !== undefined ? fmtPesos(mapa['AF_TRAMO_A_MONTO']) : null },
+      { label: 'Tramo B', val: mapa['AF_TRAMO_B_MONTO'] !== undefined ? fmtPesos(mapa['AF_TRAMO_B_MONTO']) : null },
+      { label: 'Tramo C', val: '$0' },
+      { label: 'Tramo D', val: '$0' },
+    ]));
+    gridAF.appendChild(mkCard('Renta máxima por tramo', [
+      { label: 'Límite tramo A', val: mapa['AF_LIMITE_A'] ? fmtPesos(mapa['AF_LIMITE_A']) : null },
+      { label: 'Límite tramo B', val: mapa['AF_LIMITE_B'] ? fmtPesos(mapa['AF_LIMITE_B']) : null },
+      { label: 'Límite tramo C', val: mapa['AF_LIMITE_C'] ? fmtPesos(mapa['AF_LIMITE_C']) : null },
+    ]));
     el.appendChild(gridAF);
 
-    // Tabla impuesto 2a categoría
     el.appendChild(_divider());
-    var lfImp = document.createElement('div'); lfImp.className = 'rem-section-label'; lfImp.textContent = 'Tabla impuesto 2\u00AA categor\u00EDa \u2014 tramos mensuales'; el.appendChild(lfImp);
+
+    // Tabla impuesto 2a categoría
+    var lfImp = document.createElement('div'); lfImp.className = 'rem-section-label';
+    lfImp.textContent = 'Tabla impuesto 2ª categoría — tramos mensuales'; el.appendChild(lfImp);
     var tbWrap = document.createElement('div'); tbWrap.style.overflowX = 'auto';
     var table = document.createElement('table'); table.className = 'rem-table';
     table.innerHTML = '<thead><tr><th>Tramo</th><th>Hasta</th><th>Tasa</th><th>Rebaja</th></tr></thead>';
     var tbodyImp = document.createElement('tbody');
-
     var tramos = [
-      { num:1, hasta:'IMP2_TRAMO1_HASTA', tasa:null, rebaja:null },
+      { num:1, hasta:'IMP2_TRAMO1_HASTA', tasa:null,               rebaja:null },
       { num:2, hasta:'IMP2_TRAMO2_HASTA', tasa:'IMP2_TRAMO2_TASA', rebaja:'IMP2_TRAMO2_REBAJA' },
       { num:3, hasta:'IMP2_TRAMO3_HASTA', tasa:'IMP2_TRAMO3_TASA', rebaja:'IMP2_TRAMO3_REBAJA' },
       { num:4, hasta:'IMP2_TRAMO4_HASTA', tasa:'IMP2_TRAMO4_TASA', rebaja:'IMP2_TRAMO4_REBAJA' },
@@ -1100,115 +1172,15 @@
       { num:7, hasta:'IMP2_TRAMO7_HASTA', tasa:'IMP2_TRAMO7_TASA', rebaja:'IMP2_TRAMO7_REBAJA' },
       { num:8, hasta:null,                tasa:'IMP2_TRAMO8_TASA', rebaja:'IMP2_TRAMO8_REBAJA' },
     ];
-    var mapaInd = {};
-    tramosImp.forEach(function(d) { mapaInd[d.clave] = d.valor; });
-
     tramos.forEach(function(t) {
       var tr = document.createElement('tr');
-      var hasta  = t.hasta   ? ('$' + Math.round(mapaInd[t.hasta]  || 0).toLocaleString('es-CL')) : 'En adelante';
-      var tasa   = t.tasa    ? ((mapaInd[t.tasa] || 0) + '%') : 'Exento';
-      var rebaja = t.rebaja  ? ('$' + Math.round(mapaInd[t.rebaja] || 0).toLocaleString('es-CL')) : '\u2014';
+      var hasta  = t.hasta  ? (mapa[t.hasta]  ? fmtPesos(mapa[t.hasta])  : '—') : 'En adelante';
+      var tasa   = t.tasa   ? (mapa[t.tasa]   ? fmtPct(mapa[t.tasa])     : '—') : 'Exento';
+      var rebaja = t.rebaja ? (mapa[t.rebaja] ? fmtPesos(mapa[t.rebaja]) : '—') : '—';
       tr.innerHTML = '<td>Tramo ' + t.num + '</td><td>' + hasta + '</td><td><b>' + tasa + '</b></td><td>' + rebaja + '</td>';
       tbodyImp.appendChild(tr);
     });
     table.appendChild(tbodyImp); tbWrap.appendChild(table); el.appendChild(tbWrap);
-  }
-
-  // ── PLANTILLAS ONBOARDING ─────────────────────────────────────────────────
-  function renderPlantillas(el) {
-    // Cargar cargos si no están
-    var cargarYRenderizar = function() {
-      var hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px';
-      var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.style.marginBottom = '0'; secLabel.textContent = 'Plantillas de onboarding por cargo';
-      var btnNuevo = document.createElement('button'); btnNuevo.className = 'rem-btn-pri'; btnNuevo.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Agregar \u00EDtem';
-      hdr.appendChild(secLabel); hdr.appendChild(btnNuevo); el.appendChild(hdr);
-
-      var cargoList = document.createElement('div'); cargoList.className = 'rem-cargo-list';
-      var cargosRender = [{ id:'*',label:'Todos (generales)' }].concat(_cargos.map(function(c) { return { id:c.nombre, label:c.nombre }; }));
-      cargosRender.forEach(function(c) {
-        var chip = document.createElement('button');
-        chip.className = 'rem-cargo-chip' + (c.id === _cargoActivo ? ' act' : '');
-        chip.textContent = c.label;
-        chip.addEventListener('click', function() {
-          _cargoActivo = c.id;
-          cargoList.querySelectorAll('.rem-cargo-chip').forEach(function(b) { b.classList.remove('act'); });
-          chip.classList.add('act');
-          itemsContenedor.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px">Cargando\u2026</div>';
-          _cargarItemsPlantilla(itemsContenedor, _cargoActivo);
-        });
-        cargoList.appendChild(chip);
-      });
-      el.appendChild(cargoList);
-
-      var itemsContenedor = document.createElement('div'); itemsContenedor.id = 'rem-plt-items'; el.appendChild(itemsContenedor);
-      _cargarItemsPlantilla(itemsContenedor, _cargoActivo);
-    };
-
-    if (_cargos.length > 0) {
-      cargarYRenderizar();
-    } else {
-      api('/remuneraciones/parametros/cargos').then(function(resp) {
-        _cargos = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
-        cargarYRenderizar();
-      }).catch(function() { cargarYRenderizar(); });
-    }
-  }
-
-  function _cargarItemsPlantilla(el, cargo) {
-    var url = cargo === '*'
-      ? '/remuneraciones/parametros/plantillas?todas=true'
-      : '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(cargo);
-
-    api(url).then(function(resp) {
-      _plantillas = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
-      _renderItemsPlantilla(el, _plantillas, cargo);
-    }).catch(function() {
-      el.innerHTML = '<div style="text-align:center;color:#A32D2D;padding:16px">Error al cargar plantilla.</div>';
-    });
-  }
-
-  function _renderItemsPlantilla(el, items, cargo) {
-    el.innerHTML = '';
-    if (!items.length) {
-      el.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px">No hay \u00EDtems para este cargo.</div>';
-      return;
-    }
-
-    // Agrupar por categoría
-    var cats = {};
-    items.forEach(function(it) { if (!cats[it.categoria]) cats[it.categoria] = []; cats[it.categoria].push(it); });
-
-    Object.keys(cats).forEach(function(cat) {
-      var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.textContent = cat; el.appendChild(secLabel);
-      cats[cat].forEach(function(it) {
-        var div = document.createElement('div'); div.className = 'rem-plt-item' + (it.esLegal ? ' legal' : '');
-        var nombre = document.createElement('span'); nombre.className = 'rem-plt-name'; nombre.textContent = it.nombre;
-        var catPill = document.createElement('span'); catPill.className = 'rem-plt-cat'; catPill.textContent = it.cargo === '*' ? 'General' : it.cargo;
-        var badges = document.createElement('div'); badges.className = 'rem-plt-badges';
-        if (it.esLegal)         { var b = document.createElement('span'); b.className = 'rem-pill legal'; b.textContent = 'Legal'; badges.appendChild(b); }
-        if (it.requiereFirma)   { var b = document.createElement('span'); b.className = 'rem-pill blue'; b.textContent = 'Firma'; badges.appendChild(b); }
-        if (it.requiereAdjunto) { var b = document.createElement('span'); b.className = 'rem-pill ok'; b.style.cssText='background:#EAF3DE;color:#3B6D11'; b.textContent = 'Adjunto'; badges.appendChild(b); }
-        var plazo = document.createElement('span'); plazo.className = 'rem-plt-plazo'; plazo.textContent = 'D\u00EDa ' + it.plazosDias;
-        var actions = document.createElement('div'); actions.className = 'rem-plt-actions';
-        var btnEdit = document.createElement('button'); btnEdit.className = 'rem-ico-btn'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i>';
-        var btnDel  = document.createElement('button');
-        if (it.esLegal) {
-          btnDel.className = 'rem-ico-btn rem-lock'; btnDel.title = '\u00CDtem legal \u2014 no eliminable';
-        } else {
-          btnDel.className = 'rem-ico-btn danger'; btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>';
-          btnDel.addEventListener('click', function(e) { e.stopPropagation(); _eliminarItem(it.id, el, cargo); });
-        }
-        btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>';
-        actions.appendChild(btnEdit); actions.appendChild(btnDel);
-        div.appendChild(nombre); div.appendChild(catPill); div.appendChild(badges); div.appendChild(plazo); div.appendChild(actions);
-        el.appendChild(div);
-      });
-    });
-
-    var nota = document.createElement('p');
-    nota.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:10px;display:flex;align-items:center;gap:4px';
-    nota.innerHTML = '<i class="ti ti-lock" aria-hidden="true" style="color:var(--co-orange);font-size:13px"></i> Los \u00EDtems marcados como <b style="color:var(--co-ink)">&nbsp;Legal&nbsp;</b> son obligatorios y no pueden eliminarse.';
-    el.appendChild(nota);
   }
 
   function _eliminarItem(id, contenedor, cargo) {
