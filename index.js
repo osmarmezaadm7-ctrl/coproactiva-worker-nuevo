@@ -1,6 +1,6 @@
 // ============================================================
 // CoproActiva Worker — index.js
-// Versión: 3.7 · Junio 2026
+// Versión: 3.9 · Junio 2026
 // Cambio v3.4: agrega rutas /leads y /leads/metricas
 // Cambio v3.5: agrega rutas /plantillas
 // Cambio v3.3: agrega ruta GET /documentos/catalogo-comunidad
@@ -691,16 +691,27 @@ export default {
       }
 
       // ── v3.8 — Crear carpeta Drive diferida para un trabajador ──
-if (url.pathname.match(/^\/remuneraciones\/trabajadores\/([^/]+)\/carpeta-drive$/) && method === 'POST') {
-  const segmentos    = url.pathname.split('/');
-  const idTrabajador = segmentos[3];
-  if (!idTrabajador) return jsonResponse({ ok: false, error: 'id requerido' }, 400, origin);
-  const data = await postAppsScript(APPS_SCRIPT_URL, {
-    action: 'crearCarpetaDriveTrabajador',
-    id:     idTrabajador,
-  });
-  return jsonResponse({ ok: true, data }, 200, origin);
-}
+      if (url.pathname.match(/^\/remuneraciones\/trabajadores\/([^/]+)\/carpeta-drive$/) && method === 'POST') {
+        const segmentos    = url.pathname.split('/');
+        const idTrabajador = segmentos[3];
+        if (!idTrabajador) return jsonResponse({ ok: false, error: 'id requerido' }, 400, origin);
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action: 'crearCarpetaDriveTrabajador',
+          id:     idTrabajador,
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+      // ── v3.8 — Listar documentos Drive de un trabajador ──
+      if (url.pathname.match(/^\/remuneraciones\/trabajadores\/([^/]+)\/documentos$/) && method === 'GET') {
+        const segmentos    = url.pathname.split('/');
+        const idTrabajador = segmentos[3];
+        if (!idTrabajador) return jsonResponse({ ok: false, error: 'id requerido' }, 400, origin);
+        const tResp = await callAppsScript(APPS_SCRIPT_URL, 'getTrabajador', { id: idTrabajador });
+        const carpId = tResp?.data?.carpetaDriveId || '';
+        if (!carpId) return jsonResponse({ ok: false, error: 'Sin carpeta Drive' }, 400, origin);
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'listarDocumentosTrabajador', { carpetaDriveId: carpId });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
       if (url.pathname === '/remuneraciones/instalar' && method === 'POST') {
         const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojasParametrosRem' });
         const data2 = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojaTrabajadores' });
