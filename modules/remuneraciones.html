@@ -1130,30 +1130,21 @@
     colDer.appendChild(_fichaSecLabel('Onboarding'));
     var cardOb = document.createElement('div');
     cardOb.className = 'rem-ficha-card';
-    cardOb.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct" id="fc-ob-pct">...</div><div style="font-size:12px;color:var(--co-mute);margin-top:2px" id="fc-ob-sub">Cargando...</div></div></div><div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" id="fc-ob-fill" style="width:0%"></div></div>';
+    // Calcular porcentaje real desde c.onboardingJson
+    var obJson = c.onboardingJson || {};
+    var obDone = Object.keys(obJson).filter(function(k) { return obJson[k] && obJson[k].estado === 'completado'; }).length;
+    var obTotal = Object.keys(obJson).length;
+    var obPct = obTotal > 0 ? Math.round(obDone / obTotal * 100) : 0;
+
+    cardOb.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct">' + obPct + '%</div>' +
+      '<div style="font-size:12px;color:var(--co-mute);margin-top:2px">' + obDone + ' de ' + obTotal + ' completados</div></div></div>' +
+      '<div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" style="width:' + obPct + '%"></div></div>';
     var linkOb = _fichaLinkOrange('Ver checklist completo \u2192', function() {
       var tabs = document.querySelectorAll('.rem-ficha-tab');
       if (tabs[2]) tabs[2].click();
     });
     cardOb.appendChild(linkOb);
     colDer.appendChild(cardOb);
-
-
-    // Cargar onboarding real
-    var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
-    if (com) {
-      api('/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(c.cargo || '*')).then(function(resp) {
-        var items = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
-        var total = items.length;
-        var pct = total > 0 ? 0 : 0; // onboarding real pendiente de implementar
-        var pctEl = document.getElementById('fc-ob-pct');
-        var subEl = document.getElementById('fc-ob-sub');
-        var fillEl = document.getElementById('fc-ob-fill');
-        if (pctEl) pctEl.textContent = '0%';
-        if (subEl) subEl.textContent = '0 de ' + total + ' completados';
-        if (fillEl) fillEl.style.width = '0%';
-      }).catch(function() {});
-    }
 
     twoCol.appendChild(colDer);
     el.appendChild(twoCol);
@@ -1344,6 +1335,9 @@
           el.appendChild(errDiv);
         }
       });
+      // Actualizar porcentaje tras renderizar todos los ítems
+      _actualizarPorcentajeOnboarding(el);
+
       if (!items.length) {
         var vacio = document.createElement('div');
         vacio.style.cssText = 'text-align:center;color:var(--co-mute);padding:24px;font-size:12px';
