@@ -170,6 +170,8 @@
   var _plantillas    = [];
   var _cargos        = [];
   var _filtroActivo  = 'vigentes';
+  var _colaboradoresComunidadId = null;
+  var _plantillasCargo = null;
 
   // ── API ───────────────────────────────────────────────────────────────────
   function api(path, method, body) {
@@ -399,13 +401,18 @@
 
     searchInput.addEventListener('input', function() { _renderListaColaboradores(tbody, searchInput.value, _filtroActivo); });
 
-    // Cargar datos reales
-    api('/remuneraciones/trabajadores?comunidadId=' + com.id).then(function(resp) {
-      _colaboradores = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+    // Cargar datos reales — usar caché si misma comunidad
+    if (_colaboradores.length > 0 && _colaboradoresComunidadId === com.id) {
       _renderListaColaboradores(tbody, '', _filtroActivo);
-    }).catch(function() {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#A32D2D;padding:24px">Error al cargar colaboradores.</td></tr>';
-    });
+    } else {
+      api('/remuneraciones/trabajadores?comunidadId=' + com.id).then(function(resp) {
+        _colaboradores = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+        _colaboradoresComunidadId = com.id;
+        _renderListaColaboradores(tbody, '', _filtroActivo);
+      }).catch(function() {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#A32D2D;padding:24px">Error al cargar colaboradores.</td></tr>';
+      });
+    }
   }
 
   function _renderListaColaboradores(tbody, busqueda, filtro) {
@@ -1279,12 +1286,17 @@
   }
 
   function _cargarItemsPlantilla(el, cargo) {
+    if (_plantillas.length > 0 && _plantillasCargo === cargo) {
+      _renderItemsPlantilla(el, _plantillas, cargo);
+      return;
+    }
     el.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando plantilla</div></div></div>';
     var url = cargo === '*'
       ? '/remuneraciones/parametros/plantillas?todas=true'
       : '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(cargo);
     api(url).then(function(resp) {
       _plantillas = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+      _plantillasCargo = cargo;
       _renderItemsPlantilla(el, _plantillas, cargo);
     }).catch(function() {
       el.innerHTML = '<div style="text-align:center;color:#A32D2D;padding:16px">Error al cargar plantilla.</div>';
@@ -1498,6 +1510,7 @@
         var ok = resp.data && (resp.data.ok || (resp.data.data && resp.data.data.ok));
         if (ok) {
           _plantillas = [];
+          _plantillasCargo = null;
           var contenedor = document.getElementById('rem-plt-items');
           if (contenedor) _cargarItemsPlantilla(contenedor, _cargoActivo);
           cerrar();
@@ -1524,7 +1537,7 @@
     if (!confirm('\u00BFEliminar este \u00EDtem de la plantilla?')) return;
     api('/remuneraciones/parametros/plantillas', 'POST', { action:'eliminarItemPlantilla', id:id })
       .then(function(resp) {
-        if (resp.data && resp.data.ok) { _plantillas = []; _cargarItemsPlantilla(contenedor, cargo); }
+        if (resp.data && resp.data.ok) { _plantillas = []; _plantillasCargo = null; _cargarItemsPlantilla(contenedor, cargo); }
         else alert('Error: ' + (resp.data && resp.data.error ? resp.data.error : 'No se pudo eliminar.'));
       });
   }
