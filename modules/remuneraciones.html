@@ -1214,6 +1214,16 @@
     var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
     var url = '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(c.cargo || '*');
     api(url).then(function(resp) {
+      // Verificar respuesta válida
+      if (!resp || (resp.data && resp.data.ok === false)) {
+        var subEl2 = el.querySelector('#ob-sub');
+        if (subEl2) subEl2.textContent = '0 de 0 completados';
+        var empty2 = document.createElement('div');
+        empty2.style.cssText = 'text-align:center;color:var(--co-mute);padding:24px;font-size:12px';
+        empty2.textContent = 'Sin plantilla de onboarding para el cargo "' + (c.cargo || 'sin cargo') + '". Configure una en Parámetros → Plantillas.';
+        el.appendChild(empty2);
+        return;
+      }
       var items = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
       var cats = {};
       items.forEach(function(it) {
@@ -1339,11 +1349,14 @@
         vacio.textContent = 'Sin \u00edtems de onboarding para este cargo.';
         el.appendChild(vacio);
       }
-    }).catch(function() {
-      var err = document.createElement('div');
-      err.style.cssText = 'text-align:center;color:#A32D2D;padding:24px;font-size:12px';
-      err.textContent = 'Error al cargar onboarding.';
-      el.appendChild(err);
+    }).catch(function(e) {
+      // Si no hay plantilla para el cargo, mostrar mensaje amigable
+      var subEl = el.querySelector('#ob-sub');
+      if (subEl) subEl.textContent = '0 de 0 completados';
+      var empty = document.createElement('div');
+      empty.style.cssText = 'text-align:center;color:var(--co-mute);padding:24px;font-size:12px';
+      empty.textContent = 'Sin plantilla de onboarding para el cargo "' + (c.cargo || 'sin cargo') + '". Configure una en Parámetros → Plantillas.';
+      el.appendChild(empty);
     });
   }
 
