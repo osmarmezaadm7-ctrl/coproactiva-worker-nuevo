@@ -332,9 +332,11 @@
   }
 
   function renderTabContent() {
-    var contenido = document.getElementById('rem-contenido');
-    if (!contenido) return;
-    contenido.innerHTML = '';
+    // Reemplazar todo rem-root con la ficha
+    var root = document.getElementById('rem-root');
+    if (!root) return;
+    root.innerHTML = '';
+    var contenido = root;
     var RENDERERS = {
       panel: renderPanel, colaboradores: renderColaboradores,
       procesos: renderProcesos, asistencia: renderAsistencia,
@@ -865,10 +867,51 @@
     return '';
   }
 
+  // ── Helper formato fecha ─────────────────────────────────────────────
+  function _fmtFecha(f) {
+    if (!f) return '\u2014';
+    var d = new Date(f);
+    if (isNaN(d)) {
+      // intentar DD/MM/YYYY
+      var p = String(f).split('/');
+      if (p.length === 3) return p[0].padStart(2,'0') + '/' + p[1].padStart(2,'0') + '/' + p[2];
+      return f;
+    }
+    return d.getDate().toString().padStart(2,'0') + '/' +
+           (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getFullYear();
+  }
+
+  function _fmtFechaHora(f) {
+    if (!f) return '\u2014';
+    var d = new Date(f);
+    if (isNaN(d)) return f;
+    return d.getDate().toString().padStart(2,'0') + '/' +
+           (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getFullYear() + ' ' +
+           d.getHours().toString().padStart(2,'0') + ':' +
+           d.getMinutes().toString().padStart(2,'0');
+  }
+
+  function _nombreAfp(codigo) {
+    var map = {'00':'Sin AFP','03':'Cuprum','05':'Habitat','08':'ProVida',
+               '29':'PlanVital','33':'Capital','34':'Modelo','35':'Uno'};
+    return map[String(codigo)] || codigo || '\u2014';
+  }
+
+  function _nombreSalud(codigo) {
+    var map = {'07':'Fonasa','01':'Banm\u00e9dica','02':'Consalud','03':'VidaTres',
+               '04':'Colmena','05':'Cruz Blanca','10':'Nueva Masvida','11':'Isalud',
+               '12':'Fundaci\u00f3n','25':'Cruz del Norte','28':'Esencial'};
+    return map[String(codigo)] || codigo || '\u2014';
+  }
+
   function abrirFichaColaborador(c) {
-    var contenido = document.getElementById('rem-contenido');
-    if (!contenido) return;
-    contenido.innerHTML = '';
+    // Reemplazar todo rem-root con la ficha
+    var root = document.getElementById('rem-root');
+    if (!root) return;
+    root.innerHTML = '';
+    var contenido = root;
 
     var nombre = c.nombreCompleto || ((c.nombres || '') + ' ' + (c.apellidoPaterno || '')).trim() || '\u2014';
     var ini = iniciales(nombre);
@@ -879,7 +922,9 @@
     back.className = 'rem-btn-sec';
     back.style.marginBottom = '16px';
     back.innerHTML = '<i class="ti ti-arrow-left" aria-hidden="true"></i> Volver a colaboradores';
-    back.addEventListener('click', function() { renderTabContent(); });
+    back.addEventListener('click', function() {
+      renderModulo();
+    });
     contenido.appendChild(back);
 
     // ── Header ────────────────────────────────────────────────────────────
@@ -911,12 +956,7 @@
       var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
       if (com) abrirModalColaborador(c, com);
     });
-    var btnMas = document.createElement('button');
-    btnMas.className = 'rem-btn-sec';
-    btnMas.style.padding = '7px 10px';
-    btnMas.innerHTML = '<i class="ti ti-dots-vertical" aria-hidden="true"></i>';
     acts.appendChild(btnEditar);
-    acts.appendChild(btnMas);
 
     hdr.appendChild(av);
     hdr.appendChild(info);
@@ -1052,12 +1092,10 @@
     [
       ['Tipo contrato',    c.tipoContrato],
       ['Jornada',         (c.jornadaHoras || 42) + ' hrs \u00B7 ' + (c.tipoJornada == '2' ? 'Part-time' : 'Completa')],
-      ['Inicio',          c.fechaInicio || '\u2014'],
-      ['HH.EE.',          c.pactoHorasExtra ? 'S\u00ed (Art. 32 CT)' : 'No'],
-      ['AFP \u00B7 Salud', (c.codigoAfp ? {
-        '33':'Capital','03':'Cuprum','05':'Habitat','34':'Modelo',
-        '29':'PlanVital','08':'ProVida','35':'Uno','00':'Sin AFP'
-      }[c.codigoAfp] || c.codigoAfp : '\u2014') + ' \u00B7 ' + (c.codigoSalud === '07' ? 'Fonasa' : 'Isapre')],
+      ['Inicio',          _fmtFecha(c.fechaInicio)],
+      ['AFP',             _nombreAfp(c.codigoAfp)],
+      ['Salud',           _nombreSalud(c.codigoSalud)],
+      ['CCAF',            c.codigoCcaf && c.codigoCcaf !== '00' ? {'01':'Los Andes','02':'La Araucana','03':'Los H\u00e9roes','04':'18 de Septiembre'}[c.codigoCcaf] || c.codigoCcaf : 'Sin CCAF'],
       ['Cargas familiares', (Number(c.cargasSimples) || 0) + ' simples'],
     ].forEach(function(p) { cardContrato.appendChild(_fichaDato(p[0], p[1])); });
     colIzq.appendChild(cardContrato);
@@ -1157,19 +1195,61 @@
         var card = document.createElement('div');
         card.className = 'rem-ficha-card';
         cats[cat].forEach(function(it) {
+          var nivel = it.nivelProteccion || (it.esLegal ? 'sistema' : 'borrador');
+          var wrap = document.createElement('div');
+          wrap.style.cssText = 'border-top:1px solid var(--co-line-soft);padding:8px 0';
+          wrap.style.setProperty('border-top', '1px solid var(--co-line-soft)');
+
           var row = document.createElement('div');
           row.className = 'rem-ficha-chk';
-          var ico = document.createElement('div');
-          ico.className = 'rem-ficha-chk-ico pend';
-          ico.textContent = '\u25CB';
+          row.style.borderTop = 'none';
+          row.style.paddingBottom = '4px';
+
+          // Checkbox interactivo
+          var chkWrap = document.createElement('div');
+          chkWrap.style.cssText = 'width:18px;height:18px;border-radius:50%;border:2px solid var(--co-line);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s';
+          chkWrap.dataset.done = '0';
+          chkWrap.addEventListener('click', function() {
+            var done = chkWrap.dataset.done === '1';
+            chkWrap.dataset.done = done ? '0' : '1';
+            chkWrap.style.background = done ? '' : '#EAF3DE';
+            chkWrap.style.borderColor = done ? 'var(--co-line)' : '#3B6D11';
+            chkWrap.innerHTML = done ? '' : '<i class="ti ti-check" style="font-size:10px;color:#3B6D11" aria-hidden="true"></i>';
+            fechaEl.textContent = done ? 'D\u00eda ' + (it.plazosDias || 5) : _fmtFecha(new Date().toISOString());
+          });
+
           var name = document.createElement('span');
           name.className = 'rem-ficha-chk-name';
           name.textContent = it.nombre;
-          var fecha = document.createElement('span');
-          fecha.style.cssText = 'font-size:11px;color:var(--co-mute)';
-          fecha.textContent = 'D\u00eda ' + (it.plazosDias || 5);
-          row.appendChild(ico); row.appendChild(name); row.appendChild(fecha);
-          card.appendChild(row);
+
+          // Badge nivel
+          if (nivel === 'sistema') {
+            var badge = document.createElement('span');
+            badge.className = 'rem-pill legal';
+            badge.textContent = 'Requerido';
+            badge.style.marginRight = '6px';
+            row.appendChild(chkWrap); row.appendChild(name); row.appendChild(badge);
+          } else {
+            row.appendChild(chkWrap); row.appendChild(name);
+          }
+
+          var fechaEl = document.createElement('span');
+          fechaEl.style.cssText = 'font-size:11px;color:var(--co-mute);white-space:nowrap';
+          fechaEl.textContent = 'D\u00eda ' + (it.plazosDias || 5);
+          row.appendChild(fechaEl);
+          wrap.appendChild(row);
+
+          // Observaciones
+          var obsWrap = document.createElement('div');
+          obsWrap.style.cssText = 'padding-left:28px;margin-top:2px';
+          var obsInp = document.createElement('input');
+          obsInp.type = 'text';
+          obsInp.placeholder = 'Observaci\u00f3n (opcional)\u2026';
+          obsInp.style.cssText = 'width:100%;border:none;background:transparent;font-family:var(--co-font);font-size:11px;color:var(--co-mute);outline:none;padding:0';
+          obsWrap.appendChild(obsInp);
+          wrap.appendChild(obsWrap);
+
+          card.appendChild(wrap);
         });
         el.appendChild(card);
       });
@@ -1230,7 +1310,7 @@
     var card = document.createElement('div');
     card.className = 'rem-ficha-card';
     var eventos = [
-      { desc: 'Trabajador ingresado al sistema', meta: (c.fechaInicio || '') + ' \u00B7 Sistema', orange: true },
+      { desc: 'Trabajador ingresado al sistema', meta: _fmtFechaHora(c.fechaInicio) + ' \u00B7 Sistema', orange: true },
     ];
     if (!eventos.length) {
       card.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px;font-size:12px">Sin cambios registrados.</div>';
