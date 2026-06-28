@@ -1347,10 +1347,11 @@
         hdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none';
         hdr.innerHTML = '<div style="width:34px;height:34px;border-radius:8px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-folder" style="font-size:16px;color:var(--co-orange)" aria-hidden="true"></i></div>';
         var nameEl = document.createElement('span');
-        nameEl.style.cssText = 'flex:1;font-size:13px;font-weight:700;color:var(--co-ink)';
+        nameEl.style.cssText = 'flex:1;font-size:12px;font-weight:600;color:var(--co-ink)';
         nameEl.textContent = sub;
         var countEl = document.createElement('span');
-        countEl.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-right:8px;' + (total > 0 ? 'color:var(--co-orange);background:var(--co-orange-soft)' : 'color:var(--co-mute);background:var(--co-cream-deep)');
+        countEl.className = 'rem-pill ' + (total > 0 ? 'orange' : 'gray');
+        countEl.style.marginRight = '8px';
         countEl.textContent = total + ' ' + (total === 1 ? 'archivo' : 'archivos');
         var arrEl = document.createElement('i');
         arrEl.className = 'ti ti-chevron-right';
