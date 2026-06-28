@@ -1000,6 +1000,7 @@
   }
 
   function _renderFichaTab(el, tab, c) {
+    el._docToken = null; // cancelar cualquier carga pendiente
     el.innerHTML = '';
     if (tab === 'resumen')       _fichaResumen(el, c);
     else if (tab === 'liquidaciones') _fichaLiquidaciones(el, c);
@@ -1327,9 +1328,14 @@
     spinner.innerHTML = '<div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando documentos</div></div>';
     el.appendChild(spinner);
 
+    // Token para cancelar si el tab cambia antes de que responda la API
+    var token = {};
+    el._docToken = token;
+
     // Cargar documentos reales desde GAS
     api('/remuneraciones/trabajadores/' + c.id + '/documentos').then(function(resp) {
-      el.removeChild(spinner);
+      if (el._docToken !== token) return; // tab cambió, ignorar
+      if (el.contains(spinner)) el.removeChild(spinner);
       var docs = (resp.data && resp.data.data) ? resp.data.data : {};
       var SUBS = ['01_Contrato','02_Onboarding','03_Remuneraciones','04_Previsional','05_Otros'];
       var ABIERTAS = ['01_Contrato','02_Onboarding'];
@@ -1407,7 +1413,8 @@
         el.appendChild(folderEl);
       });
     }).catch(function() {
-      el.removeChild(spinner);
+      if (el._docToken !== token) return;
+      if (el.contains(spinner)) el.removeChild(spinner);
       var err = document.createElement('div');
       err.style.cssText = 'text-align:center;color:#A32D2D;padding:24px;font-size:12px';
       err.textContent = 'Error al cargar documentos.';
