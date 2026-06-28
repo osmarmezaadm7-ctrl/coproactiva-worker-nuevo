@@ -1130,21 +1130,35 @@
     colDer.appendChild(_fichaSecLabel('Onboarding'));
     var cardOb = document.createElement('div');
     cardOb.className = 'rem-ficha-card';
-    // Calcular porcentaje real desde c.onboardingJson
-    var obJson = c.onboardingJson || {};
-    var obDone = Object.keys(obJson).filter(function(k) { return obJson[k] && obJson[k].estado === 'completado'; }).length;
-    var obTotal = Object.keys(obJson).length;
-    var obPct = obTotal > 0 ? Math.round(obDone / obTotal * 100) : 0;
-
-    cardOb.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct">' + obPct + '%</div>' +
-      '<div style="font-size:12px;color:var(--co-mute);margin-top:2px">' + obDone + ' de ' + obTotal + ' completados</div></div></div>' +
-      '<div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" style="width:' + obPct + '%"></div></div>';
-    var linkOb = _fichaLinkOrange('Ver checklist completo \u2192', function() {
+    // Mostrar placeholder mientras carga
+    cardOb.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct">…</div>' +
+      '<div style="font-size:12px;color:var(--co-mute);margin-top:2px">Cargando...</div></div></div>' +
+      '<div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" id="res-ob-fill" style="width:0%"></div></div>';
+    var linkOb = _fichaLinkOrange('Ver checklist completo →', function() {
       var tabs = document.querySelectorAll('.rem-ficha-tab');
       if (tabs[2]) tabs[2].click();
     });
     cardOb.appendChild(linkOb);
     colDer.appendChild(cardOb);
+
+    // Calcular porcentaje real: completados / total plantilla
+    api('/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(c.cargo || '*')).then(function(resp) {
+      var items = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+      var obTotal = items.length;
+      var obJson  = c.onboardingJson || {};
+      var obDone  = Object.keys(obJson).filter(function(k) {
+        return obJson[k] && obJson[k].estado === 'completado';
+      }).length;
+      var obPct = obTotal > 0 ? Math.round(obDone / obTotal * 100) : 0;
+
+      cardOb.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct">' + obPct + '%</div>' +
+        '<div style="font-size:12px;color:var(--co-mute);margin-top:2px">' + obDone + ' de ' + obTotal + ' completados</div></div></div>' +
+        '<div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" style="width:' + obPct + '%"></div></div>';
+      cardOb.appendChild(linkOb);
+    }).catch(function() {
+      cardOb.innerHTML = '<div style="font-size:12px;color:var(--co-mute)">Sin plantilla configurada</div>';
+      cardOb.appendChild(linkOb);
+    });
 
     twoCol.appendChild(colDer);
     el.appendChild(twoCol);
