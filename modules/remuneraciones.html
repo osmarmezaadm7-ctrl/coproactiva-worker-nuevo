@@ -894,20 +894,27 @@
   function _nombreAfp(codigo) {
     var map = {'00':'Sin AFP','03':'Cuprum','05':'Habitat','08':'ProVida',
                '29':'PlanVital','33':'Capital','34':'Modelo','35':'Uno'};
-    return map[String(codigo)] || codigo || '\u2014';
+    var key = String(codigo || '').padStart(2,'0');
+    return map[key] || map[String(codigo)] || codigo || '\u2014';
   }
 
-  function _nombreSalud(codigo) {
+  function _nombreSalud(codigo, montoPlan, moneda) {
     var map = {'07':'Fonasa','01':'Banm\u00e9dica','02':'Consalud','03':'VidaTres',
                '04':'Colmena','05':'Cruz Blanca','10':'Nueva Masvida','11':'Isalud',
                '12':'Fundaci\u00f3n','25':'Cruz del Norte','28':'Esencial'};
-    return map[String(codigo)] || codigo || '\u2014';
+    var key = String(codigo || '').padStart(2,'0');
+    var nombre = map[key] || map[String(codigo)] || codigo || '\u2014';
+    if (key !== '07' && montoPlan) {
+      nombre += ' \u00B7 ' + (moneda === '2' ? montoPlan + ' UF' : fmtPeso(montoPlan));
+    }
+    return nombre;
   }
 
   function abrirFichaColaborador(c) {
-    var contenido = document.getElementById('rem-contenido');
-    if (!contenido) return;
-    contenido.innerHTML = '';
+    var rootEl = document.getElementById('rem-root');
+    if (!rootEl) return;
+    rootEl.innerHTML = '';
+    var contenido = rootEl;
 
     var nombre = c.nombreCompleto || ((c.nombres || '') + ' ' + (c.apellidoPaterno || '')).trim() || '\u2014';
     var ini = iniciales(nombre);
@@ -920,7 +927,7 @@
     back.innerHTML = '<i class="ti ti-arrow-left" aria-hidden="true"></i> Volver a colaboradores';
     back.addEventListener('click', function() {
       _tabActiva = 'colaboradores';
-      renderTabContent();
+      renderModulo();
     });
     contenido.appendChild(back);
 
@@ -1067,7 +1074,7 @@
         var anos = Math.floor(meses / 12); var mesR = meses % 12;
         antig = anos > 0 ? anos + ' año' + (anos > 1 ? 's' : '') : meses + ' meses';
         if (anos > 0 && mesR > 0) antig += ' ' + mesR + 'm';
-        antigSub = 'desde ' + (c.fechaInicio || '');
+        antigSub = 'desde ' + _fmtFecha(c.fechaInicio);
       }
     }
 
@@ -1091,7 +1098,7 @@
       ['Jornada',         (c.jornadaHoras || 42) + ' hrs \u00B7 ' + (c.tipoJornada == '2' ? 'Part-time' : 'Completa')],
       ['Inicio',          _fmtFecha(c.fechaInicio)],
       ['AFP',             _nombreAfp(c.codigoAfp)],
-      ['Salud',           _nombreSalud(c.codigoSalud)],
+      ['Salud',           _nombreSalud(String(c.codigoSalud||'').padStart(2,'0'), c.montoPlanIsapre, c.monedaPlanIsapre)],
       ['CCAF',            c.codigoCcaf && c.codigoCcaf !== '00' ? {'01':'Los Andes','02':'La Araucana','03':'Los H\u00e9roes','04':'18 de Septiembre'}[c.codigoCcaf] || c.codigoCcaf : 'Sin CCAF'],
       ['Cargas familiares', (Number(c.cargasSimples) || 0) + ' simples'],
     ].forEach(function(p) { cardContrato.appendChild(_fichaDato(p[0], p[1])); });
