@@ -1344,7 +1344,10 @@
         });
         el.appendChild(card);
         } catch(e) {
-          console.error('Error renderizando categoría', cat, e);
+          var errDiv = document.createElement('div');
+          errDiv.style.cssText = 'color:#A32D2D;font-size:11px;padding:8px';
+          errDiv.textContent = 'Error en ' + cat + ': ' + e.message;
+          el.appendChild(errDiv);
         }
       });
       if (!items.length) {
