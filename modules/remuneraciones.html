@@ -144,6 +144,88 @@
   .rem-lock { opacity: 0.35; cursor: not-allowed; }
   .rem-plt-item.nivel-sistema { border-left: 3px solid var(--co-orange); border-radius: 0 8px 8px 0; }
   .rem-plt-item.nivel-administrador { border-left: 3px solid #185FA5; border-radius: 0 8px 8px 0; }
+
+  /* ── Ficha colaborador ─────────────────────────────────────────────── */
+  .rem-ficha-hdr { display:flex; align-items:flex-start; gap:14px; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--co-line); flex-wrap:wrap; }
+  .rem-ficha-av { width:48px; height:48px; border-radius:50%; background:var(--co-orange-soft); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:var(--co-orange); flex-shrink:0; }
+  .rem-ficha-info { flex:1; min-width:0; }
+  .rem-ficha-nombre { font-size:18px; font-weight:800; letter-spacing:-0.025em; color:var(--co-ink); line-height:1.15; margin-bottom:4px; }
+  .rem-ficha-meta { font-size:12px; color:var(--co-ink-3); font-weight:500; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .rem-ficha-acts { display:flex; gap:6px; flex-shrink:0; }
+
+  .rem-ficha-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+  .rem-ficha-kpi { background:var(--co-surface); border:1px solid var(--co-line); border-radius:var(--co-r-lg); padding:12px 14px; }
+  .rem-ficha-kpi-lbl { font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--co-mute); margin-bottom:5px; }
+  .rem-ficha-kpi-val { font-size:20px; font-weight:800; letter-spacing:-0.03em; line-height:1; color:var(--co-ink); }
+  .rem-ficha-kpi-val.orange { color:var(--co-orange); }
+  .rem-ficha-kpi-val.green { color:#3B6D11; }
+  .rem-ficha-kpi-sub { font-size:11px; color:var(--co-mute); margin-top:3px; }
+
+  .rem-ficha-tabs { display:flex; border-bottom:1px solid var(--co-line); margin-bottom:18px; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .rem-ficha-tabs::-webkit-scrollbar { display:none; }
+  .rem-ficha-tab { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:9px 13px; color:var(--co-mute); cursor:pointer; border:none; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; background:none; font-family:var(--co-font); transition:color .13s; }
+  .rem-ficha-tab i { font-size:14px; }
+  .rem-ficha-tab.act { color:var(--co-orange); border-bottom-color:var(--co-orange); font-weight:700; }
+
+  .rem-ficha-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .rem-ficha-card { background:var(--co-surface); border:1px solid var(--co-line); border-radius:var(--co-r-lg); padding:14px 16px; margin-bottom:12px; }
+  .rem-ficha-card:last-child { margin-bottom:0; }
+  .rem-ficha-card-title { font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--co-mute); margin-bottom:10px; padding-bottom:7px; border-bottom:1px solid var(--co-line); }
+  .rem-ficha-dato { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--co-line-soft); font-size:12px; }
+  .rem-ficha-dato:first-of-type { border-top:none; }
+  .rem-ficha-dato-lbl { color:var(--co-mute); }
+  .rem-ficha-dato-val { font-weight:700; color:var(--co-ink); text-align:right; }
+
+  .rem-ficha-hist { display:flex; align-items:flex-start; gap:9px; padding:7px 0; border-top:1px solid var(--co-line-soft); font-size:12px; }
+  .rem-ficha-hist:first-of-type { border-top:none; }
+  .rem-ficha-hist-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .rem-ficha-hist-desc { font-weight:600; color:var(--co-ink); font-size:12px; }
+  .rem-ficha-hist-meta { font-size:11px; color:var(--co-mute); margin-top:1px; }
+
+  .rem-ficha-nov { display:flex; align-items:center; gap:9px; padding:7px 0; border-top:1px solid var(--co-line-soft); font-size:12px; }
+  .rem-ficha-nov:first-of-type { border-top:none; }
+  .rem-ficha-nov-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+  .rem-ficha-prog-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .rem-ficha-prog-pct { font-size:26px; font-weight:800; letter-spacing:-0.03em; color:var(--co-orange); line-height:1; }
+  .rem-ficha-prog-bar { height:7px; background:var(--co-line); border-radius:99px; overflow:hidden; margin-bottom:6px; }
+  .rem-ficha-prog-fill { height:100%; background:var(--co-orange); border-radius:99px; }
+
+  .rem-ficha-chk { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--co-line-soft); font-size:12px; }
+  .rem-ficha-chk:first-of-type { border-top:none; }
+  .rem-ficha-chk-ico { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:10px; font-weight:800; }
+  .rem-ficha-chk-ico.done { background:#EAF3DE; color:#3B6D11; }
+  .rem-ficha-chk-ico.pend { background:var(--co-cream-deep); color:var(--co-mute); }
+  .rem-ficha-chk-ico.venc { background:#FCEBEB; color:#A32D2D; }
+  .rem-ficha-chk-name { flex:1; font-weight:600; color:var(--co-ink); }
+
+  .rem-ficha-doc { display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--co-line-soft); font-size:12px; }
+  .rem-ficha-doc:first-of-type { border-top:none; }
+  .rem-ficha-doc-ico { width:28px; height:28px; border-radius:7px; background:var(--co-orange-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; color:var(--co-orange); }
+
+  .rem-link-orange { font-size:11px; font-weight:700; color:var(--co-orange); cursor:pointer; background:none; border:none; padding:0; margin-top:8px; display:inline-block; font-family:var(--co-font); }
+
+  /* ── Media queries móvil ───────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .rem-ficha-kpis { grid-template-columns: 1fr 1fr; }
+    .rem-ficha-2col { grid-template-columns: 1fr; }
+    .rem-ficha-acts { margin-top:8px; width:100%; }
+    .rem-ficha-hdr { gap:10px; }
+    .rem-ficha-nombre { font-size:16px; }
+  }
+  @media (max-width: 480px) {
+    .rem-ficha-kpis { grid-template-columns: 1fr 1fr; gap:8px; }
+    .rem-ficha-kpi-val { font-size:17px; }
+    .page-header { flex-direction:column; align-items:flex-start; }
+    .form-grid { grid-template-columns: 1fr !important; }
+  }
+  /* tabla colaboradores wrap en móvil ya estaba, reforzar */
+  @media (max-width: 767px) {
+    .rem-table th:nth-child(4),
+    .rem-table td:nth-child(4),
+    .rem-table th:nth-child(5),
+    .rem-table td:nth-child(5) { display:none; }
+  }
 </style>
 
 <div id="rem-root">
@@ -784,7 +866,378 @@
   }
 
   function abrirFichaColaborador(c) {
-    alert('Ficha de ' + (c.nombreCompleto || c.nombres) + ' \u2014 pr\u00F3ximamente');
+    var contenido = document.getElementById('rem-contenido');
+    if (!contenido) return;
+    contenido.innerHTML = '';
+
+    var nombre = c.nombreCompleto || ((c.nombres || '') + ' ' + (c.apellidoPaterno || '')).trim() || '\u2014';
+    var ini = iniciales(nombre);
+    var tabActivaFicha = 'resumen';
+
+    // ── Back ──────────────────────────────────────────────────────────────
+    var back = document.createElement('button');
+    back.className = 'rem-btn-sec';
+    back.style.marginBottom = '16px';
+    back.innerHTML = '<i class="ti ti-arrow-left" aria-hidden="true"></i> Volver a colaboradores';
+    back.addEventListener('click', function() { renderTabContent(); });
+    contenido.appendChild(back);
+
+    // ── Header ────────────────────────────────────────────────────────────
+    var hdr = document.createElement('div');
+    hdr.className = 'rem-ficha-hdr';
+
+    var av = document.createElement('div');
+    av.className = 'rem-ficha-av';
+    av.textContent = ini;
+
+    var info = document.createElement('div');
+    info.className = 'rem-ficha-info';
+    var nEl = document.createElement('div');
+    nEl.className = 'rem-ficha-nombre';
+    nEl.textContent = nombre;
+    var meta = document.createElement('div');
+    meta.className = 'rem-ficha-meta';
+    var estadoPill = { activo: '<span class="rem-pill ok">Activo</span>', licencia: '<span class="rem-pill warn">Licencia</span>', desvinculado: '<span class="rem-pill gray">Desvinculado</span>' }[c.estado] || '<span class="rem-pill gray">' + (c.estado || '\u2014') + '</span>';
+    meta.innerHTML = (c.cargo || '\u2014') + ' &nbsp;\u00B7&nbsp; ' + (c.tipoContrato || '\u2014') + ' &nbsp;\u00B7&nbsp; RUT ' + (c.rut ? c.rut + '-' + (c.dv || '') : '\u2014') + ' &nbsp;' + estadoPill;
+    info.appendChild(nEl);
+    info.appendChild(meta);
+
+    var acts = document.createElement('div');
+    acts.className = 'rem-ficha-acts';
+    var btnEditar = document.createElement('button');
+    btnEditar.className = 'rem-btn-sec';
+    btnEditar.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> Editar';
+    btnEditar.addEventListener('click', function() {
+      var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
+      if (com) abrirModalColaborador(c, com);
+    });
+    var btnMas = document.createElement('button');
+    btnMas.className = 'rem-btn-sec';
+    btnMas.style.padding = '7px 10px';
+    btnMas.innerHTML = '<i class="ti ti-dots-vertical" aria-hidden="true"></i>';
+    acts.appendChild(btnEditar);
+    acts.appendChild(btnMas);
+
+    hdr.appendChild(av);
+    hdr.appendChild(info);
+    hdr.appendChild(acts);
+    contenido.appendChild(hdr);
+
+    // ── Tabs ──────────────────────────────────────────────────────────────
+    var tabsEl = document.createElement('div');
+    tabsEl.className = 'rem-ficha-tabs';
+    var FTABS = [
+      { id: 'resumen',       label: 'Resumen',       ico: 'ti-layout-dashboard' },
+      { id: 'liquidaciones', label: 'Liquidaciones', ico: 'ti-receipt'          },
+      { id: 'onboarding',    label: 'Onboarding',    ico: 'ti-checklist'        },
+      { id: 'documentos',    label: 'Documentos',    ico: 'ti-file-text'        },
+      { id: 'asistencia',    label: 'Asistencia',    ico: 'ti-calendar-check'   },
+      { id: 'historial',     label: 'Historial',     ico: 'ti-history'          },
+    ];
+    var fichaContenido = document.createElement('div');
+    fichaContenido.id = 'rem-ficha-contenido';
+
+    FTABS.forEach(function(t) {
+      var btn = document.createElement('button');
+      btn.className = 'rem-ficha-tab' + (t.id === tabActivaFicha ? ' act' : '');
+      btn.innerHTML = '<i class="ti ' + t.ico + '" aria-hidden="true"></i> ' + t.label;
+      btn.addEventListener('click', function() {
+        tabActivaFicha = t.id;
+        tabsEl.querySelectorAll('.rem-ficha-tab').forEach(function(b) { b.classList.remove('act'); });
+        btn.classList.add('act');
+        _renderFichaTab(fichaContenido, t.id, c);
+      });
+      tabsEl.appendChild(btn);
+    });
+    contenido.appendChild(tabsEl);
+    contenido.appendChild(fichaContenido);
+
+    _renderFichaTab(fichaContenido, tabActivaFicha, c);
+  }
+
+  function _renderFichaTab(el, tab, c) {
+    el.innerHTML = '';
+    if (tab === 'resumen')       _fichaResumen(el, c);
+    else if (tab === 'liquidaciones') _fichaLiquidaciones(el, c);
+    else if (tab === 'onboarding')    _fichaOnboarding(el, c);
+    else if (tab === 'documentos')    _fichaDocumentos(el, c);
+    else if (tab === 'asistencia')    _fichaAsistencia(el, c);
+    else if (tab === 'historial')     _fichaHistorial(el, c);
+  }
+
+  // ── helpers ficha ─────────────────────────────────────────────────────
+  function _fichaSecLabel(txt) {
+    var d = document.createElement('div');
+    d.className = 'rem-section-label';
+    d.textContent = txt;
+    return d;
+  }
+  function _fichaCard(children) {
+    var d = document.createElement('div');
+    d.className = 'rem-ficha-card';
+    children.forEach(function(c) { d.appendChild(c); });
+    return d;
+  }
+  function _fichaDato(lbl, val) {
+    var d = document.createElement('div');
+    d.className = 'rem-ficha-dato';
+    d.innerHTML = '<span class="rem-ficha-dato-lbl">' + lbl + '</span><span class="rem-ficha-dato-val">' + (val || '\u2014') + '</span>';
+    return d;
+  }
+  function _fichaHist(desc, meta, orange) {
+    var d = document.createElement('div');
+    d.className = 'rem-ficha-hist';
+    var dot = document.createElement('div');
+    dot.className = 'rem-ficha-hist-dot';
+    dot.style.background = orange ? 'var(--co-orange)' : 'var(--co-line)';
+    var body = document.createElement('div');
+    var de = document.createElement('div'); de.className = 'rem-ficha-hist-desc'; de.textContent = desc;
+    var me = document.createElement('div'); me.className = 'rem-ficha-hist-meta'; me.textContent = meta;
+    body.appendChild(de); body.appendChild(me);
+    d.appendChild(dot); d.appendChild(body);
+    return d;
+  }
+  function _fichaLinkOrange(txt, fn) {
+    var b = document.createElement('button');
+    b.className = 'rem-link-orange';
+    b.textContent = txt;
+    b.addEventListener('click', fn);
+    return b;
+  }
+
+  // ── TAB RESUMEN ───────────────────────────────────────────────────────
+  function _fichaResumen(el, c) {
+    // KPIs
+    var kpiGrid = document.createElement('div');
+    kpiGrid.className = 'rem-ficha-kpis';
+
+    function mkKpi(lbl, val, sub, cls) {
+      var k = document.createElement('div'); k.className = 'rem-ficha-kpi';
+      var l = document.createElement('div'); l.className = 'rem-ficha-kpi-lbl'; l.textContent = lbl;
+      var v = document.createElement('div'); v.className = 'rem-ficha-kpi-val' + (cls ? ' ' + cls : ''); v.textContent = val;
+      var s = document.createElement('div'); s.className = 'rem-ficha-kpi-sub'; s.textContent = sub;
+      k.appendChild(l); k.appendChild(v); k.appendChild(s);
+      return k;
+    }
+
+    // Calcular antigüedad
+    var antig = '\u2014';
+    var antigSub = '';
+    if (c.fechaInicio) {
+      var fIni = new Date(c.fechaInicio.includes('/') ? c.fechaInicio.split('/').reverse().join('-') : c.fechaInicio);
+      if (!isNaN(fIni)) {
+        var meses = Math.floor((new Date() - fIni) / (1000 * 60 * 60 * 24 * 30.44));
+        var anos = Math.floor(meses / 12); var mesR = meses % 12;
+        antig = anos > 0 ? anos + ' año' + (anos > 1 ? 's' : '') : meses + ' meses';
+        if (anos > 0 && mesR > 0) antig += ' ' + mesR + 'm';
+        antigSub = 'desde ' + (c.fechaInicio || '');
+      }
+    }
+
+    kpiGrid.appendChild(mkKpi('Antig\u00fcedad', antig, antigSub, ''));
+    kpiGrid.appendChild(mkKpi('Sueldo base', fmtPeso(c.sueldoBase), c.asigColacion || c.asigMovilizacion ? '+ asignaciones' : '', 'orange'));
+    kpiGrid.appendChild(mkKpi('\u00dalt. liquidaci\u00f3n', '\u2014', 'pendiente', ''));
+    kpiGrid.appendChild(mkKpi('Vacaciones', '\u2014', 'pendiente', ''));
+    el.appendChild(kpiGrid);
+
+    // 2 columnas
+    var twoCol = document.createElement('div');
+    twoCol.className = 'rem-ficha-2col';
+
+    // Col izq — contrato
+    var colIzq = document.createElement('div');
+    colIzq.appendChild(_fichaSecLabel('Contrato y previsional'));
+    var cardContrato = document.createElement('div');
+    cardContrato.className = 'rem-ficha-card';
+    [
+      ['Tipo contrato',    c.tipoContrato],
+      ['Jornada',         (c.jornadaHoras || 42) + ' hrs \u00B7 ' + (c.tipoJornada == '2' ? 'Part-time' : 'Completa')],
+      ['Inicio',          c.fechaInicio || '\u2014'],
+      ['HH.EE.',          c.pactoHorasExtra ? 'S\u00ed (Art. 32 CT)' : 'No'],
+      ['AFP \u00B7 Salud', (c.codigoAfp ? {
+        '33':'Capital','03':'Cuprum','05':'Habitat','34':'Modelo',
+        '29':'PlanVital','08':'ProVida','35':'Uno','00':'Sin AFP'
+      }[c.codigoAfp] || c.codigoAfp : '\u2014') + ' \u00B7 ' + (c.codigoSalud === '07' ? 'Fonasa' : 'Isapre')],
+      ['Cargas familiares', (Number(c.cargasSimples) || 0) + ' simples'],
+    ].forEach(function(p) { cardContrato.appendChild(_fichaDato(p[0], p[1])); });
+    colIzq.appendChild(cardContrato);
+
+    colIzq.appendChild(_fichaSecLabel('Últimos cambios'));
+    var cardHist = document.createElement('div');
+    cardHist.className = 'rem-ficha-card';
+    cardHist.appendChild(_fichaHist('Trabajador ingresado al sistema', (c.fechaInicio || ''), true));
+    cardHist.appendChild(_fichaLinkOrange('Ver historial completo \u2192', function() {
+      var tabs = document.querySelectorAll('.rem-ficha-tab');
+      if (tabs[5]) tabs[5].click();
+    }));
+    colIzq.appendChild(cardHist);
+    twoCol.appendChild(colIzq);
+
+    // Col der — novedades + onboarding
+    var colDer = document.createElement('div');
+    colDer.appendChild(_fichaSecLabel('Novedades activas'));
+    var cardNov = document.createElement('div');
+    cardNov.className = 'rem-ficha-card';
+    var novVac = document.createElement('div');
+    novVac.className = 'rem-ficha-nov';
+    novVac.innerHTML = '<div class="rem-ficha-nov-dot" style="background:var(--co-line)"></div><div style="font-size:12px;color:var(--co-mute)">Sin novedades activas</div>';
+    cardNov.appendChild(novVac);
+    colDer.appendChild(cardNov);
+
+    colDer.appendChild(_fichaSecLabel('Onboarding'));
+    var cardOb = document.createElement('div');
+    cardOb.className = 'rem-ficha-card';
+    cardOb.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct" id="fc-ob-pct">...</div><div style="font-size:12px;color:var(--co-mute);margin-top:2px" id="fc-ob-sub">Cargando...</div></div></div><div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" id="fc-ob-fill" style="width:0%"></div></div>';
+    var linkOb = _fichaLinkOrange('Ver checklist completo \u2192', function() {
+      var tabs = document.querySelectorAll('.rem-ficha-tab');
+      if (tabs[2]) tabs[2].click();
+    });
+    cardOb.appendChild(linkOb);
+    colDer.appendChild(cardOb);
+
+    // Cargar onboarding real
+    var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
+    if (com) {
+      api('/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(c.cargo || '*')).then(function(resp) {
+        var items = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+        var total = items.length;
+        var pct = total > 0 ? 0 : 0; // onboarding real pendiente de implementar
+        var pctEl = document.getElementById('fc-ob-pct');
+        var subEl = document.getElementById('fc-ob-sub');
+        var fillEl = document.getElementById('fc-ob-fill');
+        if (pctEl) pctEl.textContent = '0%';
+        if (subEl) subEl.textContent = '0 de ' + total + ' completados';
+        if (fillEl) fillEl.style.width = '0%';
+      }).catch(function() {});
+    }
+
+    twoCol.appendChild(colDer);
+    el.appendChild(twoCol);
+  }
+
+  // ── TAB LIQUIDACIONES ────────────────────────────────────────────────
+  function _fichaLiquidaciones(el, c) {
+    el.appendChild(_fichaSecLabel('Historial de liquidaciones'));
+    var card = document.createElement('div');
+    card.className = 'rem-ficha-card';
+    card.style.padding = '0';
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 90px;gap:8px;padding:8px 12px;border-bottom:1px solid var(--co-line);font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--co-mute)';
+    hdr.innerHTML = '<span>Per\u00edodo</span><span>Bruto</span><span>L\u00edquido</span><span>Estado</span>';
+    card.appendChild(hdr);
+    var emptyRow = document.createElement('div');
+    emptyRow.style.cssText = 'padding:24px;text-align:center;color:var(--co-mute);font-size:12px';
+    emptyRow.textContent = 'Las liquidaciones estar\u00e1n disponibles con el m\u00f3dulo de procesos.';
+    card.appendChild(emptyRow);
+    el.appendChild(card);
+  }
+
+  // ── TAB ONBOARDING ───────────────────────────────────────────────────
+  function _fichaOnboarding(el, c) {
+    // Header progreso
+    var cardProg = document.createElement('div');
+    cardProg.className = 'rem-ficha-card';
+    cardProg.style.marginBottom = '16px';
+    cardProg.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct">0%</div><div style="font-size:12px;color:var(--co-mute);margin-top:2px">0 \u00edtems completados</div></div><div style="text-align:right"><div style="font-size:11px;color:var(--co-mute)">Cargando...</div></div></div><div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" style="width:0%"></div></div>';
+    el.appendChild(cardProg);
+
+    // Cargar plantilla del cargo
+    var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
+    var url = '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(c.cargo || '*');
+    api(url).then(function(resp) {
+      var items = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+      var cats = {};
+      items.forEach(function(it) {
+        if (!cats[it.categoria]) cats[it.categoria] = [];
+        cats[it.categoria].push(it);
+      });
+      // Agrupar por categoría y mostrar como pendientes (onboarding real pendiente)
+      Object.keys(cats).forEach(function(cat) {
+        el.appendChild(_fichaSecLabel(cat));
+        var card = document.createElement('div');
+        card.className = 'rem-ficha-card';
+        cats[cat].forEach(function(it) {
+          var row = document.createElement('div');
+          row.className = 'rem-ficha-chk';
+          var ico = document.createElement('div');
+          ico.className = 'rem-ficha-chk-ico pend';
+          ico.textContent = '\u25CB';
+          var name = document.createElement('span');
+          name.className = 'rem-ficha-chk-name';
+          name.textContent = it.nombre;
+          var fecha = document.createElement('span');
+          fecha.style.cssText = 'font-size:11px;color:var(--co-mute)';
+          fecha.textContent = 'D\u00eda ' + (it.plazosDias || 5);
+          row.appendChild(ico); row.appendChild(name); row.appendChild(fecha);
+          card.appendChild(row);
+        });
+        el.appendChild(card);
+      });
+      if (!items.length) {
+        var vacio = document.createElement('div');
+        vacio.style.cssText = 'text-align:center;color:var(--co-mute);padding:24px;font-size:12px';
+        vacio.textContent = 'Sin \u00edtems de onboarding para este cargo.';
+        el.appendChild(vacio);
+      }
+    }).catch(function() {
+      var err = document.createElement('div');
+      err.style.cssText = 'text-align:center;color:#A32D2D;padding:24px;font-size:12px';
+      err.textContent = 'Error al cargar onboarding.';
+      el.appendChild(err);
+    });
+  }
+
+  // ── TAB DOCUMENTOS ───────────────────────────────────────────────────
+  function _fichaDocumentos(el, c) {
+    var hdrAcc = document.createElement('div');
+    hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:14px';
+    var btnSub = document.createElement('button');
+    btnSub.className = 'rem-btn-sec';
+    btnSub.innerHTML = '<i class="ti ti-upload" aria-hidden="true"></i> Subir documento';
+    hdrAcc.appendChild(btnSub);
+    el.appendChild(hdrAcc);
+
+    var card = document.createElement('div');
+    card.className = 'rem-ficha-card';
+    var docs = ['Contrato de trabajo', 'Reglamento interno firmado', 'IRL firmado (DS N\u00b044)', 'Protocolo Ley Karin firmado'];
+    docs.forEach(function(d) {
+      var row = document.createElement('div');
+      row.className = 'rem-ficha-doc';
+      var ico = document.createElement('div');
+      ico.className = 'rem-ficha-doc-ico';
+      ico.innerHTML = '<i class="ti ti-file-text" aria-hidden="true"></i>';
+      var nom = document.createElement('span');
+      nom.style.cssText = 'flex:1;font-weight:600;font-size:12px;color:var(--co-ink)';
+      nom.textContent = d;
+      var btn = document.createElement('button');
+      btn.className = 'rem-btn-sec';
+      btn.style.cssText = 'padding:4px 10px;font-size:11px';
+      btn.textContent = 'Ver';
+      row.appendChild(ico); row.appendChild(nom); row.appendChild(btn);
+      card.appendChild(row);
+    });
+    el.appendChild(card);
+  }
+
+  // ── TAB ASISTENCIA ───────────────────────────────────────────────────
+  function _fichaAsistencia(el, c) {
+    el.appendChild(_proximamente('ti-calendar-check', 'Registro de asistencia', 'Disponible con el m\u00f3dulo de asistencia.'));
+  }
+
+  // ── TAB HISTORIAL ────────────────────────────────────────────────────
+  function _fichaHistorial(el, c) {
+    el.appendChild(_fichaSecLabel('Cambios registrados'));
+    var card = document.createElement('div');
+    card.className = 'rem-ficha-card';
+    var eventos = [
+      { desc: 'Trabajador ingresado al sistema', meta: (c.fechaInicio || '') + ' \u00B7 Sistema', orange: true },
+    ];
+    if (!eventos.length) {
+      card.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px;font-size:12px">Sin cambios registrados.</div>';
+    } else {
+      eventos.forEach(function(e) { card.appendChild(_fichaHist(e.desc, e.meta, e.orange)); });
+    }
+    el.appendChild(card);
   }
 
   // ── PROCESOS ──────────────────────────────────────────────────────────────
