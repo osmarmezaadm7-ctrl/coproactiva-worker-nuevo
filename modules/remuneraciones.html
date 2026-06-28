@@ -1000,14 +1000,24 @@
   }
 
   function _renderFichaTab(el, tab, c) {
-    el._docToken = null; // cancelar cualquier carga pendiente
-    el.innerHTML = '';
-    if (tab === 'resumen')       _fichaResumen(el, c);
-    else if (tab === 'liquidaciones') _fichaLiquidaciones(el, c);
-    else if (tab === 'onboarding')    _fichaOnboarding(el, c);
-    else if (tab === 'documentos')    _fichaDocumentos(el, c);
-    else if (tab === 'asistencia')    _fichaAsistencia(el, c);
-    else if (tab === 'historial')     _fichaHistorial(el, c);
+    // Ocultar todos los paneles cacheados
+    el.querySelectorAll('[data-tab-panel]').forEach(function(p) { p.style.display = 'none'; });
+
+    // Si ya existe el panel, solo mostrarlo
+    var cached = el.querySelector('[data-tab-panel="' + tab + '"]');
+    if (cached) { cached.style.display = ''; return; }
+
+    // Primera vez: crear panel y renderizar
+    var panel = document.createElement('div');
+    panel.dataset.tabPanel = tab;
+    el.appendChild(panel);
+
+    if (tab === 'resumen')            _fichaResumen(panel, c);
+    else if (tab === 'liquidaciones') _fichaLiquidaciones(panel, c);
+    else if (tab === 'onboarding')    _fichaOnboarding(panel, c);
+    else if (tab === 'documentos')    _fichaDocumentos(panel, c);
+    else if (tab === 'asistencia')    _fichaAsistencia(panel, c);
+    else if (tab === 'historial')     _fichaHistorial(panel, c);
   }
 
   // ── helpers ficha ─────────────────────────────────────────────────────
@@ -1205,24 +1215,39 @@
     }).catch(function() {
       // Silencioso — no bloquear la UX si falla
     });
+    // Actualizar % en card Resumen sin recargar el panel
+    var fichaContenido = document.getElementById('rem-ficha-contenido');
+    if (fichaContenido) {
+      var resumenPanel = fichaContenido.querySelector('[data-tab-panel="resumen"]');
+      var obPanel      = fichaContenido.querySelector('[data-tab-panel="onboarding"]');
+      if (resumenPanel && obPanel) {
+        var total = obPanel.querySelectorAll('[data-done]').length;
+        var done  = obPanel.querySelectorAll('[data-done="1"]').length;
+        var pct   = total > 0 ? Math.round(done / total * 100) : 0;
+        var fillEl = resumenPanel.querySelector('#res-ob-fill');
+        var pctEl  = resumenPanel.querySelector('.rem-ficha-prog-pct');
+        var subEl  = resumenPanel.querySelector('[style*="co-mute"][style*="margin-top"]');
+        if (fillEl) fillEl.style.width = pct + '%';
+        if (pctEl)  pctEl.textContent  = pct + '%';
+        if (subEl)  subEl.textContent  = done + ' de ' + total + ' completados';
+      }
+    }
   }
 
   function _fichaOnboarding(el, c) {
-    // Header progreso
-    var cardProg = document.createElement('div');
-    cardProg.className = 'rem-ficha-card';
-    cardProg.style.marginBottom = '16px';
-    cardProg.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct" id="ob-pct">0%</div><div style="font-size:12px;color:var(--co-mute);margin-top:2px" id="ob-sub">Cargando...</div></div></div><div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" id="ob-fill" style="width:0%"></div></div>';
-    el.appendChild(cardProg);
+    // Spinner mientras carga
+    var token = {};
+    el._fichaToken = token;
+    el.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando onboarding</div></div></div>';
 
-    // Cargar plantilla del cargo
-    var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
     var url = '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(c.cargo || '*');
     api(url).then(function(resp) {
+      // Si el usuario cambió de tab, ignorar respuesta
+      if (el._fichaToken !== token) return;
+      el.innerHTML = '';
+
       // Verificar respuesta válida
       if (!resp || (resp.data && resp.data.ok === false)) {
-        var subEl2 = el.querySelector('#ob-sub');
-        if (subEl2) subEl2.textContent = '0 de 0 completados';
         var empty2 = document.createElement('div');
         empty2.style.cssText = 'text-align:center;color:var(--co-mute);padding:24px;font-size:12px';
         empty2.textContent = 'Sin plantilla de onboarding para el cargo "' + (c.cargo || 'sin cargo') + '". Configure una en Parámetros → Plantillas.';
@@ -1230,6 +1255,14 @@
         return;
       }
       var items = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+
+      // Header progreso — construido con data real, de una vez
+      var cardProg = document.createElement('div');
+      cardProg.className = 'rem-ficha-card';
+      cardProg.style.marginBottom = '16px';
+      cardProg.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct" id="ob-pct">0%</div><div style="font-size:12px;color:var(--co-mute);margin-top:2px" id="ob-sub">0 de 0 completados</div></div></div><div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" id="ob-fill" style="width:0%"></div></div>';
+      el.appendChild(cardProg);
+
       var cats = {};
       items.forEach(function(it) {
         if (!cats[it.categoria]) cats[it.categoria] = [];
@@ -1359,9 +1392,8 @@
         el.appendChild(vacio);
       }
     }).catch(function(e) {
-      // Si no hay plantilla para el cargo, mostrar mensaje amigable
-      var subEl = el.querySelector('#ob-sub');
-      if (subEl) subEl.textContent = '0 de 0 completados';
+      if (el._fichaToken !== token) return;
+      el.innerHTML = '';
       var empty = document.createElement('div');
       empty.style.cssText = 'text-align:center;color:var(--co-mute);padding:24px;font-size:12px';
       empty.textContent = 'Sin plantilla de onboarding para el cargo "' + (c.cargo || 'sin cargo') + '". Configure una en Parámetros → Plantillas.';
