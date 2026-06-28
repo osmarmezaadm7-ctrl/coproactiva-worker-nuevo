@@ -1238,19 +1238,52 @@
         card.className = 'rem-ficha-card';
         cats[cat].forEach(function(it) {
           var nivel = it.nivelProteccion || (it.esLegal ? 'sistema' : 'borrador');
+          var estadoGuardado = (c.onboardingJson && c.onboardingJson[it.id]) ? c.onboardingJson[it.id] : null;
+
           var wrap = document.createElement('div');
           wrap.style.cssText = 'border-top:1px solid var(--co-line-soft);padding:8px 0';
-          wrap.style.setProperty('border-top', '1px solid var(--co-line-soft)');
 
           var row = document.createElement('div');
           row.className = 'rem-ficha-chk';
           row.style.borderTop = 'none';
           row.style.paddingBottom = '4px';
 
-          // Checkbox interactivo
+          // ── obsWrap y obsInp PRIMERO ────────────────────────────────────
+          var obsWrap = document.createElement('div');
+          obsWrap.style.cssText = 'display:none;padding:2px 0 4px 30px';
+          var obsInp = document.createElement('input');
+          obsInp.type = 'text';
+          obsInp.placeholder = 'Agregar observación…';
+          obsInp.style.cssText = 'border:none;background:transparent;font-family:var(--co-font);font-size:12px;color:var(--co-ink);width:100%;outline:none';
+          obsInp.addEventListener('click', function(e) { e.stopPropagation(); });
+          obsWrap.appendChild(obsInp);
+          if (estadoGuardado && estadoGuardado.estado === 'completado') {
+            obsWrap.style.display = 'block';
+            if (estadoGuardado.observacion) obsInp.value = estadoGuardado.observacion;
+          }
+
+          // ── fechaEl SEGUNDO ─────────────────────────────────────────────
+          var fechaEl = document.createElement('span');
+          fechaEl.style.cssText = 'font-size:11px;color:var(--co-mute);white-space:nowrap';
+          if (estadoGuardado && estadoGuardado.estado === 'completado') {
+            fechaEl.textContent = estadoGuardado.fecha || '';
+            fechaEl.style.color = '#3B6D11';
+            fechaEl.style.fontWeight = '600';
+          } else {
+            fechaEl.textContent = 'Día ' + (it.plazosDias || 5);
+          }
+
+          // ── Checkbox TERCERO ────────────────────────────────────────────
           var chkWrap = document.createElement('div');
           chkWrap.style.cssText = 'width:18px;height:18px;border-radius:50%;border:2px solid var(--co-line);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s';
           chkWrap.dataset.done = '0';
+          if (estadoGuardado && estadoGuardado.estado === 'completado') {
+            chkWrap.dataset.done = '1';
+            chkWrap.style.background = '#EAF3DE';
+            chkWrap.style.borderColor = '#3B6D11';
+            chkWrap.innerHTML = '<i class="ti ti-check" style="font-size:10px;color:#3B6D11" aria-hidden="true"></i>';
+          }
+
           chkWrap.addEventListener('click', function() {
             var done = chkWrap.dataset.done === '1';
             var ahora = !done;
@@ -1259,21 +1292,14 @@
             chkWrap.style.borderColor = ahora ? '#3B6D11' : 'var(--co-line)';
             chkWrap.innerHTML = ahora ? '<i class="ti ti-check" style="font-size:10px;color:#3B6D11" aria-hidden="true"></i>' : '';
             var fechaHoy = _fmtFecha(new Date().toISOString());
-            fechaEl.textContent = ahora ? fechaHoy : 'D\u00eda ' + (it.plazosDias || 5);
-            // Mostrar/ocultar observación
-            var obs = wrap.querySelector('div[style*="display"]');
-            if (obs) {
-              obs.style.display = ahora ? 'block' : 'none';
-              if (!ahora) { var inp = obs.querySelector('input'); if(inp) inp.value = ''; }
-            }
-            // Persistir en c.onboardingJson
+            fechaEl.textContent = ahora ? fechaHoy : 'Día ' + (it.plazosDias || 5);
+            fechaEl.style.color = ahora ? '#3B6D11' : 'var(--co-mute)';
+            fechaEl.style.fontWeight = ahora ? '600' : 'normal';
+            obsWrap.style.display = ahora ? 'block' : 'none';
+            if (!ahora) obsInp.value = '';
             if (!c.onboardingJson) c.onboardingJson = {};
             if (ahora) {
-              c.onboardingJson[it.id] = {
-                estado:      'completado',
-                fecha:       fechaHoy,
-                observacion: obs ? (obs.querySelector('input') ? obs.querySelector('input').value : '') : ''
-              };
+              c.onboardingJson[it.id] = { estado: 'completado', fecha: fechaHoy, observacion: obsInp.value };
             } else {
               delete c.onboardingJson[it.id];
             }
@@ -1281,7 +1307,6 @@
             _actualizarPorcentajeOnboarding(el);
           });
 
-          // Guardar observación al perder foco
           obsInp.addEventListener('blur', function() {
             if (chkWrap.dataset.done === '1') {
               if (!c.onboardingJson) c.onboardingJson = {};
@@ -1291,11 +1316,11 @@
             }
           });
 
+          // ── Nombre e ítem ───────────────────────────────────────────────
           var name = document.createElement('span');
           name.className = 'rem-ficha-chk-name';
           name.textContent = it.nombre;
 
-          // Badge nivel
           if (nivel === 'sistema') {
             var badge = document.createElement('span');
             badge.className = 'rem-pill legal';
@@ -1305,39 +1330,8 @@
           } else {
             row.appendChild(chkWrap); row.appendChild(name);
           }
-
-          var fechaEl = document.createElement('span');
-          fechaEl.style.cssText = 'font-size:11px;color:var(--co-mute);white-space:nowrap';
-          // Restaurar estado guardado
-          var estadoGuardado = (c.onboardingJson && c.onboardingJson[it.id]) ? c.onboardingJson[it.id] : null;
-          if (estadoGuardado && estadoGuardado.estado === 'completado') {
-            chkWrap.dataset.done = '1';
-            chkWrap.style.background = '#EAF3DE';
-            chkWrap.style.borderColor = '#3B6D11';
-            chkWrap.innerHTML = '<i class="ti ti-check" style="font-size:10px;color:#3B6D11" aria-hidden="true"></i>';
-            fechaEl.textContent = estadoGuardado.fecha || '';
-            fechaEl.style.color = '#3B6D11';
-            fechaEl.style.fontWeight = '600';
-          } else {
-            fechaEl.textContent = 'D\u00eda ' + (it.plazosDias || 5);
-          }
           row.appendChild(fechaEl);
           wrap.appendChild(row);
-
-          // Observaciones — aparece al marcar, estilo rem-search-box input
-          var obsWrap = document.createElement('div');
-          obsWrap.style.cssText = 'display:none;padding:2px 0 4px 30px';
-          var obsInp = document.createElement('input');
-          obsInp.type = 'text';
-          obsInp.placeholder = 'Agregar observaci\u00f3n\u2026';
-          obsInp.style.cssText = 'border:none;background:transparent;font-family:var(--co-font);font-size:12px;color:var(--co-ink);width:100%;outline:none';
-          obsInp.addEventListener('click', function(e) { e.stopPropagation(); });
-          // Restaurar observación y mostrar si estaba completado
-          if (estadoGuardado && estadoGuardado.estado === 'completado') {
-            obsWrap.style.display = 'block';
-            if (estadoGuardado.observacion) obsInp.value = estadoGuardado.observacion;
-          }
-          obsWrap.appendChild(obsInp);
           wrap.appendChild(obsWrap);
 
           card.appendChild(wrap);
