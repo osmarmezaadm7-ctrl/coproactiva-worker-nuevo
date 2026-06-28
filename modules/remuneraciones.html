@@ -1137,6 +1137,52 @@
     cardOb.appendChild(linkOb);
     colDer.appendChild(cardOb);
 
+    // ── Carpeta Drive ─────────────────────────────────────
+    colDer.appendChild(_fichaSecLabel('Carpeta Drive'));
+    var cardDrive = document.createElement('div');
+    cardDrive.className = 'rem-ficha-card';
+    if (c.carpetaDriveId) {
+      var linkDrive = document.createElement('a');
+      linkDrive.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
+      linkDrive.target = '_blank';
+      linkDrive.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--co-orange);text-decoration:none';
+      linkDrive.innerHTML = '<i class="ti ti-folder" aria-hidden="true"></i> Abrir carpeta del trabajador';
+      cardDrive.appendChild(linkDrive);
+    } else {
+      var driveInfo = document.createElement('div');
+      driveInfo.style.cssText = 'font-size:12px;color:var(--co-mute);margin-bottom:10px';
+      driveInfo.textContent = 'Sin carpeta Drive asignada.';
+      var btnDrive = document.createElement('button');
+      btnDrive.className = 'rem-btn-sec';
+      btnDrive.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
+      btnDrive.addEventListener('click', function() {
+        btnDrive.disabled = true;
+        btnDrive.textContent = 'Creando...';
+        api('/remuneraciones/trabajadores/' + c.id + '/carpeta-drive', 'POST', {}).then(function(resp) {
+          if (resp.data && resp.data.ok) {
+            c.carpetaDriveId = resp.data.carpetaDriveId;
+            cardDrive.innerHTML = '';
+            var linkDrive2 = document.createElement('a');
+            linkDrive2.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
+            linkDrive2.target = '_blank';
+            linkDrive2.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--co-orange);text-decoration:none';
+            linkDrive2.innerHTML = '<i class="ti ti-folder" aria-hidden="true"></i> Abrir carpeta del trabajador';
+            cardDrive.appendChild(linkDrive2);
+          } else {
+            btnDrive.disabled = false;
+            btnDrive.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
+            alert('Error al crear carpeta: ' + ((resp.data && resp.data.error) || 'desconocido'));
+          }
+        }).catch(function() {
+          btnDrive.disabled = false;
+          btnDrive.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
+        });
+      });
+      cardDrive.appendChild(driveInfo);
+      cardDrive.appendChild(btnDrive);
+    }
+    colDer.appendChild(cardDrive);
+
     // Cargar onboarding real
     var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
     if (com) {
