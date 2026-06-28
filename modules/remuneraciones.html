@@ -1177,12 +1177,37 @@
   }
 
   // ── TAB ONBOARDING ───────────────────────────────────────────────────
+  function _actualizarPorcentajeOnboarding(el) {
+    var total = el.querySelectorAll('[data-done]').length;
+    var done  = el.querySelectorAll('[data-done="1"]').length;
+    var pct   = total > 0 ? Math.round(done / total * 100) : 0;
+    var pctEl  = el.querySelector('#ob-pct');
+    var subEl  = el.querySelector('#ob-sub');
+    var fillEl = el.querySelector('#ob-fill');
+    if (pctEl)  pctEl.textContent  = pct + '%';
+    if (subEl)  subEl.textContent  = done + ' de ' + total + ' completados';
+    if (fillEl) fillEl.style.width = pct + '%';
+  }
+
+  function _guardarOnboarding(c) {
+    // Serializar estado actual del onboarding y guardar en GAS
+    var estado = c.onboardingJson || {};
+    api('/remuneraciones/trabajadores', 'POST', {
+      action:        'editarTrabajador',
+      id:            c.id,
+      onboardingJson: JSON.stringify(estado),
+      modificadoPor: 'sistema'
+    }).catch(function() {
+      // Silencioso — no bloquear la UX si falla
+    });
+  }
+
   function _fichaOnboarding(el, c) {
     // Header progreso
     var cardProg = document.createElement('div');
     cardProg.className = 'rem-ficha-card';
     cardProg.style.marginBottom = '16px';
-    cardProg.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct">0%</div><div style="font-size:12px;color:var(--co-mute);margin-top:2px">0 \u00edtems completados</div></div><div style="text-align:right"><div style="font-size:11px;color:var(--co-mute)">Cargando...</div></div></div><div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" style="width:0%"></div></div>';
+    cardProg.innerHTML = '<div class="rem-ficha-prog-hdr"><div><div class="rem-ficha-prog-pct" id="ob-pct">0%</div><div style="font-size:12px;color:var(--co-mute);margin-top:2px" id="ob-sub">Cargando...</div></div></div><div class="rem-ficha-prog-bar"><div class="rem-ficha-prog-fill" id="ob-fill" style="width:0%"></div></div>';
     el.appendChild(cardProg);
 
     // Cargar plantilla del cargo
@@ -1217,11 +1242,42 @@
           chkWrap.dataset.done = '0';
           chkWrap.addEventListener('click', function() {
             var done = chkWrap.dataset.done === '1';
-            chkWrap.dataset.done = done ? '0' : '1';
-            chkWrap.style.background = done ? '' : '#EAF3DE';
-            chkWrap.style.borderColor = done ? 'var(--co-line)' : '#3B6D11';
-            chkWrap.innerHTML = done ? '' : '<i class="ti ti-check" style="font-size:10px;color:#3B6D11" aria-hidden="true"></i>';
-            fechaEl.textContent = done ? 'D\u00eda ' + (it.plazosDias || 5) : _fmtFecha(new Date().toISOString());
+            var ahora = !done;
+            chkWrap.dataset.done = ahora ? '1' : '0';
+            chkWrap.style.background = ahora ? '#EAF3DE' : '';
+            chkWrap.style.borderColor = ahora ? '#3B6D11' : 'var(--co-line)';
+            chkWrap.innerHTML = ahora ? '<i class="ti ti-check" style="font-size:10px;color:#3B6D11" aria-hidden="true"></i>' : '';
+            var fechaHoy = _fmtFecha(new Date().toISOString());
+            fechaEl.textContent = ahora ? fechaHoy : 'D\u00eda ' + (it.plazosDias || 5);
+            // Mostrar/ocultar observación
+            var obs = wrap.querySelector('div[style*="display"]');
+            if (obs) {
+              obs.style.display = ahora ? 'block' : 'none';
+              if (!ahora) { var inp = obs.querySelector('input'); if(inp) inp.value = ''; }
+            }
+            // Persistir en c.onboardingJson
+            if (!c.onboardingJson) c.onboardingJson = {};
+            if (ahora) {
+              c.onboardingJson[it.id] = {
+                estado:      'completado',
+                fecha:       fechaHoy,
+                observacion: obs ? (obs.querySelector('input') ? obs.querySelector('input').value : '') : ''
+              };
+            } else {
+              delete c.onboardingJson[it.id];
+            }
+            _guardarOnboarding(c);
+            _actualizarPorcentajeOnboarding(el);
+          });
+
+          // Guardar observación al perder foco
+          obsInp.addEventListener('blur', function() {
+            if (chkWrap.dataset.done === '1') {
+              if (!c.onboardingJson) c.onboardingJson = {};
+              if (!c.onboardingJson[it.id]) c.onboardingJson[it.id] = { estado: 'completado', fecha: _fmtFecha(new Date().toISOString()) };
+              c.onboardingJson[it.id].observacion = obsInp.value;
+              _guardarOnboarding(c);
+            }
           });
 
           var name = document.createElement('span');
@@ -1241,17 +1297,35 @@
 
           var fechaEl = document.createElement('span');
           fechaEl.style.cssText = 'font-size:11px;color:var(--co-mute);white-space:nowrap';
-          fechaEl.textContent = 'D\u00eda ' + (it.plazosDias || 5);
+          // Restaurar estado guardado
+          var estadoGuardado = (c.onboardingJson && c.onboardingJson[it.id]) ? c.onboardingJson[it.id] : null;
+          if (estadoGuardado && estadoGuardado.estado === 'completado') {
+            chkWrap.dataset.done = '1';
+            chkWrap.style.background = '#EAF3DE';
+            chkWrap.style.borderColor = '#3B6D11';
+            chkWrap.innerHTML = '<i class="ti ti-check" style="font-size:10px;color:#3B6D11" aria-hidden="true"></i>';
+            fechaEl.textContent = estadoGuardado.fecha || '';
+            fechaEl.style.color = '#3B6D11';
+            fechaEl.style.fontWeight = '600';
+          } else {
+            fechaEl.textContent = 'D\u00eda ' + (it.plazosDias || 5);
+          }
           row.appendChild(fechaEl);
           wrap.appendChild(row);
 
-          // Observaciones
+          // Observaciones — aparece al marcar, estilo rem-search-box input
           var obsWrap = document.createElement('div');
-          obsWrap.style.cssText = 'padding-left:28px;margin-top:2px';
+          obsWrap.style.cssText = 'display:none;padding:2px 0 4px 30px';
           var obsInp = document.createElement('input');
           obsInp.type = 'text';
-          obsInp.placeholder = 'Observaci\u00f3n (opcional)\u2026';
-          obsInp.style.cssText = 'width:100%;border:none;background:transparent;font-family:var(--co-font);font-size:11px;color:var(--co-mute);outline:none;padding:0';
+          obsInp.placeholder = 'Agregar observaci\u00f3n\u2026';
+          obsInp.style.cssText = 'border:none;background:transparent;font-family:var(--co-font);font-size:12px;color:var(--co-ink);width:100%;outline:none';
+          obsInp.addEventListener('click', function(e) { e.stopPropagation(); });
+          // Restaurar observación y mostrar si estaba completado
+          if (estadoGuardado && estadoGuardado.estado === 'completado') {
+            obsWrap.style.display = 'block';
+            if (estadoGuardado.observacion) obsInp.value = estadoGuardado.observacion;
+          }
           obsWrap.appendChild(obsInp);
           wrap.appendChild(obsWrap);
 
