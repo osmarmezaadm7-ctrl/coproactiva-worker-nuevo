@@ -1232,6 +1232,7 @@
       });
       // Agrupar por categoría y mostrar como pendientes (onboarding real pendiente)
       Object.keys(cats).forEach(function(cat) {
+        try {
         el.appendChild(_fichaSecLabel(cat));
         var card = document.createElement('div');
         card.className = 'rem-ficha-card';
@@ -1342,6 +1343,9 @@
           card.appendChild(wrap);
         });
         el.appendChild(card);
+        } catch(e) {
+          console.error('Error renderizando categoría', cat, e);
+        }
       });
       if (!items.length) {
         var vacio = document.createElement('div');
