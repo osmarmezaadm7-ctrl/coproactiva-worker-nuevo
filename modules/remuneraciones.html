@@ -1137,51 +1137,6 @@
     cardOb.appendChild(linkOb);
     colDer.appendChild(cardOb);
 
-    // ── Carpeta Drive ─────────────────────────────────────
-    colDer.appendChild(_fichaSecLabel('Carpeta Drive'));
-    var cardDrive = document.createElement('div');
-    cardDrive.className = 'rem-ficha-card';
-    if (c.carpetaDriveId) {
-      var linkDrive = document.createElement('a');
-      linkDrive.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
-      linkDrive.target = '_blank';
-      linkDrive.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--co-orange);text-decoration:none';
-      linkDrive.innerHTML = '<i class="ti ti-folder" aria-hidden="true"></i> Abrir carpeta del trabajador';
-      cardDrive.appendChild(linkDrive);
-    } else {
-      var driveInfo = document.createElement('div');
-      driveInfo.style.cssText = 'font-size:12px;color:var(--co-mute);margin-bottom:10px';
-      driveInfo.textContent = 'Sin carpeta Drive asignada.';
-      var btnDrive = document.createElement('button');
-      btnDrive.className = 'rem-btn-sec';
-      btnDrive.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
-      btnDrive.addEventListener('click', function() {
-        btnDrive.disabled = true;
-        btnDrive.textContent = 'Creando...';
-        api('/remuneraciones/trabajadores/' + c.id + '/carpeta-drive', 'POST', {}).then(function(resp) {
-          if (resp.data && resp.data.ok) {
-            c.carpetaDriveId = resp.data.carpetaDriveId;
-            cardDrive.innerHTML = '';
-            var linkDrive2 = document.createElement('a');
-            linkDrive2.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
-            linkDrive2.target = '_blank';
-            linkDrive2.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--co-orange);text-decoration:none';
-            linkDrive2.innerHTML = '<i class="ti ti-folder" aria-hidden="true"></i> Abrir carpeta del trabajador';
-            cardDrive.appendChild(linkDrive2);
-          } else {
-            btnDrive.disabled = false;
-            btnDrive.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
-            alert('Error al crear carpeta: ' + ((resp.data && resp.data.error) || 'desconocido'));
-          }
-        }).catch(function() {
-          btnDrive.disabled = false;
-          btnDrive.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
-        });
-      });
-      cardDrive.appendChild(driveInfo);
-      cardDrive.appendChild(btnDrive);
-    }
-    colDer.appendChild(cardDrive);
 
     // Cargar onboarding real
     var com = typeof getComunidadActiva === 'function' ? getComunidadActiva() : null;
@@ -1319,18 +1274,91 @@
 
   // ── TAB DOCUMENTOS ───────────────────────────────────────────────────
   function _fichaDocumentos(el, c) {
-    var hdrAcc = document.createElement('div');
-    hdrAcc.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:14px';
-    var btnSub = document.createElement('button');
-    btnSub.className = 'rem-btn-sec';
-    btnSub.innerHTML = '<i class="ti ti-upload" aria-hidden="true"></i> Subir documento';
-    hdrAcc.appendChild(btnSub);
-    el.appendChild(hdrAcc);
+    el.innerHTML = '';
+    if (!c.carpetaDriveId) {
+      // Sin carpeta Drive
+      var emptyWrap = document.createElement('div');
+      emptyWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center;border:2px dashed var(--co-line);border-radius:12px;margin-bottom:12px';
+      var emptyIco = document.createElement('div');
+      emptyIco.style.cssText = 'font-size:32px;color:var(--co-line);margin-bottom:10px';
+      emptyIco.innerHTML = '<i class="ti ti-folder-off" aria-hidden="true"></i>';
+      var emptyTitle = document.createElement('div');
+      emptyTitle.style.cssText = 'font-size:14px;font-weight:700;color:var(--co-ink);margin-bottom:6px';
+      emptyTitle.textContent = 'Sin carpeta Drive asignada';
+      var emptySub = document.createElement('div');
+      emptySub.style.cssText = 'font-size:12px;color:var(--co-mute);margin-bottom:16px;max-width:280px';
+      emptySub.textContent = 'Crea la carpeta para organizar los documentos de este trabajador en Drive.';
+      var btnCrear = document.createElement('button');
+      btnCrear.className = 'rem-btn-pri';
+      btnCrear.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
+      btnCrear.addEventListener('click', function() {
+        btnCrear.disabled = true;
+        btnCrear.textContent = 'Creando…';
+        api('/remuneraciones/trabajadores/' + c.id + '/carpeta-drive', 'POST', {}).then(function(resp) {
+          var ok = resp.data && (resp.data.ok || (resp.data.data && resp.data.data.carpetaDriveId));
+          if (ok) {
+            c.carpetaDriveId = (resp.data.data && resp.data.data.carpetaDriveId) || resp.data.carpetaDriveId;
+            _fichaDocumentos(el, c);
+          } else {
+            btnCrear.disabled = false;
+            btnCrear.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
+            alert('Error: ' + ((resp.data && resp.data.error) || 'desconocido'));
+          }
+        }).catch(function() {
+          btnCrear.disabled = false;
+          btnCrear.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
+        });
+      });
+      emptyWrap.appendChild(emptyIco);
+      emptyWrap.appendChild(emptyTitle);
+      emptyWrap.appendChild(emptySub);
+      emptyWrap.appendChild(btnCrear);
+      el.appendChild(emptyWrap);
+      var hint = document.createElement('div');
+      hint.style.cssText = 'font-size:11px;color:var(--co-mute);text-align:center';
+      hint.innerHTML = 'Se creará en <strong>Laboral / Colaboradores / ' + (c.apellidoPaterno||'') + ' ' + (c.nombres||'') + '</strong>';
+      el.appendChild(hint);
+      return;
+    }
 
-    var card = document.createElement('div');
-    card.className = 'rem-ficha-card';
-    var docs = ['Contrato de trabajo', 'Reglamento interno firmado', 'IRL firmado (DS N\u00b044)', 'Protocolo Ley Karin firmado'];
-    docs.forEach(function(d) {
+    // Con carpeta Drive
+    var topBar = document.createElement('div');
+    topBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px';
+    var linkRaiz = document.createElement('a');
+    linkRaiz.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
+    linkRaiz.target = '_blank';
+    linkRaiz.style.cssText = 'display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--co-orange);text-decoration:none';
+    linkRaiz.innerHTML = '<i class="ti ti-folder" aria-hidden="true"></i> Abrir carpeta raíz en Drive';
+    var btnSubir = document.createElement('button');
+    btnSubir.className = 'rem-btn-sec';
+    btnSubir.innerHTML = '<i class="ti ti-upload" aria-hidden="true"></i> Subir documento';
+    topBar.appendChild(linkRaiz);
+    topBar.appendChild(btnSubir);
+    el.appendChild(topBar);
+
+    el.appendChild(_fichaSecLabel('Carpetas del trabajador'));
+    var folderGrid = document.createElement('div');
+    folderGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px';
+    ['01_Contrato','02_Onboarding','03_Remuneraciones','04_Previsional','05_Otros'].forEach(function(sub) {
+      var item = document.createElement('a');
+      item.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
+      item.target = '_blank';
+      item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--co-cream);border:1px solid var(--co-line);border-radius:10px;text-decoration:none';
+      item.innerHTML = '<div style="width:32px;height:32px;border-radius:8px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-folder" style="font-size:16px;color:var(--co-orange)" aria-hidden="true"></i></div><div style="font-size:12px;font-weight:700;color:var(--co-ink)">' + sub + '</div>';
+      folderGrid.appendChild(item);
+    });
+    el.appendChild(folderGrid);
+
+    el.appendChild(_fichaSecLabel('Documentos recientes'));
+    var cardDocs = document.createElement('div');
+    cardDocs.className = 'rem-ficha-card';
+    cardDocs.style.padding = '0 16px';
+    [
+      { nombre: 'Contrato de trabajo', cat: '01_Contrato' },
+      { nombre: 'Reglamento interno firmado', cat: '02_Onboarding' },
+      { nombre: 'IRL firmado (DS N°44)', cat: '02_Onboarding' },
+      { nombre: 'Protocolo Ley Karin firmado', cat: '02_Onboarding' },
+    ].forEach(function(d) {
       var row = document.createElement('div');
       row.className = 'rem-ficha-doc';
       var ico = document.createElement('div');
@@ -1338,15 +1366,18 @@
       ico.innerHTML = '<i class="ti ti-file-text" aria-hidden="true"></i>';
       var nom = document.createElement('span');
       nom.style.cssText = 'flex:1;font-weight:600;font-size:12px;color:var(--co-ink)';
-      nom.textContent = d;
+      nom.textContent = d.nombre;
+      var cat = document.createElement('span');
+      cat.style.cssText = 'font-size:11px;color:var(--co-mute);margin-right:8px';
+      cat.textContent = d.cat;
       var btn = document.createElement('button');
       btn.className = 'rem-btn-sec';
       btn.style.cssText = 'padding:4px 10px;font-size:11px';
       btn.textContent = 'Ver';
-      row.appendChild(ico); row.appendChild(nom); row.appendChild(btn);
-      card.appendChild(row);
+      row.appendChild(ico); row.appendChild(nom); row.appendChild(cat); row.appendChild(btn);
+      cardDocs.appendChild(row);
     });
-    el.appendChild(card);
+    el.appendChild(cardDocs);
   }
 
   // ── TAB ASISTENCIA ───────────────────────────────────────────────────
