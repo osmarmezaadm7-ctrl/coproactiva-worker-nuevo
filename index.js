@@ -6,6 +6,8 @@
 // Cambio v3.3: agrega ruta GET /documentos/catalogo-comunidad
 // Cambio v3.6: agrega rutas /auth y /usuarios + validación HMAC
 // Cambio v3.7: agrega rutas /remuneraciones/trabajadores, /remuneraciones/parametros
+// Versión: 3.8 · Junio 2026
+// Cambio v3.8: agrega ruta POST /remuneraciones/trabajadores/:id/carpeta-drive
 // ============================================================
 
 const ALLOWED_ORIGINS = [
@@ -688,6 +690,17 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
+      // ── v3.8 — Crear carpeta Drive diferida para un trabajador ──
+if (url.pathname.match(/^\/remuneraciones\/trabajadores\/([^/]+)\/carpeta-drive$/) && method === 'POST') {
+  const segmentos    = url.pathname.split('/');
+  const idTrabajador = segmentos[3];
+  if (!idTrabajador) return jsonResponse({ ok: false, error: 'id requerido' }, 400, origin);
+  const data = await postAppsScript(APPS_SCRIPT_URL, {
+    action: 'crearCarpetaDriveTrabajador',
+    id:     idTrabajador,
+  });
+  return jsonResponse({ ok: true, data }, 200, origin);
+}
       if (url.pathname === '/remuneraciones/instalar' && method === 'POST') {
         const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojasParametrosRem' });
         const data2 = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojaTrabajadores' });
