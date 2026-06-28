@@ -1,6 +1,7 @@
 <!-- modules/remuneraciones.html — CoproActiva Remuneraciones -->
-<!-- Version: 1.1 · Junio 2026 -->
+<!-- Version: 1.2 · Junio 2026 -->
 <!-- v1.1: datos reales colaboradores, parametros con subtabs y datos desde GAS -->
+<!-- v1.2: plantillas onboarding — spinner, modal agregar/editar, nivelProteccion -->
 
 <style>
   #rem-root { font-family: var(--co-font); color: var(--co-ink); }
@@ -141,6 +142,8 @@
   .rem-ico-btn:hover { border-color: var(--co-orange); color: var(--co-orange); }
   .rem-ico-btn.danger:hover { border-color: #F7C1C1; color: #A32D2D; background: #FCEBEB; }
   .rem-lock { opacity: 0.35; cursor: not-allowed; }
+  .rem-plt-item.nivel-sistema { border-left: 3px solid var(--co-orange); border-radius: 0 8px 8px 0; }
+  .rem-plt-item.nivel-administrador { border-left: 3px solid #185FA5; border-radius: 0 8px 8px 0; }
 </style>
 
 <div id="rem-root">
@@ -1235,10 +1238,13 @@
 
   // ── PLANTILLAS ONBOARDING ─────────────────────────────────────────────────
   function renderPlantillas(el) {
+    el.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando plantilla</div></div></div>';
     var cargarYRenderizar = function() {
+      el.innerHTML = '';
       var hdr = document.createElement('div'); hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px';
       var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.style.marginBottom = '0'; secLabel.textContent = 'Plantillas de onboarding por cargo';
       var btnNuevo = document.createElement('button'); btnNuevo.className = 'rem-btn-pri'; btnNuevo.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i> Agregar ítem';
+      btnNuevo.addEventListener('click', function() { abrirModalItem(null, _cargoActivo); });
       hdr.appendChild(secLabel); hdr.appendChild(btnNuevo); el.appendChild(hdr);
 
       var cargoList = document.createElement('div'); cargoList.className = 'rem-cargo-list';
@@ -1273,6 +1279,7 @@
   }
 
   function _cargarItemsPlantilla(el, cargo) {
+    el.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando plantilla</div></div></div>';
     var url = cargo === '*'
       ? '/remuneraciones/parametros/plantillas?todas=true'
       : '/remuneraciones/parametros/plantillas?cargo=' + encodeURIComponent(cargo);
@@ -1295,22 +1302,34 @@
     Object.keys(cats).forEach(function(cat) {
       var secLabel = document.createElement('div'); secLabel.className = 'rem-section-label'; secLabel.textContent = cat; el.appendChild(secLabel);
       cats[cat].forEach(function(it) {
-        var div = document.createElement('div'); div.className = 'rem-plt-item' + (it.esLegal ? ' legal' : '');
+        // nivelProteccion: 'sistema' | 'administrador' | 'borrador' (fallback desde esLegal)
+        var nivel = it.nivelProteccion || (it.esLegal ? 'sistema' : 'borrador');
+        var claseNivel = nivel === 'sistema' ? ' nivel-sistema' : (nivel === 'administrador' ? ' nivel-administrador' : '');
+        var div = document.createElement('div'); div.className = 'rem-plt-item' + claseNivel;
         var nombre = document.createElement('span'); nombre.className = 'rem-plt-name'; nombre.textContent = it.nombre;
         var catPill = document.createElement('span'); catPill.className = 'rem-plt-cat'; catPill.textContent = it.cargo === '*' ? 'General' : it.cargo;
         var badges = document.createElement('div'); badges.className = 'rem-plt-badges';
-        if (it.esLegal)         { var b = document.createElement('span'); b.className = 'rem-pill legal'; b.textContent = 'Legal'; badges.appendChild(b); }
+        if (nivel === 'sistema') {
+          var b = document.createElement('span'); b.className = 'rem-pill legal'; b.textContent = 'Sistema'; badges.appendChild(b);
+        } else if (nivel === 'administrador') {
+          var b = document.createElement('span'); b.className = 'rem-pill blue'; b.textContent = 'Protegido'; badges.appendChild(b);
+        }
         if (it.requiereFirma)   { var b = document.createElement('span'); b.className = 'rem-pill blue'; b.textContent = 'Firma'; badges.appendChild(b); }
         if (it.requiereAdjunto) { var b = document.createElement('span'); b.style.cssText='background:#EAF3DE;color:#3B6D11;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700'; b.textContent = 'Adjunto'; badges.appendChild(b); }
         var plazo = document.createElement('span'); plazo.className = 'rem-plt-plazo'; plazo.textContent = 'Día ' + it.plazosDias;
         var actions = document.createElement('div'); actions.className = 'rem-plt-actions';
-        var btnEdit = document.createElement('button'); btnEdit.className = 'rem-ico-btn'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i>';
+        var btnEdit = document.createElement('button'); btnEdit.className = 'rem-ico-btn'; btnEdit.title = 'Editar'; btnEdit.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i>';
+        (function(item) {
+          btnEdit.addEventListener('click', function(e) { e.stopPropagation(); abrirModalItem(item, cargo); });
+        })(it);
         var btnDel = document.createElement('button');
-        if (it.esLegal) {
-          btnDel.className = 'rem-ico-btn rem-lock'; btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>'; btnDel.title = 'Ítem legal — no eliminable';
+        if (nivel === 'sistema') {
+          btnDel.className = 'rem-ico-btn rem-lock'; btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>'; btnDel.title = 'Ítem de sistema — no eliminable';
         } else {
           btnDel.className = 'rem-ico-btn danger'; btnDel.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>';
-          btnDel.addEventListener('click', function(e) { e.stopPropagation(); _eliminarItem(it.id, el, cargo); });
+          (function(itemId) {
+            btnDel.addEventListener('click', function(e) { e.stopPropagation(); _eliminarItem(itemId, el, cargo); });
+          })(it.id);
         }
         actions.appendChild(btnEdit); actions.appendChild(btnDel);
         div.appendChild(nombre); div.appendChild(catPill); div.appendChild(badges); div.appendChild(plazo); div.appendChild(actions);
@@ -1319,8 +1338,186 @@
     });
     var nota = document.createElement('p');
     nota.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:10px;display:flex;align-items:center;gap:4px';
-    nota.innerHTML = '<i class="ti ti-lock" aria-hidden="true" style="color:var(--co-orange);font-size:13px"></i> Los ítems marcados como <b style="color:var(--co-ink)">&nbsp;Legal&nbsp;</b> son obligatorios y no pueden eliminarse.';
+    nota.innerHTML = '<i class="ti ti-lock" aria-hidden="true" style="color:var(--co-orange);font-size:13px"></i> Ítems <b style="color:var(--co-ink)">&nbsp;Sistema&nbsp;</b> son definidos por CoproActiva y no pueden eliminarse.';
     el.appendChild(nota);
+  }
+
+  // ── MODAL AGREGAR / EDITAR ÍTEM PLANTILLA ────────────────────────────────
+  function abrirModalItem(item, cargo) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '580px';
+
+    var btnX = document.createElement('button'); btnX.className = 'modal-close'; btnX.textContent = '×';
+    btnX.addEventListener('click', cerrar);
+    box.appendChild(btnX);
+
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Parámetros · Onboarding'; box.appendChild(ey);
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = item ? 'Editar ítem' : 'Agregar ítem'; box.appendChild(tt);
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Plantilla de onboarding'; box.appendChild(st);
+
+    var form = document.createElement('div');
+
+    function secTitle(txt) {
+      var d = document.createElement('div');
+      d.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--co-line)';
+      d.textContent = txt; return d;
+    }
+    function field(label, el, full) {
+      var grp = document.createElement('div');
+      grp.className = 'form-group' + (full ? ' form-full' : '');
+      var lbl = document.createElement('label'); lbl.textContent = label;
+      grp.appendChild(lbl); grp.appendChild(el); return grp;
+    }
+    function mkInput(type, placeholder, val) {
+      var i = document.createElement('input');
+      i.type = type || 'text'; i.placeholder = placeholder || '';
+      if (val !== undefined && val !== null) i.value = val; return i;
+    }
+    function mkSelect(opciones, val) {
+      var s = document.createElement('select');
+      opciones.forEach(function(o) {
+        var opt = document.createElement('option');
+        opt.value = o.v !== undefined ? o.v : o;
+        opt.textContent = o.l !== undefined ? o.l : o;
+        if (val !== undefined && String(opt.value) === String(val)) opt.selected = true;
+        s.appendChild(opt);
+      });
+      return s;
+    }
+    function mkCheck(label, checked) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--co-ink);cursor:pointer';
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!checked;
+      cb.style.cssText = 'width:15px;height:15px;accent-color:var(--co-orange)';
+      wrap.appendChild(cb); wrap.appendChild(document.createTextNode(label));
+      wrap._cb = cb; return wrap;
+    }
+
+    // nivel actual
+    var nivelActual = item ? (item.nivelProteccion || (item.esLegal ? 'sistema' : 'borrador')) : 'borrador';
+    var esSistema = nivelActual === 'sistema';
+
+    form.appendChild(secTitle('Identificación'));
+    var grid1 = document.createElement('div'); grid1.className = 'form-grid';
+
+    var fNombre = mkInput('text', 'Ej: Firma contrato de trabajo', item ? item.nombre : '');
+    if (esSistema) fNombre.disabled = true;
+
+    var cargosOpts = [{ v:'*', l:'Todos los cargos' }].concat(_cargos.map(function(c) { return { v: c.nombre, l: c.nombre }; }));
+    var fCargo = mkSelect(cargosOpts, item ? item.cargo : (cargo || '*'));
+    if (esSistema) fCargo.disabled = true;
+
+    var fCategoria = mkSelect([
+      {v:'Documentación',l:'Documentación'},
+      {v:'Prevención',l:'Prevención'},
+      {v:'Legal',l:'Legal'},
+      {v:'Inducción',l:'Inducción'},
+      {v:'EPP',l:'EPP'},
+      {v:'Accesos',l:'Accesos'}
+    ], item ? item.categoria : 'Documentación');
+    if (esSistema) fCategoria.disabled = true;
+
+    var fResponsable = mkSelect([
+      {v:'administrador',l:'Administrador'},
+      {v:'trabajador',l:'Trabajador'}
+    ], item ? item.responsable : 'administrador');
+
+    var fPlazo = mkInput('number', '5', item ? item.plazosDias : 5);
+    fPlazo.min = 1; fPlazo.max = 90; fPlazo.style.width = '100px';
+
+    grid1.appendChild(field('Nombre del ítem *', fNombre, true));
+    grid1.appendChild(field('Cargo', fCargo));
+    grid1.appendChild(field('Categoría *', fCategoria));
+    grid1.appendChild(field('Responsable', fResponsable));
+    grid1.appendChild(field('Plazo (días desde ingreso) *', fPlazo));
+    form.appendChild(grid1);
+
+    form.appendChild(secTitle('Propiedades'));
+    var wFirma   = mkCheck('Requiere firma del trabajador',   item ? item.requiereFirma   : false);
+    var wAdjunto = mkCheck('Requiere adjuntar documento',     item ? item.requiereAdjunto : false);
+    var fgFirma   = document.createElement('div'); fgFirma.className = 'form-group form-full'; fgFirma.appendChild(wFirma);
+    var fgAdjunto = document.createElement('div'); fgAdjunto.className = 'form-group form-full'; fgAdjunto.appendChild(wAdjunto);
+    form.appendChild(fgFirma);
+    form.appendChild(fgAdjunto);
+
+    form.appendChild(secTitle('Nivel de protección'));
+    var fNivel = mkSelect([
+      {v:'borrador',    l:'Borrador — eliminable libremente'},
+      {v:'administrador',l:'Administrador — protegido por el administrador'},
+      {v:'sistema',     l:'Sistema — definido por CoproActiva (no eliminable)'}
+    ], nivelActual);
+    if (esSistema) fNivel.disabled = true;
+    var fgNivel = document.createElement('div'); fgNivel.className = 'form-group form-full'; fgNivel.appendChild(fNivel);
+    form.appendChild(fgNivel);
+
+    // Advertencia nivel sistema
+    if (esSistema) {
+      var aviso = document.createElement('div');
+      aviso.className = 'rem-alerta warn';
+      aviso.style.marginTop = '12px';
+      aviso.innerHTML = '<i class="ti ti-alert-triangle" aria-hidden="true"></i><div class="rem-alerta-txt">Ítem de nivel <b>Sistema</b> — solo puedes editar el responsable y plazo. El nombre, cargo, categoría y nivel no son modificables.</div>';
+      form.appendChild(aviso);
+    }
+
+    var errDiv = document.createElement('div'); errDiv.className = 'form-error'; form.appendChild(errDiv);
+
+    var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar';
+    btnGuardar.textContent = item ? 'Guardar cambios' : 'Crear ítem';
+    btnGuardar.addEventListener('click', function() {
+      var nombre = fNombre.value.trim();
+      if (!nombre) { errDiv.textContent = 'El nombre es obligatorio.'; return; }
+      if (!fPlazo.value || Number(fPlazo.value) < 1) { errDiv.textContent = 'El plazo debe ser al menos 1 día.'; return; }
+      errDiv.textContent = '';
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = 'Guardando…';
+
+      var datos = {
+        nombre:           nombre,
+        cargo:            fCargo.value,
+        categoria:        fCategoria.value,
+        responsable:      fResponsable.value,
+        plazosDias:       Number(fPlazo.value),
+        requiereFirma:    wFirma._cb.checked,
+        requiereAdjunto:  wAdjunto._cb.checked,
+        nivelProteccion:  fNivel.value
+      };
+
+      if (item) {
+        datos.action = 'editarItemPlantilla';
+        datos.id = item.id;
+      } else {
+        datos.action = 'crearItemPlantilla';
+      }
+
+      api('/remuneraciones/parametros/plantillas', 'POST', datos).then(function(resp) {
+        var ok = resp.data && (resp.data.ok || (resp.data.data && resp.data.data.ok));
+        if (ok) {
+          _plantillas = [];
+          var contenedor = document.getElementById('rem-plt-items');
+          if (contenedor) _cargarItemsPlantilla(contenedor, _cargoActivo);
+          cerrar();
+        } else {
+          errDiv.textContent = (resp.data && resp.data.error) ? resp.data.error : 'Error al guardar.';
+          btnGuardar.disabled = false;
+          btnGuardar.textContent = item ? 'Guardar cambios' : 'Crear ítem';
+        }
+      }).catch(function() {
+        errDiv.textContent = 'Error de conexión.';
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = item ? 'Guardar cambios' : 'Crear ítem';
+      });
+    });
+    form.appendChild(btnGuardar);
+
+    box.appendChild(form);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    function cerrar() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
   }
 
   function _eliminarItem(id, contenedor, cargo) {
