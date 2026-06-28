@@ -1275,43 +1275,27 @@
   // ── TAB DOCUMENTOS ───────────────────────────────────────────────────
   function _fichaDocumentos(el, c) {
     el.innerHTML = '';
+
     if (!c.carpetaDriveId) {
       // Sin carpeta Drive
       var emptyWrap = document.createElement('div');
       emptyWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center;border:2px dashed var(--co-line);border-radius:12px;margin-bottom:12px';
-      var emptyIco = document.createElement('div');
-      emptyIco.style.cssText = 'font-size:32px;color:var(--co-line);margin-bottom:10px';
-      emptyIco.innerHTML = '<i class="ti ti-folder-off" aria-hidden="true"></i>';
-      var emptyTitle = document.createElement('div');
-      emptyTitle.style.cssText = 'font-size:14px;font-weight:700;color:var(--co-ink);margin-bottom:6px';
-      emptyTitle.textContent = 'Sin carpeta Drive asignada';
-      var emptySub = document.createElement('div');
-      emptySub.style.cssText = 'font-size:12px;color:var(--co-mute);margin-bottom:16px;max-width:280px';
-      emptySub.textContent = 'Crea la carpeta para organizar los documentos de este trabajador en Drive.';
+      emptyWrap.innerHTML = '<div style="font-size:32px;color:var(--co-line);margin-bottom:10px"><i class="ti ti-folder-off" aria-hidden="true"></i></div><div style="font-size:14px;font-weight:700;color:var(--co-ink);margin-bottom:6px">Sin carpeta Drive asignada</div><div style="font-size:12px;color:var(--co-mute);margin-bottom:16px;max-width:280px">Crea la carpeta para organizar los documentos de este trabajador en Drive.</div>';
       var btnCrear = document.createElement('button');
       btnCrear.className = 'rem-btn-pri';
       btnCrear.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
       btnCrear.addEventListener('click', function() {
-        btnCrear.disabled = true;
-        btnCrear.textContent = 'Creando…';
+        btnCrear.disabled = true; btnCrear.textContent = 'Creando…';
         api('/remuneraciones/trabajadores/' + c.id + '/carpeta-drive', 'POST', {}).then(function(resp) {
-          var ok = resp.data && (resp.data.ok || (resp.data.data && resp.data.data.carpetaDriveId));
-          if (ok) {
-            c.carpetaDriveId = (resp.data.data && resp.data.data.carpetaDriveId) || resp.data.carpetaDriveId;
-            _fichaDocumentos(el, c);
-          } else {
+          var carpId = resp.data && ((resp.data.data && resp.data.data.carpetaDriveId) || resp.data.carpetaDriveId);
+          if (carpId) { c.carpetaDriveId = carpId; _fichaDocumentos(el, c); }
+          else {
             btnCrear.disabled = false;
             btnCrear.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
             alert('Error: ' + ((resp.data && resp.data.error) || 'desconocido'));
           }
-        }).catch(function() {
-          btnCrear.disabled = false;
-          btnCrear.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive';
-        });
+        }).catch(function() { btnCrear.disabled = false; btnCrear.innerHTML = '<i class="ti ti-folder-plus" aria-hidden="true"></i> Crear carpeta en Drive'; });
       });
-      emptyWrap.appendChild(emptyIco);
-      emptyWrap.appendChild(emptyTitle);
-      emptyWrap.appendChild(emptySub);
       emptyWrap.appendChild(btnCrear);
       el.appendChild(emptyWrap);
       var hint = document.createElement('div');
@@ -1321,9 +1305,9 @@
       return;
     }
 
-    // Con carpeta Drive
+    // Con carpeta Drive — topbar
     var topBar = document.createElement('div');
-    topBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px';
+    topBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
     var linkRaiz = document.createElement('a');
     linkRaiz.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
     linkRaiz.target = '_blank';
@@ -1332,52 +1316,102 @@
     var btnSubir = document.createElement('button');
     btnSubir.className = 'rem-btn-sec';
     btnSubir.innerHTML = '<i class="ti ti-upload" aria-hidden="true"></i> Subir documento';
-    topBar.appendChild(linkRaiz);
-    topBar.appendChild(btnSubir);
+    btnSubir.addEventListener('click', function() { window.open('https://drive.google.com/drive/folders/' + c.carpetaDriveId, '_blank'); });
+    topBar.appendChild(linkRaiz); topBar.appendChild(btnSubir);
     el.appendChild(topBar);
 
-    el.appendChild(_fichaSecLabel('Carpetas del trabajador'));
-    var folderGrid = document.createElement('div');
-    folderGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px';
-    ['01_Contrato','02_Onboarding','03_Remuneraciones','04_Previsional','05_Otros'].forEach(function(sub) {
-      var item = document.createElement('a');
-      item.href = 'https://drive.google.com/drive/folders/' + c.carpetaDriveId;
-      item.target = '_blank';
-      item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--co-cream);border:1px solid var(--co-line);border-radius:10px;text-decoration:none';
-      item.innerHTML = '<div style="width:32px;height:32px;border-radius:8px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-folder" style="font-size:16px;color:var(--co-orange)" aria-hidden="true"></i></div><div style="font-size:12px;font-weight:700;color:var(--co-ink)">' + sub + '</div>';
-      folderGrid.appendChild(item);
-    });
-    el.appendChild(folderGrid);
+    // Spinner mientras carga
+    var spinner = document.createElement('div');
+    spinner.className = 'module-loading';
+    spinner.style.minHeight = '120px';
+    spinner.innerHTML = '<div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando documentos</div></div>';
+    el.appendChild(spinner);
 
-    el.appendChild(_fichaSecLabel('Documentos recientes'));
-    var cardDocs = document.createElement('div');
-    cardDocs.className = 'rem-ficha-card';
-    cardDocs.style.padding = '0 16px';
-    [
-      { nombre: 'Contrato de trabajo', cat: '01_Contrato' },
-      { nombre: 'Reglamento interno firmado', cat: '02_Onboarding' },
-      { nombre: 'IRL firmado (DS N°44)', cat: '02_Onboarding' },
-      { nombre: 'Protocolo Ley Karin firmado', cat: '02_Onboarding' },
-    ].forEach(function(d) {
-      var row = document.createElement('div');
-      row.className = 'rem-ficha-doc';
-      var ico = document.createElement('div');
-      ico.className = 'rem-ficha-doc-ico';
-      ico.innerHTML = '<i class="ti ti-file-text" aria-hidden="true"></i>';
-      var nom = document.createElement('span');
-      nom.style.cssText = 'flex:1;font-weight:600;font-size:12px;color:var(--co-ink)';
-      nom.textContent = d.nombre;
-      var cat = document.createElement('span');
-      cat.style.cssText = 'font-size:11px;color:var(--co-mute);margin-right:8px';
-      cat.textContent = d.cat;
-      var btn = document.createElement('button');
-      btn.className = 'rem-btn-sec';
-      btn.style.cssText = 'padding:4px 10px;font-size:11px';
-      btn.textContent = 'Ver';
-      row.appendChild(ico); row.appendChild(nom); row.appendChild(cat); row.appendChild(btn);
-      cardDocs.appendChild(row);
+    // Cargar documentos reales desde GAS
+    api('/remuneraciones/trabajadores/' + c.id + '/documentos').then(function(resp) {
+      el.removeChild(spinner);
+      var docs = (resp.data && resp.data.data) ? resp.data.data : {};
+      var SUBS = ['01_Contrato','02_Onboarding','03_Remuneraciones','04_Previsional','05_Otros'];
+      var ABIERTAS = ['01_Contrato','02_Onboarding'];
+
+      SUBS.forEach(function(sub, idx) {
+        var archivos = docs[sub] || [];
+        var total = archivos.length;
+        var isOpen = ABIERTAS.indexOf(sub) >= 0;
+
+        var folderEl = document.createElement('div');
+        folderEl.style.cssText = 'background:var(--co-surface);border:1px solid ' + (isOpen ? 'var(--co-orange)' : 'var(--co-line)') + ';border-radius:12px;margin-bottom:8px;overflow:hidden;transition:border-color .15s';
+
+        // Header carpeta
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none';
+        hdr.innerHTML = '<div style="width:34px;height:34px;border-radius:8px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-folder" style="font-size:16px;color:var(--co-orange)" aria-hidden="true"></i></div>';
+        var nameEl = document.createElement('span');
+        nameEl.style.cssText = 'flex:1;font-size:13px;font-weight:700;color:var(--co-ink)';
+        nameEl.textContent = sub;
+        var countEl = document.createElement('span');
+        countEl.style.cssText = 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-right:8px;' + (total > 0 ? 'color:var(--co-orange);background:var(--co-orange-soft)' : 'color:var(--co-mute);background:var(--co-cream-deep)');
+        countEl.textContent = total + ' ' + (total === 1 ? 'archivo' : 'archivos');
+        var arrEl = document.createElement('i');
+        arrEl.className = 'ti ti-chevron-right';
+        arrEl.style.cssText = 'font-size:14px;color:var(--co-mute);transition:transform .2s;' + (isOpen ? 'transform:rotate(90deg)' : '');
+        hdr.appendChild(nameEl); hdr.appendChild(countEl); hdr.appendChild(arrEl);
+
+        // Body carpeta
+        var body = document.createElement('div');
+        body.style.cssText = 'border-top:1px solid var(--co-line);padding:0 16px;display:' + (isOpen ? 'block' : 'none');
+
+        if (total === 0) {
+          var emptyMsg = document.createElement('div');
+          emptyMsg.style.cssText = 'padding:14px 0;font-size:12px;color:var(--co-mute);text-align:center';
+          emptyMsg.textContent = 'Sin documentos en esta carpeta.';
+          body.appendChild(emptyMsg);
+        } else {
+          var mostrar = sub === '03_Remuneraciones' ? archivos.slice(0, 3) : archivos;
+          mostrar.forEach(function(arch) {
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--co-line-soft);font-size:12px';
+            var ico = document.createElement('div');
+            ico.style.cssText = 'width:26px;height:26px;border-radius:6px;background:var(--co-orange-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;color:var(--co-orange)';
+            ico.innerHTML = '<i class="ti ti-file-text" aria-hidden="true"></i>';
+            var info = document.createElement('div');
+            info.style.cssText = 'flex:1;min-width:0';
+            info.innerHTML = '<div style="font-weight:600;color:var(--co-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + arch.nombre + '</div><div style="font-size:11px;color:var(--co-mute);margin-top:1px">' + arch.fecha + (arch.tamano ? ' · ' + arch.tamano : '') + '</div>';
+            var btnVer = document.createElement('button');
+            btnVer.className = 'rem-btn-sec';
+            btnVer.style.cssText = 'padding:4px 10px;font-size:11px;flex-shrink:0';
+            btnVer.innerHTML = '<i class="ti ti-external-link" style="font-size:11px" aria-hidden="true"></i> Ver';
+            btnVer.addEventListener('click', function() { window.open(arch.url, '_blank'); });
+            row.appendChild(ico); row.appendChild(info); row.appendChild(btnVer);
+            body.appendChild(row);
+          });
+          if (sub === '03_Remuneraciones' && total > 3) {
+            var verMas = document.createElement('div');
+            verMas.style.cssText = 'padding:10px 0;font-size:11px;font-weight:700;color:var(--co-orange);cursor:pointer';
+            verMas.textContent = 'Ver todos en Drive →';
+            verMas.addEventListener('click', function() { window.open('https://drive.google.com/drive/folders/' + c.carpetaDriveId, '_blank'); });
+            body.appendChild(verMas);
+          }
+        }
+
+        // Toggle
+        hdr.addEventListener('click', function() {
+          var abierta = body.style.display !== 'none';
+          body.style.display = abierta ? 'none' : 'block';
+          arrEl.style.transform = abierta ? '' : 'rotate(90deg)';
+          folderEl.style.borderColor = abierta ? 'var(--co-line)' : 'var(--co-orange)';
+        });
+
+        folderEl.appendChild(hdr); folderEl.appendChild(body);
+        el.appendChild(folderEl);
+      });
+    }).catch(function() {
+      el.removeChild(spinner);
+      var err = document.createElement('div');
+      err.style.cssText = 'text-align:center;color:#A32D2D;padding:24px;font-size:12px';
+      err.textContent = 'Error al cargar documentos.';
+      el.appendChild(err);
     });
-    el.appendChild(cardDocs);
   }
 
   // ── TAB ASISTENCIA ───────────────────────────────────────────────────
