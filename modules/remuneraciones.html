@@ -332,11 +332,9 @@
   }
 
   function renderTabContent() {
-    // Reemplazar todo rem-root con la ficha
-    var root = document.getElementById('rem-root');
-    if (!root) return;
-    root.innerHTML = '';
-    var contenido = root;
+    var contenido = document.getElementById('rem-contenido');
+    if (!contenido) return;
+    contenido.innerHTML = '';
     var RENDERERS = {
       panel: renderPanel, colaboradores: renderColaboradores,
       procesos: renderProcesos, asistencia: renderAsistencia,
@@ -907,11 +905,9 @@
   }
 
   function abrirFichaColaborador(c) {
-    // Reemplazar todo rem-root con la ficha
-    var root = document.getElementById('rem-root');
-    if (!root) return;
-    root.innerHTML = '';
-    var contenido = root;
+    var contenido = document.getElementById('rem-contenido');
+    if (!contenido) return;
+    contenido.innerHTML = '';
 
     var nombre = c.nombreCompleto || ((c.nombres || '') + ' ' + (c.apellidoPaterno || '')).trim() || '\u2014';
     var ini = iniciales(nombre);
@@ -923,7 +919,8 @@
     back.style.marginBottom = '16px';
     back.innerHTML = '<i class="ti ti-arrow-left" aria-hidden="true"></i> Volver a colaboradores';
     back.addEventListener('click', function() {
-      renderModulo();
+      _tabActiva = 'colaboradores';
+      renderTabContent();
     });
     contenido.appendChild(back);
 
