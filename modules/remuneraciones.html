@@ -1003,10 +1003,9 @@
     // Ocultar todos los paneles cacheados
     el.querySelectorAll('[data-tab-panel]').forEach(function(p) { p.style.display = 'none'; });
 
-    // Si ya existe el panel, solo mostrarlo (Liquidaciones siempre recarga)
+    // Si ya existe el panel, solo mostrarlo
     var cached = el.querySelector('[data-tab-panel="' + tab + '"]');
-    if (cached && tab !== 'liquidaciones') { cached.style.display = ''; return; }
-    if (cached && tab === 'liquidaciones') { cached.remove(); }
+    if (cached) { cached.style.display = ''; return; }
 
     // Primera vez: crear panel y renderizar
     var panel = document.createElement('div');
@@ -1239,7 +1238,10 @@
   function _liqPeriodoLabel(periodo) {
     if (!periodo) return '<span style="font-size:13px;font-weight:500;color:var(--co-ink)">\u2014</span>';
     var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    var p = String(periodo).split('-');
+    var s = String(periodo);
+    if (s.length > 7) s = s.substring(0, 7);
+    var p = s.split('-');
+    if (p.length < 2 || !p[1] || isNaN(parseInt(p[1]))) return '<span style="font-size:13px;font-weight:500;color:var(--co-ink)">' + s + '</span>';
     var label = (meses[parseInt(p[1]) - 1] || p[1]) + ' ' + p[0];
     return '<span style="font-size:13px;font-weight:500;color:var(--co-ink)">' + label + '</span>';
   }
@@ -1256,8 +1258,7 @@
     function secLbl(txt) {
       var d = document.createElement('div');
       d.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--co-mute);padding:10px 0 6px;border-bottom:1px solid var(--co-line);margin-bottom:4px;margin-top:14px';
-      d.textContent = txt;
-      return d;
+      d.textContent = txt; return d;
     }
     function fila(lbl, val, color) {
       var d = document.createElement('div');
@@ -1271,10 +1272,8 @@
       d.innerHTML = '<span>' + lbl + '</span><span style="color:' + (color || 'var(--co-ink-2)') + '">' + val + '</span>';
       return d;
     }
-    // Haberes imponibles
     var secImp = document.createElement('div');
-    var lbl1 = secLbl('Haberes imponibles');
-    lbl1.style.marginTop = '0';
+    var lbl1 = secLbl('Haberes imponibles'); lbl1.style.marginTop = '0';
     secImp.appendChild(lbl1);
     var diasLabel = liq.diasTrabajados < liq.diasMes ? ' (' + liq.diasTrabajados + '/' + liq.diasMes + ' d\u00edas)' : '';
     if (liq.sueldoProporcional) secImp.appendChild(fila('Sueldo base' + diasLabel, fmtPeso(liq.sueldoProporcional)));
@@ -1283,7 +1282,6 @@
     if (liq.bonosAdicionales)   secImp.appendChild(fila('Bonos adicionales', fmtPeso(liq.bonosAdicionales)));
     secImp.appendChild(subtotal('Subtotal imponible', fmtPeso(liq.baseImponibleAfp)));
     wrap.appendChild(secImp);
-    // Haberes no imponibles
     var totalNoImp = (liq.asigColacion || 0) + (liq.asigMovilizacion || 0);
     if (totalNoImp > 0) {
       var secNoImp = document.createElement('div');
@@ -1293,7 +1291,6 @@
       secNoImp.appendChild(subtotal('Subtotal no imponible', fmtPeso(totalNoImp)));
       wrap.appendChild(secNoImp);
     }
-    // Descuentos legales
     var secDesc = document.createElement('div');
     secDesc.appendChild(secLbl('Descuentos legales'));
     var detSalud = {};
@@ -1308,32 +1305,25 @@
     secDesc.appendChild(fila('Impuesto 2a categor\u00eda', liq.impuesto2Cat ? '-' + fmtPeso(liq.impuesto2Cat) : '$0', liq.impuesto2Cat ? 'var(--co-red)' : 'var(--co-mute)'));
     secDesc.appendChild(subtotal('Total descuentos', '-' + fmtPeso(liq.totalDescuentos), 'var(--co-red)'));
     wrap.appendChild(secDesc);
-    // Beneficios
     var secAf = document.createElement('div');
     secAf.appendChild(secLbl('Beneficios'));
     secAf.appendChild(fila('Asig. familiar (tramo ' + (liq.tramoAsigFamiliar || '\u2014') + ')', liq.asigFamiliar ? fmtPeso(liq.asigFamiliar) : '$0', liq.asigFamiliar ? 'var(--co-green)' : 'var(--co-mute)'));
     wrap.appendChild(secAf);
-    // L\u00edquido
     var liqTotal = document.createElement('div');
     liqTotal.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 0 4px;margin-top:8px;border-top:2px solid var(--co-ink);font-size:15px;font-weight:700';
     liqTotal.innerHTML = '<span style="color:var(--co-ink)">L\u00edquido a pagar</span><span style="color:var(--co-orange)">' + fmtPeso(liq.liquidoAPagar) + '</span>';
     wrap.appendChild(liqTotal);
-    // Acciones
     var acciones = document.createElement('div');
     acciones.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;margin-top:14px';
     var btnEmp = document.createElement('button');
-    btnEmp.className = 'rem-btn-sec';
-    btnEmp.style.fontSize = '12px';
+    btnEmp.className = 'rem-btn-sec'; btnEmp.style.fontSize = '12px';
     btnEmp.innerHTML = '<i class="ti ti-building-bank" aria-hidden="true"></i> Ver costo empleador';
     btnEmp.addEventListener('click', function(e) { e.stopPropagation(); _liqModalCostoEmpleador(liq); });
     var btnPdf = document.createElement('button');
-    btnPdf.className = 'rem-btn-pri';
-    btnPdf.style.fontSize = '12px';
+    btnPdf.className = 'rem-btn-pri'; btnPdf.style.fontSize = '12px';
     btnPdf.innerHTML = '<i class="ti ti-download" aria-hidden="true"></i> Descargar PDF';
-    btnPdf.disabled = true;
-    btnPdf.title = 'Pr\u00f3ximamente';
-    acciones.appendChild(btnEmp);
-    acciones.appendChild(btnPdf);
+    btnPdf.disabled = true; btnPdf.title = 'Pr\u00f3ximamente';
+    acciones.appendChild(btnEmp); acciones.appendChild(btnPdf);
     wrap.appendChild(acciones);
     return wrap;
   }
@@ -1358,9 +1348,7 @@
     btnCerrar.textContent = 'Cerrar';
     btnCerrar.addEventListener('click', function() { document.body.removeChild(modal); });
     modal.addEventListener('click', function(e) { if (e.target === modal) document.body.removeChild(modal); });
-    box.appendChild(btnCerrar);
-    modal.appendChild(box);
-    document.body.appendChild(modal);
+    box.appendChild(btnCerrar); modal.appendChild(box); document.body.appendChild(modal);
   }
 
   function _liqCostoRow(lbl, val) {
