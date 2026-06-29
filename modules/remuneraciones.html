@@ -1178,12 +1178,14 @@
   function _fichaLiquidaciones(el, c) {
     var token = {};
     el._fichaToken = token;
-    el.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando liquidaciones</div></div></div>';
+    var inner = document.createElement('div');
+    inner.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando liquidaciones</div></div></div>';
+    el.appendChild(inner);
 
     api('/remuneraciones/liquidaciones/trabajador/' + c.id).then(function(resp) {
       if (el._fichaToken !== token) return;
-      el.innerHTML = '';
-      el.appendChild(_fichaSecLabel('Historial de liquidaciones'));
+      inner.innerHTML = '';
+      inner.appendChild(_fichaSecLabel('Historial de liquidaciones'));
 
       var lista = (resp && resp.data && resp.data.data) ? resp.data.data : [];
 
@@ -1235,15 +1237,15 @@
         });
       }
 
-      el.appendChild(card);
+      inner.appendChild(card);
     }).catch(function() {
       if (el._fichaToken !== token) return;
-      el.innerHTML = '';
-      el.appendChild(_fichaSecLabel('Historial de liquidaciones'));
+      inner.innerHTML = '';
+      inner.appendChild(_fichaSecLabel('Historial de liquidaciones'));
       var err = document.createElement('div');
       err.style.cssText = 'padding:24px;text-align:center;color:var(--co-mute);font-size:12px';
       err.textContent = 'No se pudo cargar el historial de liquidaciones.';
-      el.appendChild(err);
+      inner.appendChild(err);
     });
   }
 
