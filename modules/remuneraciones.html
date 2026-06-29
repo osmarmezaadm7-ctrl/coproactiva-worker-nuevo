@@ -1183,7 +1183,9 @@
     inner.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando liquidaciones</div></div></div>';
     el.appendChild(inner);
 
-    api('/remuneraciones/liquidaciones/trabajador/' + c.id).then(function(resp) {
+    var liqUrl = '/remuneraciones/liquidaciones/trabajador/' + c.id;
+    console.log('fichaLiq url:', liqUrl);
+    api(liqUrl).then(function(resp) {
       if (el._fichaToken !== token) return;
       inner.innerHTML = '';
       inner.appendChild(_fichaSecLabel('Historial de liquidaciones'));
