@@ -718,6 +718,112 @@ export default {
         return jsonResponse({ ok: true, parametros: data, trabajadores: data2 }, 200, origin);
       }
 
+      // ── v3.9 — Liquidaciones ─────────────────────────────────────────────
+
+      // Calcular liquidación (sin guardar)
+      if (url.pathname === '/remuneraciones/liquidaciones/calcular' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action:        'calcularLiquidacion',
+          trabajadorId:  body.trabajadorId,
+          periodo:       body.periodo,
+          opciones:      body.opciones || {},
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Generar y guardar liquidación individual
+      if (url.pathname === '/remuneraciones/liquidaciones' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action:        'generarLiquidacion',
+          trabajadorId:  body.trabajadorId,
+          periodo:       body.periodo,
+          opciones:      body.opciones || {},
+          usuario:       body.usuario  || '',
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Generar masivo (todos los vigentes de una comunidad)
+      if (url.pathname === '/remuneraciones/liquidaciones/masivo' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action:       'generarLiquidacionMasivo',
+          comunidadId:  body.comunidadId,
+          periodo:      body.periodo,
+          opciones:     body.opciones || {},
+          usuario:      body.usuario  || '',
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Listar liquidaciones por período (para tab Procesos)
+      if (url.pathname === '/remuneraciones/liquidaciones/periodo' && method === 'GET') {
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getLiquidacionesPeriodo', {
+          comunidadId: url.searchParams.get('comunidadId') || '',
+          periodo:     url.searchParams.get('periodo')     || '',
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Listar liquidaciones por trabajador (para tab Liquidaciones en ficha)
+      if (url.pathname.match(/^\/remuneraciones\/liquidaciones\/trabajador\/([^/]+)$/) && method === 'GET') {
+        const trabajadorId = url.pathname.split('/')[4];
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getLiquidacionesTrabajador', {
+          trabajadorId,
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Obtener una liquidación
+      if (url.pathname.match(/^\/remuneraciones\/liquidaciones\/([^/]+)$/) && method === 'GET') {
+        const id   = url.pathname.split('/')[3];
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'getLiquidacion', { id });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Cerrar período
+      if (url.pathname === '/remuneraciones/liquidaciones/cerrar' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action:      'cerrarPeriodoLiquidaciones',
+          comunidadId: body.comunidadId,
+          periodo:     body.periodo,
+          usuario:     body.usuario || '',
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Ítems adicionales (bonos, adelantos, descuentos)
+      if (url.pathname === '/remuneraciones/liquidaciones/items' && method === 'POST') {
+        const body = await request.json();
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action:        'agregarItemLiquidacion',
+          liquidacionId: body.liquidacionId,
+          tipo:          body.tipo,
+          descripcion:   body.descripcion,
+          monto:         body.monto,
+          usuario:       body.usuario || '',
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      if (url.pathname.match(/^\/remuneraciones\/liquidaciones\/items\/([^/]+)$/) && method === 'DELETE') {
+        const id   = url.pathname.split('/')[4];
+        const data = await postAppsScript(APPS_SCRIPT_URL, {
+          action: 'eliminarItemLiquidacion',
+          id,
+        });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
+      // Instalar hojas Liquidaciones
+      if (url.pathname === '/remuneraciones/liquidaciones/instalar' && method === 'POST') {
+        const data = await postAppsScript(APPS_SCRIPT_URL, { action: 'instalarHojasLiquidaciones' });
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
       return jsonResponse({ ok: false, error: 'Ruta no encontrada' }, 404, origin);
 
     } catch (error) {
