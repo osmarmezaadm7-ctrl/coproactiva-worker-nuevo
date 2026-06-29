@@ -1177,87 +1177,63 @@
 
   // ── TAB LIQUIDACIONES ────────────────────────────────────────────────
   function _fichaLiquidaciones(el, c) {
-    var token = {};
-    console.log('fichaLiq c:', c);
-    el._fichaToken = token;
-    var inner = document.createElement('div');
-    var spinner = document.createElement('div');
-    spinner.className = 'module-loading';
-    spinner.style.minHeight = '180px';
-    spinner.innerHTML = '<div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando liquidaciones</div></div>';
-    inner.appendChild(spinner);
-    el.appendChild(inner);
-
-    var liqUrl = '/remuneraciones/liquidaciones/trabajador/' + c.id;
-    console.log('fichaLiq url:', liqUrl);
-    try {
-    api(liqUrl).then(function(resp) {
-      if (el._fichaToken !== token) return;
-      inner.innerHTML = '';
-      inner.appendChild(_fichaSecLabel('Historial de liquidaciones'));
-
-      var lista = (resp && resp.data && resp.data.data) ? resp.data.data : [];
-
-      var card = document.createElement('div');
-      card.className = 'rem-ficha-card';
-      card.style.padding = '0';
-
-      var hdr = document.createElement('div');
-      hdr.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 100px 32px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--co-line);font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--co-mute)';
-      hdr.innerHTML = '<span>Per\u00edodo</span><span>Total haberes</span><span>L\u00edquido</span><span>Estado</span><span></span>';
-      card.appendChild(hdr);
-
-      if (!lista.length) {
-        var empty = document.createElement('div');
-        empty.style.cssText = 'padding:32px;text-align:center;color:var(--co-mute);font-size:12px';
-        empty.textContent = 'A\u00fan no hay liquidaciones generadas para este colaborador.';
-        card.appendChild(empty);
-      } else {
-        lista.forEach(function(liq) {
-          var row = document.createElement('div');
-          row.style.cssText = 'border-bottom:1px solid var(--co-line)';
-
-          var resumen = document.createElement('div');
-          resumen.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 100px 32px;gap:8px;padding:12px 14px;align-items:center;cursor:pointer';
-          resumen.innerHTML = _liqPeriodoLabel(liq.periodo) +
-            '<span style="font-size:13px;color:var(--co-ink)">' + _fmt(liq.totalHaberes) + '</span>' +
-            '<span style="font-size:13px;color:var(--co-ink)">' + _fmt(liq.liquidoAPagar) + '</span>' +
-            '<span>' + _liqBadge(liq.estado) + '</span>' +
-            '<span class="liq-chev" style="color:var(--co-mute);font-size:14px"><i class="ti ti-chevron-down" aria-hidden="true"></i></span>';
-
-          var detalle = document.createElement('div');
-          detalle.style.cssText = 'display:none;background:var(--co-cream-deep);border-top:1px solid var(--co-line);padding:16px 14px';
-          detalle.dataset.liqDet = '1';
-          detalle.appendChild(_liqDetalle(liq));
-
-          resumen.addEventListener('click', function() {
-            var open = detalle.style.display !== 'none';
-            card.querySelectorAll('[data-liq-det]').forEach(function(d) { d.style.display = 'none'; });
-            card.querySelectorAll('.liq-chev i').forEach(function(i) { i.style.transform = ''; });
-            if (!open) {
-              detalle.style.display = 'block';
-              resumen.querySelector('.liq-chev i').style.transform = 'rotate(180deg)';
-            }
+    el.innerHTML = '<div class="module-loading" style="min-height:180px"><div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando liquidaciones</div></div></div>';
+    api('/remuneraciones/liquidaciones/trabajador/' + c.id)
+      .then(function(resp) {
+        el.innerHTML = '';
+        el.appendChild(_fichaSecLabel('Historial de liquidaciones'));
+        var lista = (resp && resp.data && resp.data.data) ? resp.data.data : [];
+        var card = document.createElement('div');
+        card.className = 'rem-ficha-card';
+        card.style.padding = '0';
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 100px 32px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--co-line);font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--co-mute)';
+        hdr.innerHTML = '<span>Per\u00edodo</span><span>Total haberes</span><span>L\u00edquido</span><span>Estado</span><span></span>';
+        card.appendChild(hdr);
+        if (!lista.length) {
+          var empty = document.createElement('div');
+          empty.style.cssText = 'padding:32px;text-align:center;color:var(--co-mute);font-size:12px';
+          empty.textContent = 'A\u00fan no hay liquidaciones generadas para este colaborador.';
+          card.appendChild(empty);
+        } else {
+          lista.forEach(function(liq) {
+            var row = document.createElement('div');
+            row.style.cssText = 'border-bottom:1px solid var(--co-line)';
+            var resumen = document.createElement('div');
+            resumen.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 100px 32px;gap:8px;padding:12px 14px;align-items:center;cursor:pointer';
+            resumen.innerHTML = _liqPeriodoLabel(liq.periodo) +
+              '<span style="font-size:13px;color:var(--co-ink)">' + _fmt(liq.totalHaberes) + '</span>' +
+              '<span style="font-size:13px;color:var(--co-ink)">' + _fmt(liq.liquidoAPagar) + '</span>' +
+              '<span>' + _liqBadge(liq.estado) + '</span>' +
+              '<span class="liq-chev" style="color:var(--co-mute);font-size:14px"><i class="ti ti-chevron-down" aria-hidden="true"></i></span>';
+            var detalle = document.createElement('div');
+            detalle.style.cssText = 'display:none;background:var(--co-cream-deep);border-top:1px solid var(--co-line);padding:16px 14px';
+            detalle.dataset.liqDet = '1';
+            detalle.appendChild(_liqDetalle(liq));
+            resumen.addEventListener('click', function() {
+              var open = detalle.style.display !== 'none';
+              card.querySelectorAll('[data-liq-det]').forEach(function(d) { d.style.display = 'none'; });
+              card.querySelectorAll('.liq-chev i').forEach(function(i) { i.style.transform = ''; });
+              if (!open) {
+                detalle.style.display = 'block';
+                resumen.querySelector('.liq-chev i').style.transform = 'rotate(180deg)';
+              }
+            });
+            row.appendChild(resumen);
+            row.appendChild(detalle);
+            card.appendChild(row);
           });
-
-          row.appendChild(resumen);
-          row.appendChild(detalle);
-          card.appendChild(row);
-        });
-      }
-
-      inner.appendChild(card);
-    }).catch(function(err) {
-      console.log('fichaLiq catch:', err);
-      if (el._fichaToken !== token) return;
-      inner.innerHTML = '';
-      inner.appendChild(_fichaSecLabel('Historial de liquidaciones'));
-      var err = document.createElement('div');
-      err.style.cssText = 'padding:24px;text-align:center;color:var(--co-mute);font-size:12px';
-      err.textContent = 'No se pudo cargar el historial de liquidaciones.';
-      inner.appendChild(err);
-    });
-    } catch(e) { console.log('fichaLiq try-catch:', e); }
+        }
+        el.appendChild(card);
+      })
+      .catch(function() {
+        el.innerHTML = '';
+        el.appendChild(_fichaSecLabel('Historial de liquidaciones'));
+        var err = document.createElement('div');
+        err.style.cssText = 'padding:24px;text-align:center;color:var(--co-mute);font-size:12px';
+        err.textContent = 'No se pudo cargar el historial de liquidaciones.';
+        el.appendChild(err);
+      });
   }
 
   function _liqPeriodoLabel(periodo) {
@@ -1277,7 +1253,6 @@
 
   function _liqDetalle(liq) {
     var wrap = document.createElement('div');
-
     function secLbl(txt) {
       var d = document.createElement('div');
       d.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--co-mute);padding:10px 0 6px;border-bottom:1px solid var(--co-line);margin-bottom:4px;margin-top:14px';
@@ -1296,7 +1271,6 @@
       d.innerHTML = '<span>' + lbl + '</span><span style="color:' + (color || 'var(--co-ink-2)') + '">' + val + '</span>';
       return d;
     }
-
     // Haberes imponibles
     var secImp = document.createElement('div');
     var lbl1 = secLbl('Haberes imponibles');
@@ -1309,7 +1283,6 @@
     if (liq.bonosAdicionales)   secImp.appendChild(fila('Bonos adicionales', _fmt(liq.bonosAdicionales)));
     secImp.appendChild(subtotal('Subtotal imponible', _fmt(liq.baseImponibleAfp)));
     wrap.appendChild(secImp);
-
     // Haberes no imponibles
     var totalNoImp = (liq.asigColacion || 0) + (liq.asigMovilizacion || 0);
     if (totalNoImp > 0) {
@@ -1320,7 +1293,6 @@
       secNoImp.appendChild(subtotal('Subtotal no imponible', _fmt(totalNoImp)));
       wrap.appendChild(secNoImp);
     }
-
     // Descuentos legales
     var secDesc = document.createElement('div');
     secDesc.appendChild(secLbl('Descuentos legales'));
@@ -1336,19 +1308,16 @@
     secDesc.appendChild(fila('Impuesto 2a categor\u00eda', liq.impuesto2Cat ? '-' + _fmt(liq.impuesto2Cat) : '$0', liq.impuesto2Cat ? 'var(--co-red)' : 'var(--co-mute)'));
     secDesc.appendChild(subtotal('Total descuentos', '-' + _fmt(liq.totalDescuentos), 'var(--co-red)'));
     wrap.appendChild(secDesc);
-
-    // Beneficios — asig. familiar siempre visible
+    // Beneficios
     var secAf = document.createElement('div');
     secAf.appendChild(secLbl('Beneficios'));
     secAf.appendChild(fila('Asig. familiar (tramo ' + (liq.tramoAsigFamiliar || '\u2014') + ')', liq.asigFamiliar ? _fmt(liq.asigFamiliar) : '$0', liq.asigFamiliar ? 'var(--co-green)' : 'var(--co-mute)'));
     wrap.appendChild(secAf);
-
-    // Líquido
+    // L\u00edquido
     var liqTotal = document.createElement('div');
     liqTotal.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 0 4px;margin-top:8px;border-top:2px solid var(--co-ink);font-size:15px;font-weight:700';
     liqTotal.innerHTML = '<span style="color:var(--co-ink)">L\u00edquido a pagar</span><span style="color:var(--co-orange)">' + _fmt(liq.liquidoAPagar) + '</span>';
     wrap.appendChild(liqTotal);
-
     // Acciones
     var acciones = document.createElement('div');
     acciones.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;margin-top:14px';
@@ -1366,7 +1335,6 @@
     acciones.appendChild(btnEmp);
     acciones.appendChild(btnPdf);
     wrap.appendChild(acciones);
-
     return wrap;
   }
 
