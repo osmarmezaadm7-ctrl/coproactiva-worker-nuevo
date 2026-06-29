@@ -1202,8 +1202,8 @@
             var resumen = document.createElement('div');
             resumen.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 100px 32px;gap:8px;padding:12px 14px;align-items:center;cursor:pointer';
             resumen.innerHTML = _liqPeriodoLabel(liq.periodo) +
-              '<span style="font-size:13px;color:var(--co-ink)">' + _fmt(liq.totalHaberes) + '</span>' +
-              '<span style="font-size:13px;color:var(--co-ink)">' + _fmt(liq.liquidoAPagar) + '</span>' +
+              '<span style="font-size:13px;color:var(--co-ink)">' + fmtPeso(liq.totalHaberes) + '</span>' +
+              '<span style="font-size:13px;color:var(--co-ink)">' + fmtPeso(liq.liquidoAPagar) + '</span>' +
               '<span>' + _liqBadge(liq.estado) + '</span>' +
               '<span class="liq-chev" style="color:var(--co-mute);font-size:14px"><i class="ti ti-chevron-down" aria-hidden="true"></i></span>';
             var detalle = document.createElement('div');
@@ -1277,20 +1277,20 @@
     lbl1.style.marginTop = '0';
     secImp.appendChild(lbl1);
     var diasLabel = liq.diasTrabajados < liq.diasMes ? ' (' + liq.diasTrabajados + '/' + liq.diasMes + ' d\u00edas)' : '';
-    if (liq.sueldoProporcional) secImp.appendChild(fila('Sueldo base' + diasLabel, _fmt(liq.sueldoProporcional)));
-    if (liq.montoHorasExtra)    secImp.appendChild(fila('Horas extra (' + liq.horasExtra + ' hrs)', _fmt(liq.montoHorasExtra)));
-    if (liq.gratificacion)      secImp.appendChild(fila('Gratificaci\u00f3n garantizada', _fmt(liq.gratificacion)));
-    if (liq.bonosAdicionales)   secImp.appendChild(fila('Bonos adicionales', _fmt(liq.bonosAdicionales)));
-    secImp.appendChild(subtotal('Subtotal imponible', _fmt(liq.baseImponibleAfp)));
+    if (liq.sueldoProporcional) secImp.appendChild(fila('Sueldo base' + diasLabel, fmtPeso(liq.sueldoProporcional)));
+    if (liq.montoHorasExtra)    secImp.appendChild(fila('Horas extra (' + liq.horasExtra + ' hrs)', fmtPeso(liq.montoHorasExtra)));
+    if (liq.gratificacion)      secImp.appendChild(fila('Gratificaci\u00f3n garantizada', fmtPeso(liq.gratificacion)));
+    if (liq.bonosAdicionales)   secImp.appendChild(fila('Bonos adicionales', fmtPeso(liq.bonosAdicionales)));
+    secImp.appendChild(subtotal('Subtotal imponible', fmtPeso(liq.baseImponibleAfp)));
     wrap.appendChild(secImp);
     // Haberes no imponibles
     var totalNoImp = (liq.asigColacion || 0) + (liq.asigMovilizacion || 0);
     if (totalNoImp > 0) {
       var secNoImp = document.createElement('div');
       secNoImp.appendChild(secLbl('Haberes no imponibles'));
-      if (liq.asigColacion)     secNoImp.appendChild(fila('Asig. colaci\u00f3n', _fmt(liq.asigColacion)));
-      if (liq.asigMovilizacion) secNoImp.appendChild(fila('Asig. movilizaci\u00f3n', _fmt(liq.asigMovilizacion)));
-      secNoImp.appendChild(subtotal('Subtotal no imponible', _fmt(totalNoImp)));
+      if (liq.asigColacion)     secNoImp.appendChild(fila('Asig. colaci\u00f3n', fmtPeso(liq.asigColacion)));
+      if (liq.asigMovilizacion) secNoImp.appendChild(fila('Asig. movilizaci\u00f3n', fmtPeso(liq.asigMovilizacion)));
+      secNoImp.appendChild(subtotal('Subtotal no imponible', fmtPeso(totalNoImp)));
       wrap.appendChild(secNoImp);
     }
     // Descuentos legales
@@ -1298,25 +1298,25 @@
     secDesc.appendChild(secLbl('Descuentos legales'));
     var detSalud = {};
     try { detSalud = JSON.parse(liq.cotizacionSaludDetalle || '{}'); } catch(e) {}
-    if (liq.cotizacionAfp)   secDesc.appendChild(fila('AFP', '-' + _fmt(liq.cotizacionAfp), 'var(--co-red)'));
+    if (liq.cotizacionAfp)   secDesc.appendChild(fila('AFP', '-' + fmtPeso(liq.cotizacionAfp), 'var(--co-red)'));
     var saludLabel = detSalud.tipo === 'isapre' ? 'Isapre (plan)' : detSalud.tipo === 'fonasa_ccaf' ? 'Salud Fonasa + CCAF (7%)' : 'Salud Fonasa (7%)';
-    if (liq.cotizacionSalud) secDesc.appendChild(fila(saludLabel, '-' + _fmt(liq.cotizacionSalud), 'var(--co-red)'));
-    if (liq.cotizacionSC)    secDesc.appendChild(fila('Seguro cesant\u00eda (0.6%)', '-' + _fmt(liq.cotizacionSC), 'var(--co-red)'));
-    if (liq.descuentosCcaf)  secDesc.appendChild(fila('Descuentos CCAF', '-' + _fmt(liq.descuentosCcaf), 'var(--co-red)'));
-    if (liq.adelantos)       secDesc.appendChild(fila('Anticipos', '-' + _fmt(liq.adelantos), 'var(--co-red)'));
-    if (liq.otrosDescuentos) secDesc.appendChild(fila('Otros descuentos', '-' + _fmt(liq.otrosDescuentos), 'var(--co-red)'));
-    secDesc.appendChild(fila('Impuesto 2a categor\u00eda', liq.impuesto2Cat ? '-' + _fmt(liq.impuesto2Cat) : '$0', liq.impuesto2Cat ? 'var(--co-red)' : 'var(--co-mute)'));
-    secDesc.appendChild(subtotal('Total descuentos', '-' + _fmt(liq.totalDescuentos), 'var(--co-red)'));
+    if (liq.cotizacionSalud) secDesc.appendChild(fila(saludLabel, '-' + fmtPeso(liq.cotizacionSalud), 'var(--co-red)'));
+    if (liq.cotizacionSC)    secDesc.appendChild(fila('Seguro cesant\u00eda (0.6%)', '-' + fmtPeso(liq.cotizacionSC), 'var(--co-red)'));
+    if (liq.descuentosCcaf)  secDesc.appendChild(fila('Descuentos CCAF', '-' + fmtPeso(liq.descuentosCcaf), 'var(--co-red)'));
+    if (liq.adelantos)       secDesc.appendChild(fila('Anticipos', '-' + fmtPeso(liq.adelantos), 'var(--co-red)'));
+    if (liq.otrosDescuentos) secDesc.appendChild(fila('Otros descuentos', '-' + fmtPeso(liq.otrosDescuentos), 'var(--co-red)'));
+    secDesc.appendChild(fila('Impuesto 2a categor\u00eda', liq.impuesto2Cat ? '-' + fmtPeso(liq.impuesto2Cat) : '$0', liq.impuesto2Cat ? 'var(--co-red)' : 'var(--co-mute)'));
+    secDesc.appendChild(subtotal('Total descuentos', '-' + fmtPeso(liq.totalDescuentos), 'var(--co-red)'));
     wrap.appendChild(secDesc);
     // Beneficios
     var secAf = document.createElement('div');
     secAf.appendChild(secLbl('Beneficios'));
-    secAf.appendChild(fila('Asig. familiar (tramo ' + (liq.tramoAsigFamiliar || '\u2014') + ')', liq.asigFamiliar ? _fmt(liq.asigFamiliar) : '$0', liq.asigFamiliar ? 'var(--co-green)' : 'var(--co-mute)'));
+    secAf.appendChild(fila('Asig. familiar (tramo ' + (liq.tramoAsigFamiliar || '\u2014') + ')', liq.asigFamiliar ? fmtPeso(liq.asigFamiliar) : '$0', liq.asigFamiliar ? 'var(--co-green)' : 'var(--co-mute)'));
     wrap.appendChild(secAf);
     // L\u00edquido
     var liqTotal = document.createElement('div');
     liqTotal.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 0 4px;margin-top:8px;border-top:2px solid var(--co-ink);font-size:15px;font-weight:700';
-    liqTotal.innerHTML = '<span style="color:var(--co-ink)">L\u00edquido a pagar</span><span style="color:var(--co-orange)">' + _fmt(liq.liquidoAPagar) + '</span>';
+    liqTotal.innerHTML = '<span style="color:var(--co-ink)">L\u00edquido a pagar</span><span style="color:var(--co-orange)">' + fmtPeso(liq.liquidoAPagar) + '</span>';
     wrap.appendChild(liqTotal);
     // Acciones
     var acciones = document.createElement('div');
@@ -1351,7 +1351,7 @@
     if (liq.aporteEmpleadorSC)       rows += _liqCostoRow('Seguro cesant\u00eda empleador', liq.aporteEmpleadorSC);
     if (liq.aporteEmpleadorMutual)   rows += _liqCostoRow('Mutual', liq.aporteEmpleadorMutual);
     box.innerHTML = '<div style="font-size:14px;font-weight:700;color:var(--co-ink);margin-bottom:16px">Costo empleador \u2014 ' + liq.periodo + '</div>' + rows +
-      '<div style="display:flex;justify-content:space-between;padding:10px 0 0;margin-top:8px;border-top:2px solid var(--co-ink);font-size:14px;font-weight:700"><span>Total costo empleador</span><span style="color:var(--co-orange)">' + _fmt(liq.totalCostoEmpleador) + '</span></div>';
+      '<div style="display:flex;justify-content:space-between;padding:10px 0 0;margin-top:8px;border-top:2px solid var(--co-ink);font-size:14px;font-weight:700"><span>Total costo empleador</span><span style="color:var(--co-orange)">' + fmtPeso(liq.totalCostoEmpleador) + '</span></div>';
     var btnCerrar = document.createElement('button');
     btnCerrar.className = 'rem-btn-sec';
     btnCerrar.style.cssText = 'margin-top:16px;width:100%;font-size:13px';
@@ -1364,7 +1364,7 @@
   }
 
   function _liqCostoRow(lbl, val) {
-    return '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--co-line-soft)"><span style="color:var(--co-ink-3)">' + lbl + '</span><span style="font-weight:500;color:var(--co-ink)">' + _fmt(val) + '</span></div>';
+    return '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--co-line-soft)"><span style="color:var(--co-ink-3)">' + lbl + '</span><span style="font-weight:500;color:var(--co-ink)">' + fmtPeso(val) + '</span></div>';
   }
 
   // ── TAB ONBOARDING ───────────────────────────────────────────────────
