@@ -1003,9 +1003,10 @@
     // Ocultar todos los paneles cacheados
     el.querySelectorAll('[data-tab-panel]').forEach(function(p) { p.style.display = 'none'; });
 
-    // Si ya existe el panel, solo mostrarlo
+    // Si ya existe el panel, solo mostrarlo (Liquidaciones siempre recarga)
     var cached = el.querySelector('[data-tab-panel="' + tab + '"]');
-    if (cached) { cached.style.display = ''; return; }
+    if (cached && tab !== 'liquidaciones') { cached.style.display = ''; return; }
+    if (cached && tab === 'liquidaciones') { cached.remove(); }
 
     // Primera vez: crear panel y renderizar
     var panel = document.createElement('div');
@@ -1189,6 +1190,7 @@
 
     var liqUrl = '/remuneraciones/liquidaciones/trabajador/' + c.id;
     console.log('fichaLiq url:', liqUrl);
+    try {
     api(liqUrl).then(function(resp) {
       if (el._fichaToken !== token) return;
       inner.innerHTML = '';
@@ -1245,7 +1247,8 @@
       }
 
       inner.appendChild(card);
-    }).catch(function() {
+    }).catch(function(err) {
+      console.log('fichaLiq catch:', err);
       if (el._fichaToken !== token) return;
       inner.innerHTML = '';
       inner.appendChild(_fichaSecLabel('Historial de liquidaciones'));
@@ -1254,6 +1257,7 @@
       err.textContent = 'No se pudo cargar el historial de liquidaciones.';
       inner.appendChild(err);
     });
+    } catch(e) { console.log('fichaLiq try-catch:', e); }
   }
 
   function _liqPeriodoLabel(periodo) {
