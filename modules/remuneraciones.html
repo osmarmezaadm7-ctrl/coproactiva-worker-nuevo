@@ -1181,7 +1181,7 @@
       .then(function(resp) {
         el.innerHTML = '';
         el.appendChild(_fichaSecLabel('Historial de liquidaciones'));
-        var lista = (resp && resp.data && resp.data.data) ? resp.data.data : [];
+        var lista = (resp && resp.data && resp.data.data) ? resp.data.data.filter(function(l) { return l.estado === 'cerrado'; }) : [];
         var card = document.createElement('div');
         card.className = 'rem-ficha-card';
         card.style.padding = '0';
@@ -1192,7 +1192,7 @@
         if (!lista.length) {
           var empty = document.createElement('div');
           empty.style.cssText = 'padding:32px;text-align:center;color:var(--co-mute);font-size:12px';
-          empty.textContent = 'A\u00fan no hay liquidaciones generadas para este colaborador.';
+          empty.textContent = 'A\u00fan no hay liquidaciones cerradas para este colaborador.';
           card.appendChild(empty);
         } else {
           lista.forEach(function(liq) {
@@ -1275,7 +1275,7 @@
     var secImp = document.createElement('div');
     var lbl1 = secLbl('Haberes imponibles'); lbl1.style.marginTop = '0';
     secImp.appendChild(lbl1);
-    var diasLabel = liq.diasTrabajados < liq.diasMes ? ' (' + liq.diasTrabajados + '/' + liq.diasMes + ' d\u00edas)' : '';
+    var diasLabel = liq.diasTrabajados < 30 ? ' (' + liq.diasTrabajados + '/30 d\u00edas)' : '';
     if (liq.sueldoProporcional) secImp.appendChild(fila('Sueldo base' + diasLabel, fmtPeso(liq.sueldoProporcional)));
     if (liq.montoHorasExtra)    secImp.appendChild(fila('Horas extra (' + liq.horasExtra + ' hrs)', fmtPeso(liq.montoHorasExtra)));
     if (liq.gratificacion)      secImp.appendChild(fila('Gratificaci\u00f3n garantizada', fmtPeso(liq.gratificacion)));
