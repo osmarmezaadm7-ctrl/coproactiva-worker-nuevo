@@ -207,13 +207,13 @@
 
   /* ── Liquidaciones — fila responsiva ──────────────────────────────── */
   .liq-row-hdr {
-    display:grid; grid-template-columns:90px 1fr 1fr 70px 90px 28px; gap:8px;
-    padding:8px 14px; border-bottom:1px solid var(--co-line);
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr 24px; gap:8px;
+    padding:8px 16px; border-bottom:1px solid var(--co-line);
     font-size:10px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--co-mute);
   }
   .liq-row-data {
-    display:grid; grid-template-columns:90px 1fr 1fr 70px 90px 28px; gap:8px;
-    padding:12px 14px; align-items:center; cursor:pointer;
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr 24px; gap:8px;
+    padding:14px 16px; align-items:center; cursor:pointer;
   }
   .liq-row-data .liq-cell-liquido { font-size:13px; font-weight:700; color:var(--co-orange); }
   .liq-row-data .liq-cell-desc    { font-size:13px; color:var(--co-ink); }
@@ -1317,7 +1317,7 @@
     }
     function subtotal(lbl, val, color) {
       var d = document.createElement('div');
-      d.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:12px;font-weight:600;color:var(--co-ink-2);border-top:1px solid var(--co-line);margin-top:2px';
+      d.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;font-weight:600;color:var(--co-ink-2);border-top:1px solid var(--co-line);margin-top:2px';
       d.innerHTML = '<span>' + lbl + '</span><span style="color:' + (color || 'var(--co-ink-2)') + '">' + val + '</span>';
       return d;
     }
