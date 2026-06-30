@@ -236,6 +236,27 @@
     .liq-mv-nums .liq-cell-dias { display:block; font-size:13px; }
   }
 
+  /* ── Colaboradores — tabla desktop / tarjetas móvil ──────────────────── */
+  .rem-col-cards { display:none; }
+  .rem-col-card {
+    background:var(--co-surface); border:1px solid var(--co-line); border-radius:12px;
+    padding:14px 16px; margin-bottom:10px; cursor:pointer;
+  }
+  .rem-col-card-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .rem-col-card-name-wrap { flex:1; min-width:0; }
+  .rem-col-card-name { font-size:14px; font-weight:700; color:var(--co-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rem-col-card-cargo { font-size:12px; color:var(--co-ink-3); margin-top:1px; }
+  .rem-col-card-divider { height:1px; background:var(--co-line); margin:10px 0; }
+  .rem-col-card-meta { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .rem-col-card-meta-item { display:flex; flex-direction:column; gap:3px; }
+  .rem-col-card-meta-lbl { font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--co-mute); }
+  .rem-col-card-meta-val { font-size:13px; color:var(--co-ink); }
+
+  @media (max-width: 600px) {
+    .rem-table-wrap { display:none; }
+    .rem-col-cards { display:block; }
+  }
+
   /* ── Media queries móvil ───────────────────────────────────────────── */
   @media (max-width: 600px) {
     .rem-ficha-kpis { grid-template-columns: 1fr 1fr; }
@@ -505,30 +526,35 @@
     });
     el.appendChild(filtros);
 
-    var tbWrap = document.createElement('div'); tbWrap.style.overflowX = 'auto';
+    var tbWrap = document.createElement('div'); tbWrap.className = 'rem-table-wrap'; tbWrap.style.overflowX = 'auto';
     var table = document.createElement('table'); table.className = 'rem-table';
     table.innerHTML = '<thead><tr><th></th><th>Nombre</th><th>RUT</th><th>Cargo</th><th>Contrato</th><th>Sueldo base</th><th>Estado</th><th></th></tr></thead>';
     var tbody = document.createElement('tbody');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--co-mute);padding:24px">Cargando colaboradores\u2026</td></tr>';
     table.appendChild(tbody); tbWrap.appendChild(table); el.appendChild(tbWrap);
 
-    searchInput.addEventListener('input', function() { _renderListaColaboradores(tbody, searchInput.value, _filtroActivo); });
+    var cardsWrap = document.createElement('div'); cardsWrap.className = 'rem-col-cards';
+    cardsWrap.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px;font-size:12px">Cargando colaboradores\u2026</div>';
+    el.appendChild(cardsWrap);
+
+    searchInput.addEventListener('input', function() { _renderListaColaboradores(tbody, searchInput.value, _filtroActivo, cardsWrap); });
 
     // Cargar datos reales — usar caché si misma comunidad
     if (_colaboradores.length > 0 && _colaboradoresComunidadId === com.id) {
-      _renderListaColaboradores(tbody, '', _filtroActivo);
+      _renderListaColaboradores(tbody, '', _filtroActivo, cardsWrap);
     } else {
       api('/remuneraciones/trabajadores?comunidadId=' + com.id).then(function(resp) {
         _colaboradores = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
         _colaboradoresComunidadId = com.id;
-        _renderListaColaboradores(tbody, '', _filtroActivo);
+        _renderListaColaboradores(tbody, '', _filtroActivo, cardsWrap);
       }).catch(function() {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#A32D2D;padding:24px">Error al cargar colaboradores.</td></tr>';
+        cardsWrap.innerHTML = '<div style="text-align:center;color:#A32D2D;padding:24px;font-size:12px">Error al cargar colaboradores.</div>';
       });
     }
   }
 
-  function _renderListaColaboradores(tbody, busqueda, filtro) {
+  function _renderListaColaboradores(tbody, busqueda, filtro, cardsWrap) {
     var lista = _colaboradores.filter(function(c) {
       if (filtro === 'vigentes'      && c.estado !== 'activo' && c.estado !== 'licencia') return false;
       if (filtro === 'desvinculados' && c.estado !== 'desvinculado') return false;
@@ -544,13 +570,19 @@
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--co-mute);padding:24px">' +
         'No hay colaboradores' + (filtro === 'todos' ? '' : ' ' + (filtro === 'vigentes' ? 'vigentes' : 'desvinculados')) + ' en esta comunidad.<br>' +
         '<span style="font-size:11px">Usa "Nuevo trabajador" para agregar el primero.</span></td></tr>';
+      if (cardsWrap) {
+        cardsWrap.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:24px;font-size:12px">' +
+          'No hay colaboradores' + (filtro === 'todos' ? '' : ' ' + (filtro === 'vigentes' ? 'vigentes' : 'desvinculados')) + ' en esta comunidad.</div>';
+      }
       return;
     }
 
     tbody.innerHTML = '';
+    if (cardsWrap) cardsWrap.innerHTML = '';
     lista.forEach(function(c) {
       var estadoPill = { activo:'<span class="rem-pill ok">Activo</span>', licencia:'<span class="rem-pill warn">Licencia</span>', desvinculado:'<span class="rem-pill gray">Desvinculado</span>' }[c.estado] || '<span class="rem-pill gray">' + (c.estado || '\u2014') + '</span>';
       var nombre = c.nombreCompleto || ((c.nombres || '') + ' ' + (c.apellidoPaterno || '')).trim() || '\u2014';
+
       var tr = document.createElement('tr');
       tr.innerHTML =
         '<td><div class="rem-avatar">' + iniciales(nombre) + '</div></td>' +
@@ -563,6 +595,28 @@
         '<td><i class="ti ti-chevron-right" aria-hidden="true" style="color:var(--co-mute)"></i></td>';
       tr.addEventListener('click', function() { abrirFichaColaborador(c); });
       tbody.appendChild(tr);
+
+      if (cardsWrap) {
+        var card = document.createElement('div');
+        card.className = 'rem-col-card';
+        card.innerHTML =
+          '<div class="rem-col-card-top">' +
+            '<div class="rem-avatar">' + iniciales(nombre) + '</div>' +
+            '<div class="rem-col-card-name-wrap">' +
+              '<div class="rem-col-card-name">' + nombre + '</div>' +
+              '<div class="rem-col-card-cargo">' + (c.cargo || '\u2014') + '</div>' +
+            '</div>' +
+            '<i class="ti ti-chevron-right" aria-hidden="true" style="color:var(--co-mute);font-size:16px;flex-shrink:0"></i>' +
+          '</div>' +
+          '<div class="rem-col-card-divider"></div>' +
+          '<div class="rem-col-card-meta">' +
+            '<div class="rem-col-card-meta-item"><span class="rem-col-card-meta-lbl">RUT</span><span class="rem-col-card-meta-val">' + (c.rut ? c.rut + '-' + (c.dv || '') : '\u2014') + '</span></div>' +
+            '<div class="rem-col-card-meta-item"><span class="rem-col-card-meta-lbl">Sueldo base</span><span class="rem-col-card-meta-val">' + fmtPeso(c.sueldoBase) + '</span></div>' +
+            '<div class="rem-col-card-meta-item" style="grid-column:1/3"><span class="rem-col-card-meta-lbl">Estado</span>' + estadoPill + '</div>' +
+          '</div>';
+        card.addEventListener('click', function() { abrirFichaColaborador(c); });
+        cardsWrap.appendChild(card);
+      }
     });
   }
 
