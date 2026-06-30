@@ -3618,6 +3618,88 @@
     });
     box.appendChild(grid);
 
+    // ── Sección datos laborales — empleador ───────────────────
+    var labSep = document.createElement('div');
+    labSep.style.cssText = 'border-top:1px solid var(--co-line);margin:20px 0 16px';
+    box.appendChild(labSep);
+    var labTit = document.createElement('div');
+    labTit.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:12px';
+    labTit.textContent = 'Datos laborales \u2014 empleador';
+    box.appendChild(labTit);
+
+    var gridLab = document.createElement('div'); gridLab.className = 'form-grid';
+
+    var fgMutual = document.createElement('div'); fgMutual.className = 'form-group';
+    var lblMutual = document.createElement('label'); lblMutual.textContent = 'Mutual de seguridad'; fgMutual.appendChild(lblMutual);
+    var selMutual = document.createElement('select'); selMutual.id = 'e-mutual';
+    [['00','Sin mutual (ISL)'],['01','Asociaci\u00F3n Chilena de Seguridad (ACHS)'],['02','Mutual de Seguridad CChC'],['03','Instituto de Seguridad del Trabajo (IST)']].forEach(function(m) {
+      var opt = document.createElement('option'); opt.value = m[0]; opt.textContent = m[1];
+      if ((c.mutualCodigo || '00') === m[0]) opt.selected = true;
+      selMutual.appendChild(opt);
+    });
+    fgMutual.appendChild(selMutual); gridLab.appendChild(fgMutual);
+
+    var fgTasa = document.createElement('div'); fgTasa.className = 'form-group';
+    var lblTasa = document.createElement('label'); lblTasa.textContent = 'Tasa mutual (%)'; fgTasa.appendChild(lblTasa);
+    var inpTasa = document.createElement('input'); inpTasa.type = 'number'; inpTasa.step = '0.01'; inpTasa.id = 'e-mutual-tasa';
+    inpTasa.value = (c.mutualTasa !== undefined && c.mutualTasa !== null && c.mutualTasa !== '') ? c.mutualTasa : '0.93';
+    fgTasa.appendChild(inpTasa);
+    var hintTasa = document.createElement('div'); hintTasa.style.cssText = 'font-size:11px;color:var(--co-mute);margin-top:4px';
+    hintTasa.textContent = '0.93% base + adicional seg\u00FAn siniestralidad';
+    fgTasa.appendChild(hintTasa);
+    gridLab.appendChild(fgTasa);
+
+    var fgGrat = document.createElement('div'); fgGrat.className = 'form-group form-full';
+    var lblGrat = document.createElement('label'); lblGrat.textContent = 'Pol\u00EDtica de gratificaci\u00F3n'; fgGrat.appendChild(lblGrat);
+    var selGrat = document.createElement('select'); selGrat.id = 'e-politica-grat';
+    [['sin_gratificacion','Sin gratificaci\u00F3n'],['garantizada','Garantizada (25% IMM, Art. 50 CT)']].forEach(function(g) {
+      var opt = document.createElement('option'); opt.value = g[0]; opt.textContent = g[1];
+      if ((c.politicaGratificacion || 'sin_gratificacion') === g[0]) opt.selected = true;
+      selGrat.appendChild(opt);
+    });
+    fgGrat.appendChild(selGrat); gridLab.appendChild(fgGrat);
+
+    box.appendChild(gridLab);
+
+    // ── Sección datos financieros ──────────────────────────────
+    var finSep = document.createElement('div');
+    finSep.style.cssText = 'border-top:1px solid var(--co-line);margin:20px 0 16px';
+    box.appendChild(finSep);
+    var finTit = document.createElement('div');
+    finTit.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--co-mute);margin-bottom:12px';
+    finTit.textContent = 'Datos financieros';
+    box.appendChild(finTit);
+
+    var gridFin = document.createElement('div'); gridFin.className = 'form-grid';
+
+    var fgBanco = document.createElement('div'); fgBanco.className = 'form-group';
+    var lblBanco = document.createElement('label'); lblBanco.textContent = 'Banco'; fgBanco.appendChild(lblBanco);
+    var selBanco = document.createElement('select'); selBanco.id = 'e-banco';
+    [['','Sin banco registrado'],['chile','Banco de Chile'],['estado','BancoEstado'],['santander','Banco Santander'],['bci','BCI'],['scotiabank','Scotiabank'],['itau','Ita\u00FA'],['security','Banco Security'],['bice','Banco BICE']].forEach(function(b) {
+      var opt = document.createElement('option'); opt.value = b[0]; opt.textContent = b[1];
+      if ((c.bancoId || '') === b[0]) opt.selected = true;
+      selBanco.appendChild(opt);
+    });
+    fgBanco.appendChild(selBanco); gridFin.appendChild(fgBanco);
+
+    var fgTipoCta = document.createElement('div'); fgTipoCta.className = 'form-group';
+    var lblTipoCta = document.createElement('label'); lblTipoCta.textContent = 'Tipo de cuenta'; fgTipoCta.appendChild(lblTipoCta);
+    var selTipoCta = document.createElement('select'); selTipoCta.id = 'e-tipo-cuenta';
+    [['corriente','Cuenta corriente'],['vista','Cuenta vista'],['ahorro','Cuenta de ahorro']].forEach(function(t) {
+      var opt = document.createElement('option'); opt.value = t[0]; opt.textContent = t[1];
+      if ((c.tipoCuenta || 'corriente') === t[0]) opt.selected = true;
+      selTipoCta.appendChild(opt);
+    });
+    fgTipoCta.appendChild(selTipoCta); gridFin.appendChild(fgTipoCta);
+
+    var fgNumCta = document.createElement('div'); fgNumCta.className = 'form-group form-full';
+    var lblNumCta = document.createElement('label'); lblNumCta.textContent = 'N\u00FAmero de cuenta'; fgNumCta.appendChild(lblNumCta);
+    var inpNumCta = document.createElement('input'); inpNumCta.type = 'text'; inpNumCta.id = 'e-numero-cuenta'; inpNumCta.placeholder = '00012345678';
+    inpNumCta.value = c.numeroCuenta || '';
+    fgNumCta.appendChild(inpNumCta); gridFin.appendChild(fgNumCta);
+
+    box.appendChild(gridFin);
+
     // ── Sección instalaciones ─────────────────────────────────
     var instSep = document.createElement('div');
     instSep.style.cssText = 'border-top:1px solid var(--co-line);margin:20px 0 16px';
@@ -3681,6 +3763,12 @@
         fechaInicioContrato:document.getElementById('e-inicio').value.trim(),
         fechaRenovacion:document.getElementById('e-renovacion').value.trim(),
         estado:document.getElementById('e-estado').value,
+        mutualCodigo:document.getElementById('e-mutual').value,
+        mutualTasa:parseFloat(document.getElementById('e-mutual-tasa').value) || 0,
+        politicaGratificacion:document.getElementById('e-politica-grat').value,
+        bancoId:document.getElementById('e-banco').value,
+        tipoCuenta:document.getElementById('e-tipo-cuenta').value,
+        numeroCuenta:document.getElementById('e-numero-cuenta').value.trim(),
         instalaciones:JSON.stringify(nuevaInst)
       };
       api('/comunidades', 'POST', datos).then(function(resp) {
