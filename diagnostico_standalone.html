@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoproActiva — Diagnóstico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Aliases al sistema --co- de CoproActiva */
+  --na: #D9853B; --na-lt: #FDF3E7; --na-dk: #C2722C;
+  --az: #1A1714; --az-md: #6B6359; --az-lt: #F5EFE4;
+  --vd: #5D9C7E; --vd-lt: #E8F2EC; --vd-dk: #3F7158; --vd-md: #BFDDC8;
+  --surf: #F5EFE4; --border: #ECE5DA; --muted: #9C958A;
+  --bg: #FBF7F0; --text: #1F1F1F;
+  --sg-fg:#3F7158; --sg-bg:#E8F2EC; --sg-ac:#5D9C7E;
+  --sa-fg:#8B5028; --sa-bg:#FDF3E7; --sa-ac:#D9853B;
+  --sr-fg:#7A1F1F; --sr-bg:#FBE9E9; --sr-ac:#C44545;
+  --r:8px; --r-lg:12px; --r-xl:16px;
+  --shadow: 0 1px 3px rgba(31,31,31,0.05),0 1px 2px rgba(31,31,31,0.03);
+  --shadow-md: 0 4px 12px rgba(31,31,31,0.07),0 2px 4px rgba(31,31,31,0.04);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+
+/* ── LAYOUT BASE — siempre dentro de iframe ───────────────────────── */
+.app{display:flex;flex-direction:column;min-height:100vh;background:var(--bg);}
+
+/* Stepper horizontal de pasos — visible siempre excepto en home */
+.steps-strip{background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+.steps-strip::-webkit-scrollbar{display:none;}
+.steps-strip.hidden{display:none;}
+.steps-inner{display:flex;align-items:stretch;min-width:max-content;}
+.step-pill{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 11px 7px;cursor:pointer;min-width:60px;border-bottom:2.5px solid transparent;transition:border-color 0.15s;}
+.step-pill.done{border-bottom-color:var(--vd);}
+.step-pill.active{border-bottom-color:var(--na);}
+.step-pill-n{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);background:#fff;flex-shrink:0;transition:all 0.15s;}
+.step-pill.done .step-pill-n{background:var(--vd);border-color:var(--vd);color:#fff;font-size:8px;}
+.step-pill.active .step-pill-n{background:var(--na);border-color:var(--na);color:#fff;}
+.step-pill-l{font-size:9.5px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.step-pill.active .step-pill-l{color:var(--na);font-weight:700;}
+.step-pill.done .step-pill-l{color:var(--vd);}
+
+/* Barra de progreso */
+.progress-bar{height:2px;background:var(--surf);flex-shrink:0;}
+.progress-fill{height:100%;background:var(--na);transition:width 0.4s;}
+
+/* Área scrollable del contenido */
+.main-scroll{flex:1;overflow-y:auto;padding:20px 20px 28px;}
+
+/* Desktop — sidebar derecha con pasos */
+@media(min-width:768px){
+  .app{flex-direction:row;align-items:flex-start;}
+  .steps-strip{display:none !important;}
+  .progress-bar{display:none;}
+  .main-scroll{flex:1;padding:28px 32px;min-height:100vh;order:1;}
+  #mainContent{max-width:660px;margin:0 auto;}
+  #mainContent.wide{max-width:none;margin:0;}
+  .sidebar.visible{display:flex;order:2;}
+}
+
+/* Sidebar derecha — clara, solo desktop. JS controla .visible; sin !important para que se pueda ocultar en home */
+.sidebar{display:none;flex-direction:column;background:var(--bg);border-left:1px solid var(--border);width:190px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sb-hd{display:none;}
+.sb-nav{padding:16px 10px 8px;flex:0 1 auto;overflow-y:auto;min-height:0;}
+.sb-nav-track{position:relative;padding-left:16px;}
+.sb-nav-line{position:absolute;left:5px;top:4px;bottom:4px;width:1.5px;background:var(--border);}
+.sb-nav-line-fill{position:absolute;left:5px;top:4px;width:1.5px;background:var(--na);transition:height 0.3s;}
+.sb-step{display:flex;align-items:center;gap:10px;padding:7px 0 7px 0;border-radius:7px;cursor:pointer;transition:background 0.12s;position:relative;}
+.sb-step:hover{background:rgba(217,133,59,0.06);}
+.sb-step.active{background:var(--na-lt);margin-left:-8px;padding-left:8px;}
+.sb-dot{position:absolute;left:-16px;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);flex-shrink:0;transition:all 0.2s;}
+.sb-step.active .sb-dot{left:-12px;width:8px;height:8px;background:var(--na);border-color:var(--na);}
+.sb-step.done .sb-dot{background:var(--vd);border-color:var(--vd);}
+.sb-sl{font-size:11.5px;color:var(--muted);transition:color 0.12s;}
+.sb-step.active .sb-sl{color:var(--text);font-weight:600;}
+.sb-step.done .sb-sl{color:var(--az-md);}
+.sb-foot{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+.sb-s-lbl{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;}
+.sb-s-val{font-size:22px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-0.02em;}
+.sb-s-sub{font-size:10px;color:var(--sa-fg);margin-top:2px;font-weight:600;}
+.sb-bar{height:3px;background:var(--surf);border-radius:99px;margin-top:7px;overflow:hidden;}
+.sb-bar-f{height:100%;border-radius:99px;background:var(--na);transition:width 0.4s;}
+
+/* Ocultar topbar/step-indicator originales — ya no se usan */
+.topbar{display:none !important;}
+.step-indicator{display:none !important;}
+
+/* ── COMPONENTS ───────────────────────────────────────────────────── */
+.ph{margin-bottom:18px;}
+.ph-title{font-size:19px;font-weight:700;color:var(--az);margin-bottom:3px;}
+.ph-sub{font-size:13px;color:var(--az-md);}
+
+.card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:10px;box-shadow:var(--shadow);}
+.card-ttl{font-size:14px;font-weight:700;color:var(--az);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.cdot{width:7px;height:7px;border-radius:50%;background:var(--na);flex-shrink:0;}
+
+/* ── FORM ──────────────────────────────────────────────────────────── */
+.fg{display:grid;grid-template-columns:1fr;gap:12px;}
+@media(min-width:480px){.fg{grid-template-columns:1fr 1fr;}}
+.f{display:flex;flex-direction:column;gap:5px;}
+.f.full{grid-column:1/-1;}
+.f.full3{grid-column:1/-1;}
+@media(min-width:480px){.f.full3{grid-column:1/-1;}}
+label.fl{font-size:11.5px;color:var(--az-md);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
+input,select,textarea{font-family:'Manrope',-apple-system,sans-serif;font-size:14px;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--bg);width:100%;transition:border-color 0.13s;-webkit-appearance:none;appearance:none;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--na);background:white;}
+textarea{resize:vertical;min-height:56px;}
+.hint{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Type cards */
+.type-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+@media(min-width:400px){.type-grid{grid-template-columns:repeat(3,1fr);}}
+.type-card{border:1.5px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:all 0.13s;background:var(--bg);text-align:center;}
+.type-card:hover{border-color:var(--na);background:var(--na-lt);}
+.type-card.sel{border-color:var(--na);background:var(--na-lt);}
+.type-card-icon{font-size:22px;margin-bottom:5px;}
+.type-card-name{font-size:13px;font-weight:700;color:var(--az);}
+.type-card-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Saved list */
+.saved-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.saved-select{flex:1;min-width:180px;}
+.ctx-note{font-size:12px;color:var(--muted);padding:8px 10px;background:var(--surf);border-radius:6px;border-left:2.5px solid var(--na);margin-top:10px;}
+
+/* ── CHECKLIST ─────────────────────────────────────────────────────── */
+.items{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.irow{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--r);background:var(--surf);cursor:pointer;transition:background 0.12s;border:1.5px solid transparent;user-select:none;}
+.irow:active{background:#ebe8e3;}
+.irow.on{background:var(--vd-lt);border-color:var(--vd-md);}
+.irow.na{opacity:0.3;cursor:default;pointer-events:none;}
+.chk{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;background:white;transition:all 0.13s;}
+.irow.on .chk{background:var(--vd);border-color:var(--vd);}
+.ckm{display:none;width:5px;height:9px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg) translate(-1px,-1px);}
+.irow.on .ckm{display:block;}
+.itxt{flex:1;font-size:13.5px;color:var(--text);line-height:1.45;}
+.wp{font-size:10px;padding:2px 7px;border-radius:10px;flex-shrink:0;margin-top:3px;font-weight:700;white-space:nowrap;}
+.wc{background:var(--sr-bg);color:var(--sr-fg);}
+.wi{background:var(--sa-bg);color:var(--sa-fg);}
+.wb{background:var(--sg-bg);color:var(--sg-fg);}
+.nap{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surf);color:var(--muted);white-space:nowrap;}
+
+.obs-lbl{font-size:11.5px;color:var(--az-md);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;}
+.area-bar-row{display:flex;align-items:center;gap:9px;padding:10px 0;border-top:1px solid var(--border);margin-top:10px;flex-wrap:wrap;}
+.bar-lbl{font-size:12px;color:var(--muted);}
+.bar-track{flex:1;min-width:80px;height:5px;background:var(--surf);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+.bar-pct{font-size:13px;font-weight:700;min-width:36px;text-align:right;}
+.bar-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;}
+
+/* ── BUTTONS ───────────────────────────────────────────────────────── */
+.nav-row{display:flex;gap:9px;justify-content:space-between;margin-top:6px;flex-wrap:wrap;}
+.nav-row-end{justify-content:flex-end;}
+button{font-family:'Manrope',-apple-system,sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;border-radius:var(--r);padding:10px 18px;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all 0.13s;-webkit-tap-highlight-color:transparent;}
+button:active{opacity:0.8;}
+button.pri{background:var(--na);color:white;border-color:var(--na);}
+button.vd{background:var(--vd);color:white;border-color:var(--vd);}
+button.ghost{color:var(--az-md);border-color:var(--border);}
+button:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-sm{padding:7px 13px;font-size:12px;}
+.btn-danger{color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg);}
+
+/* ── RESULT / REVISION ─────────────────────────────────────────────── */
+.res-crit{border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;border:1.5px solid;}
+.res-circle{width:54px;height:54px;border-radius:50%;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,0.08);}
+.res-num{font-size:19px;font-weight:700;line-height:1;}
+.res-pct{font-size:9px;color:var(--muted);}
+.res-label{font-size:15px;font-weight:700;margin-bottom:2px;}
+.res-desc{font-size:12px;opacity:0.82;line-height:1.5;}
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+@media(min-width:480px){.ag{grid-template-columns:repeat(3,1fr);}}
+.ac{background:white;border:1px solid var(--border);border-radius:var(--r);padding:10px 11px;transition:box-shadow 0.13s;}.ac:hover{box-shadow:var(--shadow-md);}
+.ac-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--az-md);margin-bottom:2px;}
+.ac-pct{font-size:20px;font-weight:700;line-height:1;margin-bottom:2px;}
+.ac-bar{height:3px;background:var(--surf);border-radius:2px;margin-bottom:3px;overflow:hidden;}
+.ac-fill{height:100%;border-radius:2px;}
+.ac-lbl{font-size:10px;font-weight:700;}
+.ci-list{display:flex;flex-direction:column;gap:4px;}
+.ci{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:var(--sr-bg);border-radius:6px;border-left:2.5px solid var(--sr-ac);}
+.ci-area{font-size:10px;font-weight:700;color:var(--az-md);white-space:nowrap;padding-top:1px;min-width:55px;}
+.ci-txt{font-size:12.5px;line-height:1.4;}
+.fac-card{padding:10px 12px;background:var(--surf);border-radius:6px;border-left:2.5px solid var(--na);margin-bottom:5px;}
+.fac-ttl{font-size:13px;font-weight:700;color:var(--az);margin-bottom:2px;}
+.fac-body{font-size:12px;color:var(--az-md);line-height:1.5;}
+.fac-edit{margin-top:6px;}
+.fac-edit input{font-size:12px !important;padding:6px 9px !important;margin-bottom:4px;}
+.fac-edit textarea{font-size:12px !important;padding:6px 9px !important;min-height:40px !important;}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--na);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-row{display:flex;align-items:center;gap:9px;padding:12px 0;font-size:12.5px;color:var(--muted);}
+.val-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.val-row span{font-size:13px;color:var(--muted);}
+.val-in{font-size:14px !important;font-weight:700 !important;color:var(--vd-dk) !important;text-align:right;width:110px !important;border-color:var(--vd-md) !important;}
+
+/* Linea selector */
+.linea-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:4px;}
+@media(min-width:480px){.linea-grid{grid-template-columns:repeat(3,1fr);}}
+.linea-card{border:1.5px solid var(--border);border-radius:var(--r);padding:11px 12px;cursor:pointer;transition:all 0.13s;background:var(--bg);}
+.linea-card.sel-l1{border-color:#0369a1;background:#e0f2fe;}
+.linea-card.sel-l2{border-color:var(--vd);background:var(--vd-lt);}
+.linea-card.sel-l3{border-color:var(--na);background:var(--na-lt);}
+.linea-card .lc-tag{font-size:10px;font-weight:700;margin-bottom:3px;}
+.linea-card .lc-name{font-size:12px;font-weight:700;color:var(--az);margin-bottom:2px;}
+.linea-card .lc-desc{font-size:11px;color:var(--az-md);}
+.suggested-badge{font-size:10px;background:var(--az);color:white;padding:1px 6px;border-radius:10px;margin-left:6px;}
+
+/* ── MODAL ─────────────────────────────────────────────────────────── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-bg.show{display:flex;}
+@media(min-width:500px){.modal-bg{align-items:center;}}
+.modal{background:white;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 16px 28px;width:100%;max-height:85vh;overflow-y:auto;animation:slideUp 0.2s ease;}
+@media(min-width:500px){.modal{border-radius:var(--r-xl);max-width:420px;}}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-ttl{font-size:16px;font-weight:700;color:var(--az);margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.modal-list{display:flex;flex-direction:column;gap:6px;}
+.modal-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:background 0.12s;}
+.modal-item:hover{background:var(--surf);}
+.modal-item-name{font-size:13.5px;font-weight:700;color:var(--az);}
+.modal-item-meta{font-size:11.5px;color:var(--muted);}
+.modal-item-score{font-size:13px;font-weight:700;padding:3px 9px;border-radius:10px;}
+.modal-empty{text-align:center;padding:24px;color:var(--muted);font-size:13px;}
+/* Pantalla de acceso */
+/* loginScreen eliminado */
+.login-box{background:white;border-radius:var(--r-xl);padding:32px 28px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px;justify-content:center;}
+.login-mark{width:40px;height:40px;background:var(--na);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;}
+.login-brand{font-size:18px;font-weight:700;color:var(--az);}
+.login-brand b{color:var(--na);}
+.login-title{font-size:15px;font-weight:700;color:var(--az);margin-bottom:6px;text-align:center;}
+.login-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;}
+.login-error{font-size:12px;color:var(--sr-ac);text-align:center;margin-top:8px;min-height:18px;}
+/* Modal detalle de área */
+.area-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:center;justify-content:center;padding:16px;}
+.area-modal-bg.show{display:flex;}
+.area-modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.18);animation:slideUp 0.2s ease;}
+.area-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:white;z-index:1;}
+.area-modal-ttl{font-size:16px;font-weight:700;color:var(--az);display:flex;align-items:center;gap:8px;}
+.area-modal-score{font-size:13px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.area-modal-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surf);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--muted);flex-shrink:0;}
+.area-modal-body{padding:14px 18px 18px;}
+.area-modal-section{margin-bottom:14px;}
+.area-modal-section-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.area-modal-item{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:6px;margin-bottom:5px;}
+.area-modal-item.fail{background:var(--sr-bg);}
+.area-modal-item.ok{background:var(--sg-bg);}
+.area-modal-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;flex-shrink:0;margin-top:2px;white-space:nowrap;}
+.area-modal-item-txt{font-size:13px;line-height:1.4;}
+.area-modal-obs{font-size:12.5px;color:var(--az-md);padding:8px 10px;background:var(--surf);border-radius:6px;border-left:2.5px solid var(--na);line-height:1.5;}
+/* Exit modal */
+.exit-options{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.exit-opt{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all 0.13s;background:var(--bg);}
+.exit-opt:hover{border-color:var(--na);background:var(--na-lt);}
+.exit-opt.danger:hover{border-color:var(--sr-ac);background:var(--sr-bg);}
+.exit-opt-icon{font-size:22px;flex-shrink:0;}
+.exit-opt-ttl{font-size:14px;font-weight:700;color:var(--az);}
+.exit-opt-desc{font-size:12px;color:var(--muted);}
+/* Home view */
+/* home-header eliminado — branding lo provee la app contenedora */
+.hist-card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.13s;box-shadow:var(--shadow);}
+.hist-card:hover{border-color:var(--na);box-shadow:var(--shadow-md);}
+.hist-score{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.hist-info{flex:1;min-width:0;}
+.hist-nombre{font-size:14px;font-weight:700;color:var(--az);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-meta{font-size:11.5px;color:var(--muted);margin-top:1px;}
+.hist-linea{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.hist-actions{display:flex;gap:6px;flex-shrink:0;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-icon{font-size:36px;margin-bottom:10px;}
+.empty-ttl{font-size:15px;font-weight:700;color:var(--az-md);margin-bottom:6px;}
+.empty-desc{font-size:13px;line-height:1.6;}
+</style>
+</head>
+<body>
+<!-- Login eliminado: acceso solo via token desde iframe -->
+
+<div class="app">
+  <!-- Stepper horizontal — visible en móvil, oculto en desktop (usa sidebar) -->
+  <div class="steps-strip hidden" id="stepsStrip">
+    <div class="steps-inner" id="stepsInner"></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+  <!-- SIDEBAR desktop -->
+  <aside class="sidebar" id="sidebar">
+    <!-- sb-hd eliminado: branding lo provee la app contenedora -->
+    <div class="sb-nav" id="sbNav"></div>
+    <div class="sb-foot">
+      <div class="sb-s-lbl">Puntaje actual</div>
+      <div class="sb-s-val" id="sbVal">0%</div>
+      <div class="sb-s-sub" id="sbSub">Sin datos aún</div>
+      <div class="sb-bar"><div class="sb-bar-f" id="sbFill" style="width:0%"></div></div>
+      <button onclick="openExitModal()" style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--az-md);padding:7px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;transition:background 0.13s">← Salir del diagnóstico</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-scroll" id="mainContent"></div>
+</div>
+
+<!-- MODAL cargar diagnóstico -->
+<div class="modal-bg" id="modalBg" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl">Diagnósticos guardados</div>
+    <div class="modal-list" id="modalList"></div>
+    <div style="margin-top:12px">
+      <button class="ghost btn-sm" onclick="closeModal()" style="width:100%">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST feedback guardado -->
+<div id="toastGuardado" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--az);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;gap:8px;align-items:center">
+  <span id="toastIcon">💾</span>
+  <span id="toastMsg">Guardando...</span>
+</div>
+
+<!-- MODAL detalle de área -->
+<div class="area-modal-bg" id="areaModalBg" onclick="closeAreaModal()">
+  <div class="area-modal" onclick="event.stopPropagation()">
+    <div class="area-modal-hdr">
+      <div class="area-modal-ttl">
+        <span id="areaModalEmoji"></span>
+        <span id="areaModalTtl">Área</span>
+        <span class="area-modal-score" id="areaModalScore"></span>
+      </div>
+      <div class="area-modal-close" onclick="closeAreaModal()">×</div>
+    </div>
+    <div class="area-modal-body" id="areaModalBody"></div>
+  </div>
+</div>
+
+<!-- MODAL salir -->
+<div class="modal-bg" id="exitModalBg" onclick="closeExitModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-ttl">¿Qué deseas hacer?</div>
+    <div class="modal-sub" id="exitModalSub">Tienes cambios sin guardar en este diagnóstico.</div>
+    <div class="exit-options">
+      <div class="exit-opt" onclick="guardarYSalir()">
+        <div class="exit-opt-icon">💾</div>
+        <div>
+          <div class="exit-opt-ttl">Guardar y salir</div>
+          <div class="exit-opt-desc">Se guarda el diagnóstico con el nombre del condominio y vuelves al inicio.</div>
+        </div>
+      </div>
+      <div class="exit-opt danger" onclick="salirSinGuardar()">
+        <div class="exit-opt-icon">🚪</div>
+        <div>
+          <div class="exit-opt-ttl" style="color:var(--sr-ac)">Salir sin guardar</div>
+          <div class="exit-opt-desc">Los datos no guardados se perderán.</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="ghost btn-sm" onclick="closeExitModal()" style="width:100%">Cancelar — seguir trabajando</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const AREAS=[
+  {id:'legal',label:'Legal',emoji:'⚖️',items:[
+    {t:'Administrador inscrito en Registro Nacional de Administradores de Condominios (MINVU)',w:'c'},
+    {t:'Reglamento de copropiedad inscrito en el CBR y actualizado conforme a la Ley 21.442',w:'c'},
+    {t:'RUT de la comunidad vigente ante el SII',w:'c'},
+    {t:'Comité de Administración con acta de nombramiento reducida a escritura pública',w:'c'},
+    {t:'Libro de actas foliado al día (asambleas y reuniones de comité)',w:'i'},
+    {t:'Asamblea ordinaria celebrada en los últimos 12 meses con acta disponible',w:'i'},
+    {t:'Libro de novedades operativo y accesible a copropietarios (Art. 20 Ley 21.442)',w:'i'},
+  ]},
+  {id:'financiero',label:'Financiero',emoji:'💰',items:[
+    {t:'Cuenta bancaria exclusiva a nombre de la comunidad bajo su RUT',w:'c'},
+    {t:'Fondo de reserva constituido, separado e invertido en instrumentos seguros',w:'c'},
+    {t:'Rendición de cuentas mensual con conciliación bancaria y facturas de respaldo',w:'c'},
+    {t:'Aviso de gasto común emitido mensualmente y desglosado por alícuota',w:'i'},
+    {t:'Tabla de prorrateo vigente aprobada en asamblea',w:'i'},
+    {t:'Tabla de prorrateo diferenciada para locales comerciales',w:'i',cond:'locales'},
+    {t:'Registro de morosidad actualizado',w:'i'},
+    {t:'Presupuesto anual aprobado por asamblea',w:'b'},
+  ]},
+  {id:'laboral',label:'Laboral',emoji:'👷',condArea:'trabajadores',items:[
+    {t:'Contratos de trabajo vigentes con funciones reales descritas',w:'c'},
+    {t:'Cotizaciones previsionales al día sin deuda de arrastre (Previred)',w:'c'},
+    {t:'Carpeta laboral individual completa por trabajador (contrato, F30, liquidaciones firmadas)',w:'i'},
+    {t:'Registro de asistencia y horas extra aprobado por la DT',w:'i'},
+    {t:'Gestión preventiva DS 44 implementada (MIPER, PTP, IRL firmado por personal, EPP entregado)',w:'i'},
+    {t:'Protocolo Ley Karin con canal de denuncia confidencial operativo',w:'i'},
+    {t:'RIHS vigente (dotaciones menores de 10 trabajadores)',w:'b',cond:'menosDiez'},
+    {t:'RIOHS visado por Seremi de Salud y Mutual (10 o más trabajadores)',w:'b',cond:'diezOMas'},
+    {t:'Seguro de vida para conserjes con funciones de seguridad (Ley 21.659)',w:'b',cond:'segPrivada'},
+  ]},
+  {id:'tecnico',label:'Técnico',emoji:'🔧',items:[
+    {t:'Certificación de ascensores vigente y Carpeta Cero al día',w:'c',cond:'asc'},
+    {t:'Sello Verde de Gas SEC vigente',w:'c',cond:'gas'},
+    {t:'Certificación de caldera / central térmica vigente',w:'c',cond:'caldera'},
+    {t:'Inscripción TE-4 y bitácora de grupo electrógeno al día (SEC)',w:'c',cond:'genEle'},
+    {t:'Inscripción TE-1 o medición de puesta a tierra y termografía de tableros eléctricos',w:'c'},
+    {t:'Bitácoras de mantención al día por equipo e instalación crítica (ascensores, bombas, portones y otros según características del edificio)',w:'i'},
+    {t:'Sanitización y potabilidad de estanques de agua (ISP) al día',w:'i',cond:'hidro'},
+    {t:'Bitácora de red contra incendios y extintores vigentes',w:'i',cond:'rci'},
+    {t:'Plan de mantención preventiva documentado',w:'b'},
+  ]},
+  {id:'seguridad',label:'Seguridad',emoji:'🛡️',items:[
+    {t:'Seguro de incendio y catástrofe vigente para bienes comunes y unidades',w:'c'},
+    {t:'Plan de emergencia y evacuación vigente, visado por Bomberos',w:'i'},
+    {t:'Registro de simulacros (al menos uno en los últimos 12 meses)',w:'i'},
+    {t:'Plan de gestión de riesgos de desastres GRRD (DS 44)',w:'i',cond:'trabajadores'},
+    {t:'Señalética e iluminación de emergencia operativa en zonas comunes',w:'i'},
+    {t:'CCTV operativo y con acceso registrado',w:'b',cond:'cctv'},
+    {t:'Control de acceso vehicular operativo',w:'b',cond:'porton'},
+    {t:'Registro de electrodependientes y personas con movilidad reducida',w:'b'},
+  ]},
+  {id:'documental',label:'Documental',emoji:'📂',items:[
+    {t:'Registro de copropietarios y ocupantes actualizado (nombre, contacto, alícuota, condición)',w:'i'},
+    {t:'Archivo de planos finales, recepción definitiva DOM e instalaciones aprobadas',w:'i'},
+    {t:'Carpeta de contratos de proveedores vigentes',w:'i'},
+    {t:'Claves de acceso a plataformas y cuentas documentadas y custodiadas',w:'i'},
+    {t:'Canal de comunicación oficial con copropietarios activo',w:'b'},
+    {t:'Política de protección de datos personales de residentes',w:'b'},
+  ]},
+];
+// INSTALACIONES
+const INST_ITEMS=[
+  {id:'asc',label:'Ascensores'},
+  {id:'escMec',label:'Escaleras mecánicas'},
+  {id:'gas',label:'Red de gas centralizado'},
+  {id:'caldera',label:'Caldera / calefacción central'},
+  {id:'genEle',label:'Grupo electrógeno'},
+  {id:'hidro',label:'Estanques / sistema hidroneumático'},
+  {id:'piscina',label:'Piscina / SPA'},
+  {id:'rci',label:'Red contra incendios'},
+  {id:'porton',label:'Control vehicular / portón'},
+  {id:'cctv',label:'CCTV'},
+  {id:'locales',label:'Locales comerciales'},
+];
+const WP={c:3,i:2,b:1};
+const LINEAS={
+  L1:{label:'Administración integral',sublabel:'Administración integral',
+      desc:'La comunidad tiene base. CoproActiva asume la administración completa y optimiza los procesos existentes.',
+      color:'#0369a1',bg:'#e0f2fe',
+      items:['Recepción y auditoría documental completa','Gestión financiera con rendiciones mensuales al comité','Coordinación de proveedores y mantención preventiva','Plataforma digital para cobro y comunicación','Informes de gestión mensuales con indicadores clave'],
+      valMin:'600.000',valMax:'900.000'},
+  L2:{label:'Nueva administración',sublabel:'Nueva administración',
+      desc:'La comunidad necesita restructuración. CoproActiva ordena cada área desde cero y regulariza la gestión.',
+      color:'#1d5c38',bg:'#eaf4ee',
+      items:['Levantamiento del estado administrativo y financiero actual','Regularización legal, laboral y documental prioritaria','Implementación de plataforma de gestión y control de morosidad','Coordinación de equipamiento crítico y mantención preventiva','Informes periódicos al comité con plan de avance'],
+      valMin:'800.000',valMax:'1.100.000'},
+  L3:{label:'Asesoría externa',sublabel:'Asesoría externa',
+      desc:'Diagnóstico y orientación sin cambio de administración. Apoyo técnico al comité vigente.',
+      color:'#7a3e10',bg:'#fdeee0',
+      items:['Auditoría documental con informe de hallazgos','Asesoría legal y normativa sobre Ley 21.442','Orientación para regularización laboral y previsional','Plan de acción priorizado por nivel de riesgo','Acompañamiento al comité en la toma de decisiones'],
+      valMin:'300.000',valMax:'500.000'},
+};
+const VIEWS=['home','contexto','instalaciones',...AREAS.map(a=>a.id),'revision'];
+
+function defaultState(){return{
+  ctx:{nombre:'',tipo:'A',unidades:'',antiguedad:'',trabajadores:'',
+       sistema:'',contactoNombre:'',contactoCorreo:'',contactoCargo:'',
+       segPrivada:false},
+  inst:Object.fromEntries(INST_ITEMS.map(x=>[x.id,false])),
+  checks:Object.fromEntries(AREAS.map(a=>[a.id,new Array(a.items.length).fill(null)])),
+  notes:Object.fromEntries(AREAS.map(a=>[a.id,''])),
+  factores:[],valorMin:'',valorMax:'',lineaOverride:null,loadingFactores:false,
+  conclusion:'',loadingConclusion:false,
+};}
+let S={...defaultState(),view:'home'};
+let _prospectoVinculadoId = null;
+
+function hasInst(id){return !!(S.inst&&S.inst[id]);}
+function numTrabajadores(){return parseInt(S.ctx.trabajadores||'0');}
+
+function itemApplies(it){
+  if(!it.cond)return true;
+  const c=it.cond;
+  if(c==='locales')return hasInst('locales');
+  if(c==='asc')return hasInst('asc');
+  if(c==='gas')return hasInst('gas');
+  if(c==='caldera')return hasInst('caldera');
+  if(c==='genEle')return hasInst('genEle');
+  if(c==='hidro')return hasInst('hidro');
+  if(c==='rci')return hasInst('rci');
+  if(c==='cctv')return hasInst('cctv');
+  if(c==='porton')return hasInst('porton');
+  if(c==='trabajadores')return numTrabajadores()>0;
+  if(c==='menosDiez')return numTrabajadores()>0&&numTrabajadores()<10;
+  if(c==='diezOMas')return numTrabajadores()>=10;
+  if(c==='segPrivada')return !!(S.ctx.segPrivada);
+  return true;
+}
+function areaApplies(a){
+  if(a.condArea==='trabajadores')return numTrabajadores()>0;
+  return true;
+}
+function itemVal(aId,i){
+  const v=S.checks[aId][i];
+  return (v===null||v===undefined)?null:Number(v);
+}
+function scoreArea(a){
+  if(!areaApplies(a))return null;
+  let earned=0,possible=0;
+  a.items.forEach((it,i)=>{
+    if(!itemApplies(it))return;
+    const w=WP[it.w]; possible+=w;
+    const v=itemVal(a.id,i);
+    if(v!==null)earned+=w*v;
+  });
+  if(possible===0)return null;
+  const pct=Math.round(earned/possible*100);
+  const critNC=a.items.filter((it,i)=>it.w==='c'&&itemApplies(it)&&itemVal(a.id,i)===0).length;
+  return{pct,earned,possible,critNC};
+}
+function globalScore(){
+  let t=0,n=0;
+  AREAS.forEach(a=>{const s=scoreArea(a);if(s){t+=s.pct;n++;}});
+  return n>0?Math.round(t/n):0;
+}
+function critFailing(){
+  const out=[];
+  AREAS.forEach(a=>{
+    if(!areaApplies(a))return;
+    a.items.forEach((it,i)=>{
+      if(it.w==='c'&&itemApplies(it)){
+        const v=itemVal(a.id,i);
+        if(v===0)out.push({text:it.t,area:a.label,tipo:'nc'});
+        else if(v===0.25)out.push({text:it.t,area:a.label,tipo:'ns'});
+      }
+    });
+  });
+  return out;
+}
+
+// ── Análisis completo — 4 niveles + gatillos
+function getDiagnostico(){
+  const score=globalScore();
+  const crits=critFailing();
+  const hasCritFail=crits.length>0;
+  const areasLow=AREAS.map(a=>({...a,score:scoreArea(a)})).filter(a=>a.score&&a.score.pct<60);
+  const areasRed=areasLow.filter(a=>a.score.pct<40);
+  const requiereIntervencion=hasCritFail||areasLow.length>0;
+  let nivel,desc;
+  if(score>=80&&areasLow.length===0&&!hasCritFail){
+    nivel='Estable';
+    desc='La comunidad presenta una gestión ordenada en todas las áreas. CoproActiva puede optimizarla de manera continua.';
+  } else if(score>=80&&(areasLow.length>0||hasCritFail)){
+    nivel='Estable con observaciones';
+    const motivos=[];
+    if(areasLow.length>0)motivos.push('focos de riesgo en: '+areasLow.map(a=>a.label).join(', '));
+    if(hasCritFail)motivos.push(crits.length+' ítem(s) crítico(s) sin resolver');
+    desc='El puntaje global es satisfactorio, pero se identifican: '+motivos.join(' y ')+'. Estos aspectos requieren atención aunque el resultado global sea positivo.';
+  } else if(score>=50&&!hasCritFail){
+    nivel='En riesgo';
+    desc='Existen aspectos que requieren intervención moderada. Sin acción oportuna pueden derivar en problemas administrativos, legales o financieros de mayor envergadura.';
+  } else if(hasCritFail&&score>=50){
+    nivel='En riesgo';
+    desc='Se detectan incumplimientos en ítems críticos. Aunque el puntaje global sea moderado, estos hallazgos requieren intervención prioritaria.';
+  } else {
+    nivel='Crítico';
+    desc='Se detectan deficiencias graves en una o más áreas. Se requiere intervención urgente para evitar consecuencias legales y financieras significativas.';
+  }
+  return{score,nivel,desc,hasCritFail,crits,areasLow,areasRed,requiereIntervencion};
+}
+// ── Línea sugerida ────────────────────────────────────────────────────────────
+function lineaSugerida(){
+  const d=getDiagnostico();
+  if(d.score<40)return'L3';
+  if(d.score>=75&&d.areasRed.length===0&&!d.hasCritFail)return'L1';
+  return'L2';
+}
+function lineaActual(){return S.lineaOverride||lineaSugerida();}
+
+// ── Semáforo por área ─────────────────────────────────────────────────────────
+function semC(pct){
+  if(pct==null)return{fg:'var(--az-md)',bg:'var(--surf)',ac:'var(--border)',lbl:'No aplica'};
+  if(pct>=80) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Estable'};
+  if(pct>=60) return{fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)',lbl:'Bien'};
+  if(pct>=50) return{fg:'var(--sa-fg)',bg:'var(--sa-bg)',ac:'var(--sa-ac)',lbl:'En riesgo'};
+  return{fg:'var(--sr-fg)',bg:'var(--sr-bg)',ac:'var(--sr-ac)',lbl:'Crítico'};
+}
+
+// ── Criticidad global ─────────────────────────────────────────────────────────
+function critData(score){
+  const d=getDiagnostico();
+  const MAP={
+    'Estable':                  {fg:'var(--sg-fg)',bg:'var(--sg-bg)',ac:'var(--sg-ac)'},
+    'Estable con observaciones':{fg:'var(--sa-fg)',bg:'var(--sa-bg)',ac:'var(--sa-ac)'},
+    'En riesgo':                {fg:'var(--sa-fg)',bg:'var(--sa-bg)',ac:'var(--sa-ac)'},
+    'Crítico':                  {fg:'var(--sr-fg)',bg:'var(--sr-bg)',ac:'var(--sr-ac)'},
+  };
+  const col=MAP[d.nivel]||MAP['En riesgo'];
+  return{...col,lbl:d.nivel,desc:d.desc,requiereIntervencion:d.requiereIntervencion,diag:d};
+}
+
+// ─── STORAGE — Google Sheets via Worker ───────────────────────────────────────
+const WORKER_BASE = 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+function _getWorkerToken(){ return window._DIAG_TOKEN_HMAC || sessionStorage.getItem('token') || ''; }
+
+// ─── ESTRATEGIA: carga instantánea desde localStorage, sincroniza Sheets en background
+let _cache = null;
+let _cacheTime = 0;
+let _syncInProgress = false;
+const CACHE_TTL = 60000; // 1 minuto
+
+// Lee localStorage inmediatamente — sin espera
+function getSavedLocal() {
+  try { return JSON.parse(localStorage.getItem('ca_diag')||'[]'); } catch(e){ return []; }
+}
+
+// Sincroniza con Sheets en background y actualiza si hay diferencias
+async function syncWithSheets() {
+  if(_syncInProgress) return;
+  _syncInProgress = true;
+  try {
+    const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
+      headers: { 'Authorization': 'Bearer ' + _getWorkerToken() }
+    });
+    const data = await res.json();
+    if(!data.diagnosticos) return;
+    // Sheet es la fuente única de verdad — no mezclar con localStorage
+    const remote = data.diagnosticos.map(d => ({
+      ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
+    }));
+    _cache = remote;
+    _cacheTime = Date.now();
+    if(S.view==='home') {
+      _homeData = remote;
+      document.getElementById('mainContent').innerHTML = renderHome();
+      // Quitar indicador de sincronización
+      const syncEl = document.getElementById('syncIndicator');
+      if(syncEl) { syncEl.textContent = '✓ Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
+    }
+  } catch(e) {
+    console.log('Sheets no disponible, usando datos locales');
+    const syncEl = document.getElementById('syncIndicator');
+    if(syncEl) { syncEl.textContent = '⚠ Sin conexión'; syncEl.style.color='var(--sa-fg)'; setTimeout(()=>syncEl.remove(),3000); }
+  } finally {
+    _syncInProgress = false;
+  }
+}
+
+async function getSaved() {
+  const now = Date.now();
+  if (_cache && (now - _cacheTime) < CACHE_TTL) return _cache;
+  // Devolver local inmediatamente
+  const local = getSavedLocal();
+  _cache = local;
+  return local;
+}
+
+// ─── TRACKING DE CAMBIOS SIN GUARDAR ──────────────────────────────────────────
+let _lastSavedSnapshot = '';
+function formSnapshot(){
+  return JSON.stringify({
+    ctx:S.ctx, inst:S.inst, checks:S.checks, notes:S.notes,
+    factores:S.factores, conclusion:S.conclusion||'',
+    valorMin:S.valorMin, valorMax:S.valorMax, lineaOverride:S.lineaOverride,
+  });
+}
+function hayCambiosSinGuardar(){ return formSnapshot() !== _lastSavedSnapshot; }
+
+async function saveDiag() {
+  const nombre = S.ctx.nombre?.trim() || 'Sin nombre';
+  // ID estable basado en el nombre — siempre el mismo para el mismo condominio
+  // Así al guardar de nuevo reemplaza en vez de duplicar
+  const id = 'diag_' + nombre.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,40);
+
+  const record = {
+    id,
+    nombre,
+    fecha: new Date().toLocaleDateString('es-CL'),
+    score: globalScore(),
+    linea: lineaActual(),
+    prospectoId: _prospectoVinculadoId || '',
+    ctx: {...S.ctx},
+    inst: {...(S.inst||{})},
+    checks: JSON.parse(JSON.stringify(S.checks)),
+    notes: {...S.notes},
+    factores: [...S.factores],
+    conclusion: S.conclusion||'',
+    valorMin: S.valorMin, valorMax: S.valorMax,
+    lineaOverride: S.lineaOverride,
+  };
+
+  showToast('Guardando...', '💾', 60000); // toast permanente hasta confirmar
+
+  try {
+    const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + _getWorkerToken()},
+      body: JSON.stringify({ action:'guardar', id, fecha:record.fecha, nombre, score:record.score, prospectoId:record.prospectoId, payload:record })
+    });
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.error||'Error desconocido');
+
+    _cache = null;
+    // Backup localStorage
+    const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
+    local.unshift(record);
+    localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
+
+    showToast('Guardado correctamente', '✅', 2500);
+    _lastSavedSnapshot = formSnapshot();
+    // Forzar resync con Sheets en background
+    setTimeout(syncWithSheets, 500);
+  } catch(e) {
+    console.error('Error guardando en Sheets, usando localStorage:', e);
+    const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
+    local.unshift(record);
+    localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
+    showToast('Guardado localmente (sin conexión)', '⚠️', 3000);
+    _lastSavedSnapshot = formSnapshot();
+  }
+  return record;
+}
+
+async function loadDiag(nombre) {
+  const saved = await getSaved();
+  const d = saved.find(x=>x.nombre===nombre);
+  if(!d) return;
+  S.ctx={...d.ctx};
+  S.inst=d.inst?{...d.inst}:Object.fromEntries(INST_ITEMS.map(x=>[x.id,false]));
+  S.checks=JSON.parse(JSON.stringify(d.checks));
+  AREAS.forEach(a=>{
+    S.checks[a.id]=(S.checks[a.id]||[]).map(v=>v===true?1:v===false?null:v);
+    while(S.checks[a.id].length<a.items.length)S.checks[a.id].push(null);
+  });
+  S.notes={...d.notes};
+  S.factores=d.factores||[];
+  S.conclusion=d.conclusion||'';
+  S.valorMin=d.valorMin||'';
+  S.valorMax=d.valorMax||'';
+  S.lineaOverride=d.lineaOverride||null;
+  _lastSavedSnapshot = formSnapshot();
+  closeModal(); render();
+}
+
+async function deleteSaved(nombre) {
+  if(!confirm(`¿Eliminar el diagnóstico "${nombre}"?`)) return;
+  try {
+    const saved = await getSaved();
+    const d = saved.find(x=>x.nombre===nombre);
+    if(d && d.id) {
+      await fetch(`${WORKER_BASE}/diagnosticos`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json', 'Authorization': 'Bearer ' + _getWorkerToken()},
+        body: JSON.stringify({ action:'eliminar', id:d.id })
+      });
+    }
+    _cache = null;
+    // También borrar del localStorage
+    const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
+    localStorage.setItem('ca_diag', JSON.stringify(local));
+  } catch(e) {
+    const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
+    localStorage.setItem('ca_diag', JSON.stringify(local));
+  }
+  renderModal();
+}
+
+// ─── STEPPER + SIDEBAR ───────────────────────────────────────────────────────
+function renderNav(){
+  const steps=[{id:'contexto',label:'Datos',emoji:'📋'},{id:'instalaciones',label:'Instal.',emoji:'🏗️'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión',emoji:'📊'}];
+  const ai=steps.findIndex(s=>s.id===S.view);
+  const score=globalScore();const crit=critData(score);
+
+  // Stepper horizontal (móvil)
+  const strip=document.getElementById('stepsStrip');
+  const inner=document.getElementById('stepsInner');
+  if(strip && inner){
+    inner.innerHTML=steps.map((s,i)=>`
+      <div class="step-pill ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
+        <div class="step-pill-n">${i<ai?'✓':i+1}</div>
+        <div class="step-pill-l">${s.emoji} ${s.label}</div>
+      </div>`).join('');
+    // Scroll al paso activo
+    setTimeout(()=>{
+      const active=inner.querySelector('.step-pill.active');
+      if(active)active.scrollIntoView({inline:'center',behavior:'smooth',block:'nearest'});
+    },50);
+  }
+
+  // Sidebar derecha (desktop) — línea de progreso vertical con dots
+  const sbNav=document.getElementById('sbNav');
+  if(sbNav){
+    const pctLine=steps.length>1?Math.round((ai/(steps.length-1))*100):0;
+    sbNav.innerHTML=`<div class="sb-nav-track">
+      <div class="sb-nav-line"></div>
+      <div class="sb-nav-line-fill" style="height:${pctLine}%"></div>
+      ${steps.map((s,i)=>`
+        <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
+          <div class="sb-dot"></div>
+          <div class="sb-sl">${s.emoji?s.emoji+' ':''}${s.label}</div>
+        </div>`).join('')}
+    </div>`;
+  }
+  const sbVal=document.getElementById('sbVal');
+  const sbSub=document.getElementById('sbSub');
+  const sbFill=document.getElementById('sbFill');
+  if(sbVal){sbVal.textContent=score+'%';sbVal.style.color=crit.ac;}
+  if(sbSub)sbSub.textContent=crit.lbl;
+  if(sbFill){sbFill.style.width=score+'%';sbFill.style.background=crit.ac;}
+
+  // Barra de progreso
+  const pct=Math.round((ai/(steps.length-1))*100);
+  const pf=document.getElementById('progFill');
+  if(pf)pf.style.width=pct+'%';
+}
+
+// ─── ROUTER ───────────────────────────────────────────────────────────────────
+function goTo(v){S.view=v;render();document.querySelector('.main-scroll').scrollTop=0;window.scrollTo(0,0);}
+function goNext(){const i=VIEWS.indexOf(S.view);if(i<VIEWS.length-1)goTo(VIEWS[i+1]);}
+function goPrev(){const i=VIEWS.indexOf(S.view);if(i>0)goTo(VIEWS[i-1]);}
+
+function render(){
+  const isHome=S.view==='home';
+  // Stepper y progress — ocultos en home
+  const strip=document.getElementById('stepsStrip');
+  const progBar=document.querySelector('.progress-bar');
+  if(strip)strip.classList.toggle('hidden',isHome);
+  if(progBar)progBar.style.display=isHome?'none':'';
+  // Sidebar — oculta en home
+  const sb=document.getElementById('sidebar');
+  if(sb)sb.classList.toggle('visible',!isHome);
+
+  if(!isHome)renderNav();
+  const m=document.getElementById('mainContent');
+  m.classList.toggle('wide', S.view==='home' || S.view==='revision');
+  if(S.view==='home'){
+    
+    if(_homeData!==null)m.innerHTML=renderHome();
+    else loadHomeData();
+  }
+  else if(S.view==='contexto')m.innerHTML=renderCtx();
+  else if(S.view==='instalaciones')m.innerHTML=renderInstalaciones();
+  else if(S.view==='revision')m.innerHTML=renderRevision();
+  else{const a=AREAS.find(x=>x.id===S.view);if(a)m.innerHTML=renderArea(a);}
+}
+
+// ─── CONTEXTO ─────────────────────────────────────────────────────────────────
+function renderCtx(){
+  const c=S.ctx;
+  const saved=_homeData||[];
+  return`
+  <div class="ph">
+    <div class="ph-title">Datos de la comunidad</div>
+    <div class="ph-sub">Completa la información básica para comenzar el diagnóstico</div>
+  </div>
+
+  <!-- Guardar / Cargar -->
+  <div class="card">
+    <div class="card-ttl"><div class="cdot" style="background:var(--az-md)"></div>Formularios guardados</div>
+    <div class="saved-bar">
+      <button class="ghost btn-sm" onclick="openModal()">📂 Cargar diagnóstico guardado</button>
+      <button class="ghost btn-sm" onclick="guardarFormulario()">💾 Guardar</button>
+      <button class="btn-danger btn-sm" onclick="limpiarFormulario()">🗑 Limpiar</button>
+    </div>
+    <div class="hint">Los diagnósticos se guardan en este navegador y dispositivo.</div>
+  </div>
+
+  <!-- Identificación -->
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Identificación</div>
+    <div class="fg">
+      <div class="f full">
+        <label class="fl">Nombre del condominio o edificio *</label>
+        <input type="text" value="${c.nombre}" oninput="S.ctx.nombre=this.value" placeholder="Ej. Edificio Los Pinos" autocomplete="off">
+        <span class="hint">Este nombre se usará para guardar y recuperar el diagnóstico</span>
+      </div>
+      <div class="f">
+        <label class="fl">N° de unidades</label>
+        <input type="number" value="${c.unidades}" oninput="S.ctx.unidades=this.value" placeholder="Ej. 48" min="1">
+      </div>
+      <div class="f">
+        <label class="fl">Años de antigüedad</label>
+        <input type="number" value="${c.antiguedad}" oninput="S.ctx.antiguedad=this.value" placeholder="Ej. 12" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Tipo de condominio -->
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Tipo de condominio</div>
+    <div class="type-grid">
+      ${[
+        {v:'A',icon:'🏢',name:'Tipo A — Edificio',desc:'Departamentos en altura. Terreno común para todos.'},
+        {v:'B',icon:'🏠',name:'Tipo B — Casas',desc:'Lotes exclusivos. Solo calles y accesos comunes.'},
+        {v:'M',icon:'🏘️',name:'Mixto',desc:'Combina edificios y casas en un mismo condominio.'},
+      ].map(t=>`<div class="type-card ${c.tipo===t.v?'sel':''}" onclick="S.ctx.tipo='${t.v}';render()">
+        <div class="type-card-icon">${t.icon}</div>
+        <div class="type-card-name">${t.name}</div>
+        <div class="type-card-desc">${t.desc}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Contacto comité -->
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Contacto del comité</div>
+    <div class="fg">
+      <div class="f full">
+        <label class="fl">Nombre completo</label>
+        <input type="text" value="${c.contactoNombre}" oninput="S.ctx.contactoNombre=this.value" placeholder="Ej. Carlos Reyes" autocomplete="off">
+      </div>
+      <div class="f">
+        <label class="fl">Correo electrónico</label>
+        <input type="email" value="${c.contactoCorreo}" oninput="S.ctx.contactoCorreo=this.value" placeholder="correo@ejemplo.cl" autocomplete="off">
+      </div>
+      <div class="f">
+        <label class="fl">Cargo en el comité</label>
+        <select onchange="S.ctx.contactoCargo=this.value">
+          <option value="">— Seleccionar —</option>
+          <option ${c.contactoCargo==='Presidente'?'selected':''}>Presidente</option>
+          <option ${c.contactoCargo==='Secretario'?'selected':''}>Secretario</option>
+          <option ${c.contactoCargo==='Tesorero'?'selected':''}>Tesorero</option>
+          <option ${c.contactoCargo==='Representante inmobiliaria'?'selected':''}>Representante inmobiliaria</option>
+          <option ${c.contactoCargo==='Otro'?'selected':''}>Otro</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Software de gestión actual</div>
+    <div class="fg">
+      <div class="f full">
+        <label class="fl">Software de gestión actual</label>
+        <select onchange="S.ctx.sistema=this.value">
+          <option value="" ${c.sistema===''?'selected':''}>Sin software / no usan</option>
+          <option value="Comunidad Feliz" ${c.sistema==='Comunidad Feliz'?'selected':''}>Comunidad Feliz</option>
+          <option value="Edipro" ${c.sistema==='Edipro'?'selected':''}>Edipro</option>
+          <option value="Edifito" ${c.sistema==='Edifito'?'selected':''}>Edifito</option>
+          <option value="Kastor" ${c.sistema==='Kastor'?'selected':''}>Kastor</option>
+          <option value="Otro" ${c.sistema==='Otro'?'selected':''}>Otro</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-row nav-row-end">
+    <button class="pri" onclick="goNext()">Siguiente: instalaciones →</button>
+  </div>`;
+}
+
+// ─── ÁREA ─────────────────────────────────────────────────────────────────────
+// ─── INSTALACIONES ───────────────────────────────────────────────────────────
+function renderInstalaciones(){
+  const inst=S.inst||{};
+  const nTrab=numTrabajadores();
+  return`
+  <div class="ph">
+    <div class="ph-title">Instalaciones y equipamiento</div>
+    <div class="ph-sub">Marca todo lo que tiene el edificio — determina qué ítems aplican en el diagnóstico</div>
+  </div>
+
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Instalaciones del edificio</div>
+    <div class="items">${INST_ITEMS.map(it=>{
+      const on=!!(inst[it.id]);
+      return '<div class="irow '+(on?'on':'')+'" onclick="S.inst[\''+it.id+'\']=!S.inst[\''+it.id+'\'];render()" style="cursor:pointer"><div class="chk"><div class="ckm"></div></div><div class="itxt">'+it.label+'</div></div>';
+    }).join('')}</div>
+  </div>
+
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Personal</div>
+    <div class="fg">
+      <div class="f">
+        <label class="fl">Trabajadores contratados</label>
+        <input type="number" value="${nTrab||''}" onchange="S.ctx.trabajadores=this.value;render()" placeholder="0" min="0">
+        <span class="hint">Conserjes, personal de aseo, etc.</span>
+      </div>
+    </div>
+    ${nTrab>0?`
+    <div class="items" style="margin-top:10px">
+      <div class="irow ${S.ctx.segPrivada?'on':''}" onclick="S.ctx.segPrivada=!S.ctx.segPrivada;render()">
+        <div class="chk"><div class="ckm"></div></div>
+        <div class="itxt">Conserjes con funciones de seguridad explícitas (Ley 21.659)</div>
+      </div>
+    </div>`:''}
+  </div>
+
+  <div class="nav-row">
+    <button class="ghost" onclick="goPrev()">← Anterior</button>
+    <button class="pri" onclick="goNext()">Comenzar diagnóstico →</button>
+  </div>`;
+}
+
+function renderArea(area){
+  const applies=areaApplies(area);
+  const s=applies?scoreArea(area):null;
+  const sem=semC(s?s.pct:null);
+  const ai=AREAS.indexOf(area);
+  const isLast=ai===AREAS.length-1;
+  const evaluated=applies?area.items.filter((it,i)=>itemApplies(it)&&itemVal(area.id,i)!==null).length:0;
+  const total=applies?area.items.filter(it=>itemApplies(it)).length:0;
+
+  return`
+  <div class="ph">
+    <div class="ph-title">${area.emoji} ${area.label}</div>
+    <div class="ph-sub">Selecciona el nivel de cumplimiento de cada ítem · ${applies?evaluated+'/'+total+' evaluados':'No aplica para esta comunidad'}</div>
+  </div>
+  <div class="card">
+    ${!applies?`
+      <div style="padding:16px 0;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">👷</div>
+        <div style="font-size:14px;font-weight:700;color:var(--az-md);margin-bottom:4px">Área no aplicable</div>
+        <div style="font-size:13px;color:var(--muted)">Esta comunidad no tiene personal contratado,<br>por lo que el área Laboral no se evalúa.</div>
+      </div>`:`
+    <div class="items">${area.items.map((it,i)=>{
+      const na=!itemApplies(it);
+      const val=itemVal(area.id,i);
+      const wl={c:'Crítico',i:'Importante',b:'Básico'}[it.w];
+      const wc={c:'wc',i:'wi',b:'wb'}[it.w];
+      const bgs=val===0?'background:var(--sr-bg);border-color:#f0b8b8':val===0.25?'background:#F0EAF8;border-color:#c9a8e0':val===0.5?'background:var(--sa-bg);border-color:#f5c98a':val===1?'background:var(--vd-lt);border-color:var(--vd-md)':'';
+      const scBtns=[
+        {v:0,    lbl:'No cumple', sel:val===0,    ss:'background:var(--sr-bg);border-color:var(--sr-ac);color:var(--sr-fg)'},
+        {v:0.25, lbl:'No sabe',   sel:val===0.25, ss:'background:#F0EAF8;border-color:#9B6BBE;color:#5E3A8A'},
+        {v:0.5,  lbl:'Parcial',   sel:val===0.5,  ss:'background:var(--sa-bg);border-color:var(--sa-ac);color:var(--sa-fg)'},
+        {v:1,    lbl:'Cumple',    sel:val===1,     ss:'background:var(--vd-lt);border-color:var(--vd);color:var(--vd-dk)'},
+      ];
+      return '<div class="irow '+(na?'na':'')+'" style="'+(na?'':'cursor:default;'+bgs)+';display:block;padding:10px 12px">'
+        +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:'+(na?'0':'8px')+'">'
+        +'<div class="itxt">'+it.t+'</div>'
+        +(na?'<span class="nap">No aplica</span>':'<span class="wp '+wc+'">'+wl+'</span>')
+        +'</div>'
+        +(na?'':'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">'
+          +scBtns.map(o=>'<button onclick="setItem(\''+area.id+'\','+i+','+o.v+')" style="padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);font-size:11px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;background:white;color:var(--az-md);width:100%;'+(o.sel?o.ss:'')+'">'
+          +o.lbl+'</button>').join('')+'</div>')
+        +'</div>';
+    }).join('')}</div>
+    <label class="obs-lbl">Observaciones del área</label>
+    <textarea oninput="S.notes['${area.id}']=this.value" placeholder="Anota detalles o aclaraciones del comité sobre esta área...">${S.notes[area.id]}</textarea>
+    ${s?`<div class="area-bar-row">
+      <span class="bar-lbl">Cumplimiento</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${s.pct}%;background:${sem.ac}"></div></div>
+      <span class="bar-pct" style="color:${sem.fg}">${s.pct}%</span>
+      <span class="bar-badge" style="background:${sem.bg};color:${sem.fg}">${sem.lbl}</span>
+    </div>`:''}`}
+  </div>
+  <div class="nav-row">
+    <button class="ghost" onclick="goPrev()">← Anterior</button>
+    <button class="pri" onclick="goNext()">${isLast?'Ver revisión →':'Siguiente →'}</button>
+  </div>`;
+}
+function setItem(aId,i,val){S.checks[aId][i]=(S.checks[aId][i]===val)?null:val;render();}
+
+// ─── REVISIÓN ─────────────────────────────────────────────────────────────────
+function renderRevision(){
+  const score=globalScore();const lid=lineaActual();const sug=lineaSugerida();
+  const lm=LINEAS[lid];const crit=critData(score);const crits=critFailing();
+  const vMin=S.valorMin||lm.valMin;const vMax=S.valorMax||lm.valMax;
+
+  return`
+  <div class="ph">
+    <div class="ph-title">Revisión del diagnóstico</div>
+    <div class="ph-sub">Revisa el resultado, ajusta la línea de servicio y genera el informe PDF</div>
+  </div>
+
+  <!-- Criticidad global -->
+  <div class="res-crit" style="background:${crit.bg};border-color:${crit.ac};color:${crit.fg}">
+    <div class="res-circle">
+      <div class="res-num" style="color:${crit.fg}">${score}</div>
+      <div class="res-pct">%</div>
+    </div>
+    <div style="flex:1">
+      <div class="res-label">${crit.lbl}</div>
+      <div class="res-desc">${crit.desc}</div>
+      ${crit.requiereIntervencion?`<div style="margin-top:7px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;display:inline-block;background:rgba(0,0,0,0.1)">⚠ Requiere intervención prioritaria</div>`:''}
+    </div>
+  </div>
+
+  <!-- Grilla de áreas -->
+  <div class="ag">${AREAS.map(a=>{
+    const s=scoreArea(a);const sem=semC(s?s.pct:null);
+    return`<div class="ac" style="cursor:pointer" onclick="openAreaModal('${a.id}')" title="Ver detalle de ${a.label}">
+      <div class="ac-name">${a.label}</div>
+      <div class="ac-pct" style="color:${sem.fg}">${s?s.pct+'%':'—'}</div>
+      <div class="ac-bar"><div class="ac-fill" style="width:${s?s.pct:0}%;background:${sem.ac}"></div></div>
+      <div class="ac-lbl" style="color:${sem.fg}">${sem.lbl}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center">Toca para ver detalle</div>
+    </div>`;}).join('')}</div>
+
+  <!-- Ítems críticos -->
+  ${crits.length?`<div class="card">
+    <div class="card-ttl"><div class="cdot" style="background:var(--sr-ac)"></div>⚠️ Ítems críticos sin resolver (${crits.length})</div>
+    <div class="ci-list">${crits.map(cr=>`<div class="ci" style="${cr.tipo==='ns'?'background:#F0EAF8;border-left-color:#9B6BBE':''}">
+      <span class="ci-area">${cr.area}</span>
+      <span class="ci-txt">${cr.tipo==='ns'?'❓ ':'⚠️ '}${cr.text}</span>
+    </div>`).join('')}</div>
+  </div>`:''}
+
+  <!-- Conclusión IA -->
+  <div class="card">
+    <div class="card-ttl"><div class="cdot"></div>Conclusión del diagnóstico — generada por IA</div>
+    ${S.loadingConclusion?`<div class="load-row"><div class="spin"></div>Redactando la conclusión...</div>`:''}
+    ${!S.loadingConclusion&&S.conclusion?`
+      <div class="fac-card">
+        <div class="fac-body" style="white-space:pre-line">${S.conclusion}</div>
+        <div class="fac-edit">
+          <textarea oninput="S.conclusion=this.value" style="min-height:140px">${S.conclusion}</textarea>
+        </div>
+      </div>`:''}
+    ${!S.loadingConclusion?`<div style="display:flex;gap:8px;margin-top:${S.conclusion?'8px':'0'};flex-wrap:wrap">
+      <button class="btn-sm ${!S.conclusion?'pri':''}" onclick="generarConclusion()">
+        ${S.conclusion?'↺ Regenerar':'✨ Generar conclusión con IA'}
+      </button>
+      ${S.conclusion?`<button class="btn-sm" onclick="limpiarConclusion()" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)">🗑 Limpiar</button>`:''}
+    </div>`:''}
+  </div>
+
+
+  <!-- Línea de servicio -->
+  <div class="card">
+    <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Línea de servicio propuesta</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">
+      El sistema sugiere <strong style="color:var(--az)">${LINEAS[sug].label}</strong> según el puntaje.
+      Puedes confirmarla o cambiarla según tu criterio.
+    </div>
+    <div class="linea-grid">
+      ${Object.entries(LINEAS).map(([k,lm2])=>{
+        const isSel=lid===k;const isSug=sug===k;
+        const selCls=isSel?`sel-${k.toLowerCase()}`:'';
+        return`<div class="linea-card ${selCls}" onclick="S.lineaOverride='${k}';render()">
+          <div class="lc-tag" style="color:${lm2.color}">${isSug?`<span class="suggested-badge">Sugerida</span>`:''}</div>
+          <div class="lc-name">${lm2.sublabel}</div>
+          <div class="lc-desc">${lm2.desc.substring(0,70)}...</div>
+          ${isSel?`<div style="font-size:10px;font-weight:700;color:${lm2.color};margin-top:5px">✓ Seleccionada</div>`:''}
+        </div>`;}).join('')}
+    </div>
+  </div>
+
+  <!-- Valor -->
+  <div class="card">
+    <div class="card-ttl"><div class="cdot" style="background:var(--vd)"></div>Valor mensual estimado</div>
+    <p style="font-size:13px;color:var(--az-md);margin-bottom:10px">${lm.label}</p>
+    <div class="val-row">
+      <span>$</span>
+      <input type="text" class="val-in" value="${vMin}" oninput="S.valorMin=this.value">
+      <span>–  $</span>
+      <input type="text" class="val-in" value="${vMax}" oninput="S.valorMax=this.value">
+      <span>CLP/mes</span>
+    </div>
+    <div class="hint" style="margin-top:6px">Rango precargado según la línea seleccionada. Editable antes de generar el informe.</div>
+  </div>
+
+  <div class="nav-row">
+    <button class="ghost" onclick="openExitModal()">← Salir</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="ghost" onclick="guardarFormulario()">💾 Guardar</button>
+      <button class="vd" onclick="generarPDF()" ${S.loadingConclusion?'disabled':''}>📄 Descargar PDF</button>
+    </div>
+  </div>`;
+}
+
+// ─── ACCIONES ──────────────────────────────────────────────────────────────────
+async function guardarFormulario(){
+  if(!S.ctx.nombre?.trim()){
+    alert('Ingresa el nombre del condominio antes de guardar.');
+    goTo('contexto');
+    return;
+  }
+  await saveDiag();
+  _homeData = null;
+}
+
+function limpiarFormulario(){
+  if(!confirm('¿Limpiar todo el formulario? Los datos no guardados se perderán.'))return;
+  const nuevo=defaultState();
+  S.ctx={...nuevo.ctx};S.checks=nuevo.checks;S.notes=nuevo.notes;
+  S.inst=Object.fromEntries(INST_ITEMS.map(x=>[x.id,false]));
+  S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
+  _lastSavedSnapshot = formSnapshot();
+  S.view='contexto';render();
+}
+
+function openModal(){
+  renderModal();
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+async function renderModal(){
+  const saved=await getSaved();
+  const ml=document.getElementById('modalList');
+  if(!saved.length){ml.innerHTML=`<div class="modal-empty">No hay diagnósticos guardados aún.<br>Completa y guarda un diagnóstico para verlo aquí.</div>`;return;}
+  ml.innerHTML=saved.map(d=>{
+    const sem=semC(d.score);
+    return`<div class="modal-item" onclick="loadDiag('${d.nombre}')">
+      <div>
+        <div class="modal-item-name">${d.nombre}</div>
+        <div class="modal-item-meta">Tipo ${d.ctx?.tipo||'A'} · ${d.ctx?.unidades||'?'} unidades · ${d.fecha}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="modal-item-score" style="background:${sem.bg};color:${sem.fg}">${d.score}%</span>
+        <button class="btn-danger btn-sm" onclick="event.stopPropagation();deleteSaved('${d.nombre}')" style="padding:4px 8px">×</button>
+      </div>
+    </div>`;}).join('');
+}
+
+// ─── CONCLUSIÓN IA ───────────────────────────────────────────────────────────────
+async function generarConclusion(){
+  S.loadingConclusion=true;render();
+  const diag2=getDiagnostico();
+  const score=diag2.score;const c=S.ctx;const lid=lineaActual();
+
+  const instMarcadas=Object.entries(S.inst||{}).filter(([k,v])=>v&&k!=='_minvu').map(([k])=>{
+    const it=INST_ITEMS.find(x=>x.id===k);return it?it.label:k;
+  });
+  const minvuOk=!!(S.inst&&S.inst._minvu);
+  const resumenAreas=AREAS.map(a=>{
+    const s=scoreArea(a);if(!s)return null;
+    const nc=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===0).length;
+    const ns=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===0.25).length;
+    const cp=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===0.5).length;
+    const ok=a.items.filter((it,i)=>itemApplies(it)&&itemVal(a.id,i)===1).length;
+    return a.label+': '+s.pct+'% (NC:'+nc+' NS:'+ns+' CP:'+cp+' OK:'+ok+')';
+  }).filter(Boolean).join(' | ');
+  const critCtx=diag2.crits.length>0
+    ?'Criticos sin resolver: '+diag2.crits.map(x=>(x.tipo==='ns'?'[NO SABE] ':'[NC] ')+x.area+': '+x.text).join('; ')
+    :'Sin items criticos incumplidos.';
+
+  const prompt='Eres un auditor senior en administracion de condominios en Chile, especialista en la Ley 21.442.\n\nRedacta una conclusion diagnostica de 3 parrafos cortos (120-160 palabras en total) para un informe comercial dirigido al comite de administracion de un condominio prospecto.\n\nREGLAS ABSOLUTAS:\n- NUNCA citar articulos ni numeros de norma\n- NUNCA mencionar a CoproActiva por nombre\n- NUNCA listar items individuales ni hacer inventario de hallazgos\n- Tono: autoridad tecnica, directo, sin condescendencia\n- Proposito: que el comite entienda la gravedad de su situacion y la necesidad de gestion profesional\n- Los No sabe son senal de ausencia de control, tratalos como riesgo de gobernanza\n\nESTRUCTURA:\nP1: Sintesis del nivel de madurez administrativa. Sin eufemismos si la situacion es critica.\nP2: Las 2-3 brechas de mayor impacto legal, financiero o de seguridad, sin detallar cada item. Mencionar si hay desconocimiento sistematico.\nP3: Una sola frase de direccion: que tipo de intervencion requiere y con que urgencia.\n\nDATOS:\nCondominio: '+c.nombre+' Tipo '+c.tipo+' '+c.unidades+' unidades\nPuntaje: '+score+'% Nivel: '+diag2.nivel+'\nAdministrador MINVU: '+(minvuOk?'Si':'No o no sabe')+'\nInstalaciones: '+(instMarcadas.length?instMarcadas.join(', '):'No especificadas')+'\nAreas: '+resumenAreas+'\n'+critCtx+'\nAreas bajo 60%: '+(diag2.areasLow.map(a=>a.label+' ('+a.score.pct+'%)').join(', ')||'Ninguna')+'\nLinea: '+(LINEAS[lid]?LINEAS[lid].label:lid)+'\n\nRESPONDE SOLO con JSON valido sin markdown: {"conclusion":"..."}\nParrafos separados por \\n\\n.';
+
+  const variation=S.conclusion?'\n\nNueva generacion #'+Date.now()+'. Redacta distinta, sin repetir frases.':'';
+
+  try{
+    const res=await fetch(WORKER_BASE+'/factores',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+_getWorkerToken(),'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:prompt+variation})
+    });
+    if(!res.ok)throw new Error('Error del servidor: '+res.status);
+    const data=await res.json();
+    if(!data.text)throw new Error('Respuesta vacia');
+    const cleaned=data.text.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(cleaned);
+    if(!parsed.conclusion)throw new Error('Formato invalido');
+    S.conclusion=parsed.conclusion;
+  }catch(e){
+    S.conclusion='Error al generar: '+e.message+'. Puedes redactarla manualmente.';
+  }
+  S.loadingConclusion=false;render();
+}
+// ─── PDF ────────────────────────────────────────────────────────────────────── 
+function generarPDF(){
+  const score=globalScore();const lid=lineaActual();const lm=LINEAS[lid];
+  const crit=critData(score);const c=S.ctx;const crits=critFailing();
+  const vMin=S.valorMin||lm.valMin;const vMax=S.valorMax||lm.valMax;
+  const fecha=new Date().toLocaleDateString('es-CL',{year:'numeric',month:'long',day:'numeric'});
+  const sorted=[...AREAS].map(a=>({...a,score:scoreArea(a)})).filter(a=>a.score).sort((a,b)=>a.score.pct-b.score.pct);
+  function semHex(pct){
+    if(pct==null)return['#516576','#f2f0ed','#e8e4de','No aplica'];
+    if(pct>=70)return['#1d5c38','#eaf4ee','#6fa885','Bien'];
+    if(pct>=40)return['#7a3e10','#fdeee0','#d18549','En riesgo'];
+    return['#7a1515','#fde8e8','#b83232','Crítico'];
+  }
+  const[cFg,cBg,cAc,cLbl]=semHex(score);
+  function hdr(pg,total){return`<div style="background:#304660;height:48mm;position:relative;padding:6mm 16mm 0">
+    <div style="display:flex;align-items:center;gap:3mm;margin-bottom:2mm">
+      <div style="width:8mm;height:8mm;background:#d18549;border-radius:2mm;display:flex;align-items:center;justify-content:center;font-size:10pt;font-weight:700;color:white">C</div>
+      <span style="font-size:10pt;font-weight:700;color:#d18549">co</span><span style="font-size:10pt;color:white">proactiva</span>
+    </div>
+    <div style="position:absolute;top:6mm;right:16mm;font-size:6.5pt;color:#7a9ab5">Pág. ${pg} / ${total}</div>
+    <div style="font-size:17pt;font-weight:700;color:white;margin-bottom:1.5mm">Informe de Diagnóstico Inicial</div>
+    <div style="font-size:7.5pt;color:#8fb5cc;margin-bottom:3.5mm">Diagnóstico preliminar de riesgo y propuesta de administración</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">
+      ${[['CONDOMINIO',c.nombre||'—'],['FECHA',fecha],['TIPO / UNID.',`Tipo ${c.tipo} · ${c.unidades||'?'} unidades`],['ELABORADO POR','CoproActiva']].map(([l,v])=>`
+      <div><div style="font-size:5.5pt;color:#7a9ab5;margin-bottom:1mm;text-transform:uppercase;letter-spacing:0.5px">${l}</div><div style="font-size:7.5pt;font-weight:700;color:white">${v}</div></div>`).join('')}
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:1mm;background:#d18549"></div>
+  </div>`;}
+  function ftr(){return`<div style="position:absolute;bottom:0;left:0;right:0;height:9mm;background:#f2f0ed;border-top:0.3mm solid #e8e4de;display:flex;align-items:center;padding:0 16mm;font-size:6.5pt;color:#8a9ba8">
+    <span>coproactiva · Comunidades que funcionan.</span>
+    <span style="flex:1;text-align:center">Documento confidencial</span>
+    <span>${fecha}</span>
+  </div>`;}
+  function sec(t){return`<div style="font-size:6.5pt;font-weight:700;color:#d18549;text-transform:uppercase;letter-spacing:0.8px;border-bottom:0.5mm solid #d18549;padding-bottom:1mm;margin:5mm 0 3mm">${t}</div>`;}
+
+  const p1=`<div style="width:210mm;height:297mm;position:relative;background:#fafaf9;font-family:Arial,sans-serif;font-size:8pt;color:#1a2a38;overflow:hidden;page-break-after:always">
+    ${hdr(1,2)}
+    <div style="padding:5mm 16mm">
+      ${sec('Resultado del diagnóstico')}
+      <div style="background:${cBg};border:0.6mm solid ${cAc};border-radius:3mm;padding:4mm 5mm;display:flex;align-items:center;gap:5mm">
+        <div style="width:14mm;height:14mm;border-radius:50%;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+          <div style="font-size:14pt;font-weight:700;color:${cFg};line-height:1">${score}</div>
+          <div style="font-size:6pt;color:#8a9ba8">%</div>
+        </div>
+        <div style="width:0.3mm;background:${cAc};opacity:0.3;align-self:stretch;margin:1mm 0"></div>
+        <div><div style="font-size:11pt;font-weight:700;color:${cFg};font-family:Georgia,serif;margin-bottom:1.5mm">${cLbl}</div>
+        <div style="font-size:7.5pt;color:${cFg};opacity:0.85;line-height:1.5">${crit.desc}</div></div>
+      </div>
+      ${sec('Comparativo por área — de menor a mayor cumplimiento')}
+      ${sorted.map(a=>{const[sf,sb,sa,sl]=semHex(a.score.pct);const pct=a.score.pct;const fw=pct+'%';
+        return`<div style="display:flex;align-items:center;gap:3mm;margin-bottom:2.5mm">
+          <div style="width:22mm;font-size:8pt;color:#516576">${a.label}</div>
+          <div style="flex:1;height:4.5mm;background:#f2f0ed;border-radius:1mm;overflow:hidden;position:relative">
+            <div style="height:100%;width:${fw};background:${sa};border-radius:1mm"></div>
+            <span style="position:absolute;top:50%;transform:translateY(-50%);${pct>20?`right:4mm;color:white`:`left:${fw};margin-left:2mm;color:${sf}`};font-size:7pt;font-weight:700">${pct}%</span>
+          </div>
+          <div style="width:14mm;height:4.5mm;background:${sb};border-radius:1mm;display:flex;align-items:center;justify-content:center;font-size:6.5pt;font-weight:700;color:${sf}">${sl}</div>
+        </div>`;}).join('')}
+      ${sec('Observaciones por área')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5mm">
+        ${AREAS.map(a=>{const s=scoreArea(a);const[sf,,sa,sl]=semHex(s?s.pct:null);const notes=S.notes[a.id]||'';
+          return`<div style="border:0.3mm solid #e8e4de;border-radius:2mm;padding:2.5mm 3mm;background:white;position:relative;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:2mm;background:${sa}"></div>
+            <div style="padding-left:3mm;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5mm">
+              <span style="font-size:8pt;font-weight:700;color:#304660">${a.label}</span>
+              ${s?`<span style="font-size:7pt;font-weight:700;color:${sf}">${s.pct}% · ${sl}</span>`:''}
+            </div>
+            <div style="padding-left:3mm;font-size:7.5pt;color:#516576;line-height:1.5">${notes||'<em style="color:#8a9ba8">Sin observaciones registradas.</em>'}</div>
+          </div>`;}).join('')}
+      </div>
+    </div>
+    ${ftr()}
+  </div>`;
+
+  const byArea={};crits.forEach(it=>{byArea[it.area]=byArea[it.area]||[];byArea[it.area].push(it.text);});
+  const p2=`<div style="width:210mm;height:297mm;position:relative;background:#fafaf9;font-family:Arial,sans-serif;font-size:8pt;color:#1a2a38;overflow:hidden">
+    ${hdr(2,2)}
+    <div style="padding:5mm 16mm">
+      ${crits.length?`${sec(`Ítems críticos faltantes · ${crits.length} sin resolver`)}
+        ${Object.entries(byArea).map(([an,items])=>`
+          <div style="font-size:7.5pt;font-weight:700;color:#516576;border-bottom:0.3mm solid #516576;padding-bottom:1mm;display:inline-block;margin-bottom:2mm">${an}</div>
+          ${items.map(txt=>`<div style="display:flex;align-items:flex-start;gap:3mm;padding:2mm 3mm;background:#fde8e8;border-radius:1.5mm;border-left:2mm solid #b83232;margin-bottom:1.5mm">
+            <div style="font-size:9pt;font-weight:700;color:#b83232;line-height:1">×</div>
+            <div style="font-size:7.5pt;color:#1a2a38;line-height:1.4">${txt}</div>
+          </div>`).join('')}
+          <div style="height:3mm"></div>`).join('')}`:''}
+      ${S.conclusion?`${sec('Conclusión del diagnóstico')}
+        <div style="background:#f2f0ed;border-radius:2mm;padding:3mm 4mm;border-left:2mm solid #d18549;margin-bottom:2mm">
+          <div style="font-size:7.5pt;color:#1a2a38;line-height:1.6;white-space:pre-line">${S.conclusion}</div>
+        </div>`:''}
+      ${sec('Propuesta de servicio')}
+      <div style="background:#eaf4ee;border:1mm solid #c2e0cc;border-radius:3mm;overflow:hidden;margin-bottom:3mm">
+        <div style="background:#1d5c38;padding:3mm 5mm"><div style="font-size:9.5pt;font-weight:700;color:white">${lm.label}</div></div>
+        <div style="padding:4mm 5mm">
+          <div style="font-size:8pt;color:#516576;line-height:1.5;margin-bottom:3mm">${lm.desc}</div>
+          ${lm.items.map(item=>`<div style="display:flex;align-items:flex-start;gap:3mm;margin-bottom:2.5mm">
+            <div style="width:5mm;height:5mm;background:#6fa885;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:5pt;font-weight:700;color:white;flex-shrink:0;margin-top:0.5mm">OK</div>
+            <div style="font-size:8.5pt;color:#1a2a38;line-height:1.4">${item}</div>
+          </div>`).join('')}
+          <div style="border-top:0.3mm solid #c2e0cc;margin:3mm 0"></div>
+          <div style="background:white;border:0.5mm solid #c2e0cc;border-radius:2mm;padding:3mm 4mm;display:flex;align-items:center;justify-content:space-between">
+            <div><div style="font-size:7.5pt;color:#516576;margin-bottom:1mm">Valor mensual estimado del servicio</div><div style="font-size:6.5pt;color:#8a9ba8">Sujeto a confirmación en reunión presencial</div></div>
+            <div style="text-align:right"><div style="font-size:13pt;font-weight:700;color:#1d5c38">$${vMin} – $${vMax}</div><div style="font-size:6.5pt;color:#8a9ba8">CLP / mes</div></div>
+          </div>
+        </div>
+      </div>
+      ${sec('Próximo paso')}
+      <div style="background:#304660;border-radius:3mm;padding:4mm 5mm 4mm 8mm;position:relative;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:2.5mm;background:#d18549"></div>
+        <div style="font-size:8.5pt;font-weight:700;color:#d18549;margin-bottom:2mm">Próximo paso</div>
+        <div style="font-size:7.5pt;color:#ccd8e0;line-height:1.6">CoproActiva los invita a una reunión de presentación con el comité, donde se revisará este diagnóstico en detalle y se confirmará el valor definitivo del servicio. Para coordinar fecha y hora, contáctenos a través de nuestros canales habituales.</div>
+      </div>
+    </div>
+    ${ftr()}
+  </div>`;
+
+  const tpl=document.getElementById('pdfTpl');
+  tpl.innerHTML=p1+p2;
+  setTimeout(()=>{window.print();setTimeout(()=>{tpl.innerHTML='';},1000);},200);
+}
+
+// ─── HOME VIEW ───────────────────────────────────────────────────────────────
+// Home carga diagnósticos de forma asíncrona
+let _homeData = null;
+let _homeLoading = false;
+
+async function loadHomeData() {
+  _homeLoading = true;
+  // Sheet es la fuente única — no mostrar localStorage
+  // Mostrar estado de carga mientras llega el Sheet
+  _homeData = [];
+  _homeLoading = false;
+  if(S.view==='home') {
+    document.getElementById('mainContent').innerHTML = renderHome();
+  }
+  // Sincronizar con Sheet (reemplaza _homeData con datos reales)
+  syncWithSheets();
+}
+
+function renderHome(){
+  const hist=_homeData||[];
+  return`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="font-size:15px;font-weight:700;color:var(--az)">Diagnósticos guardados</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span id="syncIndicator" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+        <span class="spin" style="width:10px;height:10px;border-width:1.5px"></span> Sincronizando...
+      </span>
+      <span style="font-size:12px;color:var(--muted)">${hist.length} guardado${hist.length!==1?'s':''}</span>
+    </div>
+  </div>
+  ${hist.length===0?`
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-ttl">Sin diagnósticos aún</div>
+      <div class="empty-desc">Crea tu primer diagnóstico para comenzar<br>a captar clientes con CoproActiva.</div>
+      <br>
+      <button class="pri" onclick="nuevoDesdeHome()" style="margin-top:8px">Comenzar diagnóstico</button>
+    </div>
+  `:`<div style="display:flex;flex-direction:column;gap:8px">
+    ${hist.map(d=>{
+      const sem=semC(d.score);
+      const lm2=LINEAS[d.linea]||LINEAS.L2;
+      return`<div class="hist-card" onclick="cargarYAbrir('${encodeURIComponent(d.nombre)}')">
+        <div class="hist-score" style="background:${sem.bg};color:${sem.fg}">${d.score}%</div>
+        <div class="hist-info">
+          <div class="hist-nombre">${d.nombre}</div>
+          <div class="hist-meta">Tipo ${d.ctx?.tipo||'A'} · ${d.ctx?.unidades||'?'} unidades · ${d.fecha}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span class="hist-linea" style="background:${lm2.bg||'var(--vd-lt)'};color:${lm2.color||'var(--vd-dk)'}">${d.linea}</span>
+          <button class="btn-sm ghost" onclick="event.stopPropagation();generarPDFDesdeHistorial('${encodeURIComponent(d.nombre)}')" title="Descargar PDF">📄</button>
+          <button class="btn-sm" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)" onclick="event.stopPropagation();eliminarHist('${encodeURIComponent(d.nombre)}')" title="Eliminar">×</button>
+        </div>
+      </div>`;}).join('')}
+  </div>`}`;
+}
+
+function nuevoDesdeHome(){
+  const def=defaultState();
+  S.ctx=def.ctx;S.inst=def.inst;S.checks=def.checks;S.notes=def.notes;
+  S.factores=[];S.conclusion='';S.valorMin='';S.valorMax='';S.lineaOverride=null;
+  _lastSavedSnapshot = formSnapshot();
+  goTo('contexto');
+}
+
+async function cargarYAbrir(nombre){
+  await loadDiag(decodeURIComponent(nombre));
+  goTo('contexto');
+}
+
+async function eliminarHist(nombre){
+  const n=decodeURIComponent(nombre);
+  if(!confirm(`¿Eliminar el diagnóstico "${n}"?`))return;
+  await deleteSaved(n);   // borra de Sheets + localStorage
+  _homeData = null;        // invalida cache para forzar recarga
+  render();                // recarga la vista home
+}
+
+async function generarPDFDesdeHistorial(nombre){
+  const _sv=await getSaved();const d=_sv.find(x=>x.nombre===decodeURIComponent(nombre));
+  if(!d)return;
+  // Temporarily load data for PDF generation
+  const prevCtx={...S.ctx};const prevChecks=JSON.parse(JSON.stringify(S.checks));
+  const prevNotes={...S.notes};const prevFac=[...S.factores];const prevConc=S.conclusion;
+  const prevVMin=S.valorMin;const prevVMax=S.valorMax;const prevLO=S.lineaOverride;
+  S.ctx={...d.ctx};S.checks=JSON.parse(JSON.stringify(d.checks));
+  S.notes={...d.notes};S.factores=d.factores||[];S.conclusion=d.conclusion||'';
+  S.valorMin=d.valorMin||'';S.valorMax=d.valorMax||'';S.lineaOverride=d.lineaOverride||null;
+  generarPDF();
+  setTimeout(()=>{
+    S.ctx=prevCtx;S.checks=prevChecks;S.notes=prevNotes;S.factores=prevFac;S.conclusion=prevConc;
+    S.valorMin=prevVMin;S.valorMax=prevVMax;S.lineaOverride=prevLO;
+  },500);
+}
+
+// ─── EXIT MODAL ───────────────────────────────────────────────────────────────
+function openExitModal(){
+  if(!hayCambiosSinGuardar()){
+    goTo('home');
+    return;
+  }
+  const nombre=S.ctx.nombre?.trim();
+  const sub=document.getElementById('exitModalSub');
+  sub.textContent=nombre
+    ? `Estás trabajando en "${nombre}". ¿Qué deseas hacer?`
+    : 'Tienes datos sin guardar en este diagnóstico.';
+  document.getElementById('exitModalBg').classList.add('show');
+}
+function closeExitModal(){document.getElementById('exitModalBg').classList.remove('show');}
+
+async function guardarYSalir(){
+  if(!S.ctx.nombre?.trim()){
+    closeExitModal();
+    alert('Ingresa el nombre del condominio para poder guardar.');
+    goTo('contexto');
+    return;
+  }
+  closeExitModal();
+  await saveDiag();
+  _homeData = null;
+  goTo('home');
+}
+function salirSinGuardar(){
+  closeExitModal();
+  goTo('home');
+}
+
+function showToast(msg, icon='💾', duration=2500){
+  const t = document.getElementById('toastGuardado');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  t.style.display = 'flex';
+  t.style.opacity = '1';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>{
+    t.style.opacity = '0';
+    setTimeout(()=>{ t.style.display = 'none'; }, 300);
+  }, duration);
+}
+
+function openAreaModal(aId){
+  const area = AREAS.find(a=>a.id===aId);
+  if(!area) return;
+  const s = scoreArea(area);
+  const sem = semC(s?s.pct:null);
+
+  document.getElementById('areaModalEmoji').textContent = area.emoji||'';
+  document.getElementById('areaModalTtl').textContent = area.label;
+  const scoreEl = document.getElementById('areaModalScore');
+  scoreEl.textContent = s ? s.pct+'% — '+sem.lbl : 'No aplica';
+  scoreEl.style.background = sem.bg;
+  scoreEl.style.color = sem.fg;
+
+  const fallidos  = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0);
+  const noSabe    = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0.25);
+  const parciales = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===0.5);
+  const cumplidos = area.items.filter((it,i)=>itemApplies(it)&&itemVal(aId,i)===1);
+  const note = S.notes[aId]?.trim();
+  const wLabel = {c:'Crítico',i:'Importante',b:'Básico'};
+  const wFg = {c:'var(--sr-ac)',i:'var(--sa-ac)',b:'var(--sg-ac)'};
+  const wBg = {c:'var(--sr-bg)',i:'var(--sa-bg)',b:'var(--sg-bg)'};
+
+  let html = '';
+
+  if(!s){
+    html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Esta área no aplica para este condominio.</p>';
+  } else {
+    if(fallidos.length){
+      html += `<div class="area-modal-section">
+        <div class="area-modal-section-ttl" style="color:var(--sr-ac)">⚠️ Sin cumplir (${fallidos.length})</div>
+        ${fallidos.map(it=>`<div class="area-modal-item fail">
+          <span class="area-modal-badge" style="background:${wBg[it.w]};color:${wFg[it.w]}">${wLabel[it.w]}</span>
+          <span class="area-modal-item-txt">${it.t}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    if(noSabe.length){
+      html += `<div class="area-modal-section">
+        <div class="area-modal-section-ttl" style="color:#5E3A8A">❓ No sabe (${noSabe.length})</div>
+        ${noSabe.map(it=>`<div class="area-modal-item" style="background:#F0EAF8;border-left:2.5px solid #9B6BBE">
+          <span class="area-modal-badge" style="background:#F0EAF8;color:#5E3A8A">${wLabel[it.w]}</span>
+          <span class="area-modal-item-txt">${it.t}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    if(parciales.length){
+      html += `<div class="area-modal-section">
+        <div class="area-modal-section-ttl" style="color:var(--sa-fg)">⋅ Cumplimiento parcial (${parciales.length})</div>
+        ${parciales.map(it=>`<div class="area-modal-item" style="background:var(--sa-bg)">
+          <span class="area-modal-badge" style="background:var(--sa-bg);color:var(--sa-fg)">${wLabel[it.w]}</span>
+          <span class="area-modal-item-txt">${it.t}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    if(cumplidos.length){
+      html += `<div class="area-modal-section">
+        <div class="area-modal-section-ttl" style="color:var(--sg-fg)">✓ Cumplidos (${cumplidos.length})</div>
+        ${cumplidos.map(it=>`<div class="area-modal-item ok">
+          <span class="area-modal-badge" style="background:var(--sg-bg);color:var(--sg-fg)">✓</span>
+          <span class="area-modal-item-txt" style="color:var(--az-md)">${it.t}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    if(note){
+      html += `<div class="area-modal-section">
+        <div class="area-modal-section-ttl" style="color:var(--az-md)">📝 Observación anotada</div>
+        <div class="area-modal-obs">${note}</div>
+      </div>`;
+    }
+    if(!fallidos.length && !noSabe.length && !parciales.length && !cumplidos.length){
+      html = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Sin ítems evaluados en esta área.</p>';
+    }
+  }
+
+  document.getElementById('areaModalBody').innerHTML = html;
+  document.getElementById('areaModalBg').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAreaModal(){
+  document.getElementById('areaModalBg').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function eliminarFactor(i){
+  S.factores.splice(i,1);
+  render();
+}
+
+function limpiarFactores(){
+  if(!confirm('¿Eliminar todos los factores generados?')) return;
+  S.factores=[];
+  render();
+}
+
+function limpiarConclusion(){
+  if(!confirm('¿Eliminar la conclusión generada?')) return;
+  S.conclusion='';
+  render();
+}
+
+// ─── ACCESO ──────────────────────────────────────────────────────────────────
+
+function checkLogin(){ /* función desactivada — login eliminado */
+  const input = null; // document.getElementById('loginInput') eliminado
+  const val = input.value.trim();
+  if(false){
+    // Guardar sesión por 8 horas
+    sessionStorage.setItem('ca_auth', Date.now().toString());
+    /* loginScreen eliminado — nada que ocultar */
+    initApp();
+  } else {
+    document.getElementById('loginError').textContent = 'Clave incorrecta. Intenta nuevamente.';
+    input.value = '';
+    input.focus();
+    // Shake animation
+    input.style.borderColor = 'var(--sr-ac)';
+    setTimeout(()=>{ input.style.borderColor = ''; }, 1500);
+  }
+}
+
+function checkAuth(){
+  const auth = sessionStorage.getItem('ca_auth');
+  if(auth){
+    const elapsed = Date.now() - parseInt(auth);
+    if(elapsed < 8 * 60 * 60 * 1000) return true; // 8 horas
+  }
+  return false;
+}
+
+function initApp(){
+  // Precalentar Apps Script en background para reducir demora en primera carga real
+setTimeout(() => {
+  fetch(`${WORKER_BASE}/diagnosticos`, {
+    headers: { 'Authorization': 'Bearer ' + _getWorkerToken() }
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(data.diagnosticos) {
+        const remote = data.diagnosticos.map(d => ({
+          ...d.payload, id:d.id, fecha:d.fecha, nombre:d.nombre, score:d.score
+        }));
+        localStorage.setItem('ca_diag', JSON.stringify(remote.slice(0,50)));
+        _cache = remote;
+        _cacheTime = Date.now();
+        if(S.view==='home') {
+          _homeData = remote;
+          document.getElementById('mainContent').innerHTML = renderHome();
+          const si = document.getElementById('syncIndicator');
+          if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
+        }
+      }
+    })
+    .catch(() => {
+      const si = document.getElementById('syncIndicator');
+      if(si){ si.textContent='Sin conexión con servidor'; si.style.color='var(--sa-fg)'; setTimeout(()=>si.remove(),3000); }
+    });
+}, 100);
+
+  // ── Prellenado desde el pipeline (CRM) — si viene de "Ir a Diagnóstico" ──
+  try {
+    const raw = sessionStorage.getItem('prospectoVinculado');
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && p.nombre) {
+        S.ctx.nombre         = p.nombre         || '';
+        S.ctx.unidades        = p.unidades       || '';
+        S.ctx.contactoNombre  = p.contactoNombre || '';
+        S.ctx.contactoCorreo  = p.contactoCorreo || '';
+        S.ctx.contactoCargo   = p.cargoContacto  || ''; // nombre interno difiere del que usa crm.html
+        _prospectoVinculadoId = p.id || null;
+        _lastSavedSnapshot = formSnapshot(); // evita "cambios sin guardar" solo por el prellenado
+        S.view = 'contexto';
+      }
+      sessionStorage.removeItem('prospectoVinculado'); // no debe contaminar el próximo diagnóstico
+    }
+  } catch(e) { console.warn('No se pudo leer prospectoVinculado:', e); }
+
+  render();
+}
+
+// Solicitar token HMAC al padre (por si el iframe fue cacheado y no recibió el load)
+(function(){
+  if(window.self !== window.top){
+    window.parent.postMessage({type:'solicitar_token'},'*');
+  }
+})();
+
+// Procesar token URL e inicializar — debe ejecutarse ANTES de checkAuth()
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  if (urlToken) {
+    window._DIAG_TOKEN_HMAC = urlToken;
+    sessionStorage.setItem('token', urlToken);
+    sessionStorage.setItem('ca_auth', Date.now().toString());
+  }
+  if (window.self !== window.top) {
+    document.body.classList.add('in-iframe');
+  }
+})();
+
+// Escuchar mensajes del CRM (nuevo diagnóstico desde botón del header)
+window.addEventListener('message', function(event) {
+  const data = event.data;
+  if (!data || !data.type) return;
+  if (data.type === 'nuevo_diagnostico') { nuevoDesdeHome(); }
+  if (data.type === 'diag_goto' && data.view) { goTo(data.view); }
+  if (data.type === 'set_worker_token' && data.token) {
+    window._DIAG_TOKEN_HMAC = data.token;
+  }
+});
+
+// Verificar autenticación al cargar
+if(checkAuth()){
+  initApp();
+} else {
+  document.getElementById('mainContent').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px;text-align:center;gap:12px"><div style="font-size:32px">&#128274;</div><div style="font-size:16px;font-weight:700;color:var(--az)">Acceso no autorizado</div><div style="font-size:13px;color:var(--muted)">Abre esta herramienta desde el m&#243;dulo CRM de CoproActiva.</div></div>';
+}
+</script>
+
+<!-- PDF template -->
+<div id="pdfTpl" style="display:none"></div>
+<style>
+@media print{
+  @page{size:A4;margin:0;}
+  body>*:not(#pdfTpl){display:none !important;}
+  #pdfTpl{display:block !important;}
+}
+</style>
+</body>
+</html>

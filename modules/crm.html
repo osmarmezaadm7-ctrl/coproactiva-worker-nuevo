@@ -1,0 +1,602 @@
+<!-- modules/crm.html — Coproactiva CRM híbrido -->
+<!-- Versión híbrida · visual CRM v2 + backend original Worker/Apps Script -->
+<div id="crm-root" class="crmv2-root">
+  <div class="module-loading">
+    <div class="ml-iso-wrap"><div class="ml-iso" aria-hidden="true"></div></div>
+    <div class="ml-text">
+      <div class="ml-brand"><b>co</b>proactiva</div>
+      <div class="ml-status"><span class="ml-status-dot"></span>Cargando CRM</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #crm-root.crmv2-root { width:100%; font-family:var(--co-font); color:var(--co-ink); }
+  #crm-root * { box-sizing:border-box; }
+  .crmv2-top { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:18px; }
+  .crmv2-brand { display:flex; align-items:center; gap:14px; min-width:0; }
+  .crmv2-logo { width:48px; height:48px; border-radius:16px; background:var(--co-surface); border:1px solid var(--co-line); display:flex; align-items:center; justify-content:center; box-shadow:var(--co-shadow-sm); overflow:hidden; flex:0 0 auto; }
+  .crmv2-logo img { width:34px; height:34px; object-fit:contain; }
+  .crmv2-eyebrow { margin:0 0 4px; font-size:10px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--co-orange); }
+  .crmv2-title { margin:0; font-size:28px; line-height:1.08; font-weight:850; letter-spacing:-.05em; color:var(--co-ink); }
+  .crmv2-title em { font-style:normal; color:var(--co-orange); }
+  .crmv2-sub { margin:7px 0 0; color:var(--co-ink-3); font-size:13px; font-weight:500; max-width:720px; }
+  .crmv2-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .crmv2-btn { border:1.5px solid var(--co-line); background:var(--co-surface); color:var(--co-ink); border-radius:12px; padding:10px 14px; min-height:40px; font:700 12px/1 var(--co-font); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:7px; transition:.15s ease; white-space:nowrap; }
+  .crmv2-btn:hover { border-color:var(--co-orange); background:var(--co-orange-soft); }
+  .crmv2-btn.primary { background:var(--co-orange); border-color:var(--co-orange); color:#fff; box-shadow:0 8px 24px rgba(217,133,59,.18); }
+  .crmv2-btn.primary:hover { background:var(--co-orange-hover); border-color:var(--co-orange-hover); }
+  .crmv2-btn.dark { background:var(--co-ink); border-color:var(--co-ink); color:#fff; }
+  .crmv2-btn.green { background:var(--co-green); border-color:var(--co-green); color:#fff; }
+  .crmv2-btn.danger { color:var(--co-red); }
+  .crmv2-btn.full { width:100%; }
+  .crmv2-tabs { display:flex; gap:8px; overflow-x:auto; padding:6px; border:1px solid var(--co-line); background:rgba(255,255,255,.65); border-radius:18px; margin-bottom:16px; box-shadow:var(--co-shadow-sm); }
+  .crmv2-tab { border:0; background:transparent; color:var(--co-ink-3); border-radius:13px; padding:10px 13px; font:800 12px/1 var(--co-font); cursor:pointer; display:flex; align-items:center; gap:8px; white-space:nowrap; transition:.14s ease; }
+  .crmv2-tab:hover { background:var(--co-cream); color:var(--co-ink); }
+  .crmv2-tab.active { background:var(--co-ink); color:#fff; box-shadow:0 8px 18px rgba(31,31,31,.12); }
+  .crmv2-badge { min-width:20px; height:20px; padding:0 7px; border-radius:999px; background:var(--co-orange-soft); color:var(--co-orange); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; }
+  .crmv2-tab.active .crmv2-badge { background:rgba(255,255,255,.18); color:#fff; }
+  .crmv2-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+  .crmv2-card { background:var(--co-surface); border:1px solid var(--co-line); border-radius:18px; padding:16px; box-shadow:var(--co-shadow-sm); }
+  .crmv2-card.soft { background:linear-gradient(180deg,#fff,rgba(251,247,240,.82)); }
+  .crmv2-kpi-label { font-size:10px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:var(--co-mute); margin-bottom:8px; }
+  .crmv2-kpi-num { font-size:31px; line-height:1; font-weight:900; letter-spacing:-.06em; color:var(--co-ink); }
+  .crmv2-kpi-num.orange { color:var(--co-orange); }
+  .crmv2-kpi-num.green { color:var(--co-green); }
+  .crmv2-kpi-num.red { color:var(--co-red); }
+  .crmv2-grid { display:grid; gap:14px; }
+  .crmv2-grid.two { grid-template-columns:minmax(0,1.5fr) minmax(280px,.7fr); }
+  .crmv2-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .crmv2-input, .crmv2-select, .crmv2-textarea { width:100%; border:1.5px solid var(--co-line); background:var(--co-surface); color:var(--co-ink); border-radius:12px; padding:11px 13px; min-height:42px; font:600 13px/1.3 var(--co-font); outline:none; }
+  .crmv2-input:focus, .crmv2-select:focus, .crmv2-textarea:focus { border-color:var(--co-orange); box-shadow:0 0 0 4px var(--co-orange-soft); }
+  .crmv2-search { flex:1; min-width:220px; }
+  .crmv2-panel-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px; }
+  .crmv2-panel-head h2 { margin:0; font-size:18px; font-weight:900; letter-spacing:-.03em; color:var(--co-ink); }
+  .crmv2-panel-head p { margin:5px 0 0; color:var(--co-ink-3); font-size:12px; font-weight:500; }
+  .crmv2-table-wrap { overflow:auto; border:1px solid var(--co-line); border-radius:14px; }
+  .crmv2-table { width:100%; border-collapse:collapse; min-width:760px; background:#fff; }
+  .crmv2-table th { text-align:left; padding:11px 12px; font-size:9px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:var(--co-mute); background:var(--co-cream); border-bottom:1px solid var(--co-line); white-space:nowrap; }
+  .crmv2-table td { padding:13px 12px; border-bottom:1px solid var(--co-line-soft); vertical-align:middle; font-size:12px; font-weight:600; color:var(--co-ink-2); }
+  .crmv2-table tr:last-child td { border-bottom:0; }
+  .crmv2-table tr:hover td { background:#fffaf4; }
+  .crmv2-name { font-size:13px; color:var(--co-ink); font-weight:900; letter-spacing:-.01em; }
+  .crmv2-muted { color:var(--co-mute); font-size:11px; font-weight:600; }
+  .crmv2-pill { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:5px 9px; font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:var(--co-cream); color:var(--co-ink-3); border:1px solid var(--co-line); white-space:nowrap; }
+  .crmv2-pill.green { color:var(--co-green); background:var(--co-green-soft); border-color:rgba(93,156,126,.25); }
+  .crmv2-pill.orange { color:var(--co-orange); background:var(--co-orange-soft); border-color:rgba(217,133,59,.22); }
+  .crmv2-pill.red { color:var(--co-red); background:var(--co-red-soft); border-color:rgba(196,69,69,.22); }
+  .crmv2-pill.blue { color:var(--co-blue); background:var(--co-blue-soft); border-color:rgba(74,111,165,.22); }
+  .crmv2-pill.dark { color:#fff; background:var(--co-ink); border-color:var(--co-ink); }
+  .crmv2-row-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crmv2-icon-btn { width:34px; height:34px; border-radius:10px; border:1px solid var(--co-line); background:#fff; color:var(--co-ink-3); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:.14s ease; }
+  .crmv2-icon-btn:hover { color:var(--co-orange); border-color:var(--co-orange); background:var(--co-orange-soft); }
+  .crmv2-kanban-scroll { overflow:auto; padding-bottom:10px; }
+  .crmv2-kanban { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(270px,1fr); gap:12px; min-height:440px; }
+  .crmv2-col { background:rgba(255,255,255,.7); border:1px solid var(--co-line); border-radius:18px; padding:12px; min-height:360px; }
+  .crmv2-col.drag-over { outline:3px solid rgba(217,133,59,.22); background:#fffaf4; }
+  .crmv2-col-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .crmv2-col-title { font-size:12px; font-weight:900; letter-spacing:-.01em; color:var(--co-ink); display:flex; align-items:center; gap:8px; }
+  .crmv2-stage-dot { width:9px; height:9px; border-radius:999px; background:var(--co-orange); box-shadow:0 0 0 4px var(--co-orange-soft); }
+  .crmv2-prospect-card { background:#fff; border:1px solid var(--co-line); border-radius:16px; padding:13px; margin-bottom:10px; box-shadow:var(--co-shadow-sm); cursor:grab; transition:.15s ease; }
+  .crmv2-prospect-card:hover { transform:translateY(-1px); box-shadow:var(--co-shadow-md); border-color:var(--co-orange-line); }
+  .crmv2-prospect-card h3 { margin:0 0 6px; font-size:14px; font-weight:900; letter-spacing:-.02em; color:var(--co-ink); }
+  .crmv2-card-meta { display:grid; gap:5px; color:var(--co-ink-3); font-size:11px; font-weight:600; }
+  .crmv2-card-footer { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px; }
+  .crmv2-empty { padding:26px; text-align:center; border:1px dashed var(--co-line); border-radius:16px; color:var(--co-mute); background:rgba(255,255,255,.55); font-size:13px; font-weight:700; }
+  .crmv2-activity { display:flex; gap:12px; align-items:flex-start; padding:14px; border:1px solid var(--co-line); border-radius:16px; background:#fff; margin-bottom:10px; }
+  .crmv2-activity-dot { width:12px; height:12px; border-radius:50%; background:var(--co-green); margin-top:5px; box-shadow:0 0 0 5px var(--co-green-soft); flex:0 0 auto; }
+  .crmv2-activity-dot.red { background:var(--co-red); box-shadow:0 0 0 5px var(--co-red-soft); }
+  .crmv2-activity-dot.orange { background:var(--co-orange); box-shadow:0 0 0 5px var(--co-orange-soft); }
+  .crmv2-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .crmv2-form-grid .full { grid-column:1/-1; }
+  .crmv2-form-grid label { display:block; font-size:10px; font-weight:900; letter-spacing:.11em; color:var(--co-mute); text-transform:uppercase; }
+  .crmv2-form-grid input, .crmv2-form-grid select, .crmv2-form-grid textarea { margin-top:6px; }
+  .crmv2-modal { position:fixed; inset:0; z-index:99999; background:rgba(31,31,31,.46); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .crmv2-modal-panel { width:min(760px,100%); max-height:90vh; overflow:auto; background:#fff; border-radius:24px; border:1px solid rgba(255,255,255,.5); box-shadow:0 30px 80px rgba(31,31,31,.25); padding:22px; position:relative; }
+  .crmv2-modal-panel.wide { width:min(980px,100%); }
+  .crmv2-modal-close { position:absolute; top:14px; right:14px; width:36px; height:36px; border:0; border-radius:12px; background:var(--co-cream); color:var(--co-ink); cursor:pointer; font-size:22px; font-weight:700; }
+  .crmv2-modal-title { margin:0 42px 5px 0; font-size:24px; font-weight:900; letter-spacing:-.04em; color:var(--co-ink); }
+  .crmv2-modal-sub { margin:0 0 18px; color:var(--co-ink-3); font-size:13px; font-weight:600; }
+  .crmv2-modal-section { border-top:1px solid var(--co-line); padding-top:15px; margin-top:15px; }
+  .crmv2-section-title { font-size:10px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; color:var(--co-orange); margin-bottom:10px; }
+  .crmv2-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .crmv2-detail-item { background:var(--co-cream); border:1px solid var(--co-line); border-radius:14px; padding:12px; }
+  .crmv2-detail-item label { display:block; color:var(--co-mute); font-size:9px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; margin-bottom:5px; }
+  .crmv2-detail-item span { color:var(--co-ink); font-size:12px; font-weight:750; }
+  .crmv2-toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:100000; background:var(--co-ink); color:#fff; padding:12px 16px; border-radius:14px; font-size:13px; font-weight:800; box-shadow:0 18px 44px rgba(31,31,31,.25); }
+  .crm-sub-modulo .page-header, .crm-sub-modulo .ph, .crm-sub-modulo .home-header { display:none !important; }
+  .crm-sub-modulo { border:1px solid var(--co-line); border-radius:18px; padding:14px; background:#fff; box-shadow:var(--co-shadow-sm); }
+  @media (max-width:920px) { .crmv2-top, .crmv2-panel-head { flex-direction:column; } .crmv2-actions { justify-content:flex-start; } .crmv2-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .crmv2-grid.two { grid-template-columns:1fr; } .crmv2-form-grid, .crmv2-detail-grid { grid-template-columns:1fr; } .crmv2-kanban { grid-auto-columns:84vw; } }
+  @media (max-width:640px) { .crmv2-title { font-size:24px; } .crmv2-summary { grid-template-columns:1fr 1fr; gap:9px; } .crmv2-card { padding:13px; border-radius:15px; } .crmv2-tabs { border-radius:15px; } .crmv2-modal { align-items:flex-end; padding:0; } .crmv2-modal-panel { border-radius:22px 22px 0 0; max-height:92vh; } }
+</style>
+
+<script>
+(function(){
+  const WORKER = window.WORKER_URL || 'https://coproactiva-worker-nuevo.osmarmeza-adm7.workers.dev';
+  const TOKEN = sessionStorage.getItem('token') || '';
+  const ROOT_ID = 'crm-root';
+  const ETAPAS = ['Nuevo prospecto', 'Reunión Agendada', 'Diagnóstico', 'Propuesta', 'Negociación', 'Ganado', 'Perdido'];
+  const LEAD_ESTADOS = ['nuevo','contactado','descartado','convertido'];
+  const TAB_ORDER = ['resumen','leads','pipeline','diagnostico','recepcion','actividades','plantillas','archivos'];
+
+  let state = {
+    tab: 'resumen',
+    prospectos: [],
+    leads: [],
+    plantillas: [],
+    files: [
+      { nombre:'Presentación general Coproactiva', tipo:'Presentación', url:'assets/presentacion-coproactiva.pdf', canal:'Correo / WhatsApp' }
+    ],
+    filtros: { q:'', leadEstado:'', leadTipo:'', etapa:'', accion:'' },
+    tabCache: {}
+  };
+
+  const TAB_INFO = {
+    resumen:     { label:'Resumen',      icon:'ti-layout-dashboard', action:'Actualizar', actionFn: init },
+    leads:       { label:'Leads',        icon:'ti-user-search',      action:'Nuevo lead', actionFn: () => openLeadForm() },
+    pipeline:    { label:'Pipeline',     icon:'ti-layout-kanban',    action:'Nuevo prospecto', actionFn: () => openProspectForm() },
+    diagnostico: { label:'Diagnóstico',  icon:'ti-stethoscope',      action:'Ir a módulo', actionFn: () => renderExternalTab('diagnostico') },
+    recepcion:   { label:'Recepción',    icon:'ti-clipboard-list',   action:'Abrir recepción', actionFn: () => renderExternalTab('recepcion') },
+    actividades: { label:'Actividades',  icon:'ti-calendar-check',   action:'Actualizar', actionFn: init },
+    plantillas:  { label:'Plantillas',   icon:'ti-mail',             action:'Nueva plantilla', actionFn: () => toast('Usa el módulo de plantillas existente para crear/editar.') },
+    archivos:    { label:'Archivos',     icon:'ti-paperclip',        action:'Agregar link', actionFn: () => toast('Los archivos quedan como enlaces manuales para correos y WhatsApp.') }
+  };
+
+  function $(sel, root){ return (root || document).querySelector(sel); }
+  function $all(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+  function getRoot(){ return document.getElementById(ROOT_ID); }
+  function normEtapa(e){
+    const map = {'Reunión agendada':'Reunión Agendada','Reunión realizada':'Reunión Agendada','Diagnóstico agendado':'Diagnóstico','Diagnóstico realizado':'Diagnóstico','Propuesta enviada':'Propuesta'};
+    return map[e] || e || 'Nuevo prospecto';
+  }
+  function fmtDate(v){ if(!v) return '—'; const d = new Date(v); if(isNaN(d)) return esc(v); return d.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'2-digit' }); }
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function activeProspects(){ return state.prospectos.filter(p => !['Ganado','Perdido'].includes(normEtapa(p.etapa))); }
+  function activeLeads(){ return state.leads.filter(l => !isArchived(l)); }
+  function isArchived(l){ return l.archivado === true || l.archivado === 'TRUE' || l.archivado === 'true'; }
+  function isConverted(l){ return (l.estado || '').toLowerCase() === 'convertido' || !!l.convertidoAProspectoId; }
+  function leadName(l){ return l.nombreCondominio || l.empresa || l.nombre || 'Sin nombre'; }
+  function prospectName(p){ return p.nombreCondominio || p.empresa || p.nombre || 'Sin nombre'; }
+  function contactName(x){ return x.nombreContacto || x.contacto || x.contact || 'Sin contacto'; }
+  function comunaOf(x){ return x.comuna || x.direccion || ''; }
+  function emailOf(x){ return x.email || x.correo || ''; }
+  function phoneOf(x){ return x.telefono || x.phone || ''; }
+  function actionDateOf(p){ return p.fechaProximaAccion || p.proximaFecha || p.fechaUltimaInteraccion || ''; }
+  function api(path, method, body){
+    const opts = { method: method || 'GET', headers: { 'Authorization':'Bearer ' + TOKEN, 'Content-Type':'application/json' } };
+    if(body) opts.body = JSON.stringify(body);
+    return fetch(WORKER + path, opts).then(async r => {
+      let json = null;
+      try { json = await r.json(); } catch(e) { json = { ok:false, error:'Respuesta no JSON' }; }
+      if(!r.ok) return Object.assign({ ok:false, status:r.status }, json);
+      return json;
+    });
+  }
+  function unwrapList(resp){
+    if(Array.isArray(resp)) return resp;
+    if(resp && Array.isArray(resp.data)) return resp.data;
+    if(resp && resp.data && Array.isArray(resp.data.data)) return resp.data.data;
+    return [];
+  }
+  function toast(msg){
+    const old = $('.crmv2-toast'); if(old) old.remove();
+    const t = document.createElement('div'); t.className = 'crmv2-toast'; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+  }
+
+  async function init(){
+    const root = getRoot();
+    if(root) root.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando CRM integrado</div></div></div>';
+    try {
+      const [crmResp, leadsResp, plantResp] = await Promise.all([
+        api('/crm'),
+        api('/leads'),
+        api('/plantillas').catch(() => ({ ok:false }))
+      ]);
+      state.prospectos = unwrapList(crmResp).map(p => Object.assign({}, p, { etapa: normEtapa(p.etapa) }));
+      state.leads = unwrapList(leadsResp);
+      state.plantillas = unwrapList(plantResp);
+      window._crmKpis = {
+        activos: activeProspects().length,
+        urgentes: activeProspects().filter(p => p.semaforo === 'rojo').length,
+        ganados: state.prospectos.filter(p => normEtapa(p.etapa) === 'Ganado').length
+      };
+      if(typeof actualizarKpisCRM === 'function') actualizarKpisCRM();
+      window._crmAccionNuevo = function(){
+        if(state.tab === 'leads') openLeadForm();
+        else if(state.tab === 'pipeline') openProspectForm();
+        else if(state.tab === 'diagnostico') renderExternalTab('diagnostico');
+        else if(state.tab === 'recepcion') renderExternalTab('recepcion');
+        else openLeadForm();
+      };
+      render();
+    } catch(err) {
+      if(root) root.innerHTML = '<div class="crm-error">Error al cargar CRM: ' + esc(err.message) + '</div>';
+    }
+  }
+
+  function tabCount(tab){
+    if(tab === 'leads') return activeLeads().filter(l => !isConverted(l)).length;
+    if(tab === 'pipeline') return activeProspects().length;
+    if(tab === 'diagnostico') return state.prospectos.filter(p => normEtapa(p.etapa) === 'Diagnóstico').length;
+    if(tab === 'recepcion') return state.prospectos.filter(p => normEtapa(p.etapa) === 'Ganado').length;
+    if(tab === 'actividades') return computedActivities().length;
+    if(tab === 'plantillas') return state.plantillas.length;
+    if(tab === 'archivos') return state.files.length;
+    return '';
+  }
+  function render(){
+    const root = getRoot(); if(!root) return;
+    const info = TAB_INFO[state.tab];
+    root.innerHTML =
+      '<div class="crmv2-top">' +
+        '<div class="crmv2-brand">' +
+          '<div class="crmv2-logo"><img src="assets/iso.svg" onerror="this.src=\'assets/coproactiva-iso.png\'" alt="co"></div>' +
+          '<div><p class="crmv2-eyebrow">CRM Comercial</p><h1 class="crmv2-title">' + pageTitle() + '</h1><p class="crmv2-sub">Leads reemplaza a Dato. Un lead puede pasar a prospecto, y un prospecto puede volver a lead si deja de tener avance comercial.</p></div>' +
+        '</div>' +
+        '<div class="crmv2-actions"><button class="crmv2-btn" data-action="refresh"><i class="ti ti-refresh"></i> Actualizar</button><button class="crmv2-btn primary" data-action="main"><i class="ti ti-plus"></i> ' + esc(info.action) + '</button></div>' +
+      '</div>' +
+      '<div class="crmv2-tabs" id="crmTabs">' + TAB_ORDER.map(t => '<button class="crmv2-tab ' + (state.tab===t?'active':'') + '" data-tab="' + t + '"><i class="ti ' + TAB_INFO[t].icon + '"></i>' + TAB_INFO[t].label + (tabCount(t) !== '' ? '<span class="crmv2-badge">' + tabCount(t) + '</span>' : '') + '</button>').join('') + '</div>' +
+      '<div id="crmTabContent"></div>';
+
+    $('#crmTabs', root).addEventListener('click', function(e){
+      const btn = e.target.closest('[data-tab]'); if(!btn) return;
+      state.tab = btn.dataset.tab; render();
+    });
+    $('[data-action="refresh"]', root).addEventListener('click', init);
+    $('[data-action="main"]', root).addEventListener('click', function(){ TAB_INFO[state.tab].actionFn(); });
+    renderTab();
+  }
+  function pageTitle(){
+    const map = {
+      resumen:'Gestión <em>comercial</em>',
+      leads:'Leads <em>comerciales</em>',
+      pipeline:'Pipeline de <em>prospectos</em>',
+      diagnostico:'Diagnóstico de <em>prospectos</em>',
+      recepcion:'Recepción para <em>ganados</em>',
+      actividades:'Próximas <em>acciones</em>',
+      plantillas:'Plantillas de <em>seguimiento</em>',
+      archivos:'Archivos <em>comerciales</em>'
+    };
+    return map[state.tab] || 'CRM';
+  }
+  function renderTab(){
+    const cont = $('#crmTabContent'); if(!cont) return;
+    if(state.tab === 'resumen') return renderSummary(cont);
+    if(state.tab === 'leads') return renderLeads(cont);
+    if(state.tab === 'pipeline') return renderPipeline(cont);
+    if(state.tab === 'diagnostico') return renderDiagnosticoTab(cont);
+    if(state.tab === 'recepcion') return renderRecepcionTab(cont);
+    if(state.tab === 'actividades') return renderActivities(cont);
+    if(state.tab === 'plantillas') return renderPlantillas(cont);
+    if(state.tab === 'archivos') return renderArchivos(cont);
+  }
+
+  function renderSummary(cont){
+    const leads = activeLeads();
+    const prospects = activeProspects();
+    const ganados = state.prospectos.filter(p => normEtapa(p.etapa) === 'Ganado').length;
+    const perdidos = state.prospectos.filter(p => normEtapa(p.etapa) === 'Perdido').length;
+    const diag = state.prospectos.filter(p => normEtapa(p.etapa) === 'Diagnóstico').length;
+    const conv = leads.filter(isConverted).length;
+    cont.innerHTML =
+      '<section class="crmv2-summary">' +
+        kpi('Leads activos', leads.filter(l => !isConverted(l)).length, 'orange') +
+        kpi('Prospectos activos', prospects.length, '') +
+        kpi('En diagnóstico', diag, 'orange') +
+        kpi('Ganados', ganados, 'green') +
+      '</section>' +
+      '<div class="crmv2-grid two">' +
+        '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Resumen operativo</h2><p>El lead vive antes del pipeline. Solo se convierte a prospecto cuando existe intención o posibilidad real de avance.</p></div></div>' +
+          '<div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Indicador</th><th>Resultado</th><th>Lectura</th></tr></thead><tbody>' +
+            summaryRow('Leads sin convertir', leads.filter(l => !isConverted(l)).length, 'Base inicial de oportunidades.') +
+            summaryRow('Leads convertidos', conv, 'Ya tienen prospecto asociado.') +
+            summaryRow('Prospectos en pipeline', prospects.length, 'Oportunidades con avance comercial.') +
+            summaryRow('Prospectos ganados', ganados, 'Habilitan recepción documental.') +
+            summaryRow('Prospectos perdidos', perdidos, 'Pueden volver a Lead si corresponde seguimiento futuro.') +
+          '</tbody></table></div></section>' +
+        '<aside class="crmv2-card soft"><div class="crmv2-panel-head"><div><h2>Reglas del flujo</h2><p>Configuración aplicada en esta versión.</p></div></div>' +
+          '<div class="crmv2-activity"><span class="crmv2-activity-dot orange"></span><div><div class="crmv2-name">Leads después de Resumen</div><div class="crmv2-muted">Reemplaza completamente al antiguo Dato.</div></div></div>' +
+          '<div class="crmv2-activity"><span class="crmv2-activity-dot"></span><div><div class="crmv2-name">Diagnóstico solo para prospectos</div><div class="crmv2-muted">La etapa Diagnóstico queda dentro del Pipeline.</div></div></div>' +
+          '<div class="crmv2-activity"><span class="crmv2-activity-dot orange"></span><div><div class="crmv2-name">Recepción solo para ganado</div><div class="crmv2-muted">No se abre desde lead ni prospecto activo.</div></div></div>' +
+        '</aside>' +
+      '</div>';
+  }
+  function kpi(label, num, tone){ return '<article class="crmv2-card"><div class="crmv2-kpi-label">' + esc(label) + '</div><div class="crmv2-kpi-num ' + (tone||'') + '">' + esc(num) + '</div></article>'; }
+  function summaryRow(a,b,c){ return '<tr><td><div class="crmv2-name">' + esc(a) + '</div></td><td><span class="crmv2-pill orange">' + esc(b) + '</span></td><td>' + esc(c) + '</td></tr>'; }
+
+  function renderLeads(cont){
+    cont.innerHTML =
+      '<section class="crmv2-card">' +
+        '<div class="crmv2-panel-head"><div><h2>Leads</h2><p>Base inicial de oportunidades. Desde aquí se convierten a prospecto solo si hay posibilidad real de avance.</p></div><button class="crmv2-btn primary" id="btnNewLead2"><i class="ti ti-plus"></i> Nuevo lead</button></div>' +
+        '<div class="crmv2-toolbar"><input class="crmv2-input crmv2-search" id="leadSearch" placeholder="Buscar comunidad, contacto, correo, comuna o fuente" value="' + esc(state.filtros.q) + '"><select class="crmv2-select" id="leadEstado" style="max-width:190px"><option value="">Todos los estados</option>' + LEAD_ESTADOS.map(e => '<option value="' + e + '" ' + (state.filtros.leadEstado===e?'selected':'') + '>' + labelLeadEstado(e) + '</option>').join('') + '</select><select class="crmv2-select" id="leadTipo" style="max-width:190px"><option value="">Todos los tipos</option><option value="comunidad" ' + (state.filtros.leadTipo==='comunidad'?'selected':'') + '>Comunidad</option><option value="inmobiliaria" ' + (state.filtros.leadTipo==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select></div>' +
+        '<div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Lead</th><th>Tipo</th><th>Contacto</th><th>Estado</th><th>Último contacto</th><th>Acciones</th></tr></thead><tbody id="leadTbody"></tbody></table></div>' +
+      '</section>';
+    $('#btnNewLead2').addEventListener('click', () => openLeadForm());
+    $('#leadSearch').addEventListener('input', e => { state.filtros.q = e.target.value; renderLeadRows(); });
+    $('#leadEstado').addEventListener('change', e => { state.filtros.leadEstado = e.target.value; renderLeadRows(); });
+    $('#leadTipo').addEventListener('change', e => { state.filtros.leadTipo = e.target.value; renderLeadRows(); });
+    renderLeadRows();
+  }
+  function filteredLeads(){
+    let lista = activeLeads();
+    if(state.filtros.leadEstado) lista = lista.filter(l => (l.estado || 'nuevo') === state.filtros.leadEstado);
+    if(state.filtros.leadTipo) lista = lista.filter(l => (l.tipoLead || '') === state.filtros.leadTipo);
+    const q = (state.filtros.q || '').trim().toLowerCase();
+    if(q) lista = lista.filter(l => [leadName(l), contactName(l), l.email, l.telefono, l.comuna, l.fuenteLead, l.constructora, l.observaciones].join(' ').toLowerCase().includes(q));
+    return lista;
+  }
+  function renderLeadRows(){
+    const tbody = $('#leadTbody'); if(!tbody) return;
+    const lista = filteredLeads();
+    tbody.innerHTML = lista.map(l =>
+      '<tr>' +
+        '<td><div class="crmv2-name">' + esc(leadName(l)) + '</div><div class="crmv2-muted">' + esc(comunaOf(l) || l.fuenteLead || '') + '</div></td>' +
+        '<td>' + pill(l.tipoLead === 'inmobiliaria' ? 'Inmobiliaria' : 'Comunidad', l.tipoLead === 'inmobiliaria' ? 'blue' : 'orange') + '</td>' +
+        '<td><div>' + esc(contactName(l)) + '</div><div class="crmv2-muted">' + esc(emailOf(l) || phoneOf(l) || '') + '</div></td>' +
+        '<td>' + pill(labelLeadEstado(l.estado || 'nuevo'), leadTone(l.estado)) + '</td>' +
+        '<td>' + esc(fmtDate(l.fechaUltimoContacto || l.fechaIngreso)) + '</td>' +
+        '<td><div class="crmv2-row-actions"><button class="crmv2-icon-btn" title="Ver" data-lead-detail="' + esc(l.id) + '"><i class="ti ti-eye"></i></button><button class="crmv2-icon-btn" title="Editar" data-lead-edit="' + esc(l.id) + '"><i class="ti ti-pencil"></i></button><button class="crmv2-icon-btn" title="Correo" data-mail-lead="' + esc(l.id) + '"><i class="ti ti-mail"></i></button>' + (!isConverted(l) ? '<button class="crmv2-btn green" data-convert-lead="' + esc(l.id) + '"><i class="ti ti-arrow-forward-up"></i> A prospecto</button>' : '') + '</div></td>' +
+      '</tr>'
+    ).join('') || '<tr><td colspan="6"><div class="crmv2-empty">No hay leads para mostrar.</div></td></tr>';
+    $all('[data-lead-detail]').forEach(b => b.addEventListener('click', () => openLeadDetail(findLead(b.dataset.leadDetail))));
+    $all('[data-lead-edit]').forEach(b => b.addEventListener('click', () => openLeadForm(findLead(b.dataset.leadEdit))));
+    $all('[data-mail-lead]').forEach(b => b.addEventListener('click', () => openMail(findLead(b.dataset.mailLead), 'lead')));
+    $all('[data-convert-lead]').forEach(b => b.addEventListener('click', () => convertLead(findLead(b.dataset.convertLead))));
+  }
+  function labelLeadEstado(e){ return ({nuevo:'Nuevo',contactado:'Contactado',descartado:'Descartado',convertido:'Convertido'}[e] || e || 'Nuevo'); }
+  function leadTone(e){ return ({nuevo:'orange',contactado:'blue',descartado:'red',convertido:'green'}[e] || 'orange'); }
+  function findLead(id){ return state.leads.find(l => String(l.id) === String(id)); }
+  function findProspect(id){ return state.prospectos.find(p => String(p.id) === String(id)); }
+  function pill(text, tone){ return '<span class="crmv2-pill ' + (tone||'') + '">' + esc(text) + '</span>'; }
+
+  function renderPipeline(cont){
+    cont.innerHTML =
+      '<section class="crmv2-summary">' +
+        kpi('Activos', activeProspects().length, '') +
+        kpi('En diagnóstico', state.prospectos.filter(p => normEtapa(p.etapa)==='Diagnóstico').length, 'orange') +
+        kpi('Ganados', state.prospectos.filter(p => normEtapa(p.etapa)==='Ganado').length, 'green') +
+        kpi('Perdidos', state.prospectos.filter(p => normEtapa(p.etapa)==='Perdido').length, 'red') +
+      '</section>' +
+      '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Pipeline</h2><p>Arrastra prospectos entre etapas. La etapa Diagnóstico queda dentro del pipeline y se usa solo para prospectos.</p></div><button class="crmv2-btn primary" id="btnNewProspect"><i class="ti ti-plus"></i> Nuevo prospecto</button></div><div class="crmv2-kanban-scroll"><div class="crmv2-kanban" id="crmKanban"></div></div></section>';
+    $('#btnNewProspect').addEventListener('click', () => openProspectForm());
+    const kanban = $('#crmKanban');
+    kanban.innerHTML = ETAPAS.map(e => {
+      const items = state.prospectos.filter(p => normEtapa(p.etapa) === e);
+      return '<div class="crmv2-col" data-stage="' + esc(e) + '"><div class="crmv2-col-head"><div class="crmv2-col-title"><span class="crmv2-stage-dot"></span>' + esc(e) + '</div><span class="crmv2-badge">' + items.length + '</span></div>' + (items.map(prospectCard).join('') || '<div class="crmv2-empty">Sin prospectos.</div>') + '</div>';
+    }).join('');
+    bindDragDrop();
+  }
+  function prospectCard(p){
+    const e = normEtapa(p.etapa);
+    return '<article class="crmv2-prospect-card" draggable="true" data-prospect-id="' + esc(p.id) + '">' +
+      '<h3>' + esc(prospectName(p)) + '</h3>' +
+      '<div class="crmv2-card-meta"><span>' + esc(contactName(p)) + (p.cargoContacto ? ' · ' + esc(p.cargoContacto) : '') + '</span><span>' + esc(comunaOf(p) || 'Sin comuna') + (p.unidades ? ' · ' + esc(p.unidades) + ' unidades' : '') + '</span><span>' + pill(e, e==='Ganado'?'green':e==='Perdido'?'red':e==='Diagnóstico'?'orange':'') + '</span></div>' +
+      '<div class="crmv2-card-footer"><button class="crmv2-btn" data-prospect-detail="' + esc(p.id) + '">Ver</button><button class="crmv2-btn" data-mail-prospect="' + esc(p.id) + '">Correo</button></div>' +
+      '</article>';
+  }
+  function bindDragDrop(){
+    $all('.crmv2-prospect-card').forEach(card => {
+      card.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', card.dataset.prospectId));
+      card.addEventListener('click', e => {
+        const detail = e.target.closest('[data-prospect-detail]');
+        const mail = e.target.closest('[data-mail-prospect]');
+        if(detail) { openProspectDetail(findProspect(detail.dataset.prospectDetail)); return; }
+        if(mail) { openMail(findProspect(mail.dataset.mailProspect), 'prospecto'); return; }
+        openProspectDetail(findProspect(card.dataset.prospectId));
+      });
+    });
+    $all('.crmv2-col').forEach(col => {
+      col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
+      col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+      col.addEventListener('drop', async e => {
+        e.preventDefault(); col.classList.remove('drag-over');
+        const id = e.dataTransfer.getData('text/plain'); const p = findProspect(id); const newStage = col.dataset.stage;
+        if(!p || normEtapa(p.etapa) === newStage) return;
+        await changeProspectStage(p, newStage);
+      });
+    });
+  }
+  async function changeProspectStage(p, stage){
+    const old = normEtapa(p.etapa);
+    const res = await api('/crm', 'POST', { action:'cambiarEtapa', id:p.id, etapaNueva:stage });
+    if(res.ok && res.data && res.data.ok){
+      p.etapa = stage; toast('Etapa actualizada.');
+      if(stage === 'Ganado' && old !== 'Ganado') toast('Prospecto ganado: habilita recepción documental.');
+      render();
+    } else toast((res.data && res.data.error) || res.error || 'No se pudo cambiar la etapa.');
+  }
+
+  function renderDiagnosticoTab(cont){
+    const diag = state.prospectos.filter(p => normEtapa(p.etapa) === 'Diagnóstico');
+    cont.innerHTML = '<div class="crmv2-grid two"><section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Diagnóstico</h2><p>Solo disponible para prospectos. Para iniciar uno, mueve el prospecto a la etapa Diagnóstico.</p></div><button class="crmv2-btn primary" id="btnLoadDiag"><i class="ti ti-stethoscope"></i> Abrir módulo Diagnóstico</button></div>' +
+      '<div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Prospecto</th><th>Contacto</th><th>Acción</th></tr></thead><tbody>' +
+      (diag.map(p => '<tr><td><div class="crmv2-name">' + esc(prospectName(p)) + '</div><div class="crmv2-muted">' + esc(comunaOf(p)) + '</div></td><td>' + esc(contactName(p)) + '</td><td><button class="crmv2-btn orange" data-start-diag="' + esc(p.id) + '"><i class="ti ti-stethoscope"></i> Iniciar / continuar</button></td></tr>').join('') || '<tr><td colspan="3"><div class="crmv2-empty">No hay prospectos en etapa Diagnóstico.</div></td></tr>') +
+      '</tbody></table></div></section><aside class="crmv2-card soft"><h2 style="margin:0 0 8px;font-size:18px">Regla aplicada</h2><p class="crmv2-muted">No se permite crear diagnóstico desde un lead. Primero debe existir prospecto y estar en etapa Diagnóstico.</p></aside></div><div id="diagnosticoMount" style="margin-top:14px"></div>';
+    $('#btnLoadDiag').addEventListener('click', () => renderExternalTab('diagnostico', $('#diagnosticoMount')));
+    $all('[data-start-diag]').forEach(b => b.addEventListener('click', () => startDiagnosis(findProspect(b.dataset.startDiag))));
+  }
+  function startDiagnosis(p){
+    if(!p) return;
+    localStorage.setItem('prospectoDiagnosticoActivo', JSON.stringify({
+      prospectoId:p.id, nombreComunidad:prospectName(p), comunidadNombre:prospectName(p), contactoNombre:contactName(p), contactoCorreo:emailOf(p), cargoContacto:p.cargoContacto || ''
+    }));
+    renderExternalTab('diagnostico', $('#diagnosticoMount'));
+  }
+
+  function renderRecepcionTab(cont){
+    const ganados = state.prospectos.filter(p => normEtapa(p.etapa) === 'Ganado');
+    cont.innerHTML = '<div class="crmv2-grid two"><section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Recepción documental</h2><p>Solo se habilita para prospectos ganados. La recepción real se crea sobre la comunidad creada al ganar el prospecto.</p></div><button class="crmv2-btn primary" id="btnLoadRx"><i class="ti ti-clipboard-list"></i> Abrir módulo Recepción</button></div>' +
+      '<div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Ganado</th><th>Contacto</th><th>Estado</th></tr></thead><tbody>' +
+      (ganados.map(p => '<tr><td><div class="crmv2-name">' + esc(prospectName(p)) + '</div><div class="crmv2-muted">' + esc(comunaOf(p)) + '</div></td><td>' + esc(contactName(p)) + '</td><td>' + pill('Habilitado', 'green') + '</td></tr>').join('') || '<tr><td colspan="3"><div class="crmv2-empty">No hay prospectos ganados. Recepción no se abre desde leads ni prospectos activos.</div></td></tr>') +
+      '</tbody></table></div></section><aside class="crmv2-card soft"><h2 style="margin:0 0 8px;font-size:18px">Regla aplicada</h2><p class="crmv2-muted">Un prospecto debe estar en Ganado y convertido en comunidad para iniciar la recepción documental.</p></aside></div><div id="recepcionMount" style="margin-top:14px"></div>';
+    $('#btnLoadRx').addEventListener('click', () => renderExternalTab('recepcion', $('#recepcionMount')));
+  }
+
+  function computedActivities(){
+    const acts = [];
+    state.prospectos.forEach(p => {
+      if(normEtapa(p.etapa) === 'Ganado' || normEtapa(p.etapa) === 'Perdido') return;
+      acts.push({ tipo:'prospecto', id:p.id, nombre:prospectName(p), contacto:contactName(p), etapa:normEtapa(p.etapa), texto:p.proximaAccion || 'Seguimiento comercial', fecha:actionDateOf(p), obj:p });
+    });
+    activeLeads().filter(l => !isConverted(l)).forEach(l => {
+      acts.push({ tipo:'lead', id:l.id, nombre:leadName(l), contacto:contactName(l), etapa:labelLeadEstado(l.estado || 'nuevo'), texto:'Seguimiento lead', fecha:l.fechaUltimoContacto || l.fechaIngreso || '', obj:l });
+    });
+    return acts.sort((a,b) => String(a.fecha||'9999').localeCompare(String(b.fecha||'9999')));
+  }
+  function renderActivities(cont){
+    const acts = computedActivities();
+    cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Próximas acciones</h2><p>Vista unificada de leads sin convertir y prospectos activos.</p></div></div>' +
+      (acts.map(a => '<article class="crmv2-activity"><span class="crmv2-activity-dot ' + activityTone(a) + '"></span><div style="flex:1"><div class="crmv2-name">' + esc(a.texto) + '</div><div class="crmv2-muted">' + esc(a.nombre) + ' · ' + esc(a.contacto) + ' · ' + esc(a.etapa) + '</div><div class="crmv2-muted">' + esc(fmtDate(a.fecha)) + '</div></div><button class="crmv2-btn" data-act-open="' + esc(a.tipo + ':' + a.id) + '">Abrir</button></article>').join('') || '<div class="crmv2-empty">No hay acciones pendientes calculadas.</div>') + '</section>';
+    $all('[data-act-open]').forEach(b => b.addEventListener('click', () => {
+      const parts = b.dataset.actOpen.split(':');
+      if(parts[0] === 'lead') openLeadDetail(findLead(parts[1])); else openProspectDetail(findProspect(parts[1]));
+    }));
+  }
+  function activityTone(a){
+    if(!a.fecha) return '';
+    const d = new Date(a.fecha); if(isNaN(d)) return '';
+    const diff = Math.ceil((d - new Date()) / 86400000);
+    if(diff < 0) return 'red';
+    if(diff <= 2) return 'orange';
+    return '';
+  }
+
+  function renderPlantillas(cont){
+    cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Plantillas</h2><p>Se mantienen conectadas al endpoint original /plantillas.</p></div></div><div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Nombre</th><th>Etapa</th><th>Canal</th></tr></thead><tbody>' +
+      (state.plantillas.map(p => '<tr><td><div class="crmv2-name">' + esc(p.nombre || p.asunto || 'Plantilla') + '</div><div class="crmv2-muted">' + esc(p.asunto || '') + '</div></td><td>' + esc(p.etapa || 'General') + '</td><td>' + esc(p.canal || 'Correo') + '</td></tr>').join('') || '<tr><td colspan="3"><div class="crmv2-empty">No hay plantillas cargadas o el endpoint no respondió.</div></td></tr>') +
+      '</tbody></table></div></section>';
+  }
+  function renderArchivos(cont){
+    cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Archivos comerciales</h2><p>Links disponibles para insertar manualmente en correos o WhatsApp.</p></div></div>' +
+      state.files.map(f => '<article class="crmv2-activity"><span class="crmv2-activity-dot orange"></span><div style="flex:1"><div class="crmv2-name">' + esc(f.nombre) + '</div><div class="crmv2-muted">' + esc(f.tipo) + ' · ' + esc(f.canal) + '</div></div><a class="crmv2-btn" href="' + esc(f.url) + '" target="_blank" rel="noreferrer">Abrir</a></article>').join('') + '</section>';
+  }
+
+  function renderExternalTab(name, mount){
+    const target = mount || $('#crmTabContent'); if(!target) return;
+    target.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando ' + esc(name) + '</div></div></div>';
+    fetch('modules/' + name + '.html').then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }).then(html => {
+      const temp = document.createElement('div'); temp.innerHTML = html;
+      const scripts = $all('script', temp); scripts.forEach(s => s.remove());
+      const wrap = document.createElement('div'); wrap.className = 'crm-sub-modulo'; wrap.innerHTML = temp.innerHTML;
+      target.innerHTML = ''; target.appendChild(wrap);
+      scripts.forEach(old => { const s = document.createElement('script'); if(old.src) s.src = old.src; else s.textContent = old.textContent; document.body.appendChild(s); document.body.removeChild(s); });
+    }).catch(err => { target.innerHTML = '<div class="crmv2-empty">Error al cargar ' + esc(name) + ': ' + esc(err.message) + '</div>'; });
+  }
+
+  function openModal(html, wide){
+    const ov = document.createElement('div'); ov.className = 'crmv2-modal';
+    ov.innerHTML = '<div class="crmv2-modal-panel ' + (wide?'wide':'') + '"><button class="crmv2-modal-close" data-close>×</button>' + html + '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if(e.target === ov || e.target.closest('[data-close]')) ov.remove(); });
+    return ov;
+  }
+  function formField(label, id, value, type){ return '<label>' + esc(label) + '<input class="crmv2-input" id="' + id + '" type="' + (type||'text') + '" value="' + esc(value||'') + '"></label>'; }
+  function formText(label, id, value){ return '<label class="full">' + esc(label) + '<textarea class="crmv2-textarea" id="' + id + '" rows="3">' + esc(value||'') + '</textarea></label>'; }
+  function openLeadForm(l){
+    l = l || {};
+    const html = '<h2 class="crmv2-modal-title">' + (l.id ? 'Editar lead' : 'Nuevo lead') + '</h2><p class="crmv2-modal-sub">Leads reemplaza al antiguo Dato.</p>' +
+      '<div class="crmv2-form-grid">' +
+      '<label class="full">Tipo<select class="crmv2-select" id="lfTipo"><option value="comunidad" ' + ((l.tipoLead||'comunidad')==='comunidad'?'selected':'') + '>Comunidad</option><option value="inmobiliaria" ' + (l.tipoLead==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select></label>' +
+      formField('Nombre comunidad / proyecto', 'lfNombre', leadName(l)) + formField('Comuna', 'lfComuna', l.comuna) + formField('Dirección', 'lfDireccion', l.direccion) + formField('Contacto', 'lfContacto', contactName(l)==='Sin contacto'?'':contactName(l)) + formField('Cargo', 'lfCargo', l.cargoContacto) + formField('Teléfono', 'lfTelefono', phoneOf(l), 'tel') + formField('Email', 'lfEmail', emailOf(l), 'email') + formField('Fuente', 'lfFuente', l.fuenteLead || 'manual') + formField('Constructora', 'lfConstructora', l.constructora) + formText('Observaciones', 'lfObs', l.observaciones) +
+      '</div><div class="crmv2-modal-section"><button class="crmv2-btn primary full" id="lfSave">Guardar lead</button></div>';
+    const ov = openModal(html, true);
+    $('#lfSave', ov).addEventListener('click', async () => {
+      const nombre = $('#lfNombre', ov).value.trim(); const contacto = $('#lfContacto', ov).value.trim();
+      if(!nombre || !contacto) return toast('Nombre y contacto son obligatorios.');
+      const body = { action:l.id?'editarLead':'crearLead', id:l.id, tipoLead:$('#lfTipo', ov).value, nombreCondominio:nombre, comuna:$('#lfComuna', ov).value.trim(), direccion:$('#lfDireccion', ov).value.trim(), nombreContacto:contacto, cargoContacto:$('#lfCargo', ov).value.trim(), telefono:$('#lfTelefono', ov).value.trim(), email:$('#lfEmail', ov).value.trim(), fuenteLead:$('#lfFuente', ov).value.trim() || 'manual', constructora:$('#lfConstructora', ov).value.trim(), observaciones:$('#lfObs', ov).value.trim() };
+      const res = await api('/leads','POST',body);
+      if(res.ok && res.data && res.data.ok){ ov.remove(); await init(); toast('Lead guardado.'); } else toast((res.data && res.data.error) || res.error || 'No se pudo guardar.');
+    });
+  }
+  function openProspectForm(p){
+    p = p || {};
+    const html = '<h2 class="crmv2-modal-title">' + (p.id ? 'Editar prospecto' : 'Nuevo prospecto') + '</h2><p class="crmv2-modal-sub">Un prospecto tiene intención o posibilidad real de avanzar.</p>' +
+      '<div class="crmv2-form-grid">' +
+      formField('Nombre condominio', 'pfNombre', prospectName(p)) + formField('Comuna', 'pfComuna', p.comuna) + formField('Dirección', 'pfDireccion', p.direccion) + formField('Unidades', 'pfUnidades', p.unidades, 'number') + formField('Contacto', 'pfContacto', contactName(p)==='Sin contacto'?'':contactName(p)) + formField('Cargo', 'pfCargo', p.cargoContacto) + formField('Teléfono', 'pfTelefono', phoneOf(p), 'tel') + formField('Email', 'pfEmail', emailOf(p), 'email') + formField('Fuente', 'pfFuente', p.fuenteLead || 'manual') + formField('Responsable', 'pfResp', p.responsable) + formText('Observaciones', 'pfObs', p.observaciones) +
+      '</div><div class="crmv2-modal-section"><button class="crmv2-btn primary full" id="pfSave">Guardar prospecto</button></div>';
+    const ov = openModal(html, true);
+    $('#pfSave', ov).addEventListener('click', async () => {
+      const nombre = $('#pfNombre', ov).value.trim(); const contacto = $('#pfContacto', ov).value.trim();
+      if(!nombre || !contacto) return toast('Nombre y contacto son obligatorios.');
+      const body = { nombreCondominio:nombre, comuna:$('#pfComuna', ov).value.trim(), direccion:$('#pfDireccion', ov).value.trim(), unidades:$('#pfUnidades', ov).value || 0, nombreContacto:contacto, cargoContacto:$('#pfCargo', ov).value.trim(), telefono:$('#pfTelefono', ov).value.trim(), email:$('#pfEmail', ov).value.trim(), fuenteLead:$('#pfFuente', ov).value.trim() || 'manual', responsable:$('#pfResp', ov).value.trim(), observaciones:$('#pfObs', ov).value.trim() };
+      if(p.id) Object.assign(body, { action:'editarProspecto', id:p.id });
+      const res = await api('/crm','POST',body);
+      if(res.ok && res.data && res.data.ok){ ov.remove(); await init(); toast('Prospecto guardado.'); } else toast((res.data && res.data.error) || res.error || 'No se pudo guardar.');
+    });
+  }
+  function openLeadDetail(l){
+    if(!l) return;
+    const hist = renderHistory(l.historial);
+    const html = '<h2 class="crmv2-modal-title">' + esc(leadName(l)) + '</h2><p class="crmv2-modal-sub">Lead · ' + esc(labelLeadEstado(l.estado || 'nuevo')) + '</p>' + detailGrid(l) +
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Acciones</div><div class="crmv2-row-actions"><button class="crmv2-btn" id="ldEdit">Editar</button><button class="crmv2-btn" id="ldMail">Correo</button><button class="crmv2-btn" id="ldCall">Llamar</button>' + (!isConverted(l) ? '<button class="crmv2-btn green" id="ldConvert">Convertir a prospecto</button>' : '') + '</div></div>' +
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Cambiar estado</div><select class="crmv2-select" id="ldEstado">' + LEAD_ESTADOS.map(e => '<option value="' + e + '" ' + ((l.estado||'nuevo')===e?'selected':'') + '>' + labelLeadEstado(e) + '</option>').join('') + '</select><button class="crmv2-btn dark full" style="margin-top:10px" id="ldSaveEstado">Guardar estado</button></div>' +
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Historial</div>' + hist + '</div>';
+    const ov = openModal(html, true);
+    $('#ldEdit', ov).addEventListener('click', () => { ov.remove(); openLeadForm(l); });
+    $('#ldMail', ov).addEventListener('click', () => openMail(l, 'lead'));
+    $('#ldCall', ov).addEventListener('click', () => callPhone(l));
+    const c = $('#ldConvert', ov); if(c) c.addEventListener('click', async () => { ov.remove(); await convertLead(l); });
+    $('#ldSaveEstado', ov).addEventListener('click', async () => {
+      const estado = $('#ldEstado', ov).value; const res = await api('/leads','POST',{ action:'cambiarEstadoLead', id:l.id, estadoNuevo:estado });
+      if(res.ok && res.data && res.data.ok){ l.estado = estado; ov.remove(); render(); toast('Estado actualizado.'); } else toast('No se pudo cambiar estado.');
+    });
+  }
+  function openProspectDetail(p){
+    if(!p) return;
+    const etapa = normEtapa(p.etapa);
+    const html = '<h2 class="crmv2-modal-title">' + esc(prospectName(p)) + '</h2><p class="crmv2-modal-sub">Prospecto · ' + esc(etapa) + '</p>' + detailGrid(p) +
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Cambiar etapa</div><select class="crmv2-select" id="pdEtapa">' + ETAPAS.map(e => '<option value="' + e + '" ' + (etapa===e?'selected':'') + '>' + e + '</option>').join('') + '</select><button class="crmv2-btn dark full" style="margin-top:10px" id="pdSaveEtapa">Guardar etapa</button></div>' +
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Acciones</div><div class="crmv2-row-actions"><button class="crmv2-btn" id="pdEdit">Editar</button><button class="crmv2-btn" id="pdMail">Correo</button><button class="crmv2-btn" id="pdWsp">WhatsApp</button>' + (etapa === 'Diagnóstico' ? '<button class="crmv2-btn primary" id="pdDiag">Iniciar diagnóstico</button>' : '<button class="crmv2-btn" id="pdToDiag">Mover a Diagnóstico</button>') + '<button class="crmv2-btn danger" id="pdBackLead">Volver a Lead</button></div></div>';
+    const ov = openModal(html, true);
+    $('#pdEdit', ov).addEventListener('click', () => { ov.remove(); openProspectForm(p); });
+    $('#pdMail', ov).addEventListener('click', () => openMail(p, 'prospecto'));
+    $('#pdWsp', ov).addEventListener('click', () => openWhatsApp(p));
+    $('#pdSaveEtapa', ov).addEventListener('click', async () => { const st = $('#pdEtapa', ov).value; ov.remove(); await changeProspectStage(p, st); });
+    const diag = $('#pdDiag', ov); if(diag) diag.addEventListener('click', () => { ov.remove(); state.tab='diagnostico'; render(); setTimeout(() => startDiagnosis(p), 50); });
+    const toDiag = $('#pdToDiag', ov); if(toDiag) toDiag.addEventListener('click', async () => { ov.remove(); await changeProspectStage(p, 'Diagnóstico'); });
+    $('#pdBackLead', ov).addEventListener('click', async () => { ov.remove(); await convertProspectToLead(p); });
+  }
+  function detailGrid(x){
+    const rows = [ ['Comuna', x.comuna], ['Dirección', x.direccion], ['Contacto', contactName(x)], ['Cargo', x.cargoContacto], ['Teléfono', phoneOf(x)], ['Email', emailOf(x)], ['Fuente', x.fuenteLead], ['Observaciones', x.observaciones] ];
+    return '<div class="crmv2-detail-grid">' + rows.map(r => '<div class="crmv2-detail-item"><label>' + esc(r[0]) + '</label><span>' + esc(r[1] || '—') + '</span></div>').join('') + '</div>';
+  }
+  function renderHistory(raw){
+    let h = []; try { h = JSON.parse(raw || '[]'); } catch(e) {}
+    if(!h.length) return '<div class="crmv2-empty">Sin historial registrado.</div>';
+    return h.slice(-6).reverse().map(ev => '<div class="crmv2-activity"><span class="crmv2-activity-dot orange"></span><div><div class="crmv2-name">' + esc(ev.tipo || 'Evento') + '</div><div class="crmv2-muted">' + esc(fmtDate(ev.fecha)) + '</div></div></div>').join('');
+  }
+  async function convertLead(l){
+    if(!l) return;
+    if(!confirm('¿Convertir este lead a prospecto en el Pipeline?')) return;
+    const res = await api('/leads','POST',{ action:'convertirLead', id:l.id });
+    if(res.ok && res.data && res.data.ok){ await init(); state.tab='pipeline'; render(); toast('Lead convertido a prospecto.'); }
+    else toast((res.data && res.data.error) || res.error || 'No se pudo convertir.');
+  }
+  async function convertProspectToLead(p){
+    if(!p) return;
+    if(!confirm('¿Volver este prospecto a Lead? Quedará fuera del pipeline activo.')) return;
+    let res = await api('/crm','POST',{ action:'convertirProspectoALead', id:p.id });
+    if(res.ok && res.data && res.data.ok){ await init(); state.tab='leads'; render(); toast('Prospecto convertido a lead.'); return; }
+    const newLead = { action:'crearLead', tipoLead:'comunidad', nombreCondominio:prospectName(p), comuna:p.comuna || '', direccion:p.direccion || '', nombreContacto:contactName(p), cargoContacto:p.cargoContacto || '', telefono:phoneOf(p), email:emailOf(p), fuenteLead:p.fuenteLead || 'pipeline', observaciones:'Reingresado desde prospecto ' + p.id + '. ' + (p.observaciones || '') };
+    const resLead = await api('/leads','POST',newLead);
+    if(resLead.ok && resLead.data && resLead.data.ok){
+      await api('/crm','POST',{ action:'cambiarEtapa', id:p.id, etapaNueva:'Perdido' });
+      await init(); state.tab='leads'; render(); toast('Prospecto devuelto a Lead. Se dejó el prospecto como Perdido.');
+    } else toast((resLead.data && resLead.data.error) || resLead.error || 'No se pudo volver a Lead.');
+  }
+  function openMail(x, kind){
+    if(!x) return;
+    const to = emailOf(x);
+    const subject = kind === 'lead' ? 'Seguimiento Coproactiva' : 'Coproactiva - Seguimiento comercial';
+    const body = 'Hola ' + contactName(x) + ',%0D%0A%0D%0AQuería dar seguimiento a ' + (kind === 'lead' ? 'la información inicial' : 'la conversación sobre ' + prospectName(x)) + '.%0D%0A%0D%0ASaludos,%0D%0ACoproactiva';
+    if(to) window.open('mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + body, '_blank');
+    else toast('No hay correo registrado.');
+  }
+  function callPhone(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56' + tel)); else toast('Sin teléfono registrado.'); }
+  function openWhatsApp(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('https://wa.me/' + (tel.startsWith('56') ? tel : '56' + tel), '_blank'); else toast('Sin teléfono registrado.'); }
+
+  init();
+})();
+</script>

@@ -1,0 +1,9 @@
+name = "coproactiva-nueva"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbMdi1i1LVKLUsxiMlZxl36213y1Ku4BwMHL-DZrMAtLRx6ldGhQMdWx0xa_M1tjVt/exec"
+
+[secrets]
+required = ["SECRET_KEY", "ANTHROPIC_API_KEY"]

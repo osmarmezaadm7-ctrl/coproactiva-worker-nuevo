@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flujo de trabajo CoproActiva</title>
+<style>
+:root {
+  /* Categorías funcionales — paleta tonificada al sistema cálido */
+  --c-legal: #4A6FA5;
+  --c-legal-bg: #EBF1FA;
+  --c-legal-border: #C9DAEE;
+
+  --c-fin: #3F7158;
+  --c-fin-bg: #E8F2EC;
+  --c-fin-border: #BFDDC8;
+
+  --c-lab: #B07628;
+  --c-lab-bg: #FBEFD9;
+  --c-lab-border: #F0D9A6;
+
+  --c-tec: #B84545;
+  --c-tec-bg: #FBE9E9;
+  --c-tec-border: #F2C9C9;
+
+  --c-seg: #7A5BA8;
+  --c-seg-bg: #F0EAFA;
+  --c-seg-border: #D9CCEA;
+
+  --c-doc: #6B6359;
+  --c-doc-bg: #F5EFE4;
+  --c-doc-border: #DCD3C2;
+
+  --c-dec: #8B5028;
+  --c-dec-bg: #FDF3E7;
+  --c-dec-border: #F0D4A8;
+
+  --c-l1: #4A6FA5;
+  --c-l1-bg: #EBF1FA;
+  --c-l2: #3F7158;
+  --c-l2-bg: #E8F2EC;
+  --c-l3: #8B5028;
+  --c-l3-bg: #FDF3E7;
+
+  --c-conv: #6B6359;
+  --c-conv-bg: #F5EFE4;
+
+  --c-orange: #D9853B;
+
+  --font: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(31,31,31,.06), 0 1px 2px rgba(31,31,31,.04);
+  --shadow-md: 0 4px 14px rgba(31,31,31,.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { font-family: var(--font); -webkit-font-smoothing: antialiased; background: #FBF7F0; }
+
+/* HEADER (oculto — reemplazado por page-header en main) */
+.header { display: none; }
+.legend-bar { display: none; }
+
+/* PAGE HEADER (estilo mockup) */
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.page-eyebrow {
+  font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--c-orange); margin-bottom: 6px;
+}
+.page-title {
+  font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
+  color: #1F1F1F; margin-bottom: 4px;
+}
+.page-title em { font-style: normal; color: var(--c-orange); }
+.page-sub {
+  font-size: 13.5px; color: #6B6359; font-weight: 500; max-width: 580px;
+}
+
+/* TABS (estilo mockup) */
+.flujo-tabs {
+  display: flex; gap: 4px;
+  background: #F5EFE4;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #ECE5DA;
+  margin-bottom: 24px;
+  width: fit-content;
+  flex-wrap: wrap;
+}
+.flujo-tab {
+  padding: 9px 18px;
+  background: transparent;
+  border: none;
+  font-family: var(--font);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #6B6359;
+  cursor: pointer;
+  border-radius: 7px;
+  letter-spacing: -.01em;
+  transition: background .13s, color .13s;
+}
+.flujo-tab:hover { color: #1F1F1F; }
+.flujo-tab.active {
+  background: #fff;
+  color: #1F1F1F;
+  box-shadow: 0 1px 3px rgba(31,31,31,.08);
+}
+
+/* Tab panels */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* LÍNEAS RESUMEN (estilo mockup) */
+.linea-resumen-card {
+  background: #fff; border: 1px solid #ECE5DA;
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.linea-resumen-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+}
+.linea-resumen-card.l1::before { background: var(--c-l1); }
+.linea-resumen-card.l2::before { background: var(--c-l2); }
+.linea-resumen-card.l3::before { background: var(--c-l3); }
+.linea-resumen-head {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+}
+.linea-resumen-pill {
+  font-size: 10px; font-weight: 800; padding: 4px 11px; border-radius: 99px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.linea-resumen-card.l1 .linea-resumen-pill { background: var(--c-l1-bg); color: var(--c-l1); }
+.linea-resumen-card.l2 .linea-resumen-pill { background: var(--c-l2-bg); color: var(--c-l2); }
+.linea-resumen-card.l3 .linea-resumen-pill { background: var(--c-l3-bg); color: var(--c-l3); }
+.linea-resumen-name {
+  font-size: 18px; font-weight: 800; color: #1F1F1F; letter-spacing: -.02em;
+}
+.linea-resumen-sub {
+  font-size: 13px; color: #6B6359; font-weight: 500; margin-bottom: 16px;
+}
+.linea-resumen-steps {
+  display: flex; gap: 0; align-items: stretch;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+}
+.lr-step {
+  flex: 0 0 auto;
+  min-width: 150px; max-width: 200px;
+  padding: 14px 16px;
+  background: #FBF7F0;
+  border: 1px solid #ECE5DA;
+  border-radius: 10px;
+  position: relative;
+}
+.lr-step + .lr-step { margin-left: 28px; }
+.lr-step + .lr-step::before {
+  content: ''; position: absolute; left: -22px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 2px; background: #DCD3C2;
+}
+.lr-step + .lr-step::after {
+  content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
+  border: 5px solid transparent; border-left-color: #BAAE99; border-right: none;
+}
+.lr-step-num {
+  font-size: 10px; font-weight: 800; color: var(--c-orange); letter-spacing: .1em;
+}
+.lr-step-name {
+  font-size: 13px; font-weight: 800; color: #1F1F1F; letter-spacing: -.01em;
+  margin-top: 3px; line-height: 1.3;
+}
+.lr-step-meta {
+  font-size: 11px; color: #9C958A; margin-top: 6px; font-weight: 500;
+}
+
+/* MAIN */
+.main { max-width: 940px; margin: 0 auto; padding: 8px 0 80px; }
+
+/* SECTION HEADERS */
+.section-block { margin-bottom: 12px; }
+.section-label {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 18px;
+  border-radius: 12px 12px 0 0;
+  font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: 0;
+}
+.section-label.l0 { background: #1A1714; color: rgba(255,255,255,0.7); }
+.section-label.l1 { background: var(--c-l1-bg); color: var(--c-l1); border: 1px solid var(--c-legal-border); border-bottom: none; }
+.section-label.l2 { background: var(--c-l2-bg); color: var(--c-l2); border: 1px solid var(--c-fin-border); border-bottom: none; }
+.section-label.l3 { background: var(--c-l3-bg); color: var(--c-l3); border: 1px solid var(--c-dec-border); border-bottom: none; }
+.section-label.lx { background: #F5EFE4; color: #6B6359; border: 1px solid #ECE5DA; border-bottom: none; }
+.line-pill {
+  font-size: 10px; padding: 3px 10px; border-radius: 99px; font-weight: 800; letter-spacing: .06em;
+}
+
+/* FLOW CONTAINER */
+.flow-wrap {
+  border: 1px solid #ECE5DA;
+  border-radius: 0 0 12px 12px;
+  background: #fff;
+  padding: 24px 22px;
+  margin-bottom: 28px;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+
+/* CONNECTOR ARROW */
+.arrow {
+  width: 2px; height: 26px; background: #DCD3C2;
+  position: relative; margin: 0 auto;
+}
+.arrow::after {
+  content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: #BAAE99; border-bottom: none;
+}
+.arrow.short { height: 18px; }
+.arrow.label-arrow { height: 32px; }
+
+/* CONVERGENCE BAND */
+.conv-band {
+  width: 100%; padding: 10px 16px;
+  background: var(--c-conv-bg); border: 1px solid #ECE5DA; border-radius: 8px;
+  text-align: center; font-size: 11px; font-weight: 700; color: var(--c-conv);
+  margin: 4px 0;
+  letter-spacing: .02em;
+}
+
+/* STAGE NODE */
+.node {
+  width: 100%; border-radius: var(--radius);
+  border: 1.5px solid;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: box-shadow .15s, transform .1s;
+  position: relative;
+}
+.node:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.node-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 10px;
+}
+.node-type {
+  font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 99px; white-space: nowrap; flex-shrink: 0;
+}
+.node-title {
+  font-size: 14.5px; font-weight: 800; flex: 1;
+  letter-spacing: -0.015em;
+}
+.node-sub {
+  font-size: 11.5px; padding: 0 16px 12px; opacity: .75;
+  font-weight: 500; line-height: 1.5;
+}
+.node-toggle {
+  position: absolute; right: 14px; top: 14px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: inherit; transition: transform .2s;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.node.open .node-toggle { transform: rotate(45deg); }
+
+/* AREA PILLS ROW */
+.area-pills { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 16px 12px; }
+.area-pill {
+  font-size: 10px; padding: 3px 9px; border-radius: 99px; font-weight: 700; border: 1px solid;
+  letter-spacing: .02em;
+}
+.pill-legal { background: var(--c-legal-bg); color: var(--c-legal); border-color: var(--c-legal-border); }
+.pill-fin   { background: var(--c-fin-bg);   color: var(--c-fin);   border-color: var(--c-fin-border); }
+.pill-lab   { background: var(--c-lab-bg);   color: var(--c-lab);   border-color: var(--c-lab-border); }
+.pill-tec   { background: var(--c-tec-bg);   color: var(--c-tec);   border-color: var(--c-tec-border); }
+.pill-seg   { background: var(--c-seg-bg);   color: var(--c-seg);   border-color: var(--c-seg-border); }
+.pill-doc   { background: var(--c-doc-bg);   color: var(--c-doc);   border-color: var(--c-doc-border); }
+
+/* DETAIL PANEL */
+.detail {
+  display: none; border-top: 1px solid;
+  padding: 16px 16px 14px;
+  font-size: 12.5px;
+}
+.node.open .detail { display: block; }
+
+.detail-section { margin-bottom: 12px; }
+.detail-section:last-child { margin-bottom: 0; }
+.detail-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: 8px; opacity: .65;
+}
+.detail-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.detail-list li {
+  display: flex; align-items: flex-start; gap: 9px; line-height: 1.5;
+  font-weight: 500;
+}
+.detail-list li::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%; margin-top: 7px; flex-shrink: 0;
+}
+.di-legal li::before { background: var(--c-legal); }
+.di-fin   li::before { background: var(--c-fin); }
+.di-lab   li::before { background: var(--c-lab); }
+.di-tec   li::before { background: var(--c-tec); }
+.di-seg   li::before { background: var(--c-seg); }
+.di-doc   li::before { background: var(--c-doc); }
+.di-mix   li::before { background: #9C958A; }
+
+/* DECISION NODE */
+.decision-node {
+  width: 100%;
+  border: 2px solid var(--c-dec-border);
+  border-radius: var(--radius);
+  background: var(--c-dec-bg);
+  overflow: hidden;
+}
+.dec-question {
+  padding: 14px 16px;
+  font-size: 14px; font-weight: 800; color: var(--c-dec);
+  display: flex; align-items: center; gap: 8px;
+  letter-spacing: -0.01em;
+}
+.dec-diamond { font-size: 14px; }
+.dec-sub {
+  font-size: 11.5px; padding: 0 16px 12px; color: var(--c-dec); opacity: .75;
+  font-weight: 500;
+}
+.branches {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--c-dec-border);
+}
+.branch { padding: 14px 16px; background: white; }
+.branch:first-child { border-right: 1px solid var(--c-dec-border); }
+.branch-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.branch-si .branch-label { color: var(--c-fin); }
+.branch-no .branch-label { color: var(--c-tec); }
+.branch-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.branch-list li {
+  font-size: 11.5px; color: #3A3631; padding-left: 12px; position: relative; line-height: 1.45;
+  font-weight: 500;
+}
+.branch-list li::before {
+  content: ''; position: absolute; left: 0; top: 7px;
+  width: 4px; height: 4px; border-radius: 50%; background: #BAAE99;
+}
+.branch-tag {
+  font-size: 10px; color: #9C958A; font-style: italic; margin-top: 4px; padding-left: 12px;
+  font-weight: 500;
+}
+
+/* CRITICAL BADGE */
+.critical-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 99px;
+  background: var(--c-tec-bg); color: var(--c-tec); border: 1px solid var(--c-tec-border);
+}
+
+/* SLA TABLE */
+.sla-table {
+  width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 8px;
+  border-radius: 8px; overflow: hidden;
+}
+.sla-table td {
+  padding: 7px 10px; border: 1px solid #ECE5DA; vertical-align: middle;
+  font-weight: 500;
+}
+.sla-table tr:first-child td {
+  background: #F5EFE4;
+  font-weight: 800;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #6B6359;
+}
+.sla-alta  { color: var(--c-tec); font-weight: 800; }
+.sla-media { color: var(--c-orange); font-weight: 800; }
+.sla-baja  { color: var(--c-fin); font-weight: 800; }
+
+/* AUDIT STEPS */
+.aud-steps { display: flex; flex-direction: column; gap: 9px; }
+.aud-step { display: flex; gap: 12px; align-items: flex-start; }
+.aud-n {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: var(--c-l3-bg); color: var(--c-l3); border: 1px solid var(--c-dec-border);
+  font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.aud-t {
+  font-size: 12.5px; font-weight: 800; color: #1F1F1F; margin-bottom: 2px;
+  letter-spacing: -0.01em;
+}
+.aud-d {
+  font-size: 11.5px; color: #6B6359; line-height: 1.5;
+  font-weight: 500;
+}
+
+/* PHASE LABEL */
+.phase-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: #6B6359; text-align: center; padding: 6px 0 0;
+}
+
+/* PARALLEL BOX */
+.parallel-wrap {
+  width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 4px 0;
+}
+.parallel-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  text-align: center; padding: 8px; border-radius: 8px 8px 0 0; margin-bottom: -1px;
+}
+.par-op  { background: var(--c-l1-bg); color: var(--c-l1); }
+.par-aud { background: var(--c-l3-bg); color: var(--c-l3); }
+
+/* NODE COLORS */
+.n-legal { background: var(--c-legal-bg); border-color: var(--c-legal); }
+.n-legal .node-title, .n-legal .node-toggle { color: var(--c-legal); }
+.n-legal .detail { border-color: var(--c-legal-border); background: #F4F7FC; }
+.n-legal .node-type { background: var(--c-legal); color: #fff; }
+
+.n-fin { background: var(--c-fin-bg); border-color: var(--c-fin); }
+.n-fin .node-title, .n-fin .node-toggle { color: var(--c-fin); }
+.n-fin .detail { border-color: var(--c-fin-border); background: #F1F8F3; }
+.n-fin .node-type { background: var(--c-fin); color: #fff; }
+
+.n-lab { background: var(--c-lab-bg); border-color: var(--c-lab); }
+.n-lab .node-title, .n-lab .node-toggle { color: var(--c-lab); }
+.n-lab .detail { border-color: var(--c-lab-border); background: #FDF7E8; }
+.n-lab .node-type { background: var(--c-lab); color: #fff; }
+
+.n-tec { background: var(--c-tec-bg); border-color: var(--c-tec); }
+.n-tec .node-title, .n-tec .node-toggle { color: var(--c-tec); }
+.n-tec .detail { border-color: var(--c-tec-border); background: #FBF1F1; }
+.n-tec .node-type { background: var(--c-tec); color: #fff; }
+
+.n-seg { background: var(--c-seg-bg); border-color: var(--c-seg); }
+.n-seg .node-title, .n-seg .node-toggle { color: var(--c-seg); }
+.n-seg .detail { border-color: var(--c-seg-border); background: #F7F2FB; }
+.n-seg .node-type { background: var(--c-seg); color: #fff; }
+
+.n-doc { background: var(--c-doc-bg); border-color: var(--c-doc); }
+.n-doc .node-title, .n-doc .node-toggle { color: var(--c-doc); }
+.n-doc .detail { border-color: var(--c-doc-border); background: #FAF6EE; }
+.n-doc .node-type { background: var(--c-doc); color: #fff; }
+
+.n-mix { background: #F5EFE4; border-color: #BAAE99; }
+.n-mix .node-title, .n-mix .node-toggle { color: #1F1F1F; }
+.n-mix .detail { border-color: #ECE5DA; background: #FAF6EE; }
+.n-mix .node-type { background: #6B6359; color: #fff; }
+
+.n-audit { background: var(--c-l3-bg); border-color: var(--c-dec-border); border-style: dashed; }
+.n-audit .node-title, .n-audit .node-toggle { color: var(--c-l3); }
+.n-audit .detail { border-color: var(--c-dec-border); background: #FDF7E8; }
+.n-audit .node-type { background: var(--c-l3); color: #fff; }
+
+/* SCROLL TO TOP */
+.scroll-top {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #1A1714; color: #fff; border: none;
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 18px; cursor: pointer; box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .2s, transform 0.13s; opacity: 0; pointer-events: none;
+}
+.scroll-top:hover { transform: translateY(-2px); }
+.scroll-top.visible { opacity: 1; pointer-events: all; }
+
+@media (max-width: 600px) {
+  .branches { grid-template-columns: 1fr; }
+  .branch:first-child { border-right: none; border-bottom: 1px solid var(--c-dec-border); }
+  .parallel-wrap { grid-template-columns: 1fr; }
+  .header { padding: 22px 18px 18px; }
+  .main { padding: 22px 14px 60px; }
+  .legend-bar { padding: 10px 18px; top: 92px; }
+  .header h1 { font-size: 19px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header" style="display:none">
+  <div class="header-inner">
+    <h1>Flujo de trabajo <b>Coproactiva</b></h1>
+    <p>3 líneas de trabajo · Auditoría paralela · Ley N°21.442</p>
+  </div>
+</div>
+
+<div class="legend-bar" style="display:none">
+  <div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-legal)"></div>Legal</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-fin)"></div>Financiero</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-lab)"></div>Laboral</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-tec)"></div>Técnico</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-seg)"></div>Seguridad</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-doc)"></div>Documental</div>
+    <div class="leg" style="margin-left:auto"><div class="leg-dot" style="background:var(--c-l1)"></div>Línea 1</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-l2)"></div>Línea 2</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c-l3)"></div>Línea 3</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div>
+    <div class="page-eyebrow">Flujo de trabajo</div>
+    <h1 class="page-title">Cómo <em>operamos</em></h1>
+    <p class="page-sub">Flujo comercial completo · 3 líneas de trabajo · auditoría paralela · cumplimiento Ley N°21.442.</p>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="flujo-tabs">
+  <button class="flujo-tab active" data-tab="resumen" onclick="setFlujoTab('resumen')">Resumen</button>
+  <button class="flujo-tab" data-tab="comercial" onclick="setFlujoTab('comercial')">Comercial</button>
+  <button class="flujo-tab" data-tab="operacion" onclick="setFlujoTab('operacion')">Operación</button>
+  <button class="flujo-tab" data-tab="auditoria" onclick="setFlujoTab('auditoria')">Auditoría</button>
+</div>
+
+<!-- RESUMEN TAB -->
+<div class="tab-panel active" data-panel="resumen">
+  <div class="linea-resumen-card l1">
+    <div class="linea-resumen-head">
+      <span class="linea-resumen-pill">Línea 1</span>
+      <span class="linea-resumen-name">Administración integral</span>
+    </div>
+    <div class="linea-resumen-sub">Comunidad en marcha con historial · operación completa + auditoría paralela</div>
+    <div class="linea-resumen-steps">
+      <div class="lr-step"><div class="lr-step-num">FASE 01</div><div class="lr-step-name">Recepción documental</div><div class="lr-step-meta">5 días corridos</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 02</div><div class="lr-step-name">Operación mensual</div><div class="lr-step-meta">6 áreas continuas</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 03</div><div class="lr-step-name">Auditoría paralela</div><div class="lr-step-meta">10 etapas</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 04</div><div class="lr-step-name">Rendición de cuentas</div><div class="lr-step-meta">Art. 14, 20 y 21</div></div>
+    </div>
+  </div>
+
+  <div class="linea-resumen-card l2">
+    <div class="linea-resumen-head">
+      <span class="linea-resumen-pill">Línea 2</span>
+      <span class="linea-resumen-name">Nueva administración</span>
+    </div>
+    <div class="linea-resumen-sub">Primera administración o comunidad sin historial · puesta en marcha desde cero</div>
+    <div class="linea-resumen-steps">
+      <div class="lr-step"><div class="lr-step-num">FASE 01</div><div class="lr-step-name">Recepción inmobiliaria</div><div class="lr-step-meta">Si aplica</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 02</div><div class="lr-step-name">Configuración inicial</div><div class="lr-step-meta">Plataforma + fondos</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 03</div><div class="lr-step-name">Primera asamblea</div><div class="lr-step-meta">Comité + CBR</div></div>
+      <div class="lr-step"><div class="lr-step-num">FASE 04</div><div class="lr-step-name">Converge con Línea 1</div><div class="lr-step-meta">Mes 2 en adelante</div></div>
+    </div>
+  </div>
+
+  <div class="linea-resumen-card l3">
+    <div class="linea-resumen-head">
+      <span class="linea-resumen-pill">Línea 3</span>
+      <span class="linea-resumen-name">Asesoría y auditoría</span>
+    </div>
+    <div class="linea-resumen-sub">Comunidad con administrador activo · servicio externo · ~4 semanas</div>
+    <div class="linea-resumen-steps">
+      <div class="lr-step"><div class="lr-step-num">ETAPA 1</div><div class="lr-step-name">Planificación</div><div class="lr-step-meta">Alcance + criterios</div></div>
+      <div class="lr-step"><div class="lr-step-num">ETAPA 2–4</div><div class="lr-step-name">Recopilación + pruebas</div><div class="lr-step-meta">Evidencia + controles</div></div>
+      <div class="lr-step"><div class="lr-step-num">ETAPA 5–7</div><div class="lr-step-name">Hallazgos + riesgos</div><div class="lr-step-meta">Matriz impacto</div></div>
+      <div class="lr-step"><div class="lr-step-num">ETAPA 8–10</div><div class="lr-step-name">Informe + seguimiento</div><div class="lr-step-meta">Presentación comité</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 0 — FLUJO COMERCIAL
+══════════════════════════════════════════ -->
+<div class="section-block tab-panel" data-panel="comercial">
+  <div class="section-label l0">
+    <span class="line-pill" style="background:#2A2520;color:rgba(255,255,255,0.85)">0</span>
+    Flujo comercial — desde el prospecto hasta la firma del contrato
+  </div>
+  <div class="flow-wrap">
+
+    <div class="node n-doc" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapa 1</span>
+        <span class="node-title">Prospecto / Lead</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Registro en CRM · primer contacto con el comité</div>
+      <div class="area-pills"><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <div class="detail-label">Acciones</div>
+          <ul class="detail-list di-doc">
+            <li>Registrar prospecto en CRM con datos de la comunidad y contacto del comité</li>
+            <li>Respuesta al primer contacto en menos de 24 horas</li>
+            <li>Agendar reunión de levantamiento de necesidades con el comité</li>
+            <li>Envío de información inicial sobre los servicios de CoproActiva</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-mix" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapa 2</span>
+        <span class="node-title">Diagnóstico preliminar</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Checklist con el comité · 6 áreas evaluadas</div>
+      <div class="area-pills">
+        <span class="area-pill pill-legal">Legal</span>
+        <span class="area-pill pill-fin">Financiero</span>
+        <span class="area-pill pill-lab">Laboral</span>
+        <span class="area-pill pill-tec">Técnico</span>
+        <span class="area-pill pill-seg">Seguridad</span>
+        <span class="area-pill pill-doc">Documental</span>
+      </div>
+      <div class="detail">
+        <div class="detail-section">
+          <div class="detail-label">Propósito</div>
+          <ul class="detail-list di-mix">
+            <li>Evaluar el estado actual de la comunidad para construir una propuesta fundamentada</li>
+            <li>La información se levanta con el comité de administración o representante de la inmobiliaria</li>
+            <li>El diagnóstico define qué línea de trabajo se activará tras la firma del contrato</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Áreas evaluadas con checklist</div>
+          <ul class="detail-list di-mix">
+            <li><strong>Legal:</strong> Reglamento de copropiedad, constitución del comité, actas, inscripciones CBR</li>
+            <li><strong>Financiero:</strong> Estado de cuentas, fondos, morosidad, rendiciones históricas</li>
+            <li><strong>Laboral:</strong> Personal contratado, contratos vigentes, cotizaciones, F30</li>
+            <li><strong>Técnico:</strong> Mantenciones vigentes, certificaciones (ascensores, gas), garantías</li>
+            <li><strong>Seguridad:</strong> Plan de emergencia, seguros de incendio, extintores</li>
+            <li><strong>Documental:</strong> Estado del archivo, claves de acceso, plataformas</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Resultado del diagnóstico</div>
+          <ul class="detail-list di-mix">
+            <li>Mapa de brechas por área que guía el plan de trabajo y los honorarios</li>
+            <li>Definición de línea de trabajo a activar: Línea 1, 2 o 3</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-doc" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapa 3</span>
+        <span class="node-title">Propuesta comercial</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Plan de trabajo + honorarios · contrato específico según servicio</div>
+      <div class="area-pills"><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <div class="detail-label">Contenido de la propuesta</div>
+          <ul class="detail-list di-doc">
+            <li>Plan de trabajo basado en las brechas detectadas en el diagnóstico</li>
+            <li>Cronograma de regularización por área</li>
+            <li>Estructura de honorarios y condiciones de servicio</li>
+            <li>Línea de trabajo propuesta: administración integral, nueva administración o asesoría/auditoría</li>
+            <li>Contrato específico según servicio: administración integral y nueva administración mínimo 12 meses · asesoría por duración del servicio (aprox. 4 semanas)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="decision-node">
+      <div class="dec-question"><span class="dec-diamond">◆</span> Decisión 1 — ¿Acepta la propuesta el comité?</div>
+      <div class="dec-sub">El comité evalúa y responde dentro del plazo definido</div>
+      <div class="branches">
+        <div class="branch branch-si">
+          <div class="branch-label">Sí — firma del contrato</div>
+          <ul class="branch-list">
+            <li>Firma del contrato de administración con el comité</li>
+            <li>Contrato específico según línea de trabajo activada</li>
+            <li>Nombramiento en escritura pública (Art. 18 Ley 21.442)</li>
+            <li>Entrega kit de bienvenida a la comunidad</li>
+            <li>Activar línea de trabajo correspondiente</li>
+          </ul>
+        </div>
+        <div class="branch branch-no">
+          <div class="branch-label">No — negociar o cerrar</div>
+          <ul class="branch-list">
+            <li>Ajustar propuesta si hay margen (alcance u honorarios)</li>
+            <li>Seguimiento a los 5 días</li>
+            <li>Si definitivo: registrar pérdida en CRM</li>
+            <li>Correo de cierre cordial</li>
+            <li>Nurturing mensual hasta 6 meses</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+    <div class="conv-band">Contrato firmado → se activa la línea de trabajo según diagnóstico</div>
+    <div class="arrow"></div>
+
+    <div class="decision-node">
+      <div class="dec-question"><span class="dec-diamond">◆</span> Decisión 2 — ¿Qué línea de trabajo se activa?</div>
+      <div class="dec-sub">Determinado por el diagnóstico preliminar</div>
+      <div class="branches" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="branch branch-si" style="border-right:1px solid var(--c-dec-border)">
+          <div class="branch-label" style="color:var(--c-l1)">Línea 1 · Admin. integral</div>
+          <ul class="branch-list">
+            <li>Comunidad en marcha con historial</li>
+            <li>Traspaso documental del comité</li>
+            <li>Operación completa + auditoría paralela</li>
+          </ul>
+        </div>
+        <div class="branch branch-si" style="border-right:1px solid var(--c-dec-border)">
+          <div class="branch-label" style="color:var(--c-l2)">Línea 2 · Nueva admin.</div>
+          <ul class="branch-list">
+            <li>Primera administración o sin historial</li>
+            <li>Puesta en marcha desde cero</li>
+            <li>Recepción inmobiliaria si aplica</li>
+          </ul>
+        </div>
+        <div class="branch branch-no">
+          <div class="branch-label" style="color:var(--c-l3)">Línea 3 · Auditoría</div>
+          <ul class="branch-list">
+            <li>Comunidad con administrador activo</li>
+            <li>Solo diagnóstico y asesoría externa</li>
+            <li>No asume la administración</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 1 — LÍNEA 1: ADMINISTRACIÓN INTEGRAL
+══════════════════════════════════════════ -->
+<div class="section-block tab-panel" data-panel="operacion">
+  <div class="section-label l1">
+    <span class="line-pill" style="background:var(--c-l1);color:#fff">Línea 1</span>
+    Administración integral de edificios y condominios — comunidad en marcha
+  </div>
+  <div class="flow-wrap">
+
+    <div class="node n-mix" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Fase 1</span>
+        <span class="node-title">Recepción documental del comité</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Listado entregado al comité previo a la firma como anexo del contrato · plazo de entrega: 5 días corridos desde la firma</div>
+      <div class="area-pills">
+        <span class="area-pill pill-legal">Legal</span><span class="area-pill pill-fin">Financiero</span>
+        <span class="area-pill pill-lab">Laboral</span><span class="area-pill pill-tec">Técnico</span>
+        <span class="area-pill pill-seg">Seguridad</span><span class="area-pill pill-doc">Documental</span>
+      </div>
+      <div class="detail">
+        <div class="detail-section" style="background:var(--c-legal-bg);border:1px solid var(--c-legal-border);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+          <div class="detail-label" style="color:var(--c-legal)">Nota — previo a la firma del contrato</div>
+          <ul class="detail-list di-legal">
+            <li>En la reunión de presentación de la propuesta se entrega al comité el listado completo de documentos requeridos por área</li>
+            <li>Este listado se incorpora como anexo del contrato</li>
+            <li>El comité es responsable de recopilar y entregar los antecedentes dentro de los 5 días corridos desde la firma</li>
+            <li>La reunión de recepción se realiza solo con el comité de administración</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label" style="color:var(--c-legal)">Legal</div>
+          <ul class="detail-list di-legal">
+            <li>Reglamento de copropiedad en escritura pública y modificaciones</li>
+            <li>Certificado de inscripción del reglamento en CBR</li>
+            <li>Reglamento interno vigente</li>
+            <li>Libro de actas y actas históricas</li>
+            <li>Acta de asamblea de designación del comité vigente</li>
+            <li>Certificado de copropiedad DOM · permiso de edificación · recepción final de obras</li>
+            <li>Razón social · RUT · dirección · comuna · manzana y predio SII</li>
+            <li>Certificado Condominio Interés Público o Viviendas Sociales — si aplica</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label" style="color:var(--c-fin)">Financiero</div>
+          <ul class="detail-list di-fin">
+            <li>Cuenta corriente del condominio · acceso portal bancario</li>
+            <li>Tablas de prorrateo — derechos y cuotas por unidad</li>
+            <li>Informe de morosidad por unidad · historial de pagos</li>
+            <li>Rendición de cuentas del período anterior</li>
+            <li>Conciliación bancaria del último período</li>
+            <li>Composición de saldos por fondo</li>
+            <li>Detalle de cobros de obligaciones económicas por unidad</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label" style="color:var(--c-lab)">Laboral</div>
+          <ul class="detail-list di-lab">
+            <li>Contratos y anexos · AFP · salud · AFC · cargas familiares · seguro de vida por trabajador</li>
+            <li>Finiquitos ratificados de trabajadores no vigentes · contingencias activas si no existe</li>
+            <li>Control de asistencia · registro de vacaciones tomadas y pendientes</li>
+            <li>F30 del condominio — antecedentes laborales y previsionales</li>
+            <li>F30-1 de empresas externas y subcontratistas vigentes</li>
+            <li>Comprobantes de cotizaciones Previred — últimos 12 meses</li>
+            <li>Liquidaciones de sueldo — últimas 12 por trabajador firmadas</li>
+            <li>Matriz IPER · Protocolo Ley Karin · RIOHS (si hay 10 o más trabajadores)</li>
+            <li>ODI · adhesión organismo Ley 16.744 · Seguro de vida del personal vigente</li>
+            <li>Certificación OS-10 — según funciones reales del trabajador</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label" style="color:var(--c-tec)">Técnico</div>
+          <ul class="detail-list di-tec">
+            <li>Planos arquitectónicos · planos de instalaciones · especificaciones técnicas</li>
+            <li>Carpeta de ascensores — certificación · carpeta cero · manuales · si aplica</li>
+            <li>Carpeta de instalaciones y equipamiento — manuales y fichas técnicas</li>
+            <li>Certificación de gases SEC — si aplica</li>
+            <li>Garantías vigentes del constructor o inmobiliaria — si aplica</li>
+            <li>Listado de proveedores y subcontratistas del proyecto original — si aplica</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label" style="color:var(--c-seg)">Seguridad</div>
+          <ul class="detail-list di-seg">
+            <li>Plan de emergencia y evacuación — incluye unidades con condiciones especiales</li>
+            <li>Póliza de seguro de incendio vigente</li>
+            <li>Certificación de extintores vigente</li>
+            <li>Certificación red húmeda y seca — si aplica</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label" style="color:var(--c-doc)">Documental — claves de acceso</div>
+          <ul class="detail-list di-doc">
+            <li>Claves organismos públicos — SII · Dirección del Trabajo</li>
+            <li>Claves previsionales — Previred · portal licencias · AFC</li>
+            <li>Claves operativas — plataforma de gestión · correo principal y secundario</li>
+            <li>Claves corrientes débiles — CCTV · alarmas · portones</li>
+            <li>Registro de copropietarios y residentes</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+    <div class="conv-band">Inicio de dos líneas paralelas: Operación mensual + Auditoría</div>
+    <div class="arrow"></div>
+
+    <div class="parallel-wrap">
+      <div>
+        <div class="parallel-label par-op">Operación mensual continua</div>
+
+        <div class="node n-fin" onclick="toggle(this)" style="border-radius:0 var(--radius) var(--radius) var(--radius)">
+          <div class="node-header">
+            <span class="node-type">Financiero</span>
+            <span class="node-title">Gestión financiera</span>
+            <span class="node-toggle">+</span>
+          </div>
+          <div class="node-sub">Ciclo mensual de ingresos, egresos y fondos</div>
+          <div class="detail">
+            <div class="detail-section">
+              <div class="detail-label">Ingresos</div>
+              <ul class="detail-list di-fin">
+                <li>Emitir boletines de cobro por unidad según tabla de prorrateo</li>
+                <li>Registro actualizado de pagos, saldos y deudas por unidad y fondo</li>
+                <li>Certificados de estado de deuda (Art. 20 Ley 21.442)</li>
+                <li>Informar al comité acciones de cobro a morosos</li>
+              </ul>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">Egresos</div>
+              <ul class="detail-list di-fin">
+                <li>Servicios básicos de bienes comunes: luz · agua · gas con comprobantes</li>
+                <li>Remuneraciones, cotizaciones previsionales y seguros del personal</li>
+                <li>Proveedores: mantenciones y servicios con verificadores de gasto y facturas</li>
+                <li>Seguros de incendio y catástrofe de espacios comunes: pago de prima y renovación anual</li>
+              </ul>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">Fondos y control</div>
+              <ul class="detail-list di-fin">
+                <li>Mantener y custodiar fondo de reserva para gastos imprevistos</li>
+                <li>Administrar fondo operacional mensual de gastos corrientes</li>
+                <li>Conciliación bancaria mensual con cartolas adjuntas</li>
+                <li>Balance ingresos/egresos detallado para el comité (Art. 21)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow short"></div>
+
+        <div class="node n-lab" onclick="toggle(this)">
+          <div class="node-header">
+            <span class="node-type">Laboral</span>
+            <span class="node-title">Gestión laboral</span>
+            <span class="node-toggle">+</span>
+          </div>
+          <div class="node-sub">Ciclo mensual del empleador</div>
+          <div class="detail">
+            <div class="detail-section">
+              <div class="detail-label">Ciclo mensual</div>
+              <ul class="detail-list di-lab">
+                <li>Liquidaciones de sueldo y pago de cotizaciones vía Previred</li>
+                <li>F29 / F30 mensual — 12 últimos siempre disponibles</li>
+                <li>F30-1 para empresas externas y subcontratistas</li>
+                <li>Registro de licencias médicas, vacaciones y cargas familiares</li>
+              </ul>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">Marco normativo</div>
+              <ul class="detail-list di-lab">
+                <li>RIOHS · ODI · adhesión a organismos · directiva de funcionamiento</li>
+                <li>Autorización de jornada excepcional (DT) cuando aplica</li>
+                <li>DS44 y Ley Karin: protocolos vigentes y actualizados</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow short"></div>
+
+        <div class="node n-tec" onclick="toggle(this)">
+          <div class="node-header">
+            <span class="node-type">Técnico</span>
+            <span class="node-title">Gestión técnica y mantenciones</span>
+            <span class="node-toggle">+</span>
+          </div>
+          <div class="node-sub">Plan preventivo + protocolo de incidencias con SLA</div>
+          <div class="detail">
+            <div class="detail-section">
+              <div class="detail-label">Mantenciones preventivas</div>
+              <table class="sla-table">
+                <tr><td>Sistema</td><td>Mantención / Acción</td><td>Frecuencia</td></tr>
+                <tr><td rowspan="2"><strong>Ascensores</strong></td><td>Mantención preventiva</td><td>Mensual</td></tr>
+                <tr><td>Certificación MINVU (Ley 20.296)</td><td>Cada 1–2 años</td></tr>
+                <tr><td rowspan="3"><strong>Calderas</strong></td><td>Mantención preventiva</td><td>Mensual</td></tr>
+                <tr><td>Revisión de seguridad (válvulas y manómetros)</td><td>Anual</td></tr>
+                <tr><td>Prueba hidráulica (certificación)</td><td>Cada 3 años</td></tr>
+                <tr><td><strong>Grupo electrógeno</strong></td><td>Mantención preventiva</td><td>Mensual</td></tr>
+                <tr><td rowspan="2"><strong>Bombas de agua</strong></td><td>Revisión técnica</td><td>Mensual</td></tr>
+                <tr><td>Limpieza de estanques</td><td>Anual</td></tr>
+                <tr><td><strong>Red húmeda y seca</strong></td><td>Revisión y prueba</td><td>Semestral</td></tr>
+                <tr><td><strong>Extintores</strong></td><td>Mantención y recarga</td><td>Anual</td></tr>
+                <tr><td><strong>Portones automáticos</strong></td><td>Mantención preventiva</td><td>Mensual / Bimestral</td></tr>
+                <tr><td><strong>Gas (sello verde)</strong></td><td>Certificación TC6 (SEC)</td><td>Cada 2 años</td></tr>
+                <tr><td rowspan="2"><strong>Climatización y extracción</strong></td><td>Extractores de aire</td><td>Trimestral</td></tr>
+                <tr><td>Aire acondicionado</td><td>Semestral</td></tr>
+                <tr><td rowspan="2"><strong>Piscina</strong></td><td>Temporada alta</td><td>Diaria / Semanal</td></tr>
+                <tr><td>Temporada baja</td><td>Quincenal</td></tr>
+                <tr><td><strong>CCTV y control de accesos</strong></td><td>Revisión técnica</td><td>Trimestral</td></tr>
+                <tr><td><strong>Citofonía</strong></td><td>Revisión y mantención</td><td>Semestral</td></tr>
+                <tr><td><strong>Cierres perimetrales</strong></td><td>Revisión y mantención</td><td>Trimestral</td></tr>
+                <tr><td><strong>Shafts / ductos de basura</strong></td><td>Limpieza y mantención</td><td>Semestral</td></tr>
+                <tr><td><strong>Techumbres y canaletas</strong></td><td>Inspección y limpieza</td><td>Anual</td></tr>
+                <tr><td><strong>Pintura fachada</strong></td><td>Mantención y pintura</td><td>Cada 3–5 años</td></tr>
+                <tr><td rowspan="4"><strong>Jardín y áreas verdes</strong></td><td>Mantención de jardín</td><td>Semanal</td></tr>
+                <tr><td>Poda de árboles</td><td>Anual</td></tr>
+                <tr><td>Sistema de riego automático</td><td>Trimestral</td></tr>
+                <tr><td>Control de plagas</td><td>Bimensual</td></tr>
+                <tr><td><strong>Aseo áreas comunes</strong></td><td>Limpieza general</td><td>Diario</td></tr>
+                <tr><td><strong>Plan de emergencia</strong></td><td>Actualización y simulacros</td><td>Anual</td></tr>
+              </table>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">SLA de incidencias</div>
+              <table class="sla-table">
+                <tr><td>Urgencia</td><td>Descripción</td><td>Respuesta</td></tr>
+                <tr><td class="sla-alta">Alta</td><td>Riesgo de vida o daño estructural</td><td class="sla-alta">&lt; 2h</td></tr>
+                <tr><td class="sla-media">Media</td><td>Servicios esenciales afectados</td><td class="sla-media">&lt; 24h</td></tr>
+                <tr><td class="sla-baja">Baja</td><td>Mantención no urgente</td><td class="sla-baja">&lt; 5 días</td></tr>
+              </table>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">Proveedores</div>
+              <ul class="detail-list di-tec">
+                <li>Registro actualizado de proveedores con ejecutivos de cuenta</li>
+                <li>Contratos de servicios vigentes con bitácoras de mantención por sistema</li>
+                <li>Comprobantes de pago y pólizas de seguro de contratistas</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow short"></div>
+
+        <div class="node n-seg" onclick="toggle(this)">
+          <div class="node-header">
+            <span class="node-type">Seguridad</span>
+            <span class="node-title">Gestión de seguridad</span>
+            <span class="node-toggle">+</span>
+          </div>
+          <div class="node-sub">DS44 · seguros · emergencias</div>
+          <div class="detail">
+            <div class="detail-section">
+              <ul class="detail-list di-seg">
+                <li>Plan de emergencia y evacuación actualizado anualmente</li>
+                <li>Simulacros realizados con registro de participación</li>
+                <li>Póliza de seguro de incendio y todo riesgo de bienes comunes vigente</li>
+                <li>Supervisar operatividad de CCTV · portones · control de acceso</li>
+                <li>Protocolo Ley Karin vigente y comunicado al personal</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow short"></div>
+
+        <div class="node n-legal" onclick="toggle(this)">
+          <div class="node-header">
+            <span class="node-type">Legal</span>
+            <span class="node-title">Gestión comunitaria y asambleas</span>
+            <span class="node-toggle">+</span>
+          </div>
+          <div class="node-sub">Comité · asamblea · reglamento · convivencia</div>
+          <div class="detail">
+            <div class="detail-section">
+              <div class="detail-label">Comité de administración (mensual)</div>
+              <ul class="detail-list di-legal">
+                <li>Convocar y presidir reunión mensual del comité (Art. 21)</li>
+                <li>Presentar rendición: balance · egresos · cartolas bancarias</li>
+                <li>Documentación disponible 24h antes de la sesión (Art. 21)</li>
+                <li>Informar gestiones de cobro a morosos (Art. 20 inc. 4)</li>
+              </ul>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">Asamblea de copropietarios</div>
+              <ul class="detail-list di-legal">
+                <li>Convocatoria formal con documentos 24h antes</li>
+                <li>Sesión ordinaria o extraordinaria según corresponda</li>
+                <li>Votación del balance anual (Art. 14)</li>
+                <li>Reducción a escritura pública si hay acuerdos que lo requieran</li>
+              </ul>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">Reglamento y convivencia</div>
+              <ul class="detail-list di-legal">
+                <li>Velar por cumplimiento del reglamento de copropiedad y reglamento interno</li>
+                <li>Aplicar multas y sanciones conforme al reglamento</li>
+                <li>Mantener libro de actas actualizado con todos los acuerdos</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div>
+        <div class="parallel-label par-aud">Auditoría paralela — Línea 3 aplicada a Línea 1</div>
+
+        <div class="node n-audit" onclick="toggle(this)" style="border-radius:0 var(--radius) var(--radius) var(--radius)">
+          <div class="node-header">
+            <span class="node-type">Auditoría</span>
+            <span class="node-title">Proceso de auditoría en 10 etapas</span>
+            <span class="node-toggle">+</span>
+          </div>
+          <div class="node-sub">Corre en paralelo con Línea 1 desde la firma · propósito: regularizar y reducir riesgos · no aplica en Línea 2 (comunidad nueva)</div>
+          <div class="detail">
+            <div class="aud-steps">
+              <div class="aud-step"><div class="aud-n">1</div><div class="aud-body"><div class="aud-t">5.1 Planificación</div><div class="aud-d">Definir período, áreas, marco de criterios (Ley 21.442, DS44, Ley Karin, reglamento, contratos) y checklist de cumplimiento.</div></div></div>
+              <div class="aud-step"><div class="aud-n">2</div><div class="aud-body"><div class="aud-t">5.2 Recopilación de información</div><div class="aud-d">Solicitar al comité: cartolas, rendiciones, contratos, cotizaciones, pólizas, bitácoras. Validar integridad: existencia, completitud, coherencia.</div></div></div>
+              <div class="aud-step"><div class="aud-n">3</div><div class="aud-body"><div class="aud-t">5.3 Evaluación del control interno</div><div class="aud-d">Analizar autorización de gastos, segregación de funciones, registro oportuno, control de ingresos y egresos.</div></div></div>
+              <div class="aud-step"><div class="aud-n">4</div><div class="aud-body"><div class="aud-t">5.4 Pruebas de auditoría</div><div class="aud-d">Conciliación bancaria · validación de egresos e ingresos · revisión de rendiciones · verificación laboral (F30, contratos) · contratos y mantenciones.</div></div></div>
+              <div class="aud-step"><div class="aud-n">5</div><div class="aud-body"><div class="aud-t">5.5 Identificación de hallazgos</div><div class="aud-d">Comparar condición observada vs. criterio. Incluye incumplimientos, falta de respaldo, debilidades de control.</div></div></div>
+              <div class="aud-step"><div class="aud-n">6</div><div class="aud-body"><div class="aud-t">5.6 Documentación de hallazgos</div><div class="aud-d">Por hallazgo: descripción · criterio · causa raíz · efecto/impacto · recomendación · responsable · plazo.</div></div></div>
+              <div class="aud-step"><div class="aud-n">7</div><div class="aud-body"><div class="aud-t">5.7 Evaluación de riesgos</div><div class="aud-d">Matriz impacto × probabilidad. Dimensiones: normativo, económico, operacional.</div></div></div>
+              <div class="aud-step"><div class="aud-n">8</div><div class="aud-body"><div class="aud-t">5.8 Informe de auditoría</div><div class="aud-d">Resumen ejecutivo · alcance · criterios · hallazgos priorizados · recomendaciones específicas.</div></div></div>
+              <div class="aud-step"><div class="aud-n">9</div><div class="aud-body"><div class="aud-t">5.9 Presentación al comité</div><div class="aud-d">Exposición de hallazgos críticos, dimensionamiento de riesgos, acuerdos de implementación.</div></div></div>
+              <div class="aud-step"><div class="aud-n">S</div><div class="aud-body"><div class="aud-t">5.10 Seguimiento (opcional)</div><div class="aud-d">Verificar implementación: cerrado / en proceso / no implementado. Genera informe de seguimiento.</div></div></div>
+            </div>
+            <div style="margin-top:14px;padding:10px 12px;background:rgba(139,80,40,.08);border-radius:8px;font-size:11.5px;color:var(--c-l3);font-weight:500;line-height:1.5">
+              Los hallazgos se retroalimentan directamente a la operación como ítems de regularización sin detener la gestión cotidiana.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-fin" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Financiero</span>
+        <span class="node-title">Rendición de cuentas</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Art. 14, 20 y 21 Ley N°21.442 · mensual al comité · anual en asamblea</div>
+      <div class="area-pills"><span class="area-pill pill-fin">Financiero</span><span class="area-pill pill-legal">Legal</span><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <div class="detail-label">Contenido mínimo (Art. 14 y 21)</div>
+          <ul class="detail-list di-fin">
+            <li>Cuenta documentada: balance de ingresos y egresos con verificadores de cada gasto</li>
+            <li>Detalle de remuneraciones y pagos de seguridad social</li>
+            <li>Saldo de caja: cartolas de todas las cuentas corrientes adjuntas</li>
+            <li>Respaldo de certificaciones y seguros contratados</li>
+            <li>Documentación disponible 24h antes de la sesión del comité o asamblea</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Proceso de aprobación (Art. 14)</div>
+          <ul class="detail-list di-fin">
+            <li>Comité somete balance a votación</li>
+            <li>Si hay observaciones: administrador responde en 15 días hábiles</li>
+            <li>Nueva sesión o consulta escrita hasta aprobación definitiva</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 2 — LÍNEA 2: NUEVA ADMINISTRACIÓN
+══════════════════════════════════════════ -->
+<div class="section-block tab-panel" data-panel="operacion">
+  <div class="section-label l2">
+    <span class="line-pill" style="background:var(--c-l2);color:#fff">Línea 2</span>
+    Nueva administración — primera administración o comunidad sin historial
+  </div>
+  <div class="flow-wrap">
+
+    <div class="node n-doc" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Fase 1</span>
+        <span class="node-title">Recepción inmobiliaria (si aplica)</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Solo para comunidades nuevas · con representante de la inmobiliaria</div>
+      <div class="area-pills"><span class="area-pill pill-legal">Legal</span><span class="area-pill pill-tec">Técnico</span><span class="area-pill pill-seg">Seguridad</span><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <ul class="detail-list di-mix">
+            <li>Primer reglamento de copropiedad original</li>
+            <li>Permiso de edificación · recepción final DOM · certificado de acogimiento al régimen</li>
+            <li>Carpeta cero de ascensores · certificaciones de gas · planos y manuales de instalaciones</li>
+            <li>Póliza de seguro de incendio inicial y plan de emergencia</li>
+            <li>Listado de proveedores y subcontratistas del proyecto</li>
+            <li>Garantías vigentes del constructor</li>
+            <li>Tabla de prorrateo inicial: derechos y cuotas de obligaciones económicas por unidad</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-doc" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Fase 2</span>
+        <span class="node-title">Configuración inicial de sistemas</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Plataforma · registros · fondos · proveedores · personal</div>
+      <div class="area-pills"><span class="area-pill pill-fin">Financiero</span><span class="area-pill pill-lab">Laboral</span><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <ul class="detail-list di-doc">
+            <li>Configurar comunidad en plataforma de gestión: unidades, tipos, prorrateadores</li>
+            <li>Levantar registro completo de copropietarios con datos de contacto y condiciones especiales</li>
+            <li>Crear tablas de prorrateo: derechos y cuotas de obligaciones económicas</li>
+            <li>Abrir o transferir cuentas bancarias y configurar accesos</li>
+            <li>Contratar servicios esenciales: aseo · seguridad · mantenciones prioritarias</li>
+            <li>Contratar personal si aplica: carpeta laboral completa desde el primer día</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-legal" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Legal</span>
+        <span class="node-title">Primera asamblea de copropietarios</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Constitución del comité · escritura pública · inscripción CBR</div>
+      <div class="area-pills"><span class="area-pill pill-legal">Legal</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <ul class="detail-list di-legal">
+            <li>Convocatoria formal con documentación 24h antes</li>
+            <li>Presentación del plan de trabajo y honorarios</li>
+            <li>Elección y constitución del Comité de Administración</li>
+            <li>Reducción a escritura pública del acuerdo de nombramiento (Art. 18 Ley 21.442)</li>
+            <li>Inscripción del administrador en CBR</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+    <div class="conv-band">Desde el segundo mes → converge con Línea 1 en todos los módulos operativos</div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 3 — LÍNEA 3: ASESORÍA Y AUDITORÍA
+══════════════════════════════════════════ -->
+<div class="section-block tab-panel" data-panel="auditoria">
+  <div class="section-label l3">
+    <span class="line-pill" style="background:var(--c-l3);color:#fff">Línea 3</span>
+    Asesoría y auditoría — comunidad con administrador activo · servicio externo
+  </div>
+  <div class="flow-wrap">
+
+    <div class="node n-audit" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapa 1</span>
+        <span class="node-title">Planificación</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Alcance · período · áreas · criterios · checklist</div>
+      <div class="area-pills"><span class="area-pill pill-legal">Legal</span><span class="area-pill pill-fin">Financiero</span><span class="area-pill pill-lab">Laboral</span><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <ul class="detail-list di-mix">
+            <li>Definir período a auditar y características de la comunidad</li>
+            <li>Determinar áreas: financiera · rendición de cuentas · laboral · operacional</li>
+            <li>Construir marco de criterios: Ley 21.442 · reglamento · DS44 · Ley Karin · Ley 21.659 · contratos</li>
+            <li>Traducir criterios en checklist de cumplimiento operativo</li>
+            <li>Identificación preliminar de riesgos (cualitativa)</li>
+            <li>Elaborar programa de auditoría</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-audit" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapas 2–4</span>
+        <span class="node-title">Recopilación, control interno y pruebas</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Obtener evidencia · evaluar controles · ejecutar pruebas</div>
+      <div class="area-pills"><span class="area-pill pill-fin">Financiero</span><span class="area-pill pill-lab">Laboral</span><span class="area-pill pill-tec">Técnico</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <div class="detail-label">5.2 Recopilación</div>
+          <ul class="detail-list di-fin">
+            <li>Cartolas bancarias · rendiciones · contratos · pagos previsionales · pólizas · bitácoras</li>
+            <li>Validar integridad: existencia · completitud · coherencia entre documentos</li>
+            <li>Registrar faltantes — pueden constituir hallazgos en sí mismos</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">5.3 Control interno</div>
+          <ul class="detail-list di-fin">
+            <li>Autorización de gastos y segregación de funciones</li>
+            <li>Registro oportuno de operaciones y consistencia entre registros</li>
+            <li>Determinar nivel de confiabilidad del sistema de información</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">5.4 Pruebas de auditoría</div>
+          <ul class="detail-list di-fin">
+            <li>Conciliación bancaria completa</li>
+            <li>Validación de egresos e ingresos contra respaldos</li>
+            <li>Revisión de rendiciones de cuentas históricas</li>
+            <li>Verificación laboral: F30 · contratos · cotizaciones · OS-10</li>
+            <li>Revisión de contratos de servicios y bitácoras de mantención</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-audit" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapas 5–7</span>
+        <span class="node-title">Hallazgos, documentación y riesgos</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Identificar desviaciones · documentar · priorizar por riesgo</div>
+      <div class="area-pills"><span class="area-pill pill-legal">Legal</span><span class="area-pill pill-fin">Financiero</span><span class="area-pill pill-lab">Laboral</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <div class="detail-label">5.5 Identificación de hallazgos</div>
+          <ul class="detail-list di-mix">
+            <li>Comparar condición observada vs. criterio aplicable (Ley 21.442, DS44, contratos)</li>
+            <li>Incluye: incumplimientos · falta de respaldo · inconsistencias · debilidades de control</li>
+            <li>Cada hallazgo sustentado en evidencia verificable y objetiva</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">5.6 Documentación de hallazgos</div>
+          <ul class="detail-list di-mix">
+            <li>Descripción del hallazgo · criterio aplicado · causa raíz</li>
+            <li>Efecto/impacto (idealmente cuantificado) · recomendación específica</li>
+            <li>Responsable de implementar la corrección · plazo definido</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">5.7 Evaluación y priorización de riesgos</div>
+          <ul class="detail-list di-mix">
+            <li>Matriz impacto × probabilidad para cada hallazgo</li>
+            <li>Dimensiones: normativo (Ley 21.442) · económico · operacional</li>
+            <li>Clasificación de criticidad para orientar decisiones del comité</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-audit" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapas 8–9</span>
+        <span class="node-title">Informe y presentación al comité</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Consolidar resultados · presentar · acordar plan de acción</div>
+      <div class="area-pills"><span class="area-pill pill-doc">Documental</span><span class="area-pill pill-legal">Legal</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <div class="detail-label">5.8 Informe de auditoría</div>
+          <ul class="detail-list di-doc">
+            <li>Resumen ejecutivo con principales resultados y riesgos</li>
+            <li>Alcance, período evaluado y limitaciones de información</li>
+            <li>Criterios utilizados: Ley 21.442 · reglamento · DS44 · contratos</li>
+            <li>Hallazgos priorizados por nivel de riesgo con recomendaciones</li>
+          </ul>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">5.9 Presentación al comité</div>
+          <ul class="detail-list di-doc">
+            <li>Exposición de hallazgos críticos y dimensionamiento de riesgos</li>
+            <li>Priorización de acciones correctivas con el comité</li>
+            <li>Validación del informe · resolución de consultas · acuerdos de implementación</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-audit" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Etapa 10 (opcional)</span>
+        <span class="node-title">Seguimiento post-auditoría</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Servicio complementario · verificar implementación de correctivos</div>
+      <div class="area-pills"><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <ul class="detail-list di-doc">
+            <li>Cada hallazgo se clasifica: <strong>Cerrado</strong> · <strong>En proceso</strong> · <strong>No implementado</strong></li>
+            <li>Contrastar situación original con estado actual</li>
+            <li>Verificar que la causa raíz haya sido abordada</li>
+            <li>Proponer medidas complementarias si la solución es insuficiente</li>
+            <li>Generar informe de seguimiento complementario al informe original</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CICLO MENSUAL Y DECISIONES RECURRENTES
+══════════════════════════════════════════ -->
+<div class="section-block tab-panel" data-panel="operacion">
+  <div class="section-label lx">
+    <span class="line-pill" style="background:#6B6359;color:#fff">Ciclo</span>
+    Ciclo operativo mensual — aplica a Líneas 1 y 2
+  </div>
+  <div class="flow-wrap">
+
+    <div class="node n-mix" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Mensual</span>
+        <span class="node-title">Matriz de cumplimiento mensual</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Revisión de 6 áreas · detecta brechas antes de que escalen</div>
+      <div class="area-pills">
+        <span class="area-pill pill-legal">Legal</span><span class="area-pill pill-fin">Financiero</span>
+        <span class="area-pill pill-lab">Laboral</span><span class="area-pill pill-tec">Técnico</span>
+        <span class="area-pill pill-seg">Seguridad</span><span class="area-pill pill-doc">Documental</span>
+      </div>
+      <div class="detail">
+        <div class="detail-section">
+          <table class="sla-table">
+            <tr><td>Área</td><td>Indicadores clave</td></tr>
+            <tr><td><strong>Gobernanza</strong></td><td>Actas al día · reglamento vigente · comité en escritura pública</td></tr>
+            <tr><td><strong>Laboral</strong></td><td>F30 sin deudas · contratos vigentes · cotizaciones al día · DS44 · Ley Karin</td></tr>
+            <tr><td><strong>Seguridad DS44</strong></td><td>Plan emergencia actualizado · extintores vigentes · simulacros realizados</td></tr>
+            <tr><td><strong>Financiero</strong></td><td>Rendición al día · conciliación bancaria · fondos sin déficit</td></tr>
+            <tr><td><strong>Técnico</strong></td><td>Certificaciones vigentes · bitácoras actualizadas · proveedores con contrato</td></tr>
+            <tr><td><strong>Comunidad</strong></td><td>Solicitudes respondidas en plazo · comunicaciones emitidas</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="decision-node">
+      <div class="dec-question"><span class="dec-diamond">◆</span> Decisión 3 — ¿La matriz de cumplimiento está OK?</div>
+      <div class="dec-sub">Revisión mensual de los 6 indicadores clave</div>
+      <div class="branches">
+        <div class="branch branch-si">
+          <div class="branch-label">Sí — operación normal</div>
+          <ul class="branch-list">
+            <li>Reportar puntaje al comité en reunión mensual</li>
+            <li>Incluir en reporte mensual con acta firmada</li>
+            <li>Mantener monitoreo continuo</li>
+          </ul>
+        </div>
+        <div class="branch branch-no">
+          <div class="branch-label">No — plan correctivo</div>
+          <ul class="branch-list">
+            <li>Identificar brechas por área</li>
+            <li>Elevar al comité con urgencia</li>
+            <li>Reunión extraordinaria si riesgo alto</li>
+            <li>Plan: hitos · responsables · plazos</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="decision-node">
+      <div class="dec-question"><span class="dec-diamond">◆</span> Decisión 4 — ¿Hay incidencia crítica?</div>
+      <div class="dec-sub">Reporte vía formulario · QR · WhatsApp</div>
+      <div class="branches">
+        <div class="branch branch-si">
+          <div class="branch-label">Sí — protocolo de emergencia</div>
+          <ul class="branch-list">
+            <li>Clasificar: Alta / Media / Baja</li>
+            <li>Activar proveedor según SLA</li>
+            <li>Avisar al comité si gasto supera monto autorizado</li>
+            <li>Registrar en formulario de incidencia</li>
+          </ul>
+          <div class="branch-tag">Alta &lt;2h · Media &lt;24h · Baja &lt;5 días</div>
+        </div>
+        <div class="branch branch-no">
+          <div class="branch-label">No — operación rutinaria</div>
+          <ul class="branch-list">
+            <li>Seguir plan de mantención preventiva</li>
+            <li>Procesar solicitudes estándar</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-fin" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Mensual</span>
+        <span class="node-title">Reporte mensual al comité</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Primeros 5 días del mes siguiente · acta firmada</div>
+      <div class="area-pills"><span class="area-pill pill-fin">Financiero</span><span class="area-pill pill-legal">Legal</span><span class="area-pill pill-doc">Documental</span></div>
+      <div class="detail">
+        <div class="detail-section">
+          <ul class="detail-list di-fin">
+            <li>Balance ingresos / egresos con verificadores de cada gasto</li>
+            <li>Cartolas bancarias de todas las cuentas corrientes</li>
+            <li>Estado de incidencias abiertas y cerradas en el período</li>
+            <li>Resultado de la matriz de cumplimiento mensual</li>
+            <li>Acta de la reunión del comité firmada por los participantes</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     RENOVACIÓN / TÉRMINO
+══════════════════════════════════════════ -->
+<div class="section-block tab-panel" data-panel="operacion">
+  <div class="section-label lx">
+    <span class="line-pill" style="background:#6B6359;color:#fff">Anual</span>
+    Decisión anual — renovación o término del mandato
+  </div>
+  <div class="flow-wrap">
+
+    <div class="decision-node">
+      <div class="dec-question"><span class="dec-diamond">◆</span> Decisión 5 — ¿Se renueva el contrato?</div>
+      <div class="dec-sub">Al vencer los 12 meses mínimo</div>
+      <div class="branches">
+        <div class="branch branch-si">
+          <div class="branch-label">Sí — renovación</div>
+          <ul class="branch-list">
+            <li>Revisión anual del plan y ajuste de objetivos</li>
+            <li>Encuesta de satisfacción a la comunidad</li>
+            <li>↻ Vuelve al ciclo operativo mensual</li>
+          </ul>
+        </div>
+        <div class="branch branch-no">
+          <div class="branch-label">No — término formal</div>
+          <ul class="branch-list">
+            <li>Aviso mínimo 30 días (cláusula 8)</li>
+            <li>Toda la documentación se entrega al comité</li>
+            <li>Firma Acta Entrega-Recepción con el comité</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+
+    <div class="node n-mix" onclick="toggle(this)">
+      <div class="node-header">
+        <span class="node-type">Término</span>
+        <span class="node-title">Entrega de documentación al comité</span>
+        <span class="node-toggle">+</span>
+      </div>
+      <div class="node-sub">Proceso simétrico al inicio · entrega al comité, no al administrador entrante</div>
+      <div class="area-pills">
+        <span class="area-pill pill-legal">Legal</span><span class="area-pill pill-fin">Financiero</span>
+        <span class="area-pill pill-lab">Laboral</span><span class="area-pill pill-tec">Técnico</span>
+        <span class="area-pill pill-seg">Seguridad</span><span class="area-pill pill-doc">Documental</span>
+      </div>
+      <div class="detail">
+        <div class="detail-section">
+          <ul class="detail-list di-mix">
+            <li><strong>Legal:</strong> Reglamentos · escrituras · certificados DOM/CBR · libro de actas histórico</li>
+            <li><strong>Financiero:</strong> Conciliación bancaria histórica · saldos por fondo · rendición final aprobada</li>
+            <li><strong>Laboral:</strong> Carpetas laborales completas: personal vigente y no vigente con finiquitos</li>
+            <li><strong>Técnico:</strong> Planos · manuales · garantías vigentes · bitácoras de mantención por sistema</li>
+            <li><strong>Seguridad:</strong> Pólizas de seguro vigentes · contratos de proveedores activos con contactos</li>
+            <li><strong>Documental:</strong> Claves: SII · DT · Previred · banca · plataforma · CCTV · correos</li>
+            <li><strong>Documental:</strong> Registro actualizado de copropietarios · residentes · deudas morosas · saldos por unidad</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"></div>
+    <div class="conv-band">Cierre del ciclo — entrega de documentación al comité · firma Acta Entrega-Recepción</div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+function toggle(node) {
+  node.classList.toggle('open');
+}
+function setFlujoTab(t){
+  document.querySelectorAll('.flujo-tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===t));
+  document.querySelectorAll('.tab-panel[data-panel]').forEach(p=>{
+    p.classList.toggle('active', p.dataset.panel===t);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrollTop');
+  btn.classList.toggle('visible', window.scrollY > 400);
+});
+</script>
+</body>
+</html>
