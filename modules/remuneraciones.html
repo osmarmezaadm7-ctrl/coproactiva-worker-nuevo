@@ -205,6 +205,37 @@
 
   .rem-link-orange { font-size:11px; font-weight:700; color:var(--co-orange); cursor:pointer; background:none; border:none; padding:0; margin-top:8px; display:inline-block; font-family:var(--co-font); }
 
+  /* ── Liquidaciones — fila responsiva ──────────────────────────────── */
+  .liq-row-hdr {
+    display:grid; grid-template-columns:90px 1fr 1fr 70px 90px 28px; gap:8px;
+    padding:8px 14px; border-bottom:1px solid var(--co-line);
+    font-size:10px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--co-mute);
+  }
+  .liq-row-data {
+    display:grid; grid-template-columns:90px 1fr 1fr 70px 90px 28px; gap:8px;
+    padding:12px 14px; align-items:center; cursor:pointer;
+  }
+  .liq-row-data .liq-cell-liquido { font-size:13px; font-weight:700; color:var(--co-orange); }
+  .liq-row-data .liq-cell-desc    { font-size:13px; color:var(--co-ink); }
+  .liq-row-data .liq-cell-dias    { font-size:13px; color:var(--co-ink); }
+  .liq-mv-only { display:none; }
+
+  @media (max-width: 600px) {
+    .liq-row-hdr { display:none; }
+    .liq-row-data {
+      display:block;
+      padding:14px 16px;
+    }
+    .liq-dt-only { display:none; }
+    .liq-mv-only { display:block; }
+    .liq-mv-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .liq-mv-nums { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+    .liq-mv-lbl { font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--co-mute); margin-bottom:2px; }
+    .liq-mv-nums .liq-cell-liquido,
+    .liq-mv-nums .liq-cell-desc,
+    .liq-mv-nums .liq-cell-dias { display:block; font-size:13px; }
+  }
+
   /* ── Media queries móvil ───────────────────────────────────────────── */
   @media (max-width: 600px) {
     .rem-ficha-kpis { grid-template-columns: 1fr 1fr; }
@@ -1185,26 +1216,44 @@
         var card = document.createElement('div');
         card.className = 'rem-ficha-card';
         card.style.padding = '0';
-        var hdr = document.createElement('div');
-        hdr.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 100px 32px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--co-line);font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--co-mute)';
-        hdr.innerHTML = '<span>Per\u00edodo</span><span>Total haberes</span><span>L\u00edquido</span><span>Estado</span><span></span>';
-        card.appendChild(hdr);
         if (!lista.length) {
           var empty = document.createElement('div');
           empty.style.cssText = 'padding:32px;text-align:center;color:var(--co-mute);font-size:12px';
-          empty.textContent = 'A\u00fan no hay liquidaciones cerradas para este colaborador.';
+          empty.textContent = 'A\u00fan no hay liquidaciones pagadas para este colaborador.';
           card.appendChild(empty);
         } else {
+          var hdr = document.createElement('div');
+          hdr.className = 'liq-row-hdr';
+          hdr.innerHTML = '<span>Per\u00edodo</span><span>L\u00edquido a pagar</span><span>Descuentos prev.</span><span>D\u00edas</span><span>Estado</span><span></span>';
+          card.appendChild(hdr);
+
           lista.forEach(function(liq) {
             var row = document.createElement('div');
             row.style.cssText = 'border-bottom:1px solid var(--co-line)';
+
+            var descPrev = (liq.cotizacionAfp || 0) + (liq.cotizacionSalud || 0) + (liq.cotizacionSC || 0);
+            var diasLbl  = (liq.diasTrabajados || 30) + '/30';
+
             var resumen = document.createElement('div');
-            resumen.style.cssText = 'display:grid;grid-template-columns:90px 1fr 1fr 100px 32px;gap:8px;padding:12px 14px;align-items:center;cursor:pointer';
-            resumen.innerHTML = _liqPeriodoLabel(liq.periodo) +
-              '<span style="font-size:13px;color:var(--co-ink)">' + fmtPeso(liq.totalHaberes) + '</span>' +
-              '<span style="font-size:13px;color:var(--co-ink)">' + fmtPeso(liq.liquidoAPagar) + '</span>' +
-              '<span>' + _liqBadge(liq.estado) + '</span>' +
-              '<span class="liq-chev" style="color:var(--co-mute);font-size:14px"><i class="ti ti-chevron-down" aria-hidden="true"></i></span>';
+            resumen.className = 'liq-row-data';
+            resumen.innerHTML =
+              '<div class="liq-dt-only">' + _liqPeriodoLabel(liq.periodo) + '</div>' +
+              '<div class="liq-dt-only"><span class="liq-cell-liquido">' + fmtPeso(liq.liquidoAPagar) + '</span></div>' +
+              '<div class="liq-dt-only"><span class="liq-cell-desc">' + fmtPeso(descPrev) + '</span></div>' +
+              '<div class="liq-dt-only"><span class="liq-cell-dias">' + diasLbl + '</span></div>' +
+              '<div class="liq-dt-only">' + _liqBadge(liq.estado) + '</div>' +
+              '<div class="liq-dt-only liq-chev" style="color:var(--co-mute);font-size:14px"><i class="ti ti-chevron-down" aria-hidden="true"></i></div>' +
+              '<div class="liq-mv-only">' +
+                '<div class="liq-mv-top">' + _liqPeriodoLabel(liq.periodo) +
+                  '<span style="display:flex;align-items:center;gap:8px">' + _liqBadge(liq.estado) +
+                  '<span class="liq-chev" style="color:var(--co-mute);font-size:14px"><i class="ti ti-chevron-down" aria-hidden="true"></i></span></span>' +
+                '</div>' +
+                '<div class="liq-mv-nums">' +
+                  '<div><div class="liq-mv-lbl">L\u00edquido</div><span class="liq-cell-liquido">' + fmtPeso(liq.liquidoAPagar) + '</span></div>' +
+                  '<div><div class="liq-mv-lbl">Desc. prev.</div><span class="liq-cell-desc">' + fmtPeso(descPrev) + '</span></div>' +
+                  '<div><div class="liq-mv-lbl">D\u00edas</div><span class="liq-cell-dias">' + diasLbl + '</span></div>' +
+                '</div>' +
+              '</div>';
             var detalle = document.createElement('div');
             detalle.style.cssText = 'display:none;background:var(--co-cream-deep);border-top:1px solid var(--co-line);padding:16px 14px';
             detalle.dataset.liqDet = '1';
@@ -1215,7 +1264,7 @@
               card.querySelectorAll('.liq-chev i').forEach(function(i) { i.style.transform = ''; });
               if (!open) {
                 detalle.style.display = 'block';
-                resumen.querySelector('.liq-chev i').style.transform = 'rotate(180deg)';
+                resumen.querySelectorAll('.liq-chev i').forEach(function(i) { i.style.transform = 'rotate(180deg)'; });
               }
             });
             row.appendChild(resumen);
@@ -1248,7 +1297,7 @@
 
   function _liqBadge(estado) {
     if (estado === 'cerrado') {
-      return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 8px;border-radius:99px;background:var(--co-green-soft);color:var(--co-green)"><i class="ti ti-lock" aria-hidden="true"></i> Cerrado</span>';
+      return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 8px;border-radius:99px;background:var(--co-green-soft);color:var(--co-green)"><i class="ti ti-circle-check" aria-hidden="true"></i> Pagado</span>';
     }
     return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 8px;border-radius:99px;background:var(--co-cream-deep);border:1px solid var(--co-line);color:var(--co-mute)"><i class="ti ti-pencil" aria-hidden="true"></i> Borrador</span>';
   }
