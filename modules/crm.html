@@ -106,6 +106,10 @@
   .crmv2-toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:100000; background:var(--co-ink); color:#fff; padding:12px 16px; border-radius:14px; font-size:13px; font-weight:800; box-shadow:0 18px 44px rgba(31,31,31,.25); }
   .crm-sub-modulo .page-header, .crm-sub-modulo .ph, .crm-sub-modulo .home-header { display:none !important; }
   .crm-sub-modulo { border:1px solid var(--co-line); border-radius:18px; padding:14px; background:#fff; box-shadow:var(--co-shadow-sm); }
+  .crmv2-diag-overlay { position:fixed; inset:0; z-index:99999; background:var(--co-cream); }
+  .crmv2-diag-mount { width:100%; height:100vh; }
+  .crmv2-diag-back { position:absolute; top:16px; left:16px; z-index:2; display:flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--co-line); border-radius:12px; padding:9px 14px; font-size:12.5px; font-weight:800; color:var(--co-ink); box-shadow:var(--co-shadow-sm); cursor:pointer; }
+  .crmv2-diag-back:hover { background:var(--co-cream); }
   @media (max-width:920px) { .crmv2-top, .crmv2-panel-head { flex-direction:column; } .crmv2-actions { justify-content:flex-start; } .crmv2-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .crmv2-grid.two { grid-template-columns:1fr; } .crmv2-form-grid, .crmv2-detail-grid { grid-template-columns:1fr; } .crmv2-kanban { grid-auto-columns:84vw; } }
   @media (max-width:640px) { .crmv2-title { font-size:24px; } .crmv2-summary { grid-template-columns:1fr 1fr; gap:9px; } .crmv2-card { padding:13px; border-radius:15px; } .crmv2-tabs { border-radius:15px; } .crmv2-modal { align-items:flex-end; padding:0; } .crmv2-modal-panel { border-radius:22px 22px 0 0; max-height:92vh; } }
 </style>
@@ -135,7 +139,7 @@
     resumen:     { label:'Resumen',      icon:'ti-layout-dashboard', action:'Actualizar', actionFn: init },
     leads:       { label:'Leads',        icon:'ti-user-search',      action:'Nuevo lead', actionFn: () => openLeadForm() },
     pipeline:    { label:'Pipeline',     icon:'ti-layout-kanban',    action:'Nuevo prospecto', actionFn: () => openProspectForm() },
-    diagnostico: { label:'Diagnóstico',  icon:'ti-stethoscope',      action:'Ir a módulo', actionFn: () => renderExternalTab('diagnostico') },
+    diagnostico: { label:'Diagnóstico',  icon:'ti-stethoscope',      action:'Ir a módulo', actionFn: () => openDiagnosticoFullscreen() },
     recepcion:   { label:'Recepción',    icon:'ti-clipboard-list',   action:'Abrir recepción', actionFn: () => renderExternalTab('recepcion') },
     actividades: { label:'Actividades',  icon:'ti-calendar-check',   action:'Actualizar', actionFn: init },
     plantillas:  { label:'Plantillas',   icon:'ti-mail',             action:'Nueva plantilla', actionFn: () => toast('Usa el módulo de plantillas existente para crear/editar.') },
@@ -206,7 +210,7 @@
       window._crmAccionNuevo = function(){
         if(state.tab === 'leads') openLeadForm();
         else if(state.tab === 'pipeline') openProspectForm();
-        else if(state.tab === 'diagnostico') renderExternalTab('diagnostico');
+        else if(state.tab === 'diagnostico') openDiagnosticoFullscreen();
         else if(state.tab === 'recepcion') renderExternalTab('recepcion');
         else openLeadForm();
       };
@@ -413,8 +417,8 @@
     cont.innerHTML = '<div class="crmv2-grid two"><section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Diagnóstico</h2><p>Solo disponible para prospectos. Para iniciar uno, mueve el prospecto a la etapa Diagnóstico.</p></div><button class="crmv2-btn primary" id="btnLoadDiag"><i class="ti ti-stethoscope"></i> Abrir módulo Diagnóstico</button></div>' +
       '<div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Prospecto</th><th>Contacto</th><th>Acción</th></tr></thead><tbody>' +
       (diag.map(p => '<tr><td><div class="crmv2-name">' + esc(prospectName(p)) + '</div><div class="crmv2-muted">' + esc(comunaOf(p)) + '</div></td><td>' + esc(contactName(p)) + '</td><td><button class="crmv2-btn orange" data-start-diag="' + esc(p.id) + '"><i class="ti ti-stethoscope"></i> Iniciar / continuar</button></td></tr>').join('') || '<tr><td colspan="3"><div class="crmv2-empty">No hay prospectos en etapa Diagnóstico.</div></td></tr>') +
-      '</tbody></table></div></section><aside class="crmv2-card soft"><h2 style="margin:0 0 8px;font-size:18px">Regla aplicada</h2><p class="crmv2-muted">No se permite crear diagnóstico desde un lead. Primero debe existir prospecto y estar en etapa Diagnóstico.</p></aside></div><div id="diagnosticoMount" style="margin-top:14px"></div>';
-    $('#btnLoadDiag').addEventListener('click', () => renderExternalTab('diagnostico', $('#diagnosticoMount')));
+      '</tbody></table></div></section><aside class="crmv2-card soft"><h2 style="margin:0 0 8px;font-size:18px">Regla aplicada</h2><p class="crmv2-muted">No se permite crear diagnóstico desde un lead. Primero debe existir prospecto y estar en etapa Diagnóstico.</p></aside></div>';
+    $('#btnLoadDiag').addEventListener('click', () => openDiagnosticoFullscreen());
     $all('[data-start-diag]').forEach(b => b.addEventListener('click', () => startDiagnosis(findProspect(b.dataset.startDiag))));
   }
   function startDiagnosis(p){
@@ -422,7 +426,7 @@
     localStorage.setItem('prospectoDiagnosticoActivo', JSON.stringify({
       prospectoId:p.id, nombreComunidad:prospectName(p), comunidadNombre:prospectName(p), contactoNombre:contactName(p), contactoCorreo:emailOf(p), cargoContacto:p.cargoContacto || ''
     }));
-    renderExternalTab('diagnostico', $('#diagnosticoMount'));
+    openDiagnosticoFullscreen();
   }
 
   function renderRecepcionTab(cont){
@@ -471,6 +475,22 @@
   function renderArchivos(cont){
     cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Archivos comerciales</h2><p>Links disponibles para insertar manualmente en correos o WhatsApp.</p></div></div>' +
       state.files.map(f => '<article class="crmv2-activity"><span class="crmv2-activity-dot orange"></span><div style="flex:1"><div class="crmv2-name">' + esc(f.nombre) + '</div><div class="crmv2-muted">' + esc(f.tipo) + ' · ' + esc(f.canal) + '</div></div><a class="crmv2-btn" href="' + esc(f.url) + '" target="_blank" rel="noreferrer">Abrir</a></article>').join('') + '</section>';
+  }
+
+  function openDiagnosticoFullscreen(){
+    const ov = document.createElement('div');
+    ov.className = 'crmv2-diag-overlay';
+    ov.innerHTML = '<button class="crmv2-diag-back" id="diagBackBtn" type="button"><i class="ti ti-arrow-left"></i> Volver al CRM</button><div class="crmv2-diag-mount" id="diagFullMount"></div>';
+    document.body.appendChild(ov);
+    $('#diagBackBtn', ov).addEventListener('click', () => ov.remove());
+    const mount = $('#diagFullMount', ov);
+    mount.innerHTML = '<div class="module-loading"><div class="ml-iso-wrap"><div class="ml-iso"></div></div><div class="ml-text"><div class="ml-brand"><b>co</b>proactiva</div><div class="ml-status"><span class="ml-status-dot"></span>Cargando diagnóstico</div></div></div>';
+    fetch('modules/diagnostico.html').then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }).then(html => {
+      const temp = document.createElement('div'); temp.innerHTML = html;
+      const scripts = $all('script', temp); scripts.forEach(s => s.remove());
+      mount.innerHTML = temp.innerHTML;
+      scripts.forEach(old => { const s = document.createElement('script'); if(old.src) s.src = old.src; else s.textContent = old.textContent; document.body.appendChild(s); document.body.removeChild(s); });
+    }).catch(err => { mount.innerHTML = '<div class="crmv2-empty">Error al cargar diagnóstico: ' + esc(err.message) + '</div>'; });
   }
 
   function renderExternalTab(name, mount){
