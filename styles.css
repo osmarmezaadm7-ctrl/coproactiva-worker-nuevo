@@ -1698,3 +1698,68 @@ html, body {
   margin-bottom: 24px;
   font-weight: 500;
 }
+
+/* ── Form kit (global — antes repartido de forma inconsistente entre */
+/*    comunidades.html y recepcion.html; otros módulos dependían de que */
+/*    alguno de esos dos se cargara primero en la sesión) ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+.form-full { grid-column: 1 / -1; }
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--co-mute);
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--co-line);
+  border-radius: var(--co-r-md);
+  font-family: var(--co-font);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--co-ink);
+  background: var(--co-surface);
+  box-sizing: border-box;
+  min-height: 44px;
+  transition: border-color 0.13s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { outline: none; border-color: var(--co-orange); }
+.form-group input::placeholder { color: var(--co-mute); }
+.btn-guardar {
+  background: var(--co-orange);
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: var(--co-r-md);
+  font-family: var(--co-font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 20px;
+  min-height: 50px;
+  letter-spacing: -0.01em;
+  transition: background 0.13s;
+}
+.btn-guardar:hover { background: var(--co-orange-hover); }
+.btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-error {
+  color: var(--co-red);
+  font-size: 12px;
+  margin-top: 10px;
+  font-weight: 600;
+}
