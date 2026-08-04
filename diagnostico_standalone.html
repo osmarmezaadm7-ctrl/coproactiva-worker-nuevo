@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <style>
 :root {
   /* Aliases al sistema --co- de CoproActiva */
@@ -314,7 +315,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 
 <!-- TOAST feedback guardado -->
 <div id="toastGuardado" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--az);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;gap:8px;align-items:center">
-  <span id="toastIcon">💾</span>
+  <span id="toastIcon"><i class="ti ti-device-floppy" aria-hidden="true"></i></span>
   <span id="toastMsg">Guardando...</span>
 </div>
 
@@ -340,14 +341,14 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
     <div class="modal-sub" id="exitModalSub">Tienes cambios sin guardar en este diagnóstico.</div>
     <div class="exit-options">
       <div class="exit-opt" onclick="guardarYSalir()">
-        <div class="exit-opt-icon">💾</div>
+        <div class="exit-opt-icon"><i class="ti ti-device-floppy" aria-hidden="true"></i></div>
         <div>
           <div class="exit-opt-ttl">Guardar y salir</div>
           <div class="exit-opt-desc">Se guarda el diagnóstico con el nombre del condominio y vuelves al inicio.</div>
         </div>
       </div>
       <div class="exit-opt danger" onclick="salirSinGuardar()">
-        <div class="exit-opt-icon">🚪</div>
+        <div class="exit-opt-icon"><i class="ti ti-door-exit" aria-hidden="true"></i></div>
         <div>
           <div class="exit-opt-ttl" style="color:var(--sr-ac)">Salir sin guardar</div>
           <div class="exit-opt-desc">Los datos no guardados se perderán.</div>
@@ -363,7 +364,7 @@ button:disabled{opacity:0.4;cursor:not-allowed;}
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const AREAS=[
-  {id:'legal',label:'Legal',emoji:'⚖️',items:[
+  {id:'legal',label:'Legal',icon:'ti-scale',items:[
     {t:'Administrador inscrito en Registro Nacional de Administradores de Condominios (MINVU)',w:'c'},
     {t:'Reglamento de copropiedad inscrito en el CBR y actualizado conforme a la Ley 21.442',w:'c'},
     {t:'RUT de la comunidad vigente ante el SII',w:'c'},
@@ -372,7 +373,7 @@ const AREAS=[
     {t:'Asamblea ordinaria celebrada en los últimos 12 meses con acta disponible',w:'i'},
     {t:'Libro de novedades operativo y accesible a copropietarios (Art. 20 Ley 21.442)',w:'i'},
   ]},
-  {id:'financiero',label:'Financiero',emoji:'💰',items:[
+  {id:'financiero',label:'Financiero',icon:'ti-currency-dollar',items:[
     {t:'Cuenta bancaria exclusiva a nombre de la comunidad bajo su RUT',w:'c'},
     {t:'Fondo de reserva constituido, separado e invertido en instrumentos seguros',w:'c'},
     {t:'Rendición de cuentas mensual con conciliación bancaria y facturas de respaldo',w:'c'},
@@ -382,7 +383,7 @@ const AREAS=[
     {t:'Registro de morosidad actualizado',w:'i'},
     {t:'Presupuesto anual aprobado por asamblea',w:'b'},
   ]},
-  {id:'laboral',label:'Laboral',emoji:'👷',condArea:'trabajadores',items:[
+  {id:'laboral',label:'Laboral',icon:'ti-briefcase',condArea:'trabajadores',items:[
     {t:'Contratos de trabajo vigentes con funciones reales descritas',w:'c'},
     {t:'Cotizaciones previsionales al día sin deuda de arrastre (Previred)',w:'c'},
     {t:'Carpeta laboral individual completa por trabajador (contrato, F30, liquidaciones firmadas)',w:'i'},
@@ -393,7 +394,7 @@ const AREAS=[
     {t:'RIOHS visado por Seremi de Salud y Mutual (10 o más trabajadores)',w:'b',cond:'diezOMas'},
     {t:'Seguro de vida para conserjes con funciones de seguridad (Ley 21.659)',w:'b',cond:'segPrivada'},
   ]},
-  {id:'tecnico',label:'Técnico',emoji:'🔧',items:[
+  {id:'tecnico',label:'Técnico',icon:'ti-tool',items:[
     {t:'Certificación de ascensores vigente y Carpeta Cero al día',w:'c',cond:'asc'},
     {t:'Sello Verde de Gas SEC vigente',w:'c',cond:'gas'},
     {t:'Certificación de caldera / central térmica vigente',w:'c',cond:'caldera'},
@@ -404,7 +405,7 @@ const AREAS=[
     {t:'Bitácora de red contra incendios y extintores vigentes',w:'i',cond:'rci'},
     {t:'Plan de mantención preventiva documentado',w:'b'},
   ]},
-  {id:'seguridad',label:'Seguridad',emoji:'🛡️',items:[
+  {id:'seguridad',label:'Seguridad',icon:'ti-shield-check',items:[
     {t:'Seguro de incendio y catástrofe vigente para bienes comunes y unidades',w:'c'},
     {t:'Plan de emergencia y evacuación vigente, visado por Bomberos',w:'i'},
     {t:'Registro de simulacros (al menos uno en los últimos 12 meses)',w:'i'},
@@ -414,7 +415,7 @@ const AREAS=[
     {t:'Control de acceso vehicular operativo',w:'b',cond:'porton'},
     {t:'Registro de electrodependientes y personas con movilidad reducida',w:'b'},
   ]},
-  {id:'documental',label:'Documental',emoji:'📂',items:[
+  {id:'documental',label:'Documental',icon:'ti-folder',items:[
     {t:'Registro de copropietarios y ocupantes actualizado (nombre, contacto, alícuota, condición)',w:'i'},
     {t:'Archivo de planos finales, recepción definitiva DOM e instalaciones aprobadas',w:'i'},
     {t:'Carpeta de contratos de proveedores vigentes',w:'i'},
@@ -630,12 +631,12 @@ async function syncWithSheets() {
       document.getElementById('mainContent').innerHTML = renderHome();
       // Quitar indicador de sincronización
       const syncEl = document.getElementById('syncIndicator');
-      if(syncEl) { syncEl.textContent = '✓ Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
+      if(syncEl) { syncEl.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Sincronizado'; syncEl.style.color='var(--sg-fg)'; setTimeout(()=>syncEl.remove(),2000); }
     }
   } catch(e) {
     console.log('Sheets no disponible, usando datos locales');
     const syncEl = document.getElementById('syncIndicator');
-    if(syncEl) { syncEl.textContent = '⚠ Sin conexión'; syncEl.style.color='var(--sa-fg)'; setTimeout(()=>syncEl.remove(),3000); }
+    if(syncEl) { syncEl.innerHTML = '<i class="ti ti-alert-triangle" aria-hidden="true"></i> Sin conexión'; syncEl.style.color='var(--sa-fg)'; setTimeout(()=>syncEl.remove(),3000); }
   } finally {
     _syncInProgress = false;
   }
@@ -684,7 +685,7 @@ async function saveDiag() {
     lineaOverride: S.lineaOverride,
   };
 
-  showToast('Guardando...', '💾', 60000); // toast permanente hasta confirmar
+  showToast('Guardando...', 'ti-device-floppy', 60000); // toast permanente hasta confirmar
 
   try {
     const res = await fetch(`${WORKER_BASE}/diagnosticos`, {
@@ -701,7 +702,7 @@ async function saveDiag() {
     local.unshift(record);
     localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
 
-    showToast('Guardado correctamente', '✅', 2500);
+    showToast('Guardado correctamente', 'ti-circle-check', 2500);
     _lastSavedSnapshot = formSnapshot();
     // Forzar resync con Sheets en background
     setTimeout(syncWithSheets, 500);
@@ -710,7 +711,7 @@ async function saveDiag() {
     const local = JSON.parse(localStorage.getItem('ca_diag')||'[]').filter(d=>d.nombre!==nombre);
     local.unshift(record);
     localStorage.setItem('ca_diag', JSON.stringify(local.slice(0,30)));
-    showToast('Guardado localmente (sin conexión)', '⚠️', 3000);
+    showToast('Guardado localmente (sin conexión)', 'ti-alert-triangle', 3000);
     _lastSavedSnapshot = formSnapshot();
   }
   return record;
@@ -762,7 +763,7 @@ async function deleteSaved(nombre) {
 
 // ─── STEPPER + SIDEBAR ───────────────────────────────────────────────────────
 function renderNav(){
-  const steps=[{id:'contexto',label:'Datos',emoji:'📋'},{id:'instalaciones',label:'Instal.',emoji:'🏗️'},...AREAS.map(a=>({id:a.id,label:a.label,emoji:a.emoji})),{id:'revision',label:'Revisión',emoji:'📊'}];
+  const steps=[{id:'contexto',label:'Datos',icon:'ti-clipboard-text'},{id:'instalaciones',label:'Instal.',icon:'ti-building'},...AREAS.map(a=>({id:a.id,label:a.label,icon:a.icon})),{id:'revision',label:'Revisión',icon:'ti-chart-bar'}];
   const ai=steps.findIndex(s=>s.id===S.view);
   const score=globalScore();const crit=critData(score);
 
@@ -772,8 +773,8 @@ function renderNav(){
   if(strip && inner){
     inner.innerHTML=steps.map((s,i)=>`
       <div class="step-pill ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
-        <div class="step-pill-n">${i<ai?'✓':i+1}</div>
-        <div class="step-pill-l">${s.emoji} ${s.label}</div>
+        <div class="step-pill-n">${i<ai?'<i class="ti ti-check" aria-hidden="true"></i>':i+1}</div>
+        <div class="step-pill-l"><i class="ti ${s.icon}" aria-hidden="true"></i> ${s.label}</div>
       </div>`).join('');
     // Scroll al paso activo
     setTimeout(()=>{
@@ -792,7 +793,7 @@ function renderNav(){
       ${steps.map((s,i)=>`
         <div class="sb-step ${s.id===S.view?'active':''} ${i<ai?'done':''}" onclick="goTo('${s.id}')">
           <div class="sb-dot"></div>
-          <div class="sb-sl">${s.emoji?s.emoji+' ':''}${s.label}</div>
+          <div class="sb-sl">${s.icon?'<i class="ti '+s.icon+'" aria-hidden="true"></i> ':''}${s.label}</div>
         </div>`).join('')}
     </div>`;
   }
@@ -853,9 +854,9 @@ function renderCtx(){
   <div class="card">
     <div class="card-ttl"><div class="cdot" style="background:var(--az-md)"></div>Formularios guardados</div>
     <div class="saved-bar">
-      <button class="ghost btn-sm" onclick="openModal()">📂 Cargar diagnóstico guardado</button>
-      <button class="ghost btn-sm" onclick="guardarFormulario()">💾 Guardar</button>
-      <button class="btn-danger btn-sm" onclick="limpiarFormulario()">🗑 Limpiar</button>
+      <button class="ghost btn-sm" onclick="openModal()"><i class="ti ti-folder-open" aria-hidden="true"></i> Cargar diagnóstico guardado</button>
+      <button class="ghost btn-sm" onclick="guardarFormulario()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar</button>
+      <button class="btn-danger btn-sm" onclick="limpiarFormulario()"><i class="ti ti-trash" aria-hidden="true"></i> Limpiar</button>
     </div>
     <div class="hint">Los diagnósticos se guardan en este navegador y dispositivo.</div>
   </div>
@@ -885,11 +886,11 @@ function renderCtx(){
     <div class="card-ttl"><div class="cdot"></div>Tipo de condominio</div>
     <div class="type-grid">
       ${[
-        {v:'A',icon:'🏢',name:'Tipo A — Edificio',desc:'Departamentos en altura. Terreno común para todos.'},
-        {v:'B',icon:'🏠',name:'Tipo B — Casas',desc:'Lotes exclusivos. Solo calles y accesos comunes.'},
-        {v:'M',icon:'🏘️',name:'Mixto',desc:'Combina edificios y casas en un mismo condominio.'},
+        {v:'A',icon:'ti-building',name:'Tipo A — Edificio',desc:'Departamentos en altura. Terreno común para todos.'},
+        {v:'B',icon:'ti-home',name:'Tipo B — Casas',desc:'Lotes exclusivos. Solo calles y accesos comunes.'},
+        {v:'M',icon:'ti-buildings',name:'Mixto',desc:'Combina edificios y casas en un mismo condominio.'},
       ].map(t=>`<div class="type-card ${c.tipo===t.v?'sel':''}" onclick="S.ctx.tipo='${t.v}';render()">
-        <div class="type-card-icon">${t.icon}</div>
+        <div class="type-card-icon"><i class="ti ${t.icon}" aria-hidden="true"></i></div>
         <div class="type-card-name">${t.name}</div>
         <div class="type-card-desc">${t.desc}</div>
       </div>`).join('')}
@@ -998,13 +999,13 @@ function renderArea(area){
 
   return`
   <div class="ph">
-    <div class="ph-title">${area.emoji} ${area.label}</div>
+    <div class="ph-title"><i class="ti ${area.icon}" aria-hidden="true"></i> ${area.label}</div>
     <div class="ph-sub">Selecciona el nivel de cumplimiento de cada ítem · ${applies?evaluated+'/'+total+' evaluados':'No aplica para esta comunidad'}</div>
   </div>
   <div class="card">
     ${!applies?`
       <div style="padding:16px 0;text-align:center">
-        <div style="font-size:28px;margin-bottom:8px">👷</div>
+        <div style="font-size:28px;margin-bottom:8px;color:var(--muted)"><i class="ti ${area.icon}" aria-hidden="true"></i></div>
         <div style="font-size:14px;font-weight:700;color:var(--az-md);margin-bottom:4px">Área no aplicable</div>
         <div style="font-size:13px;color:var(--muted)">Esta comunidad no tiene personal contratado,<br>por lo que el área Laboral no se evalúa.</div>
       </div>`:`
@@ -1067,7 +1068,7 @@ function renderRevision(){
     <div style="flex:1">
       <div class="res-label">${crit.lbl}</div>
       <div class="res-desc">${crit.desc}</div>
-      ${crit.requiereIntervencion?`<div style="margin-top:7px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;display:inline-block;background:rgba(0,0,0,0.1)">⚠ Requiere intervención prioritaria</div>`:''}
+      ${crit.requiereIntervencion?`<div style="margin-top:7px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;display:inline-block;background:rgba(0,0,0,0.1)"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Requiere intervención prioritaria</div>`:''}
     </div>
   </div>
 
@@ -1084,10 +1085,10 @@ function renderRevision(){
 
   <!-- Ítems críticos -->
   ${crits.length?`<div class="card">
-    <div class="card-ttl"><div class="cdot" style="background:var(--sr-ac)"></div>⚠️ Ítems críticos sin resolver (${crits.length})</div>
+    <div class="card-ttl"><div class="cdot" style="background:var(--sr-ac)"></div><i class="ti ti-alert-triangle" aria-hidden="true" style="color:var(--sr-ac)"></i> Ítems críticos sin resolver (${crits.length})</div>
     <div class="ci-list">${crits.map(cr=>`<div class="ci" style="${cr.tipo==='ns'?'background:#F0EAF8;border-left-color:#9B6BBE':''}">
       <span class="ci-area">${cr.area}</span>
-      <span class="ci-txt">${cr.tipo==='ns'?'❓ ':'⚠️ '}${cr.text}</span>
+      <span class="ci-txt">${cr.tipo==='ns'?'<i class="ti ti-help-circle" aria-hidden="true"></i> ':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> '}${cr.text}</span>
     </div>`).join('')}</div>
   </div>`:''}
 
@@ -1104,9 +1105,9 @@ function renderRevision(){
       </div>`:''}
     ${!S.loadingConclusion?`<div style="display:flex;gap:8px;margin-top:${S.conclusion?'8px':'0'};flex-wrap:wrap">
       <button class="btn-sm ${!S.conclusion?'pri':''}" onclick="generarConclusion()">
-        ${S.conclusion?'↺ Regenerar':'✨ Generar conclusión con IA'}
+        ${S.conclusion?'<i class="ti ti-refresh" aria-hidden="true"></i> Regenerar':'<i class="ti ti-sparkles" aria-hidden="true"></i> Generar conclusión con IA'}
       </button>
-      ${S.conclusion?`<button class="btn-sm" onclick="limpiarConclusion()" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)">🗑 Limpiar</button>`:''}
+      ${S.conclusion?`<button class="btn-sm" onclick="limpiarConclusion()" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)"><i class="ti ti-trash" aria-hidden="true"></i> Limpiar</button>`:''}
     </div>`:''}
   </div>
 
@@ -1126,7 +1127,7 @@ function renderRevision(){
           <div class="lc-tag" style="color:${lm2.color}">${isSug?`<span class="suggested-badge">Sugerida</span>`:''}</div>
           <div class="lc-name">${lm2.sublabel}</div>
           <div class="lc-desc">${lm2.desc.substring(0,70)}...</div>
-          ${isSel?`<div style="font-size:10px;font-weight:700;color:${lm2.color};margin-top:5px">✓ Seleccionada</div>`:''}
+          ${isSel?`<div style="font-size:10px;font-weight:700;color:${lm2.color};margin-top:5px"><i class="ti ti-check" aria-hidden="true"></i> Seleccionada</div>`:''}
         </div>`;}).join('')}
     </div>
   </div>
@@ -1148,8 +1149,8 @@ function renderRevision(){
   <div class="nav-row">
     <button class="ghost" onclick="openExitModal()">← Salir</button>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="ghost" onclick="guardarFormulario()">💾 Guardar</button>
-      <button class="vd" onclick="generarPDF()" ${S.loadingConclusion?'disabled':''}>📄 Descargar PDF</button>
+      <button class="ghost" onclick="guardarFormulario()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar</button>
+      <button class="vd" onclick="generarPDF()" ${S.loadingConclusion?'disabled':''}><i class="ti ti-file-download" aria-hidden="true"></i> Descargar PDF</button>
     </div>
   </div>`;
 }
@@ -1396,7 +1397,7 @@ function renderHome(){
   </div>
   ${hist.length===0?`
     <div class="empty-state">
-      <div class="empty-icon">📋</div>
+      <div class="empty-icon" style="color:var(--muted)"><i class="ti ti-clipboard-text" aria-hidden="true"></i></div>
       <div class="empty-ttl">Sin diagnósticos aún</div>
       <div class="empty-desc">Crea tu primer diagnóstico para comenzar<br>a captar clientes con CoproActiva.</div>
       <br>
@@ -1414,7 +1415,7 @@ function renderHome(){
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           <span class="hist-linea" style="background:${lm2.bg||'var(--vd-lt)'};color:${lm2.color||'var(--vd-dk)'}">${d.linea}</span>
-          <button class="btn-sm ghost" onclick="event.stopPropagation();generarPDFDesdeHistorial('${encodeURIComponent(d.nombre)}')" title="Descargar PDF">📄</button>
+          <button class="btn-sm ghost" onclick="event.stopPropagation();generarPDFDesdeHistorial('${encodeURIComponent(d.nombre)}')" title="Descargar PDF" aria-label="Descargar PDF"><i class="ti ti-file-download" aria-hidden="true"></i></button>
           <button class="btn-sm" style="color:var(--sr-ac);border-color:var(--sr-bg);background:var(--sr-bg)" onclick="event.stopPropagation();eliminarHist('${encodeURIComponent(d.nombre)}')" title="Eliminar">×</button>
         </div>
       </div>`;}).join('')}
@@ -1491,10 +1492,10 @@ function salirSinGuardar(){
   goTo('home');
 }
 
-function showToast(msg, icon='💾', duration=2500){
+function showToast(msg, icon='ti-device-floppy', duration=2500){
   const t = document.getElementById('toastGuardado');
   document.getElementById('toastMsg').textContent = msg;
-  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastIcon').innerHTML = '<i class="ti '+icon+'" aria-hidden="true"></i>';
   t.style.display = 'flex';
   t.style.opacity = '1';
   clearTimeout(window._toastTimer);
@@ -1510,7 +1511,7 @@ function openAreaModal(aId){
   const s = scoreArea(area);
   const sem = semC(s?s.pct:null);
 
-  document.getElementById('areaModalEmoji').textContent = area.emoji||'';
+  document.getElementById('areaModalEmoji').innerHTML = area.icon ? '<i class="ti '+area.icon+'" aria-hidden="true"></i>' : '';
   document.getElementById('areaModalTtl').textContent = area.label;
   const scoreEl = document.getElementById('areaModalScore');
   scoreEl.textContent = s ? s.pct+'% — '+sem.lbl : 'No aplica';
@@ -1533,7 +1534,7 @@ function openAreaModal(aId){
   } else {
     if(fallidos.length){
       html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--sr-ac)">⚠️ Sin cumplir (${fallidos.length})</div>
+        <div class="area-modal-section-ttl" style="color:var(--sr-ac)"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Sin cumplir (${fallidos.length})</div>
         ${fallidos.map(it=>`<div class="area-modal-item fail">
           <span class="area-modal-badge" style="background:${wBg[it.w]};color:${wFg[it.w]}">${wLabel[it.w]}</span>
           <span class="area-modal-item-txt">${it.t}</span>
@@ -1542,7 +1543,7 @@ function openAreaModal(aId){
     }
     if(noSabe.length){
       html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:#5E3A8A">❓ No sabe (${noSabe.length})</div>
+        <div class="area-modal-section-ttl" style="color:#5E3A8A"><i class="ti ti-help-circle" aria-hidden="true"></i> No sabe (${noSabe.length})</div>
         ${noSabe.map(it=>`<div class="area-modal-item" style="background:#F0EAF8;border-left:2.5px solid #9B6BBE">
           <span class="area-modal-badge" style="background:#F0EAF8;color:#5E3A8A">${wLabel[it.w]}</span>
           <span class="area-modal-item-txt">${it.t}</span>
@@ -1560,16 +1561,16 @@ function openAreaModal(aId){
     }
     if(cumplidos.length){
       html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--sg-fg)">✓ Cumplidos (${cumplidos.length})</div>
+        <div class="area-modal-section-ttl" style="color:var(--sg-fg)"><i class="ti ti-check" aria-hidden="true"></i> Cumplidos (${cumplidos.length})</div>
         ${cumplidos.map(it=>`<div class="area-modal-item ok">
-          <span class="area-modal-badge" style="background:var(--sg-bg);color:var(--sg-fg)">✓</span>
+          <span class="area-modal-badge" style="background:var(--sg-bg);color:var(--sg-fg)"><i class="ti ti-check" aria-hidden="true"></i></span>
           <span class="area-modal-item-txt" style="color:var(--az-md)">${it.t}</span>
         </div>`).join('')}
       </div>`;
     }
     if(note){
       html += `<div class="area-modal-section">
-        <div class="area-modal-section-ttl" style="color:var(--az-md)">📝 Observación anotada</div>
+        <div class="area-modal-section-ttl" style="color:var(--az-md)"><i class="ti ti-note" aria-hidden="true"></i> Observación anotada</div>
         <div class="area-modal-obs">${note}</div>
       </div>`;
     }
@@ -1653,7 +1654,7 @@ setTimeout(() => {
           _homeData = remote;
           document.getElementById('mainContent').innerHTML = renderHome();
           const si = document.getElementById('syncIndicator');
-          if(si){ si.textContent='✓ Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
+          if(si){ si.innerHTML='<i class="ti ti-check" aria-hidden="true"></i> Sincronizado'; si.style.color='var(--sg-fg)'; setTimeout(()=>si.remove(),2000); }
         }
       }
     })
