@@ -37,7 +37,7 @@ const BOOTSTRAP_USERS = [
     rol: 'superadmin',
     modulos: ['*'],
     comunidades: ['*'],
-    passwordHash: '3c7d8a39c073eb1f5d00b7c81bc6db5652530e6cd7bc0062a50faa38206dcbf5',
+    passwordHash: '0e35aa101b3e47603d050e3c6b03b2fee1ae6c6de93c85ed6d34e1e2458fb9af',
   },
 ];
 
