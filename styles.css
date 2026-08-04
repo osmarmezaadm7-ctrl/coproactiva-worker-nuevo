@@ -1631,3 +1631,70 @@ html, body {
   border-radius: 20px;
   letter-spacing: 0.02em;
 }
+
+/* ── Modal (global — antes vivía solo en comunidades.html/recepcion.html; */
+/*    si esos módulos no se habían cargado aún, .modal-overlay no tenía CSS) ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,23,20,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-box {
+  background: var(--co-surface);
+  border-radius: var(--co-r-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+  position: relative;
+  box-shadow: var(--co-shadow-lg);
+}
+@media (max-width: 767px) {
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal-box { border-radius: var(--co-r-lg) var(--co-r-lg) 0 0; max-height: 92vh; padding: 24px 20px 36px; }
+}
+.modal-close {
+  position: absolute;
+  top: 18px; right: 18px;
+  background: var(--co-cream);
+  border: 1px solid var(--co-line);
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--co-ink-2);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.13s, color 0.13s;
+  font-family: var(--co-font);
+}
+.modal-close:hover { background: var(--co-orange-soft); color: var(--co-orange); }
+.modal-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--co-orange);
+  margin-bottom: 4px;
+}
+.modal-titulo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--co-ink);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin-bottom: 6px;
+  padding-right: 44px;
+}
+.modal-subtitulo {
+  font-size: 13px;
+  color: var(--co-ink-3);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
