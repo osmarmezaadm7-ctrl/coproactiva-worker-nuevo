@@ -307,6 +307,35 @@
   var _colaboradoresComunidadId = null;
   var _plantillasCargo = null;
 
+  // ── Catálogo de indicadores (compartido entre Previred y edición manual) ────
+  var INDICADOR_LABELS = {
+    UF_MES:'UF mes actual', UF_MES_ANT:'UF mes anterior', UTM:'UTM',
+    IMM:'Ingreso mínimo mensual ($)', IMM_CASA_PARTICULAR:'IMM Casa Particular ($)',
+    TOPE_AFP_UF:'Tope imponible AFP (UF)', TOPE_IPS_UF:'Tope imponible IPS (UF)',
+    TOPE_AFC_UF:'Tope imponible AFC/SC (UF)', TOPE_AFP_PESOS:'Tope imponible AFP ($)',
+    SIS_TASA:'Tasa SIS (%)', EXPECTATIVA_VIDA:'Expectativa de Vida (%)',
+    FONASA_CON_CCAF_CCAF:'Fonasa con CCAF — a CCAF (%)', FONASA_CON_CCAF_EMP:'Fonasa con CCAF — empleado (%)',
+    CCAF_NO_ISAPRE:'CCAF no afiliados Isapre (%)',
+    SC_EMP_INDEFINIDO:'SC empleador indefinido (%)', SC_TRAB_INDEFINIDO:'SC trabajador indefinido (%)',
+    SC_EMP_PLAZO_FIJO:'SC empleador plazo fijo (%)', SC_EMP_11_ANOS:'SC empleador >11 años (%)',
+    SC_TRAB_PLAZO_FIJO:'SC trabajador plazo fijo (%)',
+    TRABAJO_PESADO_TASA:'Trabajo pesado total (%)', TRABAJO_MEN_PESADO:'Trabajo menos pesado total (%)',
+    AFP_33_CAPITAL:'AFP Capital (%)', AFP_03_CUPRUM:'AFP Cuprum (%)', AFP_05_HABITAT:'AFP Habitat (%)',
+    AFP_34_MODELO:'AFP Modelo (%)', AFP_29_PLANVITAL:'AFP PlanVital (%)',
+    AFP_08_PROVIDA:'AFP ProVida (%)', AFP_35_UNO:'AFP Uno (%)',
+    APV_TOPE_MENSUAL_UF:'APV tope mensual (UF)', APV_TOPE_ANUAL_UF:'APV tope anual (UF)',
+    DEP_CONV_TOPE_UF:'Depósito convenido tope anual (UF)',
+    AF_TRAMO_A_MONTO:'Asig. familiar tramo A ($)', AF_TRAMO_B_MONTO:'Asig. familiar tramo B ($)',
+    AF_TRAMO_C_MONTO:'Asig. familiar tramo C ($)',
+    AF_LIMITE_A:'Límite tramo A ($)', AF_LIMITE_B:'Límite tramo B ($)', AF_LIMITE_C:'Límite tramo C ($)',
+    AFP_APORTE_EMPLEADOR:'AFP aporte empleador reforma (%)', SEG_SOCIAL_RENTABILIDAD_PROT:'Rentabilidad protegida (%)'
+  };
+
+  function _periodoActualFrontend() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
   // ── API ───────────────────────────────────────────────────────────────────
   function api(path, method, body) {
     method = method || 'GET';
@@ -1961,6 +1990,7 @@
     });
 
     btnPrevired.addEventListener('click', function() { _scrapingPrevired(el); });
+    btnEdit.addEventListener('click', function() { _editarIndicadores(el); });
     hdr.appendChild(btnBase); hdr.appendChild(btnPrevired); hdr.appendChild(btnEdit); el.appendChild(hdr);
 
     var contenedor = document.createElement('div'); contenedor.id = 'rem-ind-contenedor';
@@ -2008,27 +2038,7 @@
       st.textContent = data.mes + ' — ' + (data.urlUsada ? 'PDF obtenido correctamente' : '');
 
       // Construir tabla de revisión
-      var LABELS = {
-        UF_MES:'UF mes actual', UF_MES_ANT:'UF mes anterior', UTM:'UTM',
-        IMM:'Ingreso mínimo mensual ($)', IMM_CASA_PARTICULAR:'IMM Casa Particular ($)',
-        TOPE_AFP_UF:'Tope imponible AFP (UF)', TOPE_IPS_UF:'Tope imponible IPS (UF)',
-        TOPE_AFC_UF:'Tope imponible AFC/SC (UF)', TOPE_AFP_PESOS:'Tope imponible AFP ($)',
-        SIS_TASA:'Tasa SIS (%)', EXPECTATIVA_VIDA:'Expectativa de Vida (%)',
-        FONASA_CON_CCAF_CCAF:'Fonasa con CCAF — a CCAF (%)', FONASA_CON_CCAF_EMP:'Fonasa con CCAF — empleado (%)',
-        CCAF_NO_ISAPRE:'CCAF no afiliados Isapre (%)',
-        SC_EMP_INDEFINIDO:'SC empleador indefinido (%)', SC_TRAB_INDEFINIDO:'SC trabajador indefinido (%)',
-        SC_EMP_PLAZO_FIJO:'SC empleador plazo fijo (%)', SC_EMP_11_ANOS:'SC empleador >11 años (%)',
-        SC_TRAB_PLAZO_FIJO:'SC trabajador plazo fijo (%)',
-        TRABAJO_PESADO_TASA:'Trabajo pesado total (%)', TRABAJO_MEN_PESADO:'Trabajo menos pesado total (%)',
-        AFP_33_CAPITAL:'AFP Capital (%)', AFP_03_CUPRUM:'AFP Cuprum (%)', AFP_05_HABITAT:'AFP Habitat (%)',
-        AFP_34_MODELO:'AFP Modelo (%)', AFP_29_PLANVITAL:'AFP PlanVital (%)',
-        AFP_08_PROVIDA:'AFP ProVida (%)', AFP_35_UNO:'AFP Uno (%)',
-        APV_TOPE_MENSUAL_UF:'APV tope mensual (UF)', APV_TOPE_ANUAL_UF:'APV tope anual (UF)',
-        DEP_CONV_TOPE_UF:'Depósito convenido tope anual (UF)',
-        AF_TRAMO_A_MONTO:'Asig. familiar tramo A ($)', AF_TRAMO_B_MONTO:'Asig. familiar tramo B ($)',
-        AF_TRAMO_C_MONTO:'Asig. familiar tramo C ($)',
-        AF_LIMITE_A:'Límite tramo A ($)', AF_LIMITE_B:'Límite tramo B ($)', AF_LIMITE_C:'Límite tramo C ($)'
-      };
+      var LABELS = INDICADOR_LABELS;
 
       var html = '<div class="rem-alerta warn" style="margin-bottom:14px"><i class="ti ti-alert-triangle" aria-hidden="true"></i>' +
         '<div class="rem-alerta-txt"><b>Revisa los valores antes de guardar.</b> ' + (data.advertencia || '') + '</div></div>';
@@ -2128,6 +2138,112 @@
       }
     }).catch(function(e) {
       contenidoModal.innerHTML = '<div class="rem-alerta danger"><i class="ti ti-alert-circle" aria-hidden="true"></i><div class="rem-alerta-txt">Error de conexión: ' + e.message + '</div></div>';
+    });
+  }
+
+  // ── Editar indicadores manualmente ──────────────────────────────────────────
+  // IMPORTANTE: guardarIndicadoresMasivo reemplaza TODAS las filas del período
+  // enviado — no hace merge parcial. Por eso este modal siempre carga y envía
+  // el set COMPLETO de valores del período (los existentes + lo que se edite),
+  // nunca solo los campos que el usuario tocó, para no borrar datos ya buenos.
+  function _editarIndicadores(contenedorPadre) {
+    var periodo = _periodoActualFrontend();
+
+    var overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    var box = document.createElement('div'); box.className = 'modal-box'; box.style.maxWidth = '560px';
+    var ey = document.createElement('div'); ey.className = 'modal-eyebrow'; ey.textContent = 'Parámetros';
+    var tt = document.createElement('div'); tt.className = 'modal-titulo'; tt.textContent = 'Editar indicadores';
+    var st = document.createElement('div'); st.className = 'modal-subtitulo'; st.textContent = 'Período ' + periodo + ' — se guardan todos los valores de la tabla, no solo los que cambies.';
+    var btnCerrar = document.createElement('button'); btnCerrar.className = 'modal-close'; btnCerrar.textContent = '×';
+    var cerrar = function() { overlay.remove(); };
+    btnCerrar.addEventListener('click', cerrar);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrar(); });
+
+    var cuerpo = document.createElement('div'); cuerpo.style.cssText = 'margin-top:16px';
+    cuerpo.innerHTML = '<div style="text-align:center;padding:24px;color:var(--co-mute)"><i class="ti ti-loader-2" aria-hidden="true" style="font-size:28px;display:block;margin-bottom:8px"></i>Cargando valores del período…</div>';
+
+    box.appendChild(btnCerrar); box.appendChild(ey); box.appendChild(tt); box.appendChild(st); box.appendChild(cuerpo);
+    overlay.appendChild(box); document.body.appendChild(overlay);
+
+    // Carga explícita por período — no reutiliza el caché _indicadores, que
+    // puede corresponder a un período distinto o venir vacío.
+    api('/remuneraciones/parametros/indicadores?periodo=' + periodo).then(function(resp) {
+      var lista = (resp.data && resp.data.data) ? resp.data.data : (resp.data || []);
+      var mapaActual = {};
+      lista.forEach(function(d) { mapaActual[d.clave] = d.valor; });
+
+      var inputsMap = {};
+      var html = '<div style="overflow-x:auto;max-height:55vh;overflow-y:auto"><table class="rem-table" style="margin-bottom:14px">' +
+        '<thead><tr><th>Indicador</th><th>Valor</th></tr></thead><tbody>';
+      Object.keys(INDICADOR_LABELS).forEach(function(k) {
+        html += '<tr><td>' + INDICADOR_LABELS[k] + '</td><td><input type="number" step="any" class="ind-edit-input" data-clave="' + k + '" value="' +
+          (mapaActual[k] !== undefined && mapaActual[k] !== null ? mapaActual[k] : '') +
+          '" style="width:130px;padding:6px 8px;border:1px solid var(--co-line);border-radius:6px;font-size:13px"></td></tr>';
+      });
+      html += '</tbody></table></div>';
+      cuerpo.innerHTML = html;
+
+      var errDiv = document.createElement('div'); errDiv.className = 'form-error'; errDiv.style.display = 'none';
+      var btnGuardar = document.createElement('button'); btnGuardar.className = 'btn-guardar';
+      btnGuardar.textContent = 'Guardar indicadores';
+      cuerpo.appendChild(errDiv); cuerpo.appendChild(btnGuardar);
+
+      btnGuardar.addEventListener('click', function() {
+        btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando…'; errDiv.style.display = 'none';
+
+        var payload = {};
+        var huboError = false;
+        cuerpo.querySelectorAll('.ind-edit-input').forEach(function(input) {
+          var clave = input.getAttribute('data-clave');
+          var v = input.value.trim();
+          if (v === '') return; // campo vacío: no se guarda ese indicador
+          var num = Number(v);
+          if (isNaN(num)) { huboError = true; return; }
+          payload[clave] = num;
+        });
+
+        if (huboError) {
+          errDiv.textContent = 'Hay un valor inválido (no numérico). Revisa los campos marcados.';
+          errDiv.style.display = 'block';
+          btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar indicadores';
+          return;
+        }
+
+        api('/remuneraciones/parametros/indicadores/masivo', 'POST', {
+          action: 'guardarIndicadoresMasivo',
+          indicadores: payload,
+          periodo: periodo,
+          usuario: (_getUsuario && _getUsuario() && _getUsuario().email) || 'manual'
+        }).then(function(resp2) {
+          var ok = resp2.ok && resp2.data && (resp2.data.ok || (resp2.data.data && resp2.data.data.ok));
+          if (ok) {
+            btnGuardar.textContent = '✓ Indicadores guardados';
+            btnGuardar.style.background = '#3B6D11';
+            _indicadores = [];
+            setTimeout(function() {
+              overlay.remove();
+              var subContenido = document.getElementById('rem-ind-contenedor');
+              if (subContenido) {
+                subContenido.innerHTML = '<div style="text-align:center;color:var(--co-mute);padding:16px">Cargando indicadores…</div>';
+                api('/remuneraciones/parametros/indicadores').then(function(r) {
+                  _indicadores = (r.data && r.data.data) ? r.data.data : (r.data || []);
+                  _renderIndicadoresData(subContenido, _indicadores);
+                });
+              }
+            }, 1200);
+          } else {
+            var err = (resp2.data && resp2.data.error) || resp2.error || 'Error al guardar';
+            errDiv.textContent = err; errDiv.style.display = 'block';
+            btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar indicadores';
+          }
+        }).catch(function(e) {
+          errDiv.textContent = 'Error de conexión: ' + e.message;
+          errDiv.style.display = 'block';
+          btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar indicadores';
+        });
+      });
+    }).catch(function(e) {
+      cuerpo.innerHTML = '<div class="rem-alerta danger"><i class="ti ti-alert-circle" aria-hidden="true"></i><div class="rem-alerta-txt">Error de conexión: ' + e.message + '</div></div>';
     });
   }
 
