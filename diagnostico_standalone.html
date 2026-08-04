@@ -1391,6 +1391,7 @@ function renderHome(){
         <span class="spin" style="width:10px;height:10px;border-width:1.5px"></span> Sincronizando...
       </span>
       <span style="font-size:12px;color:var(--muted)">${hist.length} guardado${hist.length!==1?'s':''}</span>
+      <button class="pri btn-sm" onclick="nuevoDesdeHome()">+ Nuevo diagnóstico</button>
     </div>
   </div>
   ${hist.length===0?`
