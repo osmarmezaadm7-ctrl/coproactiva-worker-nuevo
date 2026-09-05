@@ -141,7 +141,7 @@
     diagnostico: { label:'Diagnóstico',  icon:'ti-stethoscope',      action:'Ir a módulo', actionFn: () => openDiagnosticoFullscreen() },
     recepcion:   { label:'Recepción',    icon:'ti-clipboard-list',   action:'Abrir recepción', actionFn: () => renderExternalTab('recepcion') },
     actividades: { label:'Actividades',  icon:'ti-calendar-check',   action:'Actualizar', actionFn: init },
-    plantillas:  { label:'Plantillas',   icon:'ti-mail',             action:'Nueva plantilla', actionFn: () => toast('Usa el módulo de plantillas existente para crear/editar.') },
+    plantillas:  { label:'Plantillas',   icon:'ti-mail',             action:'Nueva plantilla', actionFn: () => openPlantillaForm() },
     archivos:    { label:'Archivos',     icon:'ti-paperclip',        action:'Agregar link', actionFn: () => toast('Los archivos quedan como enlaces manuales para correos y WhatsApp.') }
   };
 
@@ -466,10 +466,51 @@
     return '';
   }
 
+  function findPlantilla(id){ return state.plantillas.find(pl => String(pl.id) === String(id)); }
+
   function renderPlantillas(cont){
-    cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Plantillas</h2><p>Se mantienen conectadas al endpoint original /plantillas.</p></div></div><div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Nombre</th><th>Etapa</th><th>Canal</th></tr></thead><tbody>' +
-      (state.plantillas.map(p => '<tr><td><div class="crmv2-name">' + esc(p.nombre || p.asunto || 'Plantilla') + '</div><div class="crmv2-muted">' + esc(p.asunto || '') + '</div></td><td>' + esc(p.etapa || 'General') + '</td><td>' + esc(p.canal || 'Correo') + '</td></tr>').join('') || '<tr><td colspan="3"><div class="crmv2-empty">No hay plantillas cargadas o el endpoint no respondió.</div></td></tr>') +
+    cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Plantillas</h2><p>Variables disponibles: {nombre}, {condominio}, {comuna}, {cargo}.</p></div></div><div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Nombre</th><th>Asunto</th><th>Tags</th><th></th></tr></thead><tbody>' +
+      (state.plantillas.map(p => '<tr><td><div class="crmv2-name">' + esc(p.nombre || 'Plantilla') + '</div></td><td class="crmv2-muted">' + esc(p.asunto || '') + '</td><td>' + esc(p.tags || '') + '</td><td><div class="crmv2-row-actions"><button class="crmv2-icon-btn" title="Editar" data-plt-edit="' + esc(p.id) + '"><i class="ti ti-pencil"></i></button><button class="crmv2-icon-btn" title="Eliminar" data-plt-delete="' + esc(p.id) + '"><i class="ti ti-trash"></i></button></div></td></tr>').join('') || '<tr><td colspan="4"><div class="crmv2-empty">No hay plantillas cargadas.</div></td></tr>') +
       '</tbody></table></div></section>';
+    $all('[data-plt-edit]').forEach(b => b.addEventListener('click', () => openPlantillaForm(findPlantilla(b.dataset.pltEdit))));
+    $all('[data-plt-delete]').forEach(b => b.addEventListener('click', () => eliminarPlantillaConfirm(findPlantilla(b.dataset.pltDelete))));
+  }
+
+  function openPlantillaForm(p){
+    p = p || {};
+    const html = '<h2 class="crmv2-modal-title">' + (p.id ? 'Editar plantilla' : 'Nueva plantilla') + '</h2>' +
+      '<p class="crmv2-modal-sub">Variables disponibles: {nombre}, {condominio}, {comuna}, {cargo}</p>' +
+      '<div class="crmv2-form-grid">' +
+      formField('Nombre', 'ptNombre', p.nombre) +
+      formField('Tags (separados por coma)', 'ptTags', p.tags) +
+      formField('Asunto', 'ptAsunto', p.asunto) +
+      formText('Cuerpo', 'ptCuerpo', p.cuerpo) +
+      '</div><div class="crmv2-modal-section"><button class="crmv2-btn primary full" id="ptSave">Guardar plantilla</button></div>';
+    const ov = openModal(html, true);
+    const ta = $('#ptCuerpo', ov); if(ta) ta.rows = 10;
+    $('#ptSave', ov).addEventListener('click', async () => {
+      const nombre = $('#ptNombre', ov).value.trim();
+      const asunto = $('#ptAsunto', ov).value.trim();
+      const cuerpo = $('#ptCuerpo', ov).value.trim();
+      if(!nombre || !asunto || !cuerpo) return toast('Nombre, asunto y cuerpo son obligatorios.');
+      const body = {
+        action: p.id ? 'editarPlantilla' : 'crearPlantilla',
+        id: p.id,
+        nombre, asunto, cuerpo,
+        tags: $('#ptTags', ov).value.trim()
+      };
+      const res = await api('/plantillas','POST',body);
+      if(res.ok && res.data && res.data.ok){ ov.remove(); await init(); toast('Plantilla guardada.'); }
+      else toast((res.data && res.data.error) || res.error || 'No se pudo guardar la plantilla.');
+    });
+  }
+
+  async function eliminarPlantillaConfirm(p){
+    if(!p) return;
+    if(!confirm('¿Eliminar la plantilla "' + (p.nombre || '') + '"? Esta acción no se puede deshacer.')) return;
+    const res = await api('/plantillas','POST',{ action:'eliminarPlantilla', id:p.id });
+    if(res.ok && res.data && res.data.ok){ await init(); toast('Plantilla eliminada.'); }
+    else toast((res.data && res.data.error) || res.error || 'No se pudo eliminar.');
   }
   function renderArchivos(cont){
     cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Archivos comerciales</h2><p>Links disponibles para insertar manualmente en correos o WhatsApp.</p></div></div>' +
