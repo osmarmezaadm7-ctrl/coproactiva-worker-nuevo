@@ -120,6 +120,11 @@
   const ROOT_ID = 'crm-root';
   const ETAPAS = ['Nuevo prospecto', 'Reunión Agendada', 'Diagnóstico', 'Propuesta', 'Negociación', 'Ganado', 'Perdido'];
   const LEAD_ESTADOS = ['nuevo','contactado','descartado','convertido'];
+  const COMUNAS_RM = ['San Bernardo','Santiago','Las Condes','Providencia','Ñuñoa','Maipú','Puente Alto','La Florida','Vitacura','Buin','Paine','Calera de Tango','La Reina','Peñalolén','Macul','San Miguel','La Cisterna','El Bosque','La Pintana','San Ramón','La Granja','Pedro Aguirre Cerda','Lo Espejo','Cerrillos','Estación Central','Quinta Normal','Lo Prado','Cerro Navia','Renca','Quilicura','Huechuraba','Conchalí','Independencia','Recoleta','Lo Barnechea','Colina','Lampa','Tiltil','Pirque','San José de Maipo','Melipilla','Alhué','Curacaví','María Pinto','San Pedro','Talagante','El Monte','Isla de Maipo','Padre Hurtado','Peñaflor'];
+  const CARGOS_CONTACTO = ['Presidente','Tesorero','Secretario','Director','Comité completo'];
+  const FUENTES_LEAD = ['Sitio web','Referido','Feria / Evento','LinkedIn'];
+  const TIPOS_SERVICIO = [{value:'administración',label:'Administración Integral'},{value:'nueva_comunidad',label:'Nueva Comunidad'},{value:'asesoria',label:'Asesoría y Auditoría Externa'}];
+  const TIPOS_PROSPECTO = [{value:'comunidad',label:'Comunidad existente'},{value:'inmobiliaria',label:'Inmobiliaria'}];
   const TAB_ORDER = ['resumen','leads','pipeline','diagnostico','recepcion','actividades','plantillas','archivos'];
 
   let state = {
@@ -370,11 +375,13 @@
     }).join('');
     bindDragDrop();
   }
+  function tipoProspectoLabel(p){ return p.tipoProspecto === 'inmobiliaria' ? 'Inmobiliaria' : (p.tipoProspecto === 'comunidad' ? 'Comunidad existente' : ''); }
   function prospectCard(p){
     const e = normEtapa(p.etapa);
+    const tipoLbl = tipoProspectoLabel(p);
     return '<article class="crmv2-prospect-card" draggable="true" data-prospect-id="' + esc(p.id) + '">' +
       '<h3>' + esc(prospectName(p)) + '</h3>' +
-      '<div class="crmv2-card-meta"><span>' + esc(contactName(p)) + (p.cargoContacto ? ' · ' + esc(p.cargoContacto) : '') + '</span><span>' + esc(comunaOf(p) || 'Sin comuna') + (p.unidades ? ' · ' + esc(p.unidades) + ' unidades' : '') + '</span><span>' + pill(e, e==='Ganado'?'green':e==='Perdido'?'red':e==='Diagnóstico'?'orange':'') + '</span></div>' +
+      '<div class="crmv2-card-meta"><span>' + esc(contactName(p)) + (p.cargoContacto ? ' · ' + esc(p.cargoContacto) : '') + '</span><span>' + esc(comunaOf(p) || 'Sin comuna') + (p.unidades ? ' · ' + esc(p.unidades) + ' unidades' : '') + '</span><span>' + pill(e, e==='Ganado'?'green':e==='Perdido'?'red':e==='Diagnóstico'?'orange':'') + (tipoLbl ? ' ' + pill(tipoLbl, p.tipoProspecto==='inmobiliaria'?'blue':'') : '') + '</span></div>' +
       '<div class="crmv2-card-footer"><button class="crmv2-btn" data-prospect-detail="' + esc(p.id) + '">Ver</button><button class="crmv2-btn" data-mail-prospect="' + esc(p.id) + '">Correo</button></div>' +
       '</article>';
   }
@@ -568,6 +575,34 @@
   }
   function formField(label, id, value, type){ return '<label>' + esc(label) + '<input class="crmv2-input" id="' + id + '" type="' + (type||'text') + '" value="' + esc(value||'') + '"></label>'; }
   function formText(label, id, value){ return '<label class="full">' + esc(label) + '<textarea class="crmv2-textarea" id="' + id + '" rows="3">' + esc(value||'') + '</textarea></label>'; }
+  function formSelectOtra(label, id, options, value){
+    const val = value || '';
+    const knownValues = options.map(o => typeof o === 'string' ? o : o.value);
+    const esOtra = !!val && knownValues.indexOf(val) === -1;
+    const opts = options.map(o => {
+      const v = typeof o === 'string' ? o : o.value;
+      const l = typeof o === 'string' ? o : o.label;
+      return '<option value="' + esc(v) + '" ' + (val===v?'selected':'') + '>' + esc(l) + '</option>';
+    }).join('');
+    return '<label>' + esc(label) +
+      '<select class="crmv2-select" id="' + id + '">' + opts + '<option value="__otra__" ' + (esOtra?'selected':'') + '>Otra…</option></select>' +
+      '<input class="crmv2-input" id="' + id + 'Otra" placeholder="Escribe el valor" style="margin-top:6px;' + (esOtra?'':'display:none') + '" value="' + esc(esOtra?val:'') + '">' +
+    '</label>';
+  }
+  function wireSelectOtra(ov, id){
+    const sel = $('#' + id, ov); const otra = $('#' + id + 'Otra', ov);
+    if(!sel || !otra) return;
+    sel.addEventListener('change', () => {
+      const esOtra = sel.value === '__otra__';
+      otra.style.display = esOtra ? 'block' : 'none';
+      if(esOtra) otra.focus();
+    });
+  }
+  function valorSelectOtra(ov, id){
+    const sel = $('#' + id, ov); const otra = $('#' + id + 'Otra', ov);
+    if(!sel) return '';
+    return sel.value === '__otra__' ? (otra ? otra.value.trim() : '') : sel.value;
+  }
   function openLeadForm(l){
     l = l || {};
     const html = '<h2 class="crmv2-modal-title">' + (l.id ? 'Editar lead' : 'Nuevo lead') + '</h2><p class="crmv2-modal-sub">Leads reemplaza al antiguo Dato.</p>' +
@@ -586,15 +621,32 @@
   }
   function openProspectForm(p){
     p = p || {};
+    const telInicial = phoneOf(p) || '+56 ';
     const html = '<h2 class="crmv2-modal-title">' + (p.id ? 'Editar prospecto' : 'Nuevo prospecto') + '</h2><p class="crmv2-modal-sub">Un prospecto tiene intención o posibilidad real de avanzar.</p>' +
       '<div class="crmv2-form-grid">' +
-      formField('Nombre condominio', 'pfNombre', prospectName(p)) + formField('Comuna', 'pfComuna', p.comuna) + formField('Dirección', 'pfDireccion', p.direccion) + formField('Unidades', 'pfUnidades', p.unidades, 'number') + formField('Contacto', 'pfContacto', contactName(p)==='Sin contacto'?'':contactName(p)) + formField('Cargo', 'pfCargo', p.cargoContacto) + formField('Teléfono', 'pfTelefono', phoneOf(p), 'tel') + formField('Email', 'pfEmail', emailOf(p), 'email') + formField('Fuente', 'pfFuente', p.fuenteLead || 'manual') + formField('Responsable', 'pfResp', p.responsable) + formText('Observaciones', 'pfObs', p.observaciones) +
+      formField('Nombre condominio', 'pfNombre', prospectName(p)) +
+      formSelectOtra('Comuna', 'pfComuna', COMUNAS_RM, p.comuna) +
+      formField('Dirección', 'pfDireccion', p.direccion) +
+      formField('Unidades', 'pfUnidades', p.unidades, 'number') +
+      formField('Contacto', 'pfContacto', contactName(p)==='Sin contacto'?'':contactName(p)) +
+      formSelectOtra('Cargo', 'pfCargo', CARGOS_CONTACTO, p.cargoContacto) +
+      formField('Teléfono', 'pfTelefono', telInicial, 'tel') +
+      formField('Email', 'pfEmail', emailOf(p), 'email') +
+      formSelectOtra('Fuente', 'pfFuente', FUENTES_LEAD, p.fuenteLead) +
+      '<label>Tipo de contraparte<select class="crmv2-select" id="pfTipoProspecto">' + TIPOS_PROSPECTO.map(t => '<option value="' + esc(t.value) + '" ' + (p.tipoProspecto===t.value?'selected':'') + '>' + esc(t.label) + '</option>').join('') + '</select></label>' +
+      '<label>Tipo de servicio<select class="crmv2-select" id="pfTipoServicio">' + TIPOS_SERVICIO.map(t => '<option value="' + esc(t.value) + '" ' + ((p.tipoServicio||'administración')===t.value?'selected':'') + '>' + esc(t.label) + '</option>').join('') + '</select></label>' +
+      formField('Responsable', 'pfResp', p.responsable) +
+      formText('Observaciones', 'pfObs', p.observaciones) +
       '</div><div class="crmv2-modal-section"><button class="crmv2-btn primary full" id="pfSave">Guardar prospecto</button></div>';
     const ov = openModal(html, true);
+    wireSelectOtra(ov, 'pfComuna'); wireSelectOtra(ov, 'pfCargo'); wireSelectOtra(ov, 'pfFuente');
+    const telInput = $('#pfTelefono', ov);
+    telInput.addEventListener('input', () => { if(!telInput.value.startsWith('+56')) telInput.value = '+56 '; });
+    telInput.addEventListener('keydown', e => { if((e.key==='Backspace'||e.key==='Delete') && telInput.selectionStart<=4) e.preventDefault(); });
     $('#pfSave', ov).addEventListener('click', async () => {
       const nombre = $('#pfNombre', ov).value.trim(); const contacto = $('#pfContacto', ov).value.trim();
       if(!nombre || !contacto) return toast('Nombre y contacto son obligatorios.');
-      const body = { nombreCondominio:nombre, comuna:$('#pfComuna', ov).value.trim(), direccion:$('#pfDireccion', ov).value.trim(), unidades:$('#pfUnidades', ov).value || 0, nombreContacto:contacto, cargoContacto:$('#pfCargo', ov).value.trim(), telefono:$('#pfTelefono', ov).value.trim(), email:$('#pfEmail', ov).value.trim(), fuenteLead:$('#pfFuente', ov).value.trim() || 'manual', responsable:$('#pfResp', ov).value.trim(), observaciones:$('#pfObs', ov).value.trim() };
+      const body = { nombreCondominio:nombre, comuna:valorSelectOtra(ov,'pfComuna'), direccion:$('#pfDireccion', ov).value.trim(), unidades:$('#pfUnidades', ov).value || 0, nombreContacto:contacto, cargoContacto:valorSelectOtra(ov,'pfCargo'), telefono:$('#pfTelefono', ov).value.trim(), email:$('#pfEmail', ov).value.trim(), fuenteLead:valorSelectOtra(ov,'pfFuente') || 'manual', tipoProspecto:$('#pfTipoProspecto', ov).value, tipoServicio:$('#pfTipoServicio', ov).value, responsable:$('#pfResp', ov).value.trim(), observaciones:$('#pfObs', ov).value.trim() };
       if(p.id) Object.assign(body, { action:'editarProspecto', id:p.id });
       else Object.assign(body, { action:'saveCRM' });
       const res = await api('/crm','POST',body);
@@ -651,7 +703,8 @@
     });
   }
   function detailGrid(x){
-    const rows = [ ['Comuna', x.comuna], ['Dirección', x.direccion], ['Contacto', contactName(x)], ['Cargo', x.cargoContacto], ['Teléfono', phoneOf(x)], ['Email', emailOf(x)], ['Fuente', x.fuenteLead], ['Observaciones', x.observaciones] ];
+    const tipo = x.tipoProspecto ? tipoProspectoLabel(x) : (x.tipoLead === 'inmobiliaria' ? 'Inmobiliaria' : (x.tipoLead === 'comunidad' ? 'Comunidad' : ''));
+    const rows = [ ['Tipo', tipo], ['Comuna', x.comuna], ['Dirección', x.direccion], ['Contacto', contactName(x)], ['Cargo', x.cargoContacto], ['Teléfono', phoneOf(x)], ['Email', emailOf(x)], ['Fuente', x.fuenteLead], ['Observaciones', x.observaciones] ];
     return '<div class="crmv2-detail-grid">' + rows.map(r => '<div class="crmv2-detail-item"><label>' + esc(r[0]) + '</label><span>' + esc(r[1] || '—') + '</span></div>').join('') + '</div>';
   }
   function renderHistory(raw){
