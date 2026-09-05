@@ -612,6 +612,12 @@ export default {
         return jsonResponse({ ok: true, data }, 200, origin);
       }
 
+      // ── Archivos comerciales (carpeta de Drive) ────────────
+      if (url.pathname === '/archivos' && method === 'GET') {
+        const data = await callAppsScript(APPS_SCRIPT_URL, 'archivos');
+        return jsonResponse({ ok: true, data }, 200, origin);
+      }
+
       // ── Recepción Documental ───────────────────────────────
       if (url.pathname === '/recepciones' && method === 'GET') {
         const id          = url.searchParams.get('id') || '';
