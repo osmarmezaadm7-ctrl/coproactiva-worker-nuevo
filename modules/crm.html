@@ -650,19 +650,25 @@
     if(!x) return;
     const to = emailOf(x);
     const etapaInicial = kind === 'prospecto' ? (x.etapa || 'Nuevo prospecto') : 'Nuevo prospecto';
+    const valorInicial = 'etapa:' + etapaInicial;
     const html =
       '<h2 class="crmv2-modal-title">Correo — ' + esc(contactName(x)) + '</h2>' +
       '<p class="crmv2-modal-sub">' + (to ? 'Para: ' + esc(to) : 'Sin correo registrado') + '</p>' +
       '<div class="crmv2-modal-section"><label class="full">Plantilla<select class="crmv2-select" id="mEtapa">' +
-        ETAPAS.map(e => '<option value="' + esc(e) + '" ' + (e===etapaInicial?'selected':'') + '>' + esc(e) + '</option>').join('') +
+        '<optgroup label="Por etapa">' + ETAPAS.map(e => '<option value="etapa:' + esc(e) + '" ' + (('etapa:'+e)===valorInicial?'selected':'') + '>' + esc(e) + '</option>').join('') + '</optgroup>' +
+        (state.plantillas.length ? '<optgroup label="Plantillas propias">' + state.plantillas.map(pl => '<option value="plt:' + esc(pl.id) + '">' + esc(pl.nombre || 'Plantilla') + '</option>').join('') + '</optgroup>' : '') +
       '</select></label></div>' +
       '<div class="crmv2-modal-section" id="mBody"><div class="crmv2-empty">Cargando plantilla…</div></div>';
     const ov = openModal(html, true);
 
-    async function cargarPlantilla(etapa){
+    async function cargarPlantilla(valor){
       $('#mBody', ov).innerHTML = '<div class="crmv2-empty">Cargando plantilla…</div>';
+      const esPropia = valor.indexOf('plt:') === 0;
+      const payload = { action:'prepararCorreo', prospectoId:x.id, kind };
+      if(esPropia) payload.plantillaId = valor.slice(4);
+      else payload.etapa = valor.slice(6);
       try {
-        const res = await api('/correo','POST',{ action:'prepararCorreo', prospectoId:x.id, kind, etapa });
+        const res = await api('/correo','POST', payload);
         const data = res.data || {};
         if(!res.ok || !data.ok){
           $('#mBody', ov).innerHTML = '<div class="crmv2-empty">' + esc((data && data.error) || res.error || 'No se pudo cargar la plantilla.') + '</div>';
@@ -691,7 +697,8 @@
       if(!to){ toast('No hay correo registrado.'); return; }
       const asunto = $('#mAsunto', ov).value.trim();
       const cuerpo = $('#mCuerpo', ov).value.trim();
-      const etapa  = $('#mEtapa', ov).value;
+      const valor  = $('#mEtapa', ov).value;
+      const etapa  = valor.indexOf('plt:') === 0 ? '' : valor.slice(6);
       if(!asunto || !cuerpo){ toast('Asunto y mensaje son obligatorios.'); return; }
       const btn = comoBorrador ? $('#mBorrador', ov) : $('#mEnviar', ov);
       btn.disabled = true; btn.textContent = comoBorrador ? 'Creando…' : 'Enviando…';
@@ -711,7 +718,7 @@
     }
 
     $('#mEtapa', ov).addEventListener('change', e => cargarPlantilla(e.target.value));
-    cargarPlantilla(etapaInicial);
+    cargarPlantilla(valorInicial);
   }
   function callPhone(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56' + tel)); else toast('Sin teléfono registrado.'); }
   function openWhatsApp(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('https://wa.me/' + (tel.startsWith('56') ? tel : '56' + tel), '_blank'); else toast('Sin teléfono registrado.'); }
