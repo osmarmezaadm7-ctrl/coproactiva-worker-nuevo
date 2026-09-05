@@ -620,13 +620,17 @@
 
     async function cargarPlantilla(etapa){
       $('#mBody', ov).innerHTML = '<div class="crmv2-empty">Cargando plantilla…</div>';
-      const res = await api('/correo','POST',{ action:'prepararCorreo', prospectoId:x.id, kind, etapa });
-      const data = res.data || {};
-      if(!res.ok || !data.ok){
-        $('#mBody', ov).innerHTML = '<div class="crmv2-empty">' + esc((data && data.error) || res.error || 'No se pudo cargar la plantilla.') + '</div>';
-        return;
+      try {
+        const res = await api('/correo','POST',{ action:'prepararCorreo', prospectoId:x.id, kind, etapa });
+        const data = res.data || {};
+        if(!res.ok || !data.ok){
+          $('#mBody', ov).innerHTML = '<div class="crmv2-empty">' + esc((data && data.error) || res.error || 'No se pudo cargar la plantilla.') + '</div>';
+          return;
+        }
+        renderCuerpo(data.asunto, data.cuerpo);
+      } catch(err) {
+        $('#mBody', ov).innerHTML = '<div class="crmv2-empty">Error de conexión: ' + esc(err.message || err) + '</div>';
       }
-      renderCuerpo(data.asunto, data.cuerpo);
     }
 
     function renderCuerpo(asunto, cuerpo){
