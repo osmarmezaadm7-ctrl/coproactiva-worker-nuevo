@@ -582,6 +582,7 @@
       if(!nombre || !contacto) return toast('Nombre y contacto son obligatorios.');
       const body = { nombreCondominio:nombre, comuna:$('#pfComuna', ov).value.trim(), direccion:$('#pfDireccion', ov).value.trim(), unidades:$('#pfUnidades', ov).value || 0, nombreContacto:contacto, cargoContacto:$('#pfCargo', ov).value.trim(), telefono:$('#pfTelefono', ov).value.trim(), email:$('#pfEmail', ov).value.trim(), fuenteLead:$('#pfFuente', ov).value.trim() || 'manual', responsable:$('#pfResp', ov).value.trim(), observaciones:$('#pfObs', ov).value.trim() };
       if(p.id) Object.assign(body, { action:'editarProspecto', id:p.id });
+      else Object.assign(body, { action:'saveCRM' });
       const res = await api('/crm','POST',body);
       if(res.ok && res.data && res.data.ok){ ov.remove(); await init(); toast('Prospecto guardado.'); } else toast((res.data && res.data.error) || res.error || 'No se pudo guardar.');
     });
@@ -637,14 +638,12 @@
   async function convertProspectToLead(p){
     if(!p) return;
     if(!confirm('¿Volver este prospecto a Lead? Quedará fuera del pipeline activo.')) return;
-    let res = await api('/crm','POST',{ action:'convertirProspectoALead', id:p.id });
-    if(res.ok && res.data && res.data.ok){ await init(); state.tab='leads'; render(); toast('Prospecto convertido a lead.'); return; }
-    const newLead = { action:'crearLead', tipoLead:'comunidad', nombreCondominio:prospectName(p), comuna:p.comuna || '', direccion:p.direccion || '', nombreContacto:contactName(p), cargoContacto:p.cargoContacto || '', telefono:phoneOf(p), email:emailOf(p), fuenteLead:p.fuenteLead || 'pipeline', observaciones:'Reingresado desde prospecto ' + p.id + '. ' + (p.observaciones || '') };
-    const resLead = await api('/leads','POST',newLead);
-    if(resLead.ok && resLead.data && resLead.data.ok){
-      await api('/crm','POST',{ action:'cambiarEtapa', id:p.id, etapaNueva:'Perdido' });
-      await init(); state.tab='leads'; render(); toast('Prospecto devuelto a Lead. Se dejó el prospecto como Perdido.');
-    } else toast((resLead.data && resLead.data.error) || resLead.error || 'No se pudo volver a Lead.');
+    const res = await api('/crm','POST',{ action:'convertirProspectoALead', id:p.id });
+    if(res.ok && res.data && res.data.ok){
+      await init(); state.tab='leads'; render(); toast('Prospecto convertido de vuelta a Lead.');
+    } else {
+      toast((res.data && res.data.error) || res.error || 'No se pudo volver a Lead.');
+    }
   }
   function openMailModal(x, kind){
     if(!x) return;
