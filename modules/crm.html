@@ -345,7 +345,7 @@
     ).join('') || '<tr><td colspan="6"><div class="crmv2-empty">No hay leads para mostrar.</div></td></tr>';
     $all('[data-lead-detail]').forEach(b => b.addEventListener('click', () => openLeadDetail(findLead(b.dataset.leadDetail))));
     $all('[data-lead-edit]').forEach(b => b.addEventListener('click', () => openLeadForm(findLead(b.dataset.leadEdit))));
-    $all('[data-mail-lead]').forEach(b => b.addEventListener('click', () => openMail(findLead(b.dataset.mailLead), 'lead')));
+    $all('[data-mail-lead]').forEach(b => b.addEventListener('click', () => openMailModal(findLead(b.dataset.mailLead), 'lead')));
     $all('[data-convert-lead]').forEach(b => b.addEventListener('click', () => convertLead(findLead(b.dataset.convertLead))));
   }
   function labelLeadEstado(e){ return ({nuevo:'Nuevo',contactado:'Contactado',descartado:'Descartado',convertido:'Convertido'}[e] || e || 'Nuevo'); }
@@ -386,7 +386,7 @@
         const detail = e.target.closest('[data-prospect-detail]');
         const mail = e.target.closest('[data-mail-prospect]');
         if(detail) { openProspectDetail(findProspect(detail.dataset.prospectDetail)); return; }
-        if(mail) { openMail(findProspect(mail.dataset.mailProspect), 'prospecto'); return; }
+        if(mail) { openMailModal(findProspect(mail.dataset.mailProspect), 'prospecto'); return; }
         openProspectDetail(findProspect(card.dataset.prospectId));
       });
     });
@@ -554,7 +554,7 @@
       '<div class="crmv2-modal-section"><div class="crmv2-section-title">Historial</div>' + hist + '</div>';
     const ov = openModal(html, true);
     $('#ldEdit', ov).addEventListener('click', () => { ov.remove(); openLeadForm(l); });
-    $('#ldMail', ov).addEventListener('click', () => openMail(l, 'lead'));
+    $('#ldMail', ov).addEventListener('click', () => openMailModal(l, 'lead'));
     $('#ldCall', ov).addEventListener('click', () => callPhone(l));
     const c = $('#ldConvert', ov); if(c) c.addEventListener('click', async () => { ov.remove(); await convertLead(l); });
     $('#ldSaveEstado', ov).addEventListener('click', async () => {
@@ -570,7 +570,7 @@
       '<div class="crmv2-modal-section"><div class="crmv2-section-title">Acciones</div><div class="crmv2-row-actions"><button class="crmv2-btn" id="pdEdit">Editar</button><button class="crmv2-btn" id="pdMail">Correo</button><button class="crmv2-btn" id="pdWsp">WhatsApp</button>' + (etapa === 'Diagnóstico' ? '<button class="crmv2-btn primary" id="pdDiag">Iniciar diagnóstico</button>' : '<button class="crmv2-btn" id="pdToDiag">Mover a Diagnóstico</button>') + '<button class="crmv2-btn danger" id="pdBackLead">Volver a Lead</button></div></div>';
     const ov = openModal(html, true);
     $('#pdEdit', ov).addEventListener('click', () => { ov.remove(); openProspectForm(p); });
-    $('#pdMail', ov).addEventListener('click', () => openMail(p, 'prospecto'));
+    $('#pdMail', ov).addEventListener('click', () => openMailModal(p, 'prospecto'));
     $('#pdWsp', ov).addEventListener('click', () => openWhatsApp(p));
     $('#pdSaveEtapa', ov).addEventListener('click', async () => { const st = $('#pdEtapa', ov).value; ov.remove(); await changeProspectStage(p, st); });
     const diag = $('#pdDiag', ov); if(diag) diag.addEventListener('click', () => { ov.remove(); state.tab='diagnostico'; render(); setTimeout(() => startDiagnosis(p), 50); });
@@ -605,13 +605,68 @@
       await init(); state.tab='leads'; render(); toast('Prospecto devuelto a Lead. Se dejó el prospecto como Perdido.');
     } else toast((resLead.data && resLead.data.error) || resLead.error || 'No se pudo volver a Lead.');
   }
-  function openMail(x, kind){
+  function openMailModal(x, kind){
     if(!x) return;
     const to = emailOf(x);
-    const subject = kind === 'lead' ? 'Seguimiento Coproactiva' : 'Coproactiva - Seguimiento comercial';
-    const body = 'Hola ' + contactName(x) + ',%0D%0A%0D%0AQuería dar seguimiento a ' + (kind === 'lead' ? 'la información inicial' : 'la conversación sobre ' + prospectName(x)) + '.%0D%0A%0D%0ASaludos,%0D%0ACoproactiva';
-    if(to) window.open('mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + body, '_blank');
-    else toast('No hay correo registrado.');
+    const etapaInicial = kind === 'prospecto' ? (x.etapa || 'Nuevo prospecto') : 'Nuevo prospecto';
+    const html =
+      '<h2 class="crmv2-modal-title">Correo — ' + esc(contactName(x)) + '</h2>' +
+      '<p class="crmv2-modal-sub">' + (to ? 'Para: ' + esc(to) : 'Sin correo registrado') + '</p>' +
+      '<div class="crmv2-modal-section"><label class="full">Plantilla<select class="crmv2-select" id="mEtapa">' +
+        ETAPAS.map(e => '<option value="' + esc(e) + '" ' + (e===etapaInicial?'selected':'') + '>' + esc(e) + '</option>').join('') +
+      '</select></label></div>' +
+      '<div class="crmv2-modal-section" id="mBody"><div class="crmv2-empty">Cargando plantilla…</div></div>';
+    const ov = openModal(html, true);
+
+    async function cargarPlantilla(etapa){
+      $('#mBody', ov).innerHTML = '<div class="crmv2-empty">Cargando plantilla…</div>';
+      const res = await api('/correo','POST',{ action:'prepararCorreo', prospectoId:x.id, kind, etapa });
+      const data = res.data || {};
+      if(!res.ok || !data.ok){
+        $('#mBody', ov).innerHTML = '<div class="crmv2-empty">' + esc((data && data.error) || res.error || 'No se pudo cargar la plantilla.') + '</div>';
+        return;
+      }
+      renderCuerpo(data.asunto, data.cuerpo);
+    }
+
+    function renderCuerpo(asunto, cuerpo){
+      $('#mBody', ov).innerHTML =
+        formField('Asunto', 'mAsunto', asunto) +
+        formText('Mensaje', 'mCuerpo', cuerpo) +
+        '<div class="crmv2-row-actions" style="margin-top:12px">' +
+          '<button class="crmv2-btn primary" id="mEnviar">Enviar correo</button>' +
+          '<button class="crmv2-btn" id="mBorrador">Crear borrador</button>' +
+        '</div>';
+      const ta = $('#mCuerpo', ov); if(ta) ta.rows = 10;
+      $('#mEnviar', ov).addEventListener('click', () => procesar(false));
+      $('#mBorrador', ov).addEventListener('click', () => procesar(true));
+    }
+
+    async function procesar(comoBorrador){
+      if(!to){ toast('No hay correo registrado.'); return; }
+      const asunto = $('#mAsunto', ov).value.trim();
+      const cuerpo = $('#mCuerpo', ov).value.trim();
+      const etapa  = $('#mEtapa', ov).value;
+      if(!asunto || !cuerpo){ toast('Asunto y mensaje son obligatorios.'); return; }
+      const btn = comoBorrador ? $('#mBorrador', ov) : $('#mEnviar', ov);
+      btn.disabled = true; btn.textContent = comoBorrador ? 'Creando…' : 'Enviando…';
+      const res = await api('/correo','POST',{
+        action: comoBorrador ? 'crearBorrador' : 'enviarCorreo',
+        prospectoId: x.id, kind, etapa,
+        etapaAnterior: kind === 'prospecto' ? (x.etapa || '') : '',
+        para: to, asunto, cuerpo, responsable: ''
+      });
+      if(res.ok && res.data && res.data.ok){
+        ov.remove();
+        toast(comoBorrador ? 'Borrador creado en Gmail.' : 'Correo enviado.');
+      } else {
+        toast((res.data && res.data.error) || res.error || 'No se pudo procesar el correo.');
+        btn.disabled = false; btn.textContent = comoBorrador ? 'Crear borrador' : 'Enviar correo';
+      }
+    }
+
+    $('#mEtapa', ov).addEventListener('change', e => cargarPlantilla(e.target.value));
+    cargarPlantilla(etapaInicial);
   }
   function callPhone(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56' + tel)); else toast('Sin teléfono registrado.'); }
   function openWhatsApp(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('https://wa.me/' + (tel.startsWith('56') ? tel : '56' + tel), '_blank'); else toast('Sin teléfono registrado.'); }
