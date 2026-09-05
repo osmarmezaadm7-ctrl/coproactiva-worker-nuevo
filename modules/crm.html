@@ -130,7 +130,7 @@
     files: [
       { nombre:'Presentación general Coproactiva', tipo:'Presentación', url:'assets/presentacion-coproactiva.pdf', canal:'Correo / WhatsApp' }
     ],
-    filtros: { q:'', leadEstado:'', leadTipo:'', etapa:'', accion:'' },
+    filtros: { q:'', leadEstado:'', leadTipo:'', etapa:'', accion:'', verArchivados:false },
     tabCache: {}
   };
 
@@ -313,17 +313,18 @@
     cont.innerHTML =
       '<section class="crmv2-card">' +
         '<div class="crmv2-panel-head"><div><h2>Leads</h2><p>Base inicial de oportunidades. Desde aquí se convierten a prospecto solo si hay posibilidad real de avance.</p></div><button class="crmv2-btn primary" id="btnNewLead2"><i class="ti ti-plus"></i> Nuevo lead</button></div>' +
-        '<div class="crmv2-toolbar"><input class="crmv2-input crmv2-search" id="leadSearch" placeholder="Buscar comunidad, contacto, correo, comuna o fuente" value="' + esc(state.filtros.q) + '"><select class="crmv2-select" id="leadEstado" style="max-width:190px"><option value="">Todos los estados</option>' + LEAD_ESTADOS.map(e => '<option value="' + e + '" ' + (state.filtros.leadEstado===e?'selected':'') + '>' + labelLeadEstado(e) + '</option>').join('') + '</select><select class="crmv2-select" id="leadTipo" style="max-width:190px"><option value="">Todos los tipos</option><option value="comunidad" ' + (state.filtros.leadTipo==='comunidad'?'selected':'') + '>Comunidad</option><option value="inmobiliaria" ' + (state.filtros.leadTipo==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select></div>' +
+        '<div class="crmv2-toolbar"><input class="crmv2-input crmv2-search" id="leadSearch" placeholder="Buscar comunidad, contacto, correo, comuna o fuente" value="' + esc(state.filtros.q) + '"><select class="crmv2-select" id="leadEstado" style="max-width:190px"><option value="">Todos los estados</option>' + LEAD_ESTADOS.map(e => '<option value="' + e + '" ' + (state.filtros.leadEstado===e?'selected':'') + '>' + labelLeadEstado(e) + '</option>').join('') + '</select><select class="crmv2-select" id="leadTipo" style="max-width:190px"><option value="">Todos los tipos</option><option value="comunidad" ' + (state.filtros.leadTipo==='comunidad'?'selected':'') + '>Comunidad</option><option value="inmobiliaria" ' + (state.filtros.leadTipo==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select><label class="crmv2-muted" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input type="checkbox" id="leadVerArchivados" ' + (state.filtros.verArchivados?'checked':'') + '> Mostrar archivados</label></div>' +
         '<div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Lead</th><th>Tipo</th><th>Contacto</th><th>Estado</th><th>Último contacto</th><th>Acciones</th></tr></thead><tbody id="leadTbody"></tbody></table></div>' +
       '</section>';
     $('#btnNewLead2').addEventListener('click', () => openLeadForm());
     $('#leadSearch').addEventListener('input', e => { state.filtros.q = e.target.value; renderLeadRows(); });
     $('#leadEstado').addEventListener('change', e => { state.filtros.leadEstado = e.target.value; renderLeadRows(); });
     $('#leadTipo').addEventListener('change', e => { state.filtros.leadTipo = e.target.value; renderLeadRows(); });
+    $('#leadVerArchivados').addEventListener('change', e => { state.filtros.verArchivados = e.target.checked; renderLeadRows(); });
     renderLeadRows();
   }
   function filteredLeads(){
-    let lista = activeLeads();
+    let lista = state.filtros.verArchivados ? state.leads.slice() : activeLeads();
     if(state.filtros.leadEstado) lista = lista.filter(l => (l.estado || 'nuevo') === state.filtros.leadEstado);
     if(state.filtros.leadTipo) lista = lista.filter(l => (l.tipoLead || '') === state.filtros.leadTipo);
     const q = (state.filtros.q || '').trim().toLowerCase();
@@ -591,7 +592,7 @@
     if(!l) return;
     const hist = renderHistory(l.historial);
     const html = '<h2 class="crmv2-modal-title">' + esc(leadName(l)) + '</h2><p class="crmv2-modal-sub">Lead · ' + esc(labelLeadEstado(l.estado || 'nuevo')) + '</p>' + detailGrid(l) +
-      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Acciones</div><div class="crmv2-row-actions"><button class="crmv2-btn" id="ldEdit">Editar</button><button class="crmv2-btn" id="ldMail">Correo</button><button class="crmv2-btn" id="ldCall">Llamar</button>' + (!isConverted(l) ? '<button class="crmv2-btn green" id="ldConvert">Convertir a prospecto</button>' : '') + '</div></div>' +
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Acciones</div><div class="crmv2-row-actions"><button class="crmv2-btn" id="ldEdit">Editar</button><button class="crmv2-btn" id="ldMail">Correo</button><button class="crmv2-btn" id="ldCall">Llamar</button>' + (!isConverted(l) ? '<button class="crmv2-btn green" id="ldConvert">Convertir a prospecto</button>' : '') + (isArchived(l) ? '<button class="crmv2-btn" id="ldReactivar">Reactivar</button>' : '<button class="crmv2-btn danger" id="ldArchivar">Archivar</button>') + '</div></div>' +
       '<div class="crmv2-modal-section"><div class="crmv2-section-title">Cambiar estado</div><select class="crmv2-select" id="ldEstado">' + LEAD_ESTADOS.map(e => '<option value="' + e + '" ' + ((l.estado||'nuevo')===e?'selected':'') + '>' + labelLeadEstado(e) + '</option>').join('') + '</select><button class="crmv2-btn dark full" style="margin-top:10px" id="ldSaveEstado">Guardar estado</button></div>' +
       '<div class="crmv2-modal-section"><div class="crmv2-section-title">Historial</div>' + hist + '</div>';
     const ov = openModal(html, true);
@@ -599,6 +600,17 @@
     $('#ldMail', ov).addEventListener('click', () => openMailModal(l, 'lead'));
     $('#ldCall', ov).addEventListener('click', () => callPhone(l));
     const c = $('#ldConvert', ov); if(c) c.addEventListener('click', async () => { ov.remove(); await convertLead(l); });
+    const arch = $('#ldArchivar', ov); if(arch) arch.addEventListener('click', async () => {
+      if(!confirm('¿Archivar este lead? Se ocultará de la lista activa, pero no se borra y puedes reactivarlo cuando quieras.')) return;
+      const res = await api('/leads','POST',{ action:'archivarLead', id:l.id });
+      if(res.ok && res.data && res.data.ok){ ov.remove(); await init(); toast('Lead archivado.'); }
+      else toast((res.data && res.data.error) || res.error || 'No se pudo archivar.');
+    });
+    const react = $('#ldReactivar', ov); if(react) react.addEventListener('click', async () => {
+      const res = await api('/leads','POST',{ action:'reactivarLead', id:l.id });
+      if(res.ok && res.data && res.data.ok){ ov.remove(); await init(); toast('Lead reactivado.'); }
+      else toast((res.data && res.data.error) || res.error || 'No se pudo reactivar.');
+    });
     $('#ldSaveEstado', ov).addEventListener('click', async () => {
       const estado = $('#ldEstado', ov).value; const res = await api('/leads','POST',{ action:'cambiarEstadoLead', id:l.id, estadoNuevo:estado });
       if(res.ok && res.data && res.data.ok){ l.estado = estado; ov.remove(); render(); toast('Estado actualizado.'); } else toast('No se pudo cambiar estado.');
@@ -609,7 +621,7 @@
     const etapa = normEtapa(p.etapa);
     const html = '<h2 class="crmv2-modal-title">' + esc(prospectName(p)) + '</h2><p class="crmv2-modal-sub">Prospecto · ' + esc(etapa) + '</p>' + detailGrid(p) +
       '<div class="crmv2-modal-section"><div class="crmv2-section-title">Cambiar etapa</div><select class="crmv2-select" id="pdEtapa">' + ETAPAS.map(e => '<option value="' + e + '" ' + (etapa===e?'selected':'') + '>' + e + '</option>').join('') + '</select><button class="crmv2-btn dark full" style="margin-top:10px" id="pdSaveEtapa">Guardar etapa</button></div>' +
-      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Acciones</div><div class="crmv2-row-actions"><button class="crmv2-btn" id="pdEdit">Editar</button><button class="crmv2-btn" id="pdMail">Correo</button><button class="crmv2-btn" id="pdWsp">WhatsApp</button>' + (etapa === 'Diagnóstico' ? '<button class="crmv2-btn primary" id="pdDiag">Iniciar diagnóstico</button>' : '<button class="crmv2-btn" id="pdToDiag">Mover a Diagnóstico</button>') + '<button class="crmv2-btn danger" id="pdBackLead">Volver a Lead</button></div></div>';
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Acciones</div><div class="crmv2-row-actions"><button class="crmv2-btn" id="pdEdit">Editar</button><button class="crmv2-btn" id="pdMail">Correo</button><button class="crmv2-btn" id="pdWsp">WhatsApp</button>' + (etapa === 'Diagnóstico' ? '<button class="crmv2-btn primary" id="pdDiag">Iniciar diagnóstico</button>' : '<button class="crmv2-btn" id="pdToDiag">Mover a Diagnóstico</button>') + '<button class="crmv2-btn danger" id="pdBackLead">Volver a Lead</button><button class="crmv2-btn danger" id="pdDelete">Eliminar</button></div></div>';
     const ov = openModal(html, true);
     $('#pdEdit', ov).addEventListener('click', () => { ov.remove(); openProspectForm(p); });
     $('#pdMail', ov).addEventListener('click', () => openMailModal(p, 'prospecto'));
@@ -618,6 +630,12 @@
     const diag = $('#pdDiag', ov); if(diag) diag.addEventListener('click', () => { ov.remove(); state.tab='diagnostico'; render(); setTimeout(() => startDiagnosis(p), 50); });
     const toDiag = $('#pdToDiag', ov); if(toDiag) toDiag.addEventListener('click', async () => { ov.remove(); await changeProspectStage(p, 'Diagnóstico'); });
     $('#pdBackLead', ov).addEventListener('click', async () => { ov.remove(); await convertProspectToLead(p); });
+    $('#pdDelete', ov).addEventListener('click', async () => {
+      if(!confirm('¿Eliminar definitivamente este prospecto? No se puede deshacer (queda un registro en el historial).')) return;
+      const res = await api('/crm','POST',{ action:'eliminarProspecto', id:p.id });
+      if(res.ok && res.data && res.data.ok){ ov.remove(); await init(); toast('Prospecto eliminado.'); }
+      else toast((res.data && res.data.error) || res.error || 'No se pudo eliminar.');
+    });
   }
   function detailGrid(x){
     const rows = [ ['Comuna', x.comuna], ['Dirección', x.direccion], ['Contacto', contactName(x)], ['Cargo', x.cargoContacto], ['Teléfono', phoneOf(x)], ['Email', emailOf(x)], ['Fuente', x.fuenteLead], ['Observaciones', x.observaciones] ];
