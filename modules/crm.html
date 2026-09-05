@@ -127,9 +127,7 @@
     prospectos: [],
     leads: [],
     plantillas: [],
-    files: [
-      { nombre:'Presentación general Coproactiva', tipo:'Presentación', url:'assets/presentacion-coproactiva.pdf', canal:'Correo / WhatsApp' }
-    ],
+    archivos: [],
     filtros: { q:'', leadEstado:'', leadTipo:'', etapa:'', accion:'', verArchivados:false },
     tabCache: {}
   };
@@ -226,7 +224,7 @@
     if(tab === 'recepcion') return state.prospectos.filter(p => normEtapa(p.etapa) === 'Ganado').length;
     if(tab === 'actividades') return computedActivities().length;
     if(tab === 'plantillas') return state.plantillas.length;
-    if(tab === 'archivos') return state.files.length;
+    if(tab === 'archivos') return state.archivos.length;
     return '';
   }
   function render(){
@@ -514,8 +512,23 @@
     else toast((res.data && res.data.error) || res.error || 'No se pudo eliminar.');
   }
   function renderArchivos(cont){
-    cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Archivos comerciales</h2><p>Links disponibles para insertar manualmente en correos o WhatsApp.</p></div></div>' +
-      state.files.map(f => '<article class="crmv2-activity"><span class="crmv2-activity-dot orange"></span><div style="flex:1"><div class="crmv2-name">' + esc(f.nombre) + '</div><div class="crmv2-muted">' + esc(f.tipo) + ' · ' + esc(f.canal) + '</div></div><a class="crmv2-btn" href="' + esc(f.url) + '" target="_blank" rel="noreferrer">Abrir</a></article>').join('') + '</section>';
+    cont.innerHTML = '<section class="crmv2-card"><div class="crmv2-panel-head"><div><h2>Archivos comerciales</h2><p>Carpeta de Drive compartida — se puede adjuntar directo desde el correo del pipeline.</p></div></div><div id="archivosList"><div class="crmv2-empty">Cargando…</div></div></section>';
+    cargarArchivos();
+  }
+  async function cargarArchivos(){
+    const cont = $('#archivosList'); if(!cont) return;
+    try {
+      const res = await api('/archivos');
+      const data = res.data || {};
+      if(!res.ok || !data.ok){
+        cont.innerHTML = '<div class="crmv2-empty">' + esc((data && data.error) || res.error || 'No se pudo cargar la carpeta.') + '</div>';
+        return;
+      }
+      state.archivos = data.data || [];
+      cont.innerHTML = state.archivos.map(f => '<article class="crmv2-activity"><span class="crmv2-activity-dot orange"></span><div style="flex:1"><div class="crmv2-name">' + esc(f.nombre) + '</div><div class="crmv2-muted">' + esc(f.mimeType || '') + '</div></div><a class="crmv2-btn" href="' + esc(f.url) + '" target="_blank" rel="noreferrer">Abrir</a></article>').join('') || '<div class="crmv2-empty">No hay archivos en la carpeta.</div>';
+    } catch(err) {
+      cont.innerHTML = '<div class="crmv2-empty">Error de conexión: ' + esc(err.message || err) + '</div>';
+    }
   }
 
   function openDiagnosticoFullscreen(){
@@ -675,8 +688,24 @@
         '<optgroup label="Por etapa">' + ETAPAS.map(e => '<option value="etapa:' + esc(e) + '" ' + (('etapa:'+e)===valorInicial?'selected':'') + '>' + esc(e) + '</option>').join('') + '</optgroup>' +
         (state.plantillas.length ? '<optgroup label="Plantillas propias">' + state.plantillas.map(pl => '<option value="plt:' + esc(pl.id) + '">' + esc(pl.nombre || 'Plantilla') + '</option>').join('') + '</optgroup>' : '') +
       '</select></label></div>' +
+      '<div class="crmv2-modal-section"><div class="crmv2-section-title">Adjuntar (opcional)</div><div id="mAdjuntos"><div class="crmv2-empty">Cargando archivos…</div></div></div>' +
       '<div class="crmv2-modal-section" id="mBody"><div class="crmv2-empty">Cargando plantilla…</div></div>';
     const ov = openModal(html, true);
+
+    async function cargarAdjuntos(){
+      const cont = $('#mAdjuntos', ov); if(!cont) return;
+      try {
+        const res = await api('/archivos');
+        const data = res.data || {};
+        if(!res.ok || !data.ok){ cont.innerHTML = '<div class="crmv2-empty">No se pudo cargar la carpeta de archivos.</div>'; return; }
+        const lista = data.data || [];
+        cont.innerHTML = lista.length
+          ? lista.map(f => '<label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;color:var(--co-ink-2)"><input type="checkbox" class="mAdjChk" value="' + esc(f.id) + '"> ' + esc(f.nombre) + '</label>').join('')
+          : '<div class="crmv2-empty">No hay archivos en la carpeta.</div>';
+      } catch(err) {
+        cont.innerHTML = '<div class="crmv2-empty">Error de conexión: ' + esc(err.message || err) + '</div>';
+      }
+    }
 
     async function cargarPlantilla(valor){
       $('#mBody', ov).innerHTML = '<div class="crmv2-empty">Cargando plantilla…</div>';
@@ -719,11 +748,12 @@
       if(!asunto || !cuerpo){ toast('Asunto y mensaje son obligatorios.'); return; }
       const btn = comoBorrador ? $('#mBorrador', ov) : $('#mEnviar', ov);
       btn.disabled = true; btn.textContent = comoBorrador ? 'Creando…' : 'Enviando…';
+      const adjuntos = $all('.mAdjChk', ov).filter(c => c.checked).map(c => c.value);
       const res = await api('/correo','POST',{
         action: comoBorrador ? 'crearBorrador' : 'enviarCorreo',
         prospectoId: x.id, kind, etapa,
         etapaAnterior: kind === 'prospecto' ? (x.etapa || '') : '',
-        para: to, asunto, cuerpo, responsable: ''
+        para: to, asunto, cuerpo, adjuntos, responsable: ''
       });
       if(res.ok && res.data && res.data.ok){
         ov.remove();
@@ -736,6 +766,7 @@
 
     $('#mEtapa', ov).addEventListener('change', e => cargarPlantilla(e.target.value));
     cargarPlantilla(valorInicial);
+    cargarAdjuntos();
   }
   function callPhone(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('tel:+' + (tel.startsWith('56') ? tel : '56' + tel)); else toast('Sin teléfono registrado.'); }
   function openWhatsApp(x){ const tel = String(phoneOf(x)||'').replace(/[^0-9]/g,''); if(tel) window.open('https://wa.me/' + (tel.startsWith('56') ? tel : '56' + tel), '_blank'); else toast('Sin teléfono registrado.'); }
