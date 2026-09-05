@@ -433,10 +433,10 @@ export default {
 
       if (url.pathname === '/correo' && method === 'POST') {
         const body = await request.json();
-        if (!body.para || !body.asunto || !body.cuerpo) {
+        const action = body.action || 'enviarCorreo';
+        if (action !== 'prepararCorreo' && (!body.para || !body.asunto || !body.cuerpo)) {
           return jsonResponse({ ok: false, error: 'Faltan campos: para, asunto, cuerpo' }, 400, origin);
         }
-        const action = body.action || 'enviarCorreo';
         const data = await postAppsScript(APPS_SCRIPT_URL, { ...body, action });
         return jsonResponse({ ok: true, data }, 200, origin);
       }
