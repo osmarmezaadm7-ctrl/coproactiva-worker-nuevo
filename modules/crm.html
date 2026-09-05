@@ -124,7 +124,7 @@
   const CARGOS_CONTACTO = ['Presidente','Tesorero','Secretario','Director','Comité completo'];
   const FUENTES_LEAD = ['Sitio web','Referido','Feria / Evento','LinkedIn'];
   const TIPOS_SERVICIO = [{value:'administración',label:'Administración Integral'},{value:'nueva_comunidad',label:'Nueva Comunidad'},{value:'asesoria',label:'Asesoría y Auditoría Externa'}];
-  const TIPOS_PROSPECTO = [{value:'comunidad',label:'Comunidad existente'},{value:'inmobiliaria',label:'Inmobiliaria'}];
+  const TIPOS_PROSPECTO = [{value:'comunidad',label:'Comité de administración'},{value:'inmobiliaria',label:'Inmobiliaria'}];
   const TAB_ORDER = ['resumen','leads','pipeline','diagnostico','recepcion','actividades','plantillas','archivos'];
 
   let state = {
@@ -316,7 +316,7 @@
     cont.innerHTML =
       '<section class="crmv2-card">' +
         '<div class="crmv2-panel-head"><div><h2>Leads</h2><p>Base inicial de oportunidades. Desde aquí se convierten a prospecto solo si hay posibilidad real de avance.</p></div><button class="crmv2-btn primary" id="btnNewLead2"><i class="ti ti-plus"></i> Nuevo lead</button></div>' +
-        '<div class="crmv2-toolbar"><input class="crmv2-input crmv2-search" id="leadSearch" placeholder="Buscar comunidad, contacto, correo, comuna o fuente" value="' + esc(state.filtros.q) + '"><select class="crmv2-select" id="leadEstado" style="max-width:190px"><option value="">Todos los estados</option>' + LEAD_ESTADOS.map(e => '<option value="' + e + '" ' + (state.filtros.leadEstado===e?'selected':'') + '>' + labelLeadEstado(e) + '</option>').join('') + '</select><select class="crmv2-select" id="leadTipo" style="max-width:190px"><option value="">Todos los tipos</option><option value="comunidad" ' + (state.filtros.leadTipo==='comunidad'?'selected':'') + '>Comunidad</option><option value="inmobiliaria" ' + (state.filtros.leadTipo==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select><label class="crmv2-muted" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input type="checkbox" id="leadVerArchivados" ' + (state.filtros.verArchivados?'checked':'') + '> Mostrar archivados</label></div>' +
+        '<div class="crmv2-toolbar"><input class="crmv2-input crmv2-search" id="leadSearch" placeholder="Buscar comunidad, contacto, correo, comuna o fuente" value="' + esc(state.filtros.q) + '"><select class="crmv2-select" id="leadEstado" style="max-width:190px"><option value="">Todos los estados</option>' + LEAD_ESTADOS.map(e => '<option value="' + e + '" ' + (state.filtros.leadEstado===e?'selected':'') + '>' + labelLeadEstado(e) + '</option>').join('') + '</select><select class="crmv2-select" id="leadTipo" style="max-width:190px"><option value="">Todos los tipos</option><option value="comunidad" ' + (state.filtros.leadTipo==='comunidad'?'selected':'') + '>Comité de administración</option><option value="inmobiliaria" ' + (state.filtros.leadTipo==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select><label class="crmv2-muted" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input type="checkbox" id="leadVerArchivados" ' + (state.filtros.verArchivados?'checked':'') + '> Mostrar archivados</label></div>' +
         '<div class="crmv2-table-wrap"><table class="crmv2-table"><thead><tr><th>Lead</th><th>Tipo</th><th>Contacto</th><th>Estado</th><th>Último contacto</th><th>Acciones</th></tr></thead><tbody id="leadTbody"></tbody></table></div>' +
       '</section>';
     $('#btnNewLead2').addEventListener('click', () => openLeadForm());
@@ -340,7 +340,7 @@
     tbody.innerHTML = lista.map(l =>
       '<tr>' +
         '<td><div class="crmv2-name">' + esc(leadName(l)) + '</div><div class="crmv2-muted">' + esc(comunaOf(l) || l.fuenteLead || '') + '</div></td>' +
-        '<td>' + pill(l.tipoLead === 'inmobiliaria' ? 'Inmobiliaria' : 'Comunidad', l.tipoLead === 'inmobiliaria' ? 'blue' : 'orange') + '</td>' +
+        '<td>' + pill(l.tipoLead === 'inmobiliaria' ? 'Inmobiliaria' : 'Comité de administración', l.tipoLead === 'inmobiliaria' ? 'blue' : 'orange') + '</td>' +
         '<td><div>' + esc(contactName(l)) + '</div><div class="crmv2-muted">' + esc(emailOf(l) || phoneOf(l) || '') + '</div></td>' +
         '<td>' + pill(labelLeadEstado(l.estado || 'nuevo'), leadTone(l.estado)) + '</td>' +
         '<td>' + esc(fmtDate(l.fechaUltimoContacto || l.fechaIngreso)) + '</td>' +
@@ -375,7 +375,7 @@
     }).join('');
     bindDragDrop();
   }
-  function tipoProspectoLabel(p){ return p.tipoProspecto === 'inmobiliaria' ? 'Inmobiliaria' : (p.tipoProspecto === 'comunidad' ? 'Comunidad existente' : ''); }
+  function tipoProspectoLabel(p){ return p.tipoProspecto === 'inmobiliaria' ? 'Inmobiliaria' : (p.tipoProspecto === 'comunidad' ? 'Comité de administración' : ''); }
   function prospectCard(p){
     const e = normEtapa(p.etapa);
     const tipoLbl = tipoProspectoLabel(p);
@@ -607,7 +607,7 @@
     l = l || {};
     const html = '<h2 class="crmv2-modal-title">' + (l.id ? 'Editar lead' : 'Nuevo lead') + '</h2><p class="crmv2-modal-sub">Leads reemplaza al antiguo Dato.</p>' +
       '<div class="crmv2-form-grid">' +
-      '<label class="full">Tipo<select class="crmv2-select" id="lfTipo"><option value="comunidad" ' + ((l.tipoLead||'comunidad')==='comunidad'?'selected':'') + '>Comunidad</option><option value="inmobiliaria" ' + (l.tipoLead==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select></label>' +
+      '<label class="full">Categoría del prospecto<select class="crmv2-select" id="lfTipo"><option value="comunidad" ' + ((l.tipoLead||'comunidad')==='comunidad'?'selected':'') + '>Comité de administración</option><option value="inmobiliaria" ' + (l.tipoLead==='inmobiliaria'?'selected':'') + '>Inmobiliaria</option></select></label>' +
       formField('Nombre comunidad / proyecto', 'lfNombre', leadName(l)) + formField('Comuna', 'lfComuna', l.comuna) + formField('Dirección', 'lfDireccion', l.direccion) + formField('Contacto', 'lfContacto', contactName(l)==='Sin contacto'?'':contactName(l)) + formField('Cargo', 'lfCargo', l.cargoContacto) + formField('Teléfono', 'lfTelefono', phoneOf(l), 'tel') + formField('Email', 'lfEmail', emailOf(l), 'email') + formField('Fuente', 'lfFuente', l.fuenteLead || 'manual') + formField('Constructora', 'lfConstructora', l.constructora) + formText('Observaciones', 'lfObs', l.observaciones) +
       '</div><div class="crmv2-modal-section"><button class="crmv2-btn primary full" id="lfSave">Guardar lead</button></div>';
     const ov = openModal(html, true);
@@ -633,7 +633,7 @@
       formField('Teléfono', 'pfTelefono', telInicial, 'tel') +
       formField('Email', 'pfEmail', emailOf(p), 'email') +
       formSelectOtra('Fuente', 'pfFuente', FUENTES_LEAD, p.fuenteLead) +
-      '<label>Tipo de contraparte<select class="crmv2-select" id="pfTipoProspecto">' + TIPOS_PROSPECTO.map(t => '<option value="' + esc(t.value) + '" ' + (p.tipoProspecto===t.value?'selected':'') + '>' + esc(t.label) + '</option>').join('') + '</select></label>' +
+      '<label>Categoría del prospecto<select class="crmv2-select" id="pfTipoProspecto">' + TIPOS_PROSPECTO.map(t => '<option value="' + esc(t.value) + '" ' + (p.tipoProspecto===t.value?'selected':'') + '>' + esc(t.label) + '</option>').join('') + '</select></label>' +
       '<label>Tipo de servicio<select class="crmv2-select" id="pfTipoServicio">' + TIPOS_SERVICIO.map(t => '<option value="' + esc(t.value) + '" ' + ((p.tipoServicio||'administración')===t.value?'selected':'') + '>' + esc(t.label) + '</option>').join('') + '</select></label>' +
       formField('Responsable', 'pfResp', p.responsable) +
       formText('Observaciones', 'pfObs', p.observaciones) +
@@ -703,7 +703,7 @@
     });
   }
   function detailGrid(x){
-    const tipo = x.tipoProspecto ? tipoProspectoLabel(x) : (x.tipoLead === 'inmobiliaria' ? 'Inmobiliaria' : (x.tipoLead === 'comunidad' ? 'Comunidad' : ''));
+    const tipo = x.tipoProspecto ? tipoProspectoLabel(x) : (x.tipoLead === 'inmobiliaria' ? 'Inmobiliaria' : (x.tipoLead === 'comunidad' ? 'Comité de administración' : ''));
     const rows = [ ['Tipo', tipo], ['Comuna', x.comuna], ['Dirección', x.direccion], ['Contacto', contactName(x)], ['Cargo', x.cargoContacto], ['Teléfono', phoneOf(x)], ['Email', emailOf(x)], ['Fuente', x.fuenteLead], ['Observaciones', x.observaciones] ];
     return '<div class="crmv2-detail-grid">' + rows.map(r => '<div class="crmv2-detail-item"><label>' + esc(r[0]) + '</label><span>' + esc(r[1] || '—') + '</span></div>').join('') + '</div>';
   }
